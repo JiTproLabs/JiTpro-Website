@@ -1,40 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>About JiTpro</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JiTpro - Info</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #ffffff;
-      margin: 0;
-      padding: 40px 20px;
-      text-align: center;
+      padding: 2em;
+      background-color: #f7f7f7;
     }
-    h1 {
-      font-size: 26px;
-      color: #333;
+    .accordion-item {
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #fff;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
-    p {
-      font-size: 18px;
-      color: #555;
-      max-width: 700px;
-      margin: 20px auto;
-      line-height: 1.6;
+    .accordion-header {
+      background-color: #e8e8e8;
+      border: none;
+      width: 100%;
+      padding: 1em;
+      text-align: left;
+      font-size: 1.1em;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    a {
-      display: inline-block;
-      margin-top: 30px;
-      color: #cc0000;
-      text-decoration: none;
+    .accordion-content {
+      display: none;
+      padding: 1em;
+    }
+    .icon {
+      font-weight: bold;
+      font-size: 1.2em;
     }
   </style>
 </head>
 <body>
-  <h1>What is JiTpro?</h1>
-  <p>JiTpro is a construction procurement platform designed to eliminate delays, confusion, and chaos in material procurement and submittal tracking. We help contractors, subcontractors, and vendors coordinate everything — from approvals to delivery — in one place.</p>
-  <p>With JiTpro, your team gets exactly what they need, when they need it — no missed deadlines, no lost paperwork, no wasted time.</p>
-  <a href="index.html">← Back to Home</a>
+  <h1>Learn More About JiTpro</h1>
+  <div class="accordion">
+    <div class="accordion-item">
+      <button class="accordion-header">What is JiTpro? <span class="icon">+</span></button>
+      <div class="accordion-content">
+        <p><strong>JiTpro</strong> — short for Just-in-Time Procurement — helps small and mid-sized general contractors gain early, disciplined control of the procurement process.</p>
+        <p>Most project delays and cost overruns start long before they ever exhibit themselves in the field — in the front-end chaos of submittals, approvals, and material coordination. JiTpro gives builders the structure and visibility to stay ahead of that curve.</p>
+        <p>We help GCs protect their schedule, profit, and reputation by taking control of procurement early — before problems reach the field.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const headers = document.querySelectorAll('.accordion-header');
+
+    headers.forEach(header => {
+      header.addEventListener('click', () => {
+        const content = header.nextElementSibling;
+        const isVisible = content.style.display === 'block';
+
+        // Close all sections and reset icons
+        document.querySelectorAll('.accordion-content').forEach(c => c.style.display = 'none');
+        document.querySelectorAll('.accordion-header .icon').forEach(icon => icon.textContent = '+');
+
+        // Toggle clicked section and icon
+        if (!isVisible) {
+          content.style.display = 'block';
+          header.querySelector('.icon').textContent = '-';
+        }
+      });
+    });
+  </script>
 </body>
 </html>
