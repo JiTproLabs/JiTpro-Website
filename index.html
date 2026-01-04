@@ -40,11 +40,16 @@
       margin-bottom: 20px;
     }
 
-    h1 {
+    .hero-line {
       font-size: 3em;
-      margin-bottom: 0;
+      margin: 0;
       text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+      opacity: 0;
       animation: fadeIn 2s ease forwards;
+    }
+
+    .hero-line.second {
+      animation-delay: 2s;
     }
 
     p, .p2 {
@@ -73,7 +78,7 @@
     }
 
     a.learn-more::after, a.start-button::after {
-      content: " \279C"; /* Unicode arrow */
+      content: " \279C";
       font-size: 1.2em;
       margin-left: 5px;
     }
@@ -100,10 +105,8 @@
 <body>
   <header>
     <img src="jitpro-logo.svg" alt="JiTpro Logo" />
-  <h1>
-  Proactive Procurement.<br>
-  <span>No Fire Drills</span>
-</h1>
+    <h1 class="hero-line">Proactive Procurement.</h1>
+    <h1 class="hero-line second">No Fire Drills</h1>
   </header>
 
   <main>
@@ -121,5 +124,3 @@
   </footer>
 </body>
 </html>
-
-
