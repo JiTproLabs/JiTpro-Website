@@ -127,18 +127,16 @@ export default function Home() {
           </p>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight leading-tight">
-            Construction schedules break when procurement constraints stay invisible
+            Can You Stand Behind Your Schedule?
           </h1>
 
           <p className="text-xl md:text-2xl text-slate-200 mb-6 max-w-4xl mx-auto leading-relaxed">
-            JiTpro helps general contractors, owners, and design teams identify long-lead
-            decisions early, map procurement dependencies, and tie decisions to required
-            onsite dates before schedule damage shows up in the field.
+            JiTpro helps project teams manage procurement constraints from day one so
+            they can stand behind their schedules.
           </p>
 
           <p className="text-base md:text-lg text-slate-300 mb-12">
-            Built for general contractors, owners &amp; developers, and architects &amp;
-            engineers.
+            Built for general contractors ready for bigger projects.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
