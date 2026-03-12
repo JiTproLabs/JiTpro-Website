@@ -120,12 +120,6 @@ export default function Home() {
               <ArrowRight size={20} />
             </Link>
 
-            <Link
-              to="/how-it-works"
-              className="inline-flex items-center gap-2 border border-slate-300 text-slate-900 px-8 py-4 text-lg font-medium hover:border-slate-900 transition-colors"
-            >
-              How It Works
-            </Link>
           </div>
 
           <p className="text-sm text-slate-500">
