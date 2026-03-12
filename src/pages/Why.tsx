@@ -8,7 +8,9 @@ export default function Why() {
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed mb-4">
             Construction schedules are highly detailed.
-            <br />Procurement planning usually isn't.
+          </p>
+          <p className="text-xl text-slate-600 leading-relaxed mb-4">
+            Procurement planning usually isn't.
           </p>
           <p className="text-lg text-slate-600 leading-relaxed mb-4">
             Most project teams understand that materials, products, and services take time to procure — especially long-lead items. But the process required to make those deliveries happen is rarely mapped with the same level of detail as the construction schedule.
@@ -25,7 +27,9 @@ export default function Why() {
           </ul>
           <p className="text-lg text-slate-600 leading-relaxed mb-4">
             When limited procurement planning collides with these constraints, procurement becomes chaotic.
-            <br />Decisions happen too late.
+          </p>
+          <p className="text-lg text-slate-600 leading-relaxed mb-4">
+            Decisions happen too late.
             <br />Procurement tasks pile up.
             <br />Schedules begin to stretch.
           </p>

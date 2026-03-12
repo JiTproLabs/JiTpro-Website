@@ -127,7 +127,7 @@ export default function Home() {
           </p>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight leading-tight">
-            Schedules Your Teams Can Rely On
+            Stabilize Projects Before Construction Begins
           </h1>
 
           <p className="text-xl md:text-2xl text-slate-200 mb-12 max-w-4xl mx-auto leading-relaxed">
