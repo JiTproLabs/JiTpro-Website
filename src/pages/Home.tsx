@@ -151,13 +151,16 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
-              Why projects fall behind
+              Where projects start falling behind
             </h2>
             <p className="text-lg text-slate-600 leading-relaxed mb-4">
-              Construction schedules often break down because procurement dependencies are discovered too late. Every material and product delivered to a jobsite depends on a chain of upstream steps.
+              Procurement—buyout, submittals, approvals, fabrication, and delivery—is the operational backbone that supports your construction schedule.
+            </p>
+            <p className="text-lg text-slate-600 leading-relaxed mb-4">
+              Construction schedules break down because procurement dependencies surface too late. Every material and product delivered to a jobsite depends on a chain of upstream steps.
             </p>
             <p className="text-lg text-slate-600 leading-relaxed">
-              When these dependencies are not identified and managed early, procurement cannot support the construction schedule and the schedule begins to slip.
+              When dependencies aren't identified early and linked to procurement tasks, procurement can't support the construction schedule, and delays set in.
             </p>
           </div>
 
