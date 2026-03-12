@@ -23,7 +23,7 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-20">
           <Link to="/" className="flex items-center">
-            <img src="/jitpro-logo_(1).svg" alt="JITpro" className="h-10" />
+            <img src={`${import.meta.env.BASE_URL}jitpro-logo_(1).svg`} alt="JITpro" className="h-12" />
           </Link>
 
           <div className="hidden lg:flex items-center gap-8">
@@ -41,10 +41,10 @@ export default function Navigation() {
               </Link>
             ))}
             <Link
-              to="/demo"
+              to="/how-it-works"
               className="bg-slate-900 text-white px-6 py-2.5 text-sm font-medium hover:bg-slate-800 transition-colors"
             >
-              Request Demo
+              How It Works
             </Link>
           </div>
 
@@ -76,11 +76,11 @@ export default function Navigation() {
               </Link>
             ))}
             <Link
-              to="/demo"
+              to="/how-it-works"
               className="block bg-slate-900 text-white px-6 py-3 text-base font-medium text-center hover:bg-slate-800 transition-colors mt-4"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Request Demo
+              How It Works
             </Link>
           </div>
         </div>

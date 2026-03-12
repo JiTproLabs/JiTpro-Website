@@ -121,10 +121,10 @@ export default function Home() {
             </Link>
 
             <Link
-              to="/demo"
+              to="/how-it-works"
               className="inline-flex items-center gap-2 border border-slate-300 text-slate-900 px-8 py-4 text-lg font-medium hover:border-slate-900 transition-colors"
             >
-              Request Demo
+              How It Works
             </Link>
           </div>
 
@@ -328,10 +328,10 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              to="/demo"
+              to="/how-it-works"
               className="inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-4 text-lg font-medium hover:bg-slate-800 transition-colors"
             >
-              Request Demo
+              How It Works
               <ArrowRight size={20} />
             </Link>
 

@@ -55,11 +55,11 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="text-sm font-bold text-slate-900 mb-4">Contact</h4>
+            <h4 className="text-sm font-bold text-slate-900 mb-4">Get Started</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/demo" className="text-slate-600 hover:text-slate-900 transition-colors">
-                  Request demo
+                <Link to="/how-it-works" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  How it works
                 </Link>
               </li>
             </ul>
