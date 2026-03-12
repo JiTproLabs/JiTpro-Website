@@ -160,7 +160,7 @@ export default function Home() {
               Construction schedules break down because procurement dependencies surface too late. Every material and product delivered to a jobsite depends on a chain of upstream steps.
             </p>
             <p className="text-lg text-slate-600 leading-relaxed">
-              When dependencies aren't identified early and linked to procurement tasks, procurement can't support the construction schedule, and delays set in.
+              When dependencies aren't identified early and tied to procurement tasks, procurement can't support the construction schedule—and chaos follows.
             </p>
           </div>
 
