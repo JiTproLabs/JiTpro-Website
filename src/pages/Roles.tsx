@@ -1,3 +1,39 @@
+import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
+
+const roles = [
+  {
+    to: '/roles/general-contractors',
+    title: 'General Contractors',
+    description:
+      'You carry the schedule and the risk. JITpro gives you early control over the procurement decisions that protect your project — and defensible records when delays are not your fault.',
+  },
+  {
+    to: '/roles/architects-engineers',
+    title: 'Architects & Engineers',
+    description:
+      'Your reviews and approvals drive procurement timing. JITpro shows you which submittals are schedule-critical so you can prioritize what matters and protect your review record.',
+  },
+  {
+    to: '/roles/subcontractors',
+    title: 'Subcontractors',
+    description:
+      'You feel the impact of late decisions first. JITpro gives you visibility into submittal status, upstream delays, and documentation to support your position when others cause the problem.',
+  },
+  {
+    to: '/roles/owners-developers',
+    title: 'Owners & Developers',
+    description:
+      'Your selections and approvals drive procurement. JITpro shows you which decisions are schedule-critical, when they are due, and what happens to the schedule if they are late.',
+  },
+  {
+    to: '/roles/project-managers',
+    title: 'Project Managers & Construction Managers',
+    description:
+      'You coordinate everything. JITpro gives you a single view of all procurement, automated follow-ups, and ready-made documentation — so you spend less time tracking and more time managing.',
+  },
+];
+
 export default function Roles() {
   return (
     <div>
@@ -7,108 +43,50 @@ export default function Roles() {
             Built for your role
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed">
-            JITpro gives each stakeholder the control and visibility they need to protect schedule and manage accountability.
+            Every stakeholder on a construction project has a different relationship with procurement. JITpro gives each role the visibility, accountability, and documentation they need to protect the schedule and their position.
           </p>
         </div>
       </section>
 
       <section className="px-6 py-16">
-        <div className="max-w-4xl mx-auto space-y-20">
-          <div>
-            <h2 className="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b-2 border-slate-200">
-              General Contractors
-            </h2>
-            <div className="space-y-8">
-              <div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">
-                  What you control
-                </h3>
-                <p className="text-lg text-slate-600 leading-relaxed">
-                  Set procurement deadlines. Route approvals with clear timing requirements. Escalate delays before they impact schedule. Enforce accountability across all parties.
-                </p>
+        <div className="max-w-4xl mx-auto space-y-8">
+          {roles.map((role) => (
+            <Link
+              key={role.to}
+              to={role.to}
+              className="block border border-slate-200 rounded-xl p-8 bg-white hover:border-slate-400 transition-colors group"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-3 group-hover:text-amber-600 transition-colors">
+                    {role.title}
+                  </h2>
+                  <p className="text-lg text-slate-600 leading-relaxed">
+                    {role.description}
+                  </p>
+                </div>
+                <ArrowRight className="text-slate-400 group-hover:text-amber-600 transition-colors flex-shrink-0 mt-1" size={24} />
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">
-                  What you see
-                </h3>
-                <p className="text-lg text-slate-600 leading-relaxed">
-                  Procurement risk forecast weeks ahead. Real-time status of all scope items. Pending approvals with time remaining. Clear view of who's holding decisions and when delays occur.
-                </p>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">
-                  How you're protected
-                </h3>
-                <p className="text-lg text-slate-600 leading-relaxed">
-                  Timestamped records of every approval request, decision, and delay. Attribution is clear. If schedule slips due to procurement, you have documentation showing exactly why.
-                </p>
-              </div>
-            </div>
-          </div>
+            </Link>
+          ))}
+        </div>
+      </section>
 
-          <div>
-            <h2 className="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b-2 border-slate-200">
-              Owners &amp; Developers
-            </h2>
-            <div className="space-y-8">
-              <div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">
-                  What you control
-                </h3>
-                <p className="text-lg text-slate-600 leading-relaxed">
-                  Visibility into procurement timing and approval status. Clear understanding of decision deadlines and schedule impact. Authority to approve or reject with full context.
-                </p>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">
-                  What you see
-                </h3>
-                <p className="text-lg text-slate-600 leading-relaxed">
-                  Pending approvals requiring your input. Time remaining before decisions affect schedule. Complete history of what was approved and when.
-                </p>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">
-                  How you're protected
-                </h3>
-                <p className="text-lg text-slate-600 leading-relaxed">
-                  Locked records of your approvals with timestamps. No ambiguity about what you authorized. If delays occur elsewhere, documentation shows it wasn't your decisions.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b-2 border-slate-200">
-              Architects &amp; Engineers
-            </h2>
-            <div className="space-y-8">
-              <div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">
-                  What you control
-                </h3>
-                <p className="text-lg text-slate-600 leading-relaxed">
-                  Review and approve technical specifications within defined timelines. Flag issues that need resolution before procurement. Maintain design intent while respecting schedule requirements.
-                </p>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">
-                  What you see
-                </h3>
-                <p className="text-lg text-slate-600 leading-relaxed">
-                  Items requiring technical review. Decision deadlines based on procurement timing. Clear context on why decisions are time-sensitive.
-                </p>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">
-                  How you're protected
-                </h3>
-                <p className="text-lg text-slate-600 leading-relaxed">
-                  Complete record of your approvals, revisions, and any concerns you raised. If issues arise later, documentation shows what you reviewed and when.
-                </p>
-              </div>
-            </div>
-          </div>
+      <section className="px-6 py-20 bg-slate-50">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-slate-900 mb-6">
+            Procurement affects everyone on the project
+          </h2>
+          <p className="text-lg text-slate-600 mb-10 leading-relaxed max-w-3xl mx-auto">
+            When procurement decisions are visible early and accountability is clear, every stakeholder benefits. Fewer surprises, fewer disputes, and better schedule outcomes.
+          </p>
+          <Link
+            to="/how-it-works"
+            className="inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-4 text-lg font-medium hover:bg-slate-800 transition-colors"
+          >
+            See how JITpro works
+            <ArrowRight size={20} />
+          </Link>
         </div>
       </section>
     </div>

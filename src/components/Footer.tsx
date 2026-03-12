@@ -25,9 +25,35 @@ export default function Footer() {
                   How it works
                 </Link>
               </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-bold text-slate-900 mb-4">Roles</h4>
+            <ul className="space-y-2">
               <li>
-                <Link to="/roles" className="text-slate-600 hover:text-slate-900 transition-colors">
-                  Roles
+                <Link to="/roles/general-contractors" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  General Contractors
+                </Link>
+              </li>
+              <li>
+                <Link to="/roles/architects-engineers" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  Architects & Engineers
+                </Link>
+              </li>
+              <li>
+                <Link to="/roles/subcontractors" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  Subcontractors
+                </Link>
+              </li>
+              <li>
+                <Link to="/roles/owners-developers" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  Owners & Developers
+                </Link>
+              </li>
+              <li>
+                <Link to="/roles/project-managers" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  Project Managers / CMs
                 </Link>
               </li>
             </ul>
@@ -49,17 +75,6 @@ export default function Footer() {
               <li>
                 <Link to="/about" className="text-slate-600 hover:text-slate-900 transition-colors">
                   About
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-bold text-slate-900 mb-4">Get Started</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/how-it-works" className="text-slate-600 hover:text-slate-900 transition-colors">
-                  How it works
                 </Link>
               </li>
             </ul>

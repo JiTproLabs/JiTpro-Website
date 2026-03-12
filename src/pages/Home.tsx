@@ -71,42 +71,72 @@ const workflowSteps = [
 
 const audiences = [
   {
+    to: '/roles/general-contractors',
     title: 'General Contractors',
     description:
       'See procurement risk before it turns into field delay, coordination churn, or expensive recovery.',
   },
   {
+    to: '/roles/owners-developers',
     title: 'Owners & Developers',
     description:
       'Know which decisions are truly schedule-critical and where unresolved choices threaten project dates.',
   },
   {
+    to: '/roles/architects-engineers',
     title: 'Architects & Engineers',
     description:
       'Understand which approvals, selections, and releases must move early to protect downstream work.',
+  },
+  {
+    to: '/roles/subcontractors',
+    title: 'Subcontractors',
+    description:
+      'Get visibility into submittal status and upstream decisions that affect your materials and schedule.',
+  },
+  {
+    to: '/roles/project-managers',
+    title: 'Project Managers / CMs',
+    description:
+      'Consolidate procurement tracking into one system with automated follow-ups and ready-made documentation.',
   },
 ];
 
 export default function Home() {
   return (
     <div>
-      <section className="px-6 py-24 md:py-32 lg:py-40">
-        <div className="max-w-5xl mx-auto text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600 mb-6">
+      <section className="relative overflow-hidden px-6 py-24 md:py-32 lg:py-40">
+        {/* Background video */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src={`${import.meta.env.BASE_URL}assets/video/hero-bg.mp4`} type="video/mp4" />
+        </video>
+
+
+        {/* Subtle dark overlay */}
+        <div className="absolute inset-0 bg-black/40" />
+
+        <div className="relative z-10 max-w-5xl mx-auto text-center">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-400 mb-6">
             Procurement clarity for construction projects
           </p>
 
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-6 tracking-tight leading-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight leading-tight">
             Construction schedules break when procurement constraints stay invisible
           </h1>
 
-          <p className="text-xl md:text-2xl text-slate-600 mb-6 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-slate-200 mb-6 max-w-4xl mx-auto leading-relaxed">
             JiTpro helps general contractors, owners, and design teams identify long-lead
             decisions early, map procurement dependencies, and tie decisions to required
             onsite dates before schedule damage shows up in the field.
           </p>
 
-          <p className="text-base md:text-lg text-slate-500 mb-12">
+          <p className="text-base md:text-lg text-slate-300 mb-12">
             Built for general contractors, owners &amp; developers, and architects &amp;
             engineers.
           </p>
@@ -114,7 +144,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <Link
               to="/how-it-works"
-              className="inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-4 text-lg font-medium hover:bg-slate-800 transition-colors"
+              className="inline-flex items-center gap-2 bg-white text-slate-900 px-8 py-4 text-lg font-medium hover:bg-slate-100 transition-colors"
             >
               See how JiTpro works
               <ArrowRight size={20} />
@@ -122,7 +152,7 @@ export default function Home() {
 
           </div>
 
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-400">
             Works with your existing project management tools. No process overhaul required.
           </p>
         </div>
@@ -249,12 +279,12 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 xl:grid-cols-5 gap-8">
             {audiences.map((item) => (
-              <div key={item.title} className="border border-slate-200 rounded-xl p-8 bg-white">
-                <h3 className="text-xl font-bold text-slate-900 mb-3">{item.title}</h3>
+              <Link key={item.title} to={item.to} className="border border-slate-200 rounded-xl p-8 bg-white hover:border-slate-400 transition-colors group block">
+                <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-amber-600 transition-colors">{item.title}</h3>
                 <p className="text-slate-600 leading-relaxed">{item.description}</p>
-              </div>
+              </Link>
             ))}
           </div>
 
