@@ -3,69 +3,69 @@ import { Link } from 'react-router-dom';
 
 const problemPoints = [
   {
-    title: 'Selections arrive late',
+    title: 'Design & specification decisions',
     description:
-      'Windows, equipment, steel, finishes, and other critical items cannot move until key decisions are made.',
+      'Selections and specifications must be finalized before procurement can begin.',
   },
   {
-    title: 'Dependencies stay hidden',
+    title: 'Submittal coordination & review',
     description:
-      'Submittals, design signoff, owner input, and vendor lead times stack up long before the field feels the delay.',
+      'Submittals must be prepared, submitted, and reviewed before fabrication can start.',
   },
   {
-    title: 'Recovery gets expensive',
+    title: 'Fabrication & delivery timelines',
     description:
-      'By the time the schedule shows the impact, options are limited and the team is already reacting instead of controlling.',
+      'Lead times for fabrication and delivery must be accounted for to meet required onsite dates.',
   },
 ];
 
 const solutionPoints = [
   {
     icon: Search,
-    title: 'Identify critical procurement items',
+    title: 'Procurement tasks',
     description:
-      'Find the materials, approvals, and design decisions that can damage the schedule if they move too late.',
+      'Identify every procurement action required across the project.',
   },
   {
     icon: GitBranch,
-    title: 'Map upstream dependencies',
+    title: 'Responsible parties',
     description:
-      'Make the chain visible behind each item, including submittals, reviews, approvals, and release timing.',
+      'Assign ownership so every decision and approval has a clear responsible party.',
   },
   {
     icon: Clock,
-    title: 'Set decision deadlines from install dates',
+    title: 'Delivery deadlines',
     description:
-      'Work backward from required onsite dates so the team sees risk while there is still time to act.',
+      'Set deadlines tied to required onsite dates, not assumptions.',
   },
   {
     icon: FileCheck,
-    title: 'Keep a defensible record',
+    title: 'Constraint identification',
     description:
-      'Capture approvals, timing, and changes in a clear history that supports accountability and documentation.',
+      'Surface timing risks early so the team can act before the schedule slips.',
   },
 ];
 
 const workflowSteps = [
   {
-    title: 'Identify procurement scope',
-    description: 'Define the items and decisions that can affect schedule performance.',
+    title: 'Buyout',
+    description: 'Contracts and purchase orders are issued.',
   },
   {
-    title: 'Map dependencies and lead times',
-    description: 'Show what each item depends on before it can be released or fabricated.',
+    title: 'Submittals',
+    description: 'Shop drawings and product data are submitted for review.',
   },
   {
-    title: 'Set decision deadlines',
-    description: 'Tie procurement timing to required installation dates, not hopeful assumptions.',
+    title: 'Review Cycles',
+    description: 'Track each step of review through to approval.',
   },
   {
-    title: 'Track approvals before they become delays',
-    description: 'Surface drift early so the team can resolve issues before the field pays for them.',
+    title: 'Fabrication',
+    description: 'Custom items are manufactured to specification.',
   },
   {
-    title: 'Maintain a permanent record',
-    description: 'Keep a clear history of what happened, when it happened, and where delays originated.',
+    title: 'Delivery',
+    description: 'Materials arrive onsite when required.',
   },
 ];
 
@@ -74,31 +74,31 @@ const audiences = [
     to: '/roles/general-contractors',
     title: 'General Contractors',
     description:
-      'See procurement risk before it turns into field delay, coordination churn, or expensive recovery.',
+      'JiTpro gives GCs control over procurement timing so schedule commitments hold up in the field.',
   },
   {
     to: '/roles/owners-developers',
     title: 'Owners & Developers',
     description:
-      'Know which decisions are truly schedule-critical and where unresolved choices threaten project dates.',
+      'When your GC uses JiTpro, you get early visibility into the decisions and constraints that drive your project dates.',
   },
   {
     to: '/roles/architects-engineers',
     title: 'Architects & Engineers',
     description:
-      'Understand which approvals, selections, and releases must move early to protect downstream work.',
+      'JiTpro clarifies which design decisions and approvals are schedule-critical, reducing last-minute pressure on your team.',
   },
   {
     to: '/roles/subcontractors',
     title: 'Subcontractors',
     description:
-      'Get visibility into submittal status and upstream decisions that affect your materials and schedule.',
+      'When the GC tracks procurement with JiTpro, subs get clearer timelines and fewer surprises on submittals and deliveries.',
   },
   {
     to: '/roles/project-managers',
     title: 'Project Managers / CMs',
     description:
-      'Consolidate procurement tracking into one system with automated follow-ups and ready-made documentation.',
+      'JiTpro gives PMs a single view of procurement status across the project with clear ownership and deadlines.',
   },
 ];
 
@@ -123,20 +123,15 @@ export default function Home() {
 
         <div className="relative z-10 max-w-5xl mx-auto text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-400 mb-6">
-            Procurement clarity for construction projects
+            Procurement Intelligence for Construction
           </p>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight leading-tight">
-            Can You Stand Behind Your Schedule?
+            Schedules Your Teams Can Rely On
           </h1>
 
-          <p className="text-xl md:text-2xl text-slate-200 mb-6 max-w-4xl mx-auto leading-relaxed">
-            JiTpro helps project teams manage procurement constraints from day one so
-            they can stand behind their schedules.
-          </p>
-
-          <p className="text-base md:text-lg text-slate-300 mb-12">
-            Built for general contractors ready for bigger projects.
+          <p className="text-xl md:text-2xl text-slate-200 mb-12 max-w-4xl mx-auto leading-relaxed">
+            JiTpro helps project teams manage procurement constraints from day one so materials and services arrive onsite when required.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
@@ -149,10 +144,6 @@ export default function Home() {
             </Link>
 
           </div>
-
-          <p className="text-sm text-slate-400">
-            Works with your existing project management tools. No process overhaul required.
-          </p>
         </div>
       </section>
 
@@ -162,11 +153,11 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
               Why projects fall behind
             </h2>
+            <p className="text-lg text-slate-600 leading-relaxed mb-4">
+              Construction schedules often break down because procurement dependencies are discovered too late. Every material and product delivered to a jobsite depends on a chain of upstream steps.
+            </p>
             <p className="text-lg text-slate-600 leading-relaxed">
-              Long-lead materials are only part of the problem. The real schedule damage
-              happens when the decisions tied to those materials are not visible early enough.
-              Selections drift. Approvals wait. Procurement windows close. By the time the
-              schedule reflects the impact, recovery is harder and more expensive.
+              When these dependencies are not identified and managed early, procurement cannot support the construction schedule and the schedule begins to slip.
             </p>
           </div>
 
@@ -195,12 +186,10 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
-              What JiTpro makes visible
+              What JiTpro does
             </h2>
             <p className="text-lg text-slate-600 leading-relaxed">
-              JiTpro is not another generic PM layer. It gives the team visibility into the
-              procurement decisions, dependencies, and timing constraints that drive schedule
-              performance long before those problems hit the field.
+              JiTpro maps procurement workflows across the project and identifies timing risks early. It tracks the information the team needs to keep procurement on schedule.
             </p>
           </div>
 
@@ -232,9 +221,7 @@ export default function Home() {
               How JiTpro works
             </h2>
             <p className="text-lg text-slate-600 leading-relaxed">
-              JiTpro helps the team work backward from required onsite dates, expose what each
-              procurement item depends on, and keep decisions moving before schedule damage
-              becomes visible downstream.
+              JiTpro maps the complete procurement sequence backwards from required onsite dates to ensure materials arrive when needed. Every item follows this chain.
             </p>
           </div>
 
@@ -269,11 +256,10 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
-              Built for the teams who carry procurement risk
+              Built for general contractors, valuable to the whole team
             </h2>
             <p className="text-lg text-slate-600 leading-relaxed">
-              JiTpro is designed for the people who have to make decisions early, coordinate
-              across disciplines, and protect the schedule when procurement timing matters.
+              JiTpro is built for the GC managing procurement risk. When the GC uses it, every stakeholder on the project benefits.
             </p>
           </div>
 
@@ -305,9 +291,7 @@ export default function Home() {
               Works with the tools you already use
             </h2>
             <p className="text-lg text-slate-300 leading-relaxed mb-8">
-              JiTpro adds procurement visibility, decision timing, and accountability to the
-              systems your team already relies on. It is a control layer for procurement, not a
-              replacement for the rest of your project workflow.
+              JiTpro adds procurement visibility to your existing workflow. No process overhaul required.
             </p>
             <Link
               to="/product"
@@ -323,9 +307,7 @@ export default function Home() {
               Built from construction experience
             </h2>
             <p className="text-lg text-slate-300 leading-relaxed mb-8">
-              JiTpro comes from seeing the same failure repeat across projects: the schedule
-              looks fine until procurement decisions happen too late to protect it. The goal is
-              simple — make those constraints visible while the team still has time to act.
+              JiTpro was built because procurement decisions happen too late on too many projects. The goal is simple — make constraints visible while there is still time to act.
             </p>
             <Link
               to="/about"
@@ -341,11 +323,10 @@ export default function Home() {
       <section className="px-6 py-24">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
-            See the procurement problem before it hits your schedule
+            See procurement risk before it hits your schedule
           </h2>
           <p className="text-lg text-slate-600 mb-10 leading-relaxed">
-            When procurement constraints are visible early, teams can make better decisions,
-            protect installation dates, and avoid schedule damage that shows up too late to fix.
+            When procurement constraints are visible early, teams protect installation dates and avoid schedule damage.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
