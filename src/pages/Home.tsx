@@ -5,17 +5,17 @@ const problemPoints = [
   {
     title: 'Design & specification decisions',
     description:
-      'Selections and specifications must be finalized before procurement can begin.',
+      'Unresolved design and specification decisions quietly become procurement constraints that destabilize execution.',
   },
   {
-    title: 'Submittal coordination & review',
+    title: 'Submittal Coordination & Prep',
     description:
-      'Submittals must be prepared, submitted, and reviewed before fabrication can start.',
+      'When time is not allocated for proper submittal sequencing, mistakes and rework become common.',
   },
   {
-    title: 'Fabrication & delivery timelines',
+    title: 'Submittal Review & Approval',
     description:
-      'Lead times for fabrication and delivery must be accounted for to meet required onsite dates.',
+      'Expedited reviews overwhelm consultants and delay procurement approvals.',
   },
 ];
 
@@ -151,16 +151,16 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
-              Where projects start falling behind
+              Where Construction Schedules Begin to Unravel
             </h2>
             <p className="text-lg text-slate-600 leading-relaxed mb-4">
-              Procurement—buyout, submittals, approvals, fabrication, and delivery—is the operational backbone that supports your construction schedule.
+              Procurement—buyout, submittals, approvals, fabrication, and delivery—is the operational backbone that supports the construction schedule.
             </p>
             <p className="text-lg text-slate-600 leading-relaxed mb-4">
-              Construction schedules break down because procurement dependencies surface too late. Every material and product delivered to a jobsite depends on a chain of upstream steps.
+              Construction schedules break down when procurement dependencies surface too late. Every material and product delivered to a jobsite depends on a chain of upstream steps.
             </p>
             <p className="text-lg text-slate-600 leading-relaxed">
-              When dependencies aren't identified early and tied to procurement tasks, procurement can't support the construction schedule—and chaos follows.
+              When those dependencies aren't identified early and tied to procurement tasks, procurement cannot support the schedule—and instability spreads across the project.
             </p>
           </div>
 
