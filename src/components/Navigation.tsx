@@ -22,6 +22,7 @@ export default function Navigation() {
     { to: '/why', label: 'Why JITpro' },
     { to: '/documentation', label: 'Documentation' },
     { to: '/about', label: 'About' },
+    { to: '/founder-story', label: 'Founder Story' },
   ];
 
   const isActive = (path: string) => location.pathname === path;

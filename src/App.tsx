@@ -8,6 +8,7 @@ import Roles from './pages/Roles';
 import Why from './pages/Why';
 import Documentation from './pages/Documentation';
 import About from './pages/About';
+import FounderStory from './pages/FounderStory';
 import Demo from './pages/Demo';
 import GeneralContractors from './pages/roles/GeneralContractors';
 import ArchitectsEngineers from './pages/roles/ArchitectsEngineers';
@@ -34,6 +35,7 @@ function App() {
             <Route path="/why" element={<Why />} />
             <Route path="/documentation" element={<Documentation />} />
             <Route path="/about" element={<About />} />
+            <Route path="/founder-story" element={<FounderStory />} />
             <Route path="/demo" element={<Demo />} />
             <Route path="*" element={<Home />} />
           </Routes>
