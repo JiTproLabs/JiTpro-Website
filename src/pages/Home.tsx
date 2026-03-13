@@ -127,11 +127,11 @@ export default function Home() {
           </p>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight leading-tight">
-            Stabilize Projects Before Construction Begins
+            Get Ahead of the Job Before It Gets Ahead of You
           </h1>
 
           <p className="text-xl md:text-2xl text-slate-200 mb-12 max-w-4xl mx-auto leading-relaxed">
-            JiTpro helps project teams manage procurement constraints from day one so materials and services arrive onsite when required.
+            JiTpro empowers general contractors to take control of missing decisions, buyout, approvals, and long-lead items before they turn into schedule delays and daily firefighting.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
