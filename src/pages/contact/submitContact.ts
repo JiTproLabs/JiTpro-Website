@@ -1,3 +1,10 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
+
 export interface ContactFormData {
   // Metadata
   role: string;
@@ -30,24 +37,59 @@ export interface ContactFormData {
 }
 
 /**
- * Placeholder function for Supabase submission.
- * Add your SUPABASE_URL and SUPABASE_ANON_KEY to .env when ready.
+ * Inserts form data into the Supabase `leads` table.
  */
 export async function submitContactForm(data: ContactFormData): Promise<void> {
-  // TODO: Replace with actual Supabase endpoint
-  const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-contact`;
-
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify(data),
+  console.log("PAYLOAD BEING SENT:", {
+    role: data.role,
+    intent: data.intent,
+    source: data.source,
+    page: data.page,
+    timestamp: data.timestamp,
+    has_project: data.hasProject,
+    project_location: data.projectLocation,
+    project_type: data.projectType,
+    estimated_value: data.estimatedValue,
+    project_timeline: data.projectTimeline,
+    user_role: data.userRole,
+    procurement_method: data.procurementMethod,
+    first_name: data.firstName,
+    last_name: data.lastName,
+    email: data.email,
+    phone: data.phone,
+    company: data.company,
+    message: data.message,
+    schedule_call: data.scheduleCall,
   });
 
-  if (!response.ok) {
-    throw new Error('Failed to submit contact form');
+  const { error } = await supabase
+    .from('leads')
+    .insert([{
+      role: data.role,
+      intent: data.intent,
+      source: data.source,
+      page: data.page,
+      timestamp: data.timestamp,
+      has_project: data.hasProject,
+      project_location: data.projectLocation,
+      project_type: data.projectType,
+      estimated_value: data.estimatedValue,
+      project_timeline: data.projectTimeline,
+      user_role: data.userRole,
+      procurement_method: data.procurementMethod,
+      first_name: data.firstName,
+      last_name: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      company: data.company,
+      message: data.message,
+      schedule_call: data.scheduleCall,
+    }]);
+
+  if (error) {
+    console.error('Supabase insert error:', error);
+    console.error('Supabase insert error JSON:', JSON.stringify(error, null, 2));
+    throw new Error(error.message);
   }
 }
 
