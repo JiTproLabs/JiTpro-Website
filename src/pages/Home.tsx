@@ -131,7 +131,7 @@ export default function Home() {
           </h1>
 
           <p className="text-xl md:text-2xl text-slate-200 mb-12 max-w-4xl mx-auto leading-relaxed">
-            JiTpro empowers general contractors to take control of missing decisions, buyout, approvals, and long-lead items before they turn into schedule delays and daily firefighting.
+            JiTpro reveals the procurement decisions and dependencies your construction schedule quietly depends on — so your team can actually stand behind the schedule.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
