@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { submitContactForm } from './submitContact';
+import Turnstile from '../../components/Turnstile';
 
 export default function ArchitectContact() {
   const navigate = useNavigate();
@@ -26,11 +27,21 @@ export default function ArchitectContact() {
   // Honeypot
   const [honeypot, setHoneypot] = useState('');
 
+  // Turnstile
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const handleToken = useCallback((token: string) => setTurnstileToken(token), []);
+  const handleExpire = useCallback(() => setTurnstileToken(''), []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Bot detected
     if (honeypot) return;
+
+    if (!turnstileToken) {
+      setError('Please complete the verification challenge.');
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -57,13 +68,10 @@ export default function ArchitectContact() {
     };
 
     try {
-      await submitContactForm(data);
-      // TODO: Enable when send-contact-notification Edge Function is deployed
-      // await sendEmailNotification(data);
+      await submitContactForm(data, turnstileToken);
       navigate('/thank-you', { state: { scheduleCall: scheduleCall === 'yes' } });
-    } catch {
-      // Submission placeholder not yet connected — navigate to thank you
-      navigate('/thank-you', { state: { scheduleCall: scheduleCall === 'yes' } });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Submission failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -99,9 +107,6 @@ export default function ArchitectContact() {
               tabIndex={-1}
               autoComplete="off"
             />
-
-            {/* Cloudflare Turnstile placeholder */}
-            <div id="cf-turnstile-architect" data-sitekey="TURNSTILE_SITE_KEY_PLACEHOLDER" />
 
             {/* Section 1: Project Information */}
             <div>
@@ -244,6 +249,9 @@ export default function ArchitectContact() {
               </div>
             </div>
 
+            {/* Cloudflare Turnstile */}
+            <Turnstile onToken={handleToken} onExpire={handleExpire} />
+
             {error && (
               <div className="p-4 bg-red-50 border-2 border-red-200 text-red-800">
                 {error}
@@ -252,7 +260,7 @@ export default function ArchitectContact() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !turnstileToken}
               className="w-full bg-slate-900 text-white px-8 py-4 text-lg font-medium hover:bg-slate-800 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
             >
               {loading ? 'Submitting...' : 'Submit'}

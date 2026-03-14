@@ -1,11 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-
-console.log("SUPABASE URL:", import.meta.env.VITE_SUPABASE_URL);
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
-
 export interface ContactFormData {
   // Metadata
   role: string;
@@ -38,10 +30,14 @@ export interface ContactFormData {
 }
 
 /**
- * Inserts form data into the Supabase `leads` table.
+ * Submits form data through the submit-contact Edge Function,
+ * which validates the Turnstile token and inserts into the leads table.
  */
-export async function submitContactForm(data: ContactFormData): Promise<void> {
-  console.log("PAYLOAD BEING SENT:", {
+export async function submitContactForm(data: ContactFormData, turnstileToken: string): Promise<void> {
+  const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-contact`;
+
+  const payload = {
+    turnstileToken,
     role: data.role,
     intent: data.intent,
     source: data.source,
@@ -61,60 +57,20 @@ export async function submitContactForm(data: ContactFormData): Promise<void> {
     company: data.company,
     message: data.message,
     schedule_call: data.scheduleCall,
-  });
-
-  const { error } = await supabase
-    .from('leads')
-    .insert([{
-      role: data.role,
-      intent: data.intent,
-      source: data.source,
-      page: data.page,
-      timestamp: data.timestamp,
-      has_project: data.hasProject,
-      project_location: data.projectLocation,
-      project_type: data.projectType,
-      estimated_value: data.estimatedValue,
-      project_timeline: data.projectTimeline,
-      user_role: data.userRole,
-      procurement_method: data.procurementMethod,
-      first_name: data.firstName,
-      last_name: data.lastName,
-      email: data.email,
-      phone: data.phone,
-      company: data.company,
-      message: data.message,
-      schedule_call: data.scheduleCall,
-    }]);
-
-  if (error) {
-    console.error('Supabase insert error:', error);
-    console.error('Supabase insert error JSON:', JSON.stringify(error, null, 2));
-    throw new Error(error.message);
-  }
-}
-
-/**
- * Placeholder function for email notification.
- * Sends form data to info@jit-pro.com via server-side function.
- */
-export async function sendEmailNotification(data: ContactFormData): Promise<void> {
-  // TODO: Replace with actual email notification endpoint
-  const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact-notification`;
+  };
 
   const response = await fetch(apiUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
       'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({
-      to: 'info@jit-pro.com',
-      formData: data,
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
-    throw new Error('Failed to send email notification');
+    const result = await response.json().catch(() => ({ error: 'Submission failed' }));
+    throw new Error(result.error || 'Submission failed');
   }
 }
