@@ -10,6 +10,10 @@ import Documentation from './pages/Documentation';
 import About from './pages/About';
 import FounderStory from './pages/FounderStory';
 import Demo from './pages/Demo';
+import OwnerContact from './pages/contact/OwnerContact';
+import ContractorContact from './pages/contact/ContractorContact';
+import ArchitectContact from './pages/contact/ArchitectContact';
+import ThankYou from './pages/ThankYou';
 import GeneralContractors from './pages/roles/GeneralContractors';
 import ArchitectsEngineers from './pages/roles/ArchitectsEngineers';
 import Subcontractors from './pages/roles/Subcontractors';
@@ -36,6 +40,10 @@ function App() {
             <Route path="/documentation" element={<Documentation />} />
             <Route path="/about" element={<About />} />
             <Route path="/founder-story" element={<FounderStory />} />
+            <Route path="/contact/owner" element={<OwnerContact />} />
+            <Route path="/contact/contractor" element={<ContractorContact />} />
+            <Route path="/contact/architect" element={<ArchitectContact />} />
+            <Route path="/thank-you" element={<ThankYou />} />
             <Route path="/demo" element={<Demo />} />
             <Route path="*" element={<Home />} />
           </Routes>
