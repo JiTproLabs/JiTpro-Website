@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { submitContactForm, sendEmailNotification } from './submitContact';
+import { submitContactForm } from './submitContact';
 
 export default function OwnerContact() {
   const navigate = useNavigate();
@@ -56,7 +56,8 @@ export default function OwnerContact() {
 
     try {
       await submitContactForm(data);
-      await sendEmailNotification(data);
+      // TODO: Enable when send-contact-notification Edge Function is deployed
+      // await sendEmailNotification(data);
       navigate('/thank-you', { state: { scheduleCall: scheduleCall === 'yes' } });
     } catch {
       // Submission placeholder not yet connected — navigate to thank you
