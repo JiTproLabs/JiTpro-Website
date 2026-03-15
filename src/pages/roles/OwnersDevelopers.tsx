@@ -133,22 +133,13 @@ export default function OwnersDevelopers() {
           <p className="text-lg text-slate-300 leading-relaxed mb-10 max-w-3xl mx-auto">
             JITpro gives owners the visibility to make timely procurement decisions and the documentation to prove it. Your decisions drive the schedule — make sure you know when they are needed.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              to="/contact/owner"
-              className="inline-flex items-center gap-2 bg-white text-slate-900 px-8 py-4 text-lg font-medium hover:bg-slate-100 transition-colors"
-            >
-              Let's Talk Procurement
-              <ArrowRight size={20} />
-            </Link>
-            <Link
-              to="/how-it-works"
-              className="inline-flex items-center gap-2 border-2 border-white text-white px-8 py-4 text-lg font-medium hover:bg-white/10 transition-colors"
-            >
-              See how JITpro works
-              <ArrowRight size={20} />
-            </Link>
-          </div>
+          <Link
+            to="/contact/owner"
+            className="inline-flex items-center gap-2 bg-white text-slate-900 px-8 py-4 text-lg font-medium hover:bg-slate-100 transition-colors"
+          >
+            Let's Talk Procurement
+            <ArrowRight size={20} />
+          </Link>
         </div>
       </section>
     </div>

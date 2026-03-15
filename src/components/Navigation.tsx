@@ -2,36 +2,65 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-const roleLinks = [
-  { to: '/roles/general-contractors', label: 'General Contractors' },
-  { to: '/roles/architects-engineers', label: 'Architects & Engineers' },
-  { to: '/roles/subcontractors', label: 'Subcontractors' },
-  { to: '/roles/owners-developers', label: 'Owners & Developers' },
-  { to: '/roles/project-managers', label: 'Project Managers / CMs' },
-];
+const dropdowns = {
+  howItWorks: {
+    label: 'How It Works',
+    items: [
+      { to: '/product', label: 'Product' },
+      { to: '/how-it-works', label: 'How It Works' },
+      { to: '/roles', label: 'Roles' },
+    ],
+  },
+  why: {
+    label: 'Why JiTpro',
+    items: [
+      { to: '/why', label: 'Why JiTpro' },
+      { to: '/documentation', label: 'Documentation & Risk' },
+    ],
+  },
+  about: {
+    label: 'About',
+    items: [
+      { to: '/about', label: 'About JiTpro' },
+      { to: '/founder-story', label: 'Founder Story' },
+    ],
+  },
+  contact: {
+    label: 'Contact',
+    items: [
+      { to: '/contact/contractor', label: 'General Contractors' },
+      { to: '/contact/architect', label: 'Architects & Engineers' },
+      { to: '/contact/owner', label: 'Owners & Developers' },
+    ],
+  },
+  demo: {
+    label: 'Request Demo',
+    items: [
+      { to: '/contact/contractor', label: 'General Contractors' },
+      { to: '/contact/architect', label: 'Architects & Engineers' },
+      { to: '/contact/owner', label: 'Owners & Developers' },
+    ],
+  },
+};
+
+const dropdownKeys = ['howItWorks', 'why', 'about', 'contact', 'demo'] as const;
+type DropdownKey = typeof dropdownKeys[number];
 
 export default function Navigation() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [rolesDropdownOpen, setRolesDropdownOpen] = useState(false);
-  const [mobileRolesOpen, setMobileRolesOpen] = useState(false);
-  const links = [
-    { to: '/', label: 'Home' },
-    { to: '/product', label: 'Product' },
-    { to: '/how-it-works', label: 'How It Works' },
-    { to: '/why', label: 'Why JITpro' },
-    { to: '/documentation', label: 'Documentation' },
-    { to: '/about', label: 'About' },
-    { to: '/founder-story', label: 'Founder Story' },
-  ];
+  const [openDesktop, setOpenDesktop] = useState<DropdownKey | null>(null);
+  const [openMobile, setOpenMobile] = useState<DropdownKey | null>(null);
 
   const isActive = (path: string) => location.pathname === path;
-  const isRolesActive = location.pathname.startsWith('/roles');
+
+  const isDropdownActive = (key: DropdownKey) =>
+    dropdowns[key].items.some((item) => location.pathname.startsWith(item.to));
 
   useEffect(() => {
-    setRolesDropdownOpen(false);
+    setOpenDesktop(null);
     setMobileMenuOpen(false);
-    setMobileRolesOpen(false);
+    setOpenMobile(null);
   }, [location.pathname]);
 
   return (
@@ -43,66 +72,52 @@ export default function Navigation() {
           </Link>
 
           <div className="hidden lg:flex items-center gap-8">
-            {links.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`text-sm font-medium transition-colors ${
-                  isActive(link.to)
-                    ? 'text-slate-900'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {dropdownKeys.map((key) => {
+              const dropdown = dropdowns[key];
+              const isDemo = key === 'demo';
 
-            {/* Roles dropdown */}
-            <div
-              className="relative"
+              return (
+                <div
+                  key={key}
+                  className="relative"
+                  onMouseEnter={() => setOpenDesktop(key)}
+                  onMouseLeave={() => setOpenDesktop(null)}
+                >
+                  <button
+                    className={`text-sm font-medium transition-colors inline-flex items-center gap-1 ${
+                      isDemo
+                        ? 'bg-slate-900 text-white px-6 py-2.5 hover:bg-slate-800'
+                        : isDropdownActive(key)
+                          ? 'text-slate-900'
+                          : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {dropdown.label}
+                    <ChevronDown size={14} className={`transition-transform ${openDesktop === key ? 'rotate-180' : ''}`} />
+                  </button>
 
-              onMouseEnter={() => setRolesDropdownOpen(true)}
-              onMouseLeave={() => setRolesDropdownOpen(false)}
-            >
-              <Link
-                to="/roles"
-                className={`text-sm font-medium transition-colors inline-flex items-center gap-1 ${
-                  isRolesActive
-                    ? 'text-slate-900'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Roles
-                <ChevronDown size={14} className={`transition-transform ${rolesDropdownOpen ? 'rotate-180' : ''}`} />
-              </Link>
-
-              {rolesDropdownOpen && (
-                <div className="absolute top-full left-0 pt-2 z-50">
-                  <div className="w-64 bg-white border border-slate-200 rounded-lg shadow-lg py-2">
-                    {roleLinks.map((role) => (
-                      <Link
-                        key={role.to}
-                        to={role.to}
-                        className={`block px-4 py-2.5 text-sm transition-colors ${
-                          isActive(role.to)
-                            ? 'text-amber-600 bg-amber-50'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                        }`}
-                      >
-                        {role.label}
-                      </Link>
-                    ))}
-                  </div>
+                  {openDesktop === key && (
+                    <div className="absolute top-full left-0 pt-2 z-50">
+                      <div className="w-64 bg-white border border-slate-200 rounded-lg shadow-lg py-2">
+                        {dropdown.items.map((item) => (
+                          <Link
+                            key={item.to}
+                            to={item.to}
+                            className={`block px-4 py-2.5 text-sm transition-colors ${
+                              isActive(item.to)
+                                ? 'text-amber-600 bg-amber-50'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                            }`}
+                          >
+                            {item.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-
-            <Link
-              to="/how-it-works"
-              className="bg-slate-900 text-white px-6 py-2.5 text-sm font-medium hover:bg-slate-800 transition-colors"
-            >
-              How It Works
-            </Link>
+              );
+            })}
           </div>
 
           <button
@@ -118,66 +133,45 @@ export default function Navigation() {
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-slate-200 bg-white">
           <div className="px-6 py-4 space-y-1">
-            {links.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`block py-2 text-base font-medium ${
-                  isActive(link.to)
-                    ? 'text-slate-900'
-                    : 'text-slate-600'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {dropdownKeys.map((key) => {
+              const dropdown = dropdowns[key];
+              const isDemo = key === 'demo';
+              const isOpen = openMobile === key;
 
-            {/* Mobile Roles accordion */}
-            <div>
-              <button
-                onClick={() => setMobileRolesOpen(!mobileRolesOpen)}
-                className={`flex items-center justify-between w-full py-2 text-base font-medium ${
-                  isRolesActive ? 'text-slate-900' : 'text-slate-600'
-                }`}
-              >
-                Roles
-                <ChevronDown size={16} className={`transition-transform ${mobileRolesOpen ? 'rotate-180' : ''}`} />
-              </button>
-              {mobileRolesOpen && (
-                <div className="pl-4 space-y-1 pb-2">
-                  <Link
-                    to="/roles"
-                    className={`block py-1.5 text-sm ${
-                      location.pathname === '/roles' ? 'text-amber-600 font-medium' : 'text-slate-600'
+              return (
+                <div key={key}>
+                  <button
+                    onClick={() => setOpenMobile(isOpen ? null : key)}
+                    className={`flex items-center justify-between w-full py-2 text-base font-medium ${
+                      isDemo
+                        ? 'bg-slate-900 text-white px-6 py-3 text-center hover:bg-slate-800 transition-colors mt-4'
+                        : isDropdownActive(key)
+                          ? 'text-slate-900'
+                          : 'text-slate-600'
                     }`}
-                    onClick={() => setMobileMenuOpen(false)}
                   >
-                    All Roles
-                  </Link>
-                  {roleLinks.map((role) => (
-                    <Link
-                      key={role.to}
-                      to={role.to}
-                      className={`block py-1.5 text-sm ${
-                        isActive(role.to) ? 'text-amber-600 font-medium' : 'text-slate-600'
-                      }`}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {role.label}
-                    </Link>
-                  ))}
+                    {dropdown.label}
+                    <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isOpen && (
+                    <div className="pl-4 space-y-1 pb-2">
+                      {dropdown.items.map((item) => (
+                        <Link
+                          key={item.to}
+                          to={item.to}
+                          className={`block py-1.5 text-sm ${
+                            isActive(item.to) ? 'text-amber-600 font-medium' : 'text-slate-600'
+                          }`}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-
-            <Link
-              to="/how-it-works"
-              className="block bg-slate-900 text-white px-6 py-3 text-base font-medium text-center hover:bg-slate-800 transition-colors mt-4"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              How It Works
-            </Link>
+              );
+            })}
           </div>
         </div>
       )}
