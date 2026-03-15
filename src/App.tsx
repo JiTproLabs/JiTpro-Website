@@ -19,10 +19,12 @@ import ArchitectsEngineers from './pages/roles/ArchitectsEngineers';
 import Subcontractors from './pages/roles/Subcontractors';
 import OwnersDevelopers from './pages/roles/OwnersDevelopers';
 import ProjectManagers from './pages/roles/ProjectManagers';
+import ScrollToTop from './components/ScrollToTop';
 
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <div className="min-h-screen flex flex-col bg-white">
         <Navigation />
         <main className="flex-1">
