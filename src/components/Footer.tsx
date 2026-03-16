@@ -7,9 +7,18 @@ export default function Footer() {
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           <div>
             <h3 className="text-xl font-bold text-slate-900 mb-4">JITpro</h3>
-            <p className="text-slate-600 leading-relaxed">
+            <p className="text-slate-600 leading-relaxed mb-4">
               Procurement intelligence for construction schedule control.
             </p>
+            <a
+              href="https://www.linkedin.com/in/jeff-kaufman"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-[#0A66C2] hover:bg-[#004182] transition-colors"
+              aria-label="LinkedIn"
+            >
+              <span className="text-white text-sm font-bold leading-none">in</span>
+            </a>
           </div>
 
           <div>
