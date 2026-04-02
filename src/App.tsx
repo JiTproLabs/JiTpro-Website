@@ -28,6 +28,7 @@ import EconomicCase from './pages/investor/EconomicCase';
 import InvestorAppendix from './pages/investor/InvestorAppendix';
 import MainLayout from './components/MainLayout';
 import Admin from './pages/Admin';
+import AdminApproved from './pages/AdminApproved';
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
       <Routes>
         {/* Admin — no layout wrapper */}
         <Route path="/admin" element={<Admin />} />
+        <Route path="/admin/approved" element={<AdminApproved />} />
 
         {/* Investor sub-site — own nav/footer */}
         <Route path="/investor" element={<InvestorLayout />}>

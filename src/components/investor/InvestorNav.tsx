@@ -18,18 +18,16 @@ export default function InvestorNav() {
 
   return (
     <nav className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800">
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
-        <Link to="/investor" className="flex items-center gap-3">
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-28">
+        <Link to="/investor" className="flex items-center gap-4">
           <img
-            src="/JiTpro-Website/assets/logo/JiTpro_Amber.svg"
-            alt="JiTpro"
-            className="h-7"
+            src="/JiTpro-Website/assets/logo/JiTpro_Amber_white_text.svg"
+            alt="JiTpro — Just in Time Procurement"
+            className="h-20"
             onError={(e) => {
-              // Fallback for local dev where base path differs
-              (e.target as HTMLImageElement).src = '/assets/logo/JiTpro_Amber.svg';
+              (e.target as HTMLImageElement).src = '/assets/logo/JiTpro_Amber_white_text.svg';
             }}
           />
-          <span className="text-xs font-medium tracking-widest text-slate-500 uppercase">Investor</span>
         </Link>
 
         {/* Desktop */}

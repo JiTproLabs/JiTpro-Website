@@ -7,22 +7,17 @@ Deno.serve(async (req: Request) => {
 
   const adminPassword = Deno.env.get("ADMIN_PASSWORD");
   if (!adminPassword || key !== adminPassword) {
-    return new Response(htmlPage("Unauthorized", "Invalid admin key."), {
-      status: 403,
-      headers: { "Content-Type": "text/html" },
-    });
+    return new Response("Unauthorized: Invalid admin key.", { status: 403 });
   }
 
   if (!id) {
-    return new Response(htmlPage("Error", "Missing request ID."), {
-      status: 400,
-      headers: { "Content-Type": "text/html" },
-    });
+    return new Response("Error: Missing request ID.", { status: 400 });
   }
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const siteUrl = Deno.env.get("SITE_URL") || "https://jit-pro.com";
 
     // Fetch the request
     const fetchResponse = await fetch(
@@ -37,19 +32,14 @@ Deno.serve(async (req: Request) => {
 
     const records = await fetchResponse.json();
     if (!records.length) {
-      return new Response(htmlPage("Not Found", "Request not found."), {
-        status: 404,
-        headers: { "Content-Type": "text/html" },
-      });
+      return new Response("Request not found.", { status: 404 });
     }
 
     const record = records[0];
 
     if (record.status === "approved") {
-      return new Response(
-        htmlPage("Already Approved", `Access was already granted to ${record.name} (${record.email}).`),
-        { status: 200, headers: { "Content-Type": "text/html" } }
-      );
+      const redirectUrl = `${siteUrl}/admin/approved?name=${encodeURIComponent(record.name)}&email=${encodeURIComponent(record.email)}&note=already`;
+      return Response.redirect(redirectUrl, 302);
     }
 
     // Generate access token
@@ -76,15 +66,11 @@ Deno.serve(async (req: Request) => {
     if (!updateResponse.ok) {
       const err = await updateResponse.text();
       console.error("Update failed:", err);
-      return new Response(htmlPage("Error", "Failed to approve request."), {
-        status: 500,
-        headers: { "Content-Type": "text/html" },
-      });
+      return new Response("Failed to approve request.", { status: 500 });
     }
 
     // Send access email to investor
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    const siteUrl = Deno.env.get("SITE_URL") || "https://jit-pro.com/JiTpro-Website";
 
     if (resendApiKey) {
       const accessLink = `${siteUrl}/investor?token=${accessToken}`;
@@ -96,7 +82,7 @@ Deno.serve(async (req: Request) => {
           Authorization: `Bearer ${resendApiKey}`,
         },
         body: JSON.stringify({
-          from: "JiTpro <jeff@jit-pro.com>",
+          from: "JiTpro <noreply@mail.jit-pro.com>",
           to: [record.email],
           subject: "Your JiTpro Investor Access",
           html: `
@@ -122,42 +108,10 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    return new Response(
-      htmlPage(
-        "Access Granted",
-        `Access has been granted to <strong>${record.name}</strong> (${record.email}).<br/><br/>An email with their access link has been sent.`
-      ),
-      { status: 200, headers: { "Content-Type": "text/html" } }
-    );
+    const redirectUrl = `${siteUrl}/admin/approved?name=${encodeURIComponent(record.name)}&email=${encodeURIComponent(record.email)}`;
+    return Response.redirect(redirectUrl, 302);
   } catch (error) {
     console.error("Approve error:", error);
-    return new Response(htmlPage("Error", "An unexpected error occurred."), {
-      status: 500,
-      headers: { "Content-Type": "text/html" },
-    });
+    return new Response("An unexpected error occurred.", { status: 500 });
   }
 });
-
-function htmlPage(title: string, message: string): string {
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>JiTpro — ${title}</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
-    .card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 40px; max-width: 480px; text-align: center; }
-    h1 { color: #f59e0b; font-size: 24px; margin: 0 0 16px; }
-    p { color: #94a3b8; line-height: 1.6; margin: 0; }
-    strong { color: #e2e8f0; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h1>${title}</h1>
-    <p>${message}</p>
-  </div>
-</body>
-</html>`;
-}
