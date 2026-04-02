@@ -1,6 +1,4 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navigation from './components/Navigation';
-import Footer from './components/Footer';
 import Home from './pages/Home';
 import Product from './pages/Product';
 import HowItWorks from './pages/HowItWorks';
@@ -20,38 +18,59 @@ import Subcontractors from './pages/roles/Subcontractors';
 import OwnersDevelopers from './pages/roles/OwnersDevelopers';
 import ProjectManagers from './pages/roles/ProjectManagers';
 import ScrollToTop from './components/ScrollToTop';
+import InvestorLayout from './components/investor/InvestorLayout';
+import InvestorHome from './pages/investor/InvestorHome';
+import MarketOpportunity from './pages/investor/MarketOpportunity';
+import HiddenCost from './pages/investor/HiddenCost';
+import WhyNow from './pages/investor/WhyNow';
+import InvestorProduct from './pages/investor/InvestorProduct';
+import EconomicCase from './pages/investor/EconomicCase';
+import InvestorAppendix from './pages/investor/InvestorAppendix';
+import MainLayout from './components/MainLayout';
+import Admin from './pages/Admin';
 
 function App() {
   return (
     <Router>
       <ScrollToTop />
-      <div className="min-h-screen flex flex-col bg-white">
-        <Navigation />
-        <main className="flex-1">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/product" element={<Product />} />
-            <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/roles" element={<Roles />} />
-            <Route path="/roles/general-contractors" element={<GeneralContractors />} />
-            <Route path="/roles/architects-engineers" element={<ArchitectsEngineers />} />
-            <Route path="/roles/subcontractors" element={<Subcontractors />} />
-            <Route path="/roles/owners-developers" element={<OwnersDevelopers />} />
-            <Route path="/roles/project-managers" element={<ProjectManagers />} />
-            <Route path="/why" element={<Why />} />
-            <Route path="/documentation" element={<Documentation />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/founder-story" element={<FounderStory />} />
-            <Route path="/contact/owner" element={<OwnerContact />} />
-            <Route path="/contact/contractor" element={<ContractorContact />} />
-            <Route path="/contact/architect" element={<ArchitectContact />} />
-            <Route path="/thank-you" element={<ThankYou />} />
-            <Route path="/demo" element={<Demo />} />
-            <Route path="*" element={<Home />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
+      <Routes>
+        {/* Admin — no layout wrapper */}
+        <Route path="/admin" element={<Admin />} />
+
+        {/* Investor sub-site — own nav/footer */}
+        <Route path="/investor" element={<InvestorLayout />}>
+          <Route index element={<InvestorHome />} />
+          <Route path="market" element={<MarketOpportunity />} />
+          <Route path="hidden-cost" element={<HiddenCost />} />
+          <Route path="why-now" element={<WhyNow />} />
+          <Route path="product" element={<InvestorProduct />} />
+          <Route path="economics" element={<EconomicCase />} />
+          <Route path="appendix" element={<InvestorAppendix />} />
+        </Route>
+
+        {/* Main site */}
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/product" element={<Product />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/roles" element={<Roles />} />
+          <Route path="/roles/general-contractors" element={<GeneralContractors />} />
+          <Route path="/roles/architects-engineers" element={<ArchitectsEngineers />} />
+          <Route path="/roles/subcontractors" element={<Subcontractors />} />
+          <Route path="/roles/owners-developers" element={<OwnersDevelopers />} />
+          <Route path="/roles/project-managers" element={<ProjectManagers />} />
+          <Route path="/why" element={<Why />} />
+          <Route path="/documentation" element={<Documentation />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/founder-story" element={<FounderStory />} />
+          <Route path="/contact/owner" element={<OwnerContact />} />
+          <Route path="/contact/contractor" element={<ContractorContact />} />
+          <Route path="/contact/architect" element={<ArchitectContact />} />
+          <Route path="/thank-you" element={<ThankYou />} />
+          <Route path="/demo" element={<Demo />} />
+          <Route path="*" element={<Home />} />
+        </Route>
+      </Routes>
     </Router>
   );
 }

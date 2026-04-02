@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import JiTproWordmark from './JiTproWordmark';
 
 export default function Footer() {
   return (
@@ -6,7 +7,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 py-16">
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           <div>
-            <h3 className="text-xl font-bold text-slate-900 mb-4">JITpro</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-4"><JiTproWordmark variant="slate" /></h3>
             <p className="text-slate-600 leading-relaxed mb-4">
               Procurement intelligence for construction schedule control.
             </p>
@@ -26,7 +27,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link to="/product" className="text-slate-600 hover:text-slate-900 transition-colors">
-                  What JITpro enables
+                  What <JiTproWordmark variant="slate" /> enables
                 </Link>
               </li>
               <li>
@@ -73,7 +74,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link to="/why" className="text-slate-600 hover:text-slate-900 transition-colors">
-                  Why JITpro
+                  Why <JiTproWordmark variant="slate" />
                 </Link>
               </li>
               <li>
@@ -90,10 +91,16 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="pt-8 border-t border-slate-200">
+        <div className="pt-8 border-t border-slate-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <p className="text-sm text-slate-600">
-            © {new Date().getFullYear()} JITpro. Schedule certainty through procurement intelligence.
+            © {new Date().getFullYear()} <JiTproWordmark variant="slate" />. Schedule certainty through procurement intelligence.
           </p>
+          <Link
+            to="/investor"
+            className="text-sm text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            For Investors
+          </Link>
         </div>
       </div>
     </footer>
