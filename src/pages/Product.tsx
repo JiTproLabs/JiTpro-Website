@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { brandText } from '../components/JiTproWordmark';
 
 export default function Product() {
   return (
@@ -10,10 +11,10 @@ export default function Product() {
             Procurement intelligence and forecasting
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed mb-6">
-            JITpro manages the full procurement lifecycle from scope identification to material delivery. It forecasts risk, enforces decision timing, and maintains complete accountability.
+{brandText('JITpro manages the full procurement lifecycle from scope identification to material delivery. It forecasts risk, enforces decision timing, and maintains complete accountability.', 'slate', 'relative -top-[3px]')}
           </p>
           <p className="text-lg text-slate-600 leading-relaxed">
-            Works alongside your existing project management tools—Procore, Planera, or any other system you use. JITpro adds the procurement intelligence layer they don't provide.
+{brandText("Works alongside your existing project management tools—Procore, Planera, or any other system you use. JITpro adds the procurement intelligence layer they don't provide.", 'slate', 'relative -top-[3px]')}
           </p>
         </div>
       </section>
@@ -25,7 +26,7 @@ export default function Product() {
               Full-scope procurement lifecycle
             </h2>
             <p className="text-lg text-slate-600 leading-relaxed">
-              Transform project scope into a managed procurement process. Identify all scope items, generate submittal registries, and tie materials to project milestones. JITpro tracks the entire lifecycle from selection through delivery.
+{brandText('Transform project scope into a managed procurement process. Identify all scope items, generate submittal registries, and tie materials to project milestones. JITpro tracks the entire lifecycle from selection through delivery.', 'slate', 'relative -top-[3px]')}
             </p>
           </div>
 
@@ -52,7 +53,7 @@ export default function Product() {
               Delay attribution
             </h2>
             <p className="text-lg text-slate-600 leading-relaxed">
-              When decisions miss deadlines, JITpro records the delay and who caused it. You have a timestamped record of exactly what happened and when.
+{brandText('When decisions miss deadlines, JITpro records the delay and who caused it. You have a timestamped record of exactly what happened and when.', 'slate', 'relative -top-[3px]')}
             </p>
           </div>
 
@@ -73,7 +74,7 @@ export default function Product() {
             Complements your existing tools
           </h2>
           <p className="text-lg text-slate-600 mb-10 leading-relaxed">
-            JITpro integrates with your current PM software. It doesn't replace what you use—it adds the forecasting and procurement control layer those tools don't provide.
+{brandText("JITpro integrates with your current PM software. It doesn't replace what you use—it adds the forecasting and procurement control layer those tools don't provide.", 'slate', 'relative -top-[3px]')}
           </p>
           <Link
             to="/how-it-works"

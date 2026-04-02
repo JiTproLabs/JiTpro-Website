@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { brandText } from './JiTproWordmark';
 
 const dropdowns = {
   howItWorks: {
@@ -68,7 +69,7 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-20">
           <Link to="/" className="flex items-center">
-            <img src={`${import.meta.env.BASE_URL}jitpro-logo_(1).svg`} alt="JITpro" className="h-12" />
+            <img src={`${import.meta.env.BASE_URL}assets/logo/JiTpro_Amber.svg`} alt="JITpro" className="h-28" />
           </Link>
 
           <div className="hidden lg:flex items-center gap-8">
@@ -92,7 +93,7 @@ export default function Navigation() {
                           : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    {dropdown.label}
+                    {brandText(dropdown.label)}
                     <ChevronDown size={14} className={`transition-transform ${openDesktop === key ? 'rotate-180' : ''}`} />
                   </button>
 
@@ -109,7 +110,7 @@ export default function Navigation() {
                                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                             }`}
                           >
-                            {item.label}
+                            {brandText(item.label)}
                           </Link>
                         ))}
                       </div>
@@ -150,7 +151,7 @@ export default function Navigation() {
                           : 'text-slate-600'
                     }`}
                   >
-                    {dropdown.label}
+                    {brandText(dropdown.label)}
                     <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {isOpen && (
@@ -164,7 +165,7 @@ export default function Navigation() {
                           }`}
                           onClick={() => setMobileMenuOpen(false)}
                         >
-                          {item.label}
+                          {brandText(item.label)}
                         </Link>
                       ))}
                     </div>

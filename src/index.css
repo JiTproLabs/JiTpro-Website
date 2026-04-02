@@ -11,6 +11,7 @@
     @apply antialiased;
     font-feature-settings: "kern" 1, "liga" 1;
     text-rendering: optimizeLegibility;
+    color: rgb(30, 41, 59);
   }
 
   h1, h2, h3, h4, h5, h6 {

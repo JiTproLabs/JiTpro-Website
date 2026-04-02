@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import JiTproWordmark, { brandText } from '../../components/JiTproWordmark';
 
 export default function ProjectManagers() {
   return (
@@ -10,10 +11,10 @@ export default function ProjectManagers() {
             Roles
           </p>
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-            JITpro for Project Managers &amp; Construction Managers
+            <JiTproWordmark variant="slate" /> for Project Managers &amp; Construction Managers
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed">
-            You manage the schedule, the budget, and the coordination between every party on the project. But procurement — the one area that causes the most schedule damage — is usually tracked in spreadsheets, emails, and memory. JITpro gives you a structured system to manage procurement timing before it becomes a crisis.
+{brandText('You manage the schedule, the budget, and the coordination between every party on the project. But procurement — the one area that causes the most schedule damage — is usually tracked in spreadsheets, emails, and memory. JITpro gives you a structured system to manage procurement timing before it becomes a crisis.')}
           </p>
         </div>
       </section>
@@ -71,25 +72,25 @@ export default function ProjectManagers() {
       <section className="px-6 py-16 bg-slate-50">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b-2 border-slate-200">
-            How JITpro helps
+            How <JiTproWordmark variant="slate" /> helps
           </h2>
           <div className="space-y-8">
             <div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Single view of all procurement</h3>
               <p className="text-lg text-slate-600 leading-relaxed">
-                JITpro consolidates every procurement item, submittal, approval, and decision into one system. You see the status of every item, who is responsible, and how much time remains — without chasing emails or updating spreadsheets.
+{brandText('JITpro consolidates every procurement item, submittal, approval, and decision into one system. You see the status of every item, who is responsible, and how much time remains — without chasing emails or updating spreadsheets.')}
               </p>
             </div>
             <div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Automated notifications and escalation</h3>
               <p className="text-lg text-slate-600 leading-relaxed">
-                JITpro sends advance notifications when deadlines are approaching and escalates items that are at risk. You do not have to remember what needs follow-up — the system handles it.
+{brandText('JITpro sends advance notifications when deadlines are approaching and escalates items that are at risk. You do not have to remember what needs follow-up — the system handles it.')}
               </p>
             </div>
             <div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Procurement schedule aligned to construction schedule</h3>
               <p className="text-lg text-slate-600 leading-relaxed">
-                JITpro ties procurement timing to actual installation dates. You see whether materials will arrive on time based on the current status of decisions and approvals — not based on hopeful assumptions in the schedule.
+{brandText('JITpro ties procurement timing to actual installation dates. You see whether materials will arrive on time based on the current status of decisions and approvals — not based on hopeful assumptions in the schedule.')}
               </p>
             </div>
             <div>
@@ -131,13 +132,13 @@ export default function ProjectManagers() {
             Manage procurement the way you manage the schedule
           </h2>
           <p className="text-lg text-slate-300 leading-relaxed mb-10 max-w-3xl mx-auto">
-            JITpro gives project managers the structure to control procurement timing, the automation to reduce manual tracking, and the documentation to protect the project when decisions drift.
+{brandText('JITpro gives project managers the structure to control procurement timing, the automation to reduce manual tracking, and the documentation to protect the project when decisions drift.', 'amber')}
           </p>
           <Link
             to="/how-it-works"
             className="inline-flex items-center gap-2 bg-white text-slate-900 px-8 py-4 text-lg font-medium hover:bg-slate-100 transition-colors"
           >
-            See how JITpro works
+            See how <JiTproWordmark variant="amber" /> works
             <ArrowRight size={20} />
           </Link>
         </div>

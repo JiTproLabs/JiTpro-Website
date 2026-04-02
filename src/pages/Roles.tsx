@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import JiTproWordmark, { brandText } from '../components/JiTproWordmark';
 
 const roles = [
   {
@@ -43,7 +44,7 @@ export default function Roles() {
             Built for your role
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed">
-            Every stakeholder on a construction project has a different relationship with procurement. JITpro gives each role the visibility, accountability, and documentation they need to protect the schedule and their position.
+{brandText('Every stakeholder on a construction project has a different relationship with procurement. JITpro gives each role the visibility, accountability, and documentation they need to protect the schedule and their position.')}
           </p>
         </div>
       </section>
@@ -62,7 +63,7 @@ export default function Roles() {
                     {role.title}
                   </h2>
                   <p className="text-lg text-slate-600 leading-relaxed">
-                    {role.description}
+                    {brandText(role.description)}
                   </p>
                 </div>
                 <ArrowRight className="text-slate-400 group-hover:text-amber-600 transition-colors flex-shrink-0 mt-1" size={24} />
@@ -84,7 +85,7 @@ export default function Roles() {
             to="/how-it-works"
             className="inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-4 text-lg font-medium hover:bg-slate-800 transition-colors"
           >
-            See how JITpro works
+            See how <JiTproWordmark variant="amber" /> works
             <ArrowRight size={20} />
           </Link>
         </div>

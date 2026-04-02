@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { submitContactForm } from './submitContact';
 import Turnstile from '../../components/Turnstile';
+import { brandText } from '../../components/JiTproWordmark';
 
 export default function ContractorContact() {
   const navigate = useNavigate();
@@ -93,7 +94,7 @@ export default function ContractorContact() {
             Let's Talk Procurement
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed mb-12">
-            Tell us about your project and how JITpro can help you get ahead of the job.
+            {brandText('Tell us about your project and how JITpro can help you get ahead of the job.')}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-12">

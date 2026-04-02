@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import JiTproWordmark, { brandText } from '../../components/JiTproWordmark';
 
 export default function Subcontractors() {
   return (
@@ -10,10 +11,10 @@ export default function Subcontractors() {
             Roles
           </p>
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-            JITpro for Subcontractors
+            <JiTproWordmark variant="slate" /> for Subcontractors
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed">
-            You are often the first to feel the impact of late procurement decisions — and the last to know they are coming. When materials do not show up on time, your crew sits idle, your schedule compresses, and your margin disappears. JITpro gives you visibility into the decisions that affect your work before they become problems.
+{brandText('You are often the first to feel the impact of late procurement decisions — and the last to know they are coming. When materials do not show up on time, your crew sits idle, your schedule compresses, and your margin disappears. JITpro gives you visibility into the decisions that affect your work before they become problems.')}
           </p>
         </div>
       </section>
@@ -71,31 +72,31 @@ export default function Subcontractors() {
       <section className="px-6 py-16 bg-slate-50">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b-2 border-slate-200">
-            How JITpro helps
+            How <JiTproWordmark variant="slate" /> helps
           </h2>
           <div className="space-y-8">
             <div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Visibility into your submittal status</h3>
               <p className="text-lg text-slate-600 leading-relaxed">
-                JITpro shows you where your submittals are in the review process, who is responsible for the next action, and how much time remains before a delay impacts your procurement timeline.
+{brandText('JITpro shows you where your submittals are in the review process, who is responsible for the next action, and how much time remains before a delay impacts your procurement timeline.')}
               </p>
             </div>
             <div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Early warning on upstream decisions</h3>
               <p className="text-lg text-slate-600 leading-relaxed">
-                If an owner selection or design decision that affects your scope is running behind, JITpro surfaces that risk early. You know about it before it becomes a compressed fabrication window.
+{brandText('If an owner selection or design decision that affects your scope is running behind, JITpro surfaces that risk early. You know about it before it becomes a compressed fabrication window.')}
               </p>
             </div>
             <div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Clear documentation of delay causes</h3>
               <p className="text-lg text-slate-600 leading-relaxed">
-                When procurement delays affect your work, JITpro records who caused the delay and when it occurred. If you are asked to accelerate due to someone else's late decision, you have documentation to support your position.
+{brandText("When procurement delays affect your work, JITpro records who caused the delay and when it occurred. If you are asked to accelerate due to someone else's late decision, you have documentation to support your position.")}
               </p>
             </div>
             <div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Coordination with other trades</h3>
               <p className="text-lg text-slate-600 leading-relaxed">
-                JITpro maps dependencies between trades so you can see how upstream procurement delays might affect your start date. Better visibility means fewer surprises when you are ready to mobilize.
+{brandText('JITpro maps dependencies between trades so you can see how upstream procurement delays might affect your start date. Better visibility means fewer surprises when you are ready to mobilize.')}
               </p>
             </div>
           </div>
@@ -131,13 +132,13 @@ export default function Subcontractors() {
             Stop absorbing the cost of someone else's late decision
           </h2>
           <p className="text-lg text-slate-300 leading-relaxed mb-10 max-w-3xl mx-auto">
-            JITpro gives subcontractors the visibility and documentation they need to protect their schedule, their margin, and their position when procurement decisions drift.
+{brandText('JITpro gives subcontractors the visibility and documentation they need to protect their schedule, their margin, and their position when procurement decisions drift.', 'amber')}
           </p>
           <Link
             to="/how-it-works"
             className="inline-flex items-center gap-2 bg-white text-slate-900 px-8 py-4 text-lg font-medium hover:bg-slate-100 transition-colors"
           >
-            See how JITpro works
+            See how <JiTproWordmark variant="amber" /> works
             <ArrowRight size={20} />
           </Link>
         </div>

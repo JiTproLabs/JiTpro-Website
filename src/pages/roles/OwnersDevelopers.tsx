@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import JiTproWordmark, { brandText } from '../../components/JiTproWordmark';
 
 export default function OwnersDevelopers() {
   return (
@@ -10,10 +11,10 @@ export default function OwnersDevelopers() {
             Roles
           </p>
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-            JITpro for Owners &amp; Developers
+            <JiTproWordmark variant="slate" /> for Owners &amp; Developers
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed">
-            Your decisions drive procurement. Material selections, finish approvals, equipment choices — these are owner decisions, and each one has a deadline tied to the construction schedule. JITpro makes those deadlines visible so you can make decisions on time instead of finding out after the fact that a delay started with you.
+{brandText('Your decisions drive procurement. Material selections, finish approvals, equipment choices — these are owner decisions, and each one has a deadline tied to the construction schedule. JITpro makes those deadlines visible so you can make decisions on time instead of finding out after the fact that a delay started with you.')}
           </p>
         </div>
       </section>
@@ -71,13 +72,13 @@ export default function OwnersDevelopers() {
       <section className="px-6 py-16 bg-slate-50">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b-2 border-slate-200">
-            How JITpro helps
+            How <JiTproWordmark variant="slate" /> helps
           </h2>
           <div className="space-y-8">
             <div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Decisions prioritized by schedule impact</h3>
               <p className="text-lg text-slate-600 leading-relaxed">
-                JITpro shows you which of your pending decisions are tied to critical path materials and long-lead items. You see what needs to happen now versus what has more runway — so your time goes where it matters most.
+{brandText('JITpro shows you which of your pending decisions are tied to critical path materials and long-lead items. You see what needs to happen now versus what has more runway — so your time goes where it matters most.')}
               </p>
             </div>
             <div>
@@ -89,7 +90,7 @@ export default function OwnersDevelopers() {
             <div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Visibility into the full procurement chain</h3>
               <p className="text-lg text-slate-600 leading-relaxed">
-                JITpro shows you the complete path from your decision to material delivery. You understand the downstream impact of your choices — not just the approval itself, but the fabrication, shipping, and installation that follows.
+{brandText('JITpro shows you the complete path from your decision to material delivery. You understand the downstream impact of your choices — not just the approval itself, but the fabrication, shipping, and installation that follows.')}
               </p>
             </div>
             <div>
@@ -131,7 +132,7 @@ export default function OwnersDevelopers() {
             Know which decisions matter most — and when they are due
           </h2>
           <p className="text-lg text-slate-300 leading-relaxed mb-10 max-w-3xl mx-auto">
-            JITpro gives owners the visibility to make timely procurement decisions and the documentation to prove it. Your decisions drive the schedule — make sure you know when they are needed.
+{brandText('JITpro gives owners the visibility to make timely procurement decisions and the documentation to prove it. Your decisions drive the schedule — make sure you know when they are needed.', 'amber')}
           </p>
           <Link
             to="/contact/owner"

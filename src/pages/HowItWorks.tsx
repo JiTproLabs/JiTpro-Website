@@ -1,3 +1,5 @@
+import JiTproWordmark, { brandText } from '../components/JiTproWordmark';
+
 export default function HowItWorks() {
   const steps = [
     {
@@ -32,7 +34,7 @@ export default function HowItWorks() {
       <section className="px-6 py-20 md:py-28">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-            How JITpro works
+            How <JiTproWordmark variant="slate" /> works
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed">
             Transform scope into a managed procurement lifecycle. Forecast timing by working backward from install dates. Enforce accountability at every step.
@@ -54,7 +56,7 @@ export default function HowItWorks() {
                   {step.title}
                 </h2>
                 <p className="text-lg text-slate-600 leading-relaxed">
-                  {step.description}
+                  {brandText(step.description)}
                 </p>
               </div>
             </div>
@@ -68,10 +70,10 @@ export default function HowItWorks() {
             Simple to implement
           </h2>
           <p className="text-lg text-slate-600 leading-relaxed mb-8">
-            JITpro integrates with your existing workflow. No process overhaul. Just add the control and accountability layer that prevents schedule delays.
+{brandText('JITpro integrates with your existing workflow. No process overhaul. Just add the control and accountability layer that prevents schedule delays.')}
           </p>
           <p className="text-lg text-slate-600 leading-relaxed">
-            Your team continues working as they do today. JITpro simply enforces the timing and documentation that keeps projects on schedule.
+{brandText('Your team continues working as they do today. JITpro simply enforces the timing and documentation that keeps projects on schedule.')}
           </p>
         </div>
       </section>
