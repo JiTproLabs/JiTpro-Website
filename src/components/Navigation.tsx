@@ -1,7 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { brandText } from './JiTproWordmark';
 
 const dropdowns = {
   howItWorks: {
@@ -65,7 +64,7 @@ export default function Navigation() {
   }, [location.pathname]);
 
   return (
-    <nav className="border-b border-slate-200 bg-white sticky top-0 z-50">
+    <nav className="border-b border-slate-700 bg-slate-800 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-20">
           <Link to="/" className="flex items-center">
@@ -87,30 +86,30 @@ export default function Navigation() {
                   <button
                     className={`text-sm font-medium transition-colors inline-flex items-center gap-1 ${
                       isDemo
-                        ? 'bg-slate-900 text-white px-6 py-2.5 hover:bg-slate-800'
+                        ? 'bg-amber-500 text-slate-900 px-6 py-2.5 hover:bg-amber-400'
                         : isDropdownActive(key)
-                          ? 'text-slate-900'
-                          : 'text-slate-600 hover:text-slate-900'
+                          ? 'text-white'
+                          : 'text-slate-300 hover:text-white'
                     }`}
                   >
-                    {brandText(dropdown.label)}
+                    {dropdown.label}
                     <ChevronDown size={14} className={`transition-transform ${openDesktop === key ? 'rotate-180' : ''}`} />
                   </button>
 
                   {openDesktop === key && (
                     <div className="absolute top-full left-0 pt-2 z-50">
-                      <div className="w-64 bg-white border border-slate-200 rounded-lg shadow-lg py-2">
+                      <div className="w-64 bg-slate-700 border border-slate-600 rounded-lg shadow-lg py-2">
                         {dropdown.items.map((item) => (
                           <Link
                             key={item.to}
                             to={item.to}
                             className={`block px-4 py-2.5 text-sm transition-colors ${
                               isActive(item.to)
-                                ? 'text-amber-600 bg-amber-50'
-                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                                ? 'text-amber-500 bg-slate-600'
+                                : 'text-slate-300 hover:text-white hover:bg-slate-600'
                             }`}
                           >
-                            {brandText(item.label)}
+                            {item.label}
                           </Link>
                         ))}
                       </div>
@@ -122,7 +121,7 @@ export default function Navigation() {
           </div>
 
           <button
-            className="lg:hidden text-slate-900"
+            className="lg:hidden text-slate-300"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -132,7 +131,7 @@ export default function Navigation() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-200 bg-white">
+        <div className="lg:hidden border-t border-slate-700 bg-slate-800">
           <div className="px-6 py-4 space-y-1">
             {dropdownKeys.map((key) => {
               const dropdown = dropdowns[key];
@@ -145,13 +144,13 @@ export default function Navigation() {
                     onClick={() => setOpenMobile(isOpen ? null : key)}
                     className={`flex items-center justify-between w-full py-2 text-base font-medium ${
                       isDemo
-                        ? 'bg-slate-900 text-white px-6 py-3 text-center hover:bg-slate-800 transition-colors mt-4'
+                        ? 'bg-amber-500 text-slate-900 px-6 py-3 text-center hover:bg-amber-400 transition-colors mt-4'
                         : isDropdownActive(key)
-                          ? 'text-slate-900'
-                          : 'text-slate-600'
+                          ? 'text-white'
+                          : 'text-slate-300'
                     }`}
                   >
-                    {brandText(dropdown.label)}
+                    {dropdown.label}
                     <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {isOpen && (
@@ -161,11 +160,11 @@ export default function Navigation() {
                           key={item.to}
                           to={item.to}
                           className={`block py-1.5 text-sm ${
-                            isActive(item.to) ? 'text-amber-600 font-medium' : 'text-slate-600'
+                            isActive(item.to) ? 'text-amber-500 font-medium' : 'text-slate-400'
                           }`}
                           onClick={() => setMobileMenuOpen(false)}
                         >
-                          {brandText(item.label)}
+                          {item.label}
                         </Link>
                       ))}
                     </div>

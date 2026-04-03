@@ -1,6 +1,6 @@
 import { ArrowRight, Clock, FileCheck, GitBranch, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import JiTproWordmark, { brandText } from '../components/JiTproWordmark';
+import JiTproWordmark from '../components/JiTproWordmark';
 
 const problemPoints = [
   {
@@ -140,7 +140,7 @@ export default function Home() {
               to="/how-it-works"
               className="inline-flex items-center gap-2 bg-white text-slate-900 px-8 py-4 text-lg font-medium hover:bg-slate-100 transition-colors"
             >
-              See how <JiTproWordmark variant="slate" /> works
+              See how JiTpro works
               <ArrowRight size={20} />
             </Link>
 
@@ -190,10 +190,10 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
-              What <JiTproWordmark variant="slate" /> does
+              What JiTpro does
             </h2>
             <p className="text-lg text-slate-600 leading-relaxed">
-{brandText('JiTpro maps procurement workflows across the project and identifies timing risks early. It tracks the information the team needs to keep procurement on schedule.')}
+JiTpro maps procurement workflows across the project and identifies timing risks early. It tracks the information the team needs to keep procurement on schedule.
             </p>
           </div>
 
@@ -222,10 +222,10 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
-              How <JiTproWordmark variant="slate" /> works
+              How JiTpro works
             </h2>
             <p className="text-lg text-slate-600 leading-relaxed">
-{brandText('JiTpro maps the complete procurement sequence backwards from required onsite dates to ensure materials arrive when needed. Every item follows this chain.')}
+JiTpro maps the complete procurement sequence backwards from required onsite dates to ensure materials arrive when needed. Every item follows this chain.
             </p>
           </div>
 
@@ -263,7 +263,7 @@ export default function Home() {
               Built for general contractors. Essential to the entire project team.
             </h2>
             <p className="text-lg text-slate-600 leading-relaxed">
-{brandText('JiTpro is built for the GC managing procurement risk. When the GC uses it, every stakeholder on the project benefits.')}
+JiTpro is built for the GC managing procurement risk. When the GC uses it, every stakeholder on the project benefits.
             </p>
           </div>
 
@@ -271,7 +271,7 @@ export default function Home() {
             {audiences.map((item) => (
               <Link key={item.title} to={item.to} className="border border-slate-200 rounded-xl p-8 bg-white hover:border-slate-400 transition-colors group block">
                 <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-amber-600 transition-colors">{item.title}</h3>
-                <p className="text-slate-600 leading-relaxed">{brandText(item.description)}</p>
+                <p className="text-slate-600 leading-relaxed">{item.description}</p>
               </Link>
             ))}
           </div>
@@ -281,7 +281,7 @@ export default function Home() {
               to="/roles"
               className="inline-flex items-center gap-2 text-slate-900 font-medium text-lg hover:text-amber-600 transition-colors"
             >
-              See who <JiTproWordmark variant="slate" /> is built for
+              See who JiTpro is built for
               <ArrowRight size={20} />
             </Link>
           </div>
@@ -295,13 +295,13 @@ export default function Home() {
               Works with the tools you already use
             </h2>
             <p className="text-lg text-slate-300 leading-relaxed mb-8">
-{brandText('JiTpro adds procurement visibility to your existing workflow. No process overhaul required.', 'amber')}
+JiTpro adds procurement visibility to your existing workflow. No process overhaul required.
             </p>
             <Link
               to="/product"
               className="inline-flex items-center gap-2 text-amber-300 font-medium text-lg hover:text-amber-200 transition-colors"
             >
-              See what <JiTproWordmark variant="amber" /> enables
+              See what JiTpro enables
               <ArrowRight size={20} />
             </Link>
           </div>
@@ -311,7 +311,7 @@ export default function Home() {
               Built from construction experience
             </h2>
             <p className="text-lg text-slate-300 leading-relaxed mb-8">
-{brandText('JiTpro was built because procurement decisions happen too late on too many projects. The goal is simple — make constraints visible while there is still time to act.', 'amber')}
+JiTpro was built because procurement decisions happen too late on too many projects. The goal is simple — make constraints visible while there is still time to act.
             </p>
             <Link
               to="/about"
@@ -346,7 +346,7 @@ export default function Home() {
               to="/why"
               className="inline-flex items-center gap-2 border border-slate-300 text-slate-900 px-8 py-4 text-lg font-medium hover:border-slate-900 transition-colors"
             >
-              Why <JiTproWordmark variant="slate" /> exists
+              Why JiTpro exists
             </Link>
           </div>
         </div>

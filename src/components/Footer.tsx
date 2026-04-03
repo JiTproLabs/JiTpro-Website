@@ -27,7 +27,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link to="/product" className="text-slate-600 hover:text-slate-900 transition-colors">
-                  What <JiTproWordmark variant="slate" /> enables
+                  What JiTpro enables
                 </Link>
               </li>
               <li>
@@ -74,7 +74,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link to="/why" className="text-slate-600 hover:text-slate-900 transition-colors">
-                  Why <JiTproWordmark variant="slate" />
+                  Why JiTpro
                 </Link>
               </li>
               <li>
@@ -93,7 +93,7 @@ export default function Footer() {
 
         <div className="pt-8 border-t border-slate-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <p className="text-sm text-slate-600">
-            © {new Date().getFullYear()} <JiTproWordmark variant="slate" />. Schedule certainty through procurement intelligence.
+            © {new Date().getFullYear()} JiTpro. Schedule certainty through procurement intelligence.
           </p>
           <Link
             to="/investor"

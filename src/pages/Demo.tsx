@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import JiTproWordmark, { brandText } from '../components/JiTproWordmark';
 
 export default function Demo() {
   const [formData, setFormData] = useState({
@@ -59,7 +58,7 @@ export default function Demo() {
             Request received
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed">
-            We'll contact you within one business day to schedule your demonstration of <JiTproWordmark variant="slate" />.
+            We'll contact you within one business day to schedule your demonstration of JiTpro.
           </p>
         </div>
       </div>
@@ -74,7 +73,7 @@ export default function Demo() {
             Request a demonstration
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed mb-12">
-{brandText('See how JITpro enforces procurement timing and maintains accountability across your projects.')}
+See how JiTpro enforces procurement timing and maintains accountability across your projects.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -180,7 +179,7 @@ export default function Demo() {
               What you'll see
             </h3>
             <ul className="space-y-3 text-lg text-slate-600">
-              <li>{brandText('How JITpro enforces procurement decision deadlines')}</li>
+              <li>How JiTpro enforces procurement decision deadlines</li>
               <li>Approval routing and accountability tracking</li>
               <li>Delay attribution and locked audit trails</li>
               <li>Implementation process for your organization</li>

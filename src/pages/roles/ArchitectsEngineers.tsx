@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import JiTproWordmark, { brandText } from '../../components/JiTproWordmark';
 
 export default function ArchitectsEngineers() {
   return (
@@ -11,10 +10,10 @@ export default function ArchitectsEngineers() {
             Roles
           </p>
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-            <JiTproWordmark variant="slate" /> for Architects &amp; Engineers
+            JiTpro for Architects &amp; Engineers
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed">
-{brandText('Your review and approval decisions directly affect whether materials get ordered on time. But most of the time, you are reviewing submittals without knowing which ones are schedule-critical and which ones can wait. JITpro changes that.')}
+Your review and approval decisions directly affect whether materials get ordered on time. But most of the time, you are reviewing submittals without knowing which ones are schedule-critical and which ones can wait. JiTpro changes that.
           </p>
         </div>
       </section>
@@ -72,25 +71,25 @@ export default function ArchitectsEngineers() {
       <section className="px-6 py-16 bg-slate-50">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b-2 border-slate-200">
-            How <JiTproWordmark variant="slate" /> helps
+            How JiTpro helps
           </h2>
           <div className="space-y-8">
             <div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Prioritized review queues</h3>
               <p className="text-lg text-slate-600 leading-relaxed">
-{brandText('JITpro shows you which submittals are tied to critical path procurement and which ones have more runway. You review the items that matter most to the schedule first — not the ones that happen to land on your desk first.')}
+JiTpro shows you which submittals are tied to critical path procurement and which ones have more runway. You review the items that matter most to the schedule first — not the ones that happen to land on your desk first.
               </p>
             </div>
             <div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Deadlines tied to real procurement timing</h3>
               <p className="text-lg text-slate-600 leading-relaxed">
-{brandText('Instead of generic contractual review windows, JITpro provides deadlines based on actual material lead times and required onsite dates. You see exactly when your review must be complete to avoid a schedule impact.')}
+Instead of generic contractual review windows, JiTpro provides deadlines based on actual material lead times and required onsite dates. You see exactly when your review must be complete to avoid a schedule impact.
               </p>
             </div>
             <div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Visibility into upstream dependencies</h3>
               <p className="text-lg text-slate-600 leading-relaxed">
-{brandText('When a submittal cannot be approved because a design decision is pending or an owner selection is missing, JITpro makes that visible. The gap is documented — not assumed to be a review delay.')}
+When a submittal cannot be approved because a design decision is pending or an owner selection is missing, JiTpro makes that visible. The gap is documented — not assumed to be a review delay.
               </p>
             </div>
             <div>
@@ -132,7 +131,7 @@ export default function ArchitectsEngineers() {
             Review what matters. Document what happened.
           </h2>
           <p className="text-lg text-slate-300 leading-relaxed mb-10 max-w-3xl mx-auto">
-{brandText('JITpro gives your team the context to prioritize reviews and the documentation to protect your position. You focus on design intent. JITpro handles the procurement timing.', 'amber')}
+JiTpro gives your team the context to prioritize reviews and the documentation to protect your position. You focus on design intent. JiTpro handles the procurement timing.
           </p>
           <Link
             to="/contact/architect"

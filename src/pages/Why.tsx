@@ -1,4 +1,4 @@
-import JiTproWordmark, { brandText } from '../components/JiTproWordmark';
+import JiTproWordmark from '../components/JiTproWordmark';
 
 export default function Why() {
   return (
@@ -202,7 +202,7 @@ export default function Why() {
 
             {/* Sequenced column */}
             <div className="bg-blue-50 rounded-lg p-6">
-              <h3 className="text-xl font-bold text-slate-900 mb-4">Sequenced Project (<JiTproWordmark variant="slate" />)</h3>
+              <h3 className="text-xl font-bold text-slate-900 mb-4">Sequenced Project (JiTpro)</h3>
               <ul className="text-lg text-slate-600 leading-relaxed mb-4 list-disc list-inside space-y-2">
                 <li>Questions are surfaced early</li>
                 <li>Every question is aligned to when it must be answered</li>
@@ -275,10 +275,10 @@ export default function Why() {
       <section className="px-6 py-16">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6">
-            This is where <JiTproWordmark variant="slate" /> comes in
+            This is where JiTpro comes in
           </h2>
           <p className="text-lg text-slate-600 leading-relaxed mb-4">
-{brandText('JiTpro\u2014Just in Time Procurement\u2014exists to change how projects start.')}
+JiTpro—Just in Time Procurement—exists to change how projects start.
           </p>
           <p className="text-lg text-slate-600 leading-relaxed mb-4">
             It doesn't just track procurement.
@@ -299,7 +299,7 @@ export default function Why() {
             So they don't show up later as urgency.
           </p>
           <p className="text-lg text-slate-600 leading-relaxed mb-1">
-{brandText("JiTpro doesn't just track what needs to be answered.")}
+JiTpro doesn't just track what needs to be answered.
           </p>
           <p className="text-lg text-slate-600 leading-relaxed mb-4 font-semibold">
             It defines exactly when each answer is required.

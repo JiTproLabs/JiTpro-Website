@@ -1,4 +1,3 @@
-import { brandText } from '../components/JiTproWordmark';
 
 export default function Documentation() {
   return (
@@ -9,7 +8,7 @@ export default function Documentation() {
             Documentation &amp; Risk
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed">
-{brandText('JITpro creates a complete, timestamped record of every procurement decision. When disputes arise, you have facts instead of arguments.')}
+JiTpro creates a complete, timestamped record of every procurement decision. When disputes arise, you have facts instead of arguments.
           </p>
         </div>
       </section>
@@ -36,7 +35,7 @@ export default function Documentation() {
               Track the full lifecycle of every procurement item. When was it identified? When was approval requested? How long did the decision take?
             </p>
             <p className="text-lg text-slate-600 leading-relaxed">
-{brandText('If revisions occurred, JITpro shows what changed, who requested it, and when. Complete visibility into how decisions evolved.')}
+If revisions occurred, JiTpro shows what changed, who requested it, and when. Complete visibility into how decisions evolved.
             </p>
           </div>
 
@@ -45,7 +44,7 @@ export default function Documentation() {
               Delay attribution
             </h2>
             <p className="text-lg text-slate-600 leading-relaxed mb-4">
-{brandText("When deadlines are missed, JITpro records who caused the delay and by how many days. This isn't blame, it's documentation.")}
+When deadlines are missed, JiTpro records who caused the delay and by how many days. This isn't blame, it's documentation.
             </p>
             <p className="text-lg text-slate-600 leading-relaxed">
               If a schedule slips because of late approvals, you have proof of when decisions were requested and when they were finally made.
@@ -57,7 +56,7 @@ export default function Documentation() {
               Claims and dispute readiness
             </h2>
             <p className="text-lg text-slate-600 leading-relaxed mb-4">
-{brandText('Construction disputes often center on timing: who knew what and when. JITpro provides an immutable record that answers these questions.')}
+Construction disputes often center on timing: who knew what and when. JiTpro provides an immutable record that answers these questions.
             </p>
             <p className="text-lg text-slate-600 leading-relaxed">
               Whether it's a delay claim, a change order dispute, or schedule impact analysis, you have documented proof of procurement timing and accountability.
@@ -72,7 +71,7 @@ export default function Documentation() {
             Legally defensible documentation
           </h2>
           <p className="text-lg text-slate-600 leading-relaxed mb-8">
-{brandText('Executives need assurance that schedule risks are controlled and disputes are defensible. JITpro provides both through immutable records and clear accountability.')}
+Executives need assurance that schedule risks are controlled and disputes are defensible. JiTpro provides both through immutable records and clear accountability.
           </p>
           <p className="text-lg text-slate-600 leading-relaxed">
             See procurement status in real time. Know who's responsible for pending decisions. Have legally defensible documentation if disputes arise. Eliminate preventable procurement delays through enforced timing.

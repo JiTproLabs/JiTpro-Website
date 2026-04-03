@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronDown, Eye, Settings, Shield } from 'lucide-react';
-import JiTproWordmark, { brandText } from '../../components/JiTproWordmark';
 
 function AccordionCard({
   icon,
@@ -26,7 +25,7 @@ function AccordionCard({
           <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
             {icon}
           </div>
-          <h3 className="text-xl font-bold text-slate-900">{brandText(title)}</h3>
+          <h3 className="text-xl font-bold text-slate-900">{title}</h3>
         </div>
         <ChevronDown
           size={20}
@@ -64,7 +63,7 @@ export default function GeneralContractors() {
             Get Ahead of the Job<br />Before It Gets Ahead of You
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed mb-8">
-{brandText('When procurement breaks down early, the damage spreads far beyond material dates. Schedules slip, teams go reactive, quality gets compressed, and credibility with owners and consultants erodes. JITpro gives general contractors a Day One procurement execution framework that supports the schedule and protects the health of the entire project environment.')}
+When procurement breaks down early, the damage spreads far beyond material dates. Schedules slip, teams go reactive, quality gets compressed, and credibility with owners and consultants erodes. JiTpro gives general contractors a Day One procurement execution framework that supports the schedule and protects the health of the entire project environment.
           </p>
           <div className="space-y-3">
             {[
@@ -140,7 +139,7 @@ export default function GeneralContractors() {
       <section className="px-6 py-16 bg-slate-50">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b-2 border-slate-200">
-            What <JiTproWordmark variant="slate" /> delivers
+            What JiTpro delivers
           </h2>
           <div className="space-y-4">
             <AccordionCard
@@ -164,7 +163,7 @@ export default function GeneralContractors() {
             />
             <AccordionCard
               icon={<Shield size={20} />}
-              title="What JITpro protects"
+              title="What JiTpro protects"
               bullets={[
                 'Schedule stability before field pressure compounds',
                 'A healthier, less reactive project environment',
@@ -211,11 +210,11 @@ export default function GeneralContractors() {
       <section className="px-6 py-16 bg-slate-50">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b-2 border-slate-200">
-            <JiTproWordmark variant="slate" /> replaces reaction with structure
+            JiTpro replaces reaction with structure
           </h2>
           <div className="space-y-6">
             <p className="text-lg text-slate-600 leading-relaxed">
-{brandText('Before field pressure begins, JITpro creates a procurement control system that turns unresolved information into managed schedule constraints. That structure does more than protect procurement. It helps preserve a healthier execution environment across the project.')}
+Before field pressure begins, JiTpro creates a procurement control system that turns unresolved information into managed schedule constraints. That structure does more than protect procurement. It helps preserve a healthier execution environment across the project.
             </p>
             <div className="space-y-3">
               {[
@@ -269,7 +268,7 @@ export default function GeneralContractors() {
             Control before construction
           </h2>
           <p className="text-lg text-slate-300 leading-relaxed mb-4 max-w-3xl mx-auto">
-{brandText('You would never build without a schedule. You should never build without a procurement execution plan. JITpro gives general contractors the structure to capture project constraints on Day One, stabilize the schedule before field pressure begins, and protect the health of the project environment as execution ramps up.', 'amber')}
+You would never build without a schedule. You should never build without a procurement execution plan. JiTpro gives general contractors the structure to capture project constraints on Day One, stabilize the schedule before field pressure begins, and protect the health of the project environment as execution ramps up.
           </p>
           <p className="text-slate-400 mb-10">
             A healthier project starts with better procurement control.
