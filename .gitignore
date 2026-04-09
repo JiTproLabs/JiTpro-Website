@@ -8,3 +8,9 @@ dist/
 .env
 .env.local
 .env.*.local
+
+# Claude Code
+.claude/
+
+# Supabase temp
+supabase/.temp/

@@ -78,7 +78,7 @@ export const investorCopy = {
     },
     scale: {
       title: 'U.S. construction at scale',
-      body: 'The U.S. construction industry represents nearly $2 trillion in annual spending. Residential construction alone accounts for approximately $890 billion. This is not a niche market — it is one of the largest sectors in the U.S. economy, and one of the least digitized.',
+      body: 'The U.S. construction industry represents nearly $2 trillion in annual spending, with residential construction accounting for approximately $890 billion. While enterprise contractors have adopted project management platforms, the small-to-mid-sized GCs that dominate the market still manage procurement through spreadsheets, email, and manual coordination—leaving the most schedule-critical phase of construction largely unmanaged.',
     },
     segmentSpend: {
       title: 'Relevant segment spend',

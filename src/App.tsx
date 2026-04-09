@@ -26,6 +26,7 @@ import WhyNow from './pages/investor/WhyNow';
 import InvestorProduct from './pages/investor/InvestorProduct';
 import EconomicCase from './pages/investor/EconomicCase';
 import InvestorAppendix from './pages/investor/InvestorAppendix';
+import InvestorDeckPage from './pages/investor/InvestorDeckPage';
 import MainLayout from './components/MainLayout';
 import Admin from './pages/Admin';
 import AdminApproved from './pages/AdminApproved';
@@ -48,6 +49,7 @@ function App() {
           <Route path="product" element={<InvestorProduct />} />
           <Route path="economics" element={<EconomicCase />} />
           <Route path="appendix" element={<InvestorAppendix />} />
+          <Route path="deck" element={<InvestorDeckPage />} />
         </Route>
 
         {/* Main site */}
