@@ -5,20 +5,59 @@ const painPoints = [
   {
     to: '/roles/general-contractors',
     role: 'General Contractors',
-    headline: 'You commit to a schedule before procurement constraints are fully known.',
-    body: "Missing design and specifications, unclear ownership, and undefined delivery dates show up later — and now you're chasing the job.",
+    headline: "You're losing money on jobs before they even start.",
+    body: (
+      <>
+        <p>
+          You commit to a schedule without fully knowing what it will take to actually procure the work.
+        </p>
+        <div className="mt-4 space-y-1">
+          <p>Missing design.</p>
+          <p>Undefined decisions.</p>
+          <p>Unclear ownership.</p>
+        </div>
+        <p className="mt-4">
+          It all shows up later — and now you're chasing the job, paying for it in change orders, expediting, and lost margin.
+        </p>
+      </>
+    ),
   },
   {
     to: '/roles/owners-developers',
     role: 'Owners / Developers',
-    headline: "You're promised a schedule no one can actually stand behind.",
-    body: 'The project looks controlled early until long-lead items and late decisions start pushing the schedule out.',
+    headline: (
+      <>
+        Projects don't spiral late.
+        <br />
+        They spiral early—when no one is in control.
+      </>
+    ),
+    body: (
+      <>
+        <div className="space-y-1">
+          <p>Schedules slip.</p>
+          <p>Change orders stack.</p>
+          <p>Decisions become urgent.</p>
+          <p>And the project starts running you.</p>
+        </div>
+        <p className="mt-4 font-medium text-slate-900">
+          JiTpro brings control in early—before things break.
+        </p>
+        <div className="mt-4 space-y-1">
+          <p>Identify decisions before they become urgent</p>
+          <p>Sequence procurement before delays start</p>
+          <p>Build the schedule from real constraints</p>
+        </div>
+      </>
+    ),
   },
   {
     to: '/roles/architects-engineers',
     role: 'Architects / Engineers',
     headline: 'Design continues during procurement — but no one owns the timing.',
-    body: 'Submittals become the place where design gets finished instead of verified.',
+    body: (
+      <p>Submittals become the place where design gets finished instead of verified.</p>
+    ),
   },
 ];
 
@@ -80,7 +119,7 @@ export default function Home() {
               <Link
                 key={item.role}
                 to={item.to}
-                className="border border-slate-200 rounded-xl p-8 bg-white hover:border-slate-400 transition-colors group block"
+                className="border border-slate-200 rounded-xl p-8 bg-white hover:border-slate-400 transition-colors group flex flex-col h-full"
               >
                 <p className="text-sm font-semibold uppercase tracking-[0.15em] text-amber-600 mb-4">
                   {item.role}
@@ -88,8 +127,8 @@ export default function Home() {
                 <h3 className="text-xl font-bold text-slate-900 mb-4 leading-snug group-hover:text-amber-700 transition-colors">
                   {item.headline}
                 </h3>
-                <p className="text-slate-600 leading-relaxed mb-6">{item.body}</p>
-                <span className="inline-flex items-center gap-2 text-slate-900 font-medium group-hover:text-amber-600 transition-colors">
+                <div className="text-slate-600 leading-relaxed mb-6">{item.body}</div>
+                <span className="inline-flex items-center gap-2 text-slate-900 font-medium group-hover:text-amber-600 transition-colors mt-auto">
                   Read more
                   <ArrowRight size={18} />
                 </span>
