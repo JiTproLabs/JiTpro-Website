@@ -80,28 +80,18 @@ export default function Home() {
 
         <div className="relative z-10 max-w-5xl mx-auto text-center">
           <p className="text-sm md:text-base font-semibold uppercase tracking-[0.2em] text-amber-300 mb-8 leading-relaxed">
-            Construction schedules don't break in the field.
+            $31.2B is lost to construction rework every year.
             <br />
-            They break in procurement.
+            Is some of it in your projects?
           </p>
 
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-8 tracking-tight leading-[1.05]">
             Control Before You Build.
           </h1>
 
-          <p className="text-xl md:text-2xl text-slate-200 mb-12 leading-relaxed">
-            Protect the schedule. Protect the margin.
+          <p className="text-xl md:text-2xl text-slate-200 leading-relaxed">
+            JiTpro reveals and sequences the procurement constraints your schedule depends on—before they cost you.
           </p>
-
-          <div className="flex items-center justify-center">
-            <Link
-              to="/how-it-works"
-              className="inline-flex items-center gap-2 bg-white text-slate-900 px-8 py-4 text-lg font-medium hover:bg-slate-100 transition-colors"
-            >
-              See how it works
-              <ArrowRight size={20} />
-            </Link>
-          </div>
         </div>
       </section>
 
