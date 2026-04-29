@@ -93,7 +93,7 @@ export default function Footer() {
 
         <div className="pt-8 border-t border-slate-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <p className="text-sm text-slate-600">
-            © {new Date().getFullYear()} JiTpro. Schedule certainty through procurement intelligence.
+            © {new Date().getFullYear()} JiTpro. Schedule certainty through procurement automation.
           </p>
           <Link
             to="/investor"
