@@ -30,6 +30,7 @@ import InvestorDeckPage from './pages/investor/InvestorDeckPage';
 import MainLayout from './components/MainLayout';
 import Admin from './pages/Admin';
 import AdminApproved from './pages/AdminApproved';
+import BrokenBeforeJobStarts from './pages/BrokenBeforeJobStarts';
 
 function App() {
   return (
@@ -39,6 +40,9 @@ function App() {
         {/* Admin — no layout wrapper */}
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin/approved" element={<AdminApproved />} />
+
+        {/* Unlisted LinkedIn landing page — standalone, not in main nav */}
+        <Route path="/broken-before-the-job-starts" element={<BrokenBeforeJobStarts />} />
 
         {/* Investor sub-site — own nav/footer */}
         <Route path="/investor" element={<InvestorLayout />}>
