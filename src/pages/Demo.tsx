@@ -86,6 +86,7 @@ See how JiTpro enforces procurement timing and maintains accountability across y
                 id="name"
                 name="name"
                 required
+                autoComplete="name"
                 value={formData.name}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border-2 border-slate-300 text-slate-900 focus:border-slate-900 focus:outline-none text-lg"
@@ -101,6 +102,7 @@ See how JiTpro enforces procurement timing and maintains accountability across y
                 id="company"
                 name="company"
                 required
+                autoComplete="organization"
                 value={formData.company}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border-2 border-slate-300 text-slate-900 focus:border-slate-900 focus:outline-none text-lg"
@@ -116,6 +118,7 @@ See how JiTpro enforces procurement timing and maintains accountability across y
                 id="email"
                 name="email"
                 required
+                autoComplete="email"
                 value={formData.email}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border-2 border-slate-300 text-slate-900 focus:border-slate-900 focus:outline-none text-lg"
@@ -131,6 +134,7 @@ See how JiTpro enforces procurement timing and maintains accountability across y
                 id="phone"
                 name="phone"
                 required
+                autoComplete="tel"
                 value={formData.phone}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border-2 border-slate-300 text-slate-900 focus:border-slate-900 focus:outline-none text-lg"

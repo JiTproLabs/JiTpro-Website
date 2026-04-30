@@ -196,24 +196,24 @@ export default function ContractorContact() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="firstName" className={labelClass}>First Name *</label>
-                    <input type="text" id="firstName" required value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} />
+                    <input type="text" id="firstName" required autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} />
                   </div>
                   <div>
                     <label htmlFor="lastName" className={labelClass}>Last Name *</label>
-                    <input type="text" id="lastName" required value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} />
+                    <input type="text" id="lastName" required autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} />
                   </div>
                 </div>
                 <div>
                   <label htmlFor="email" className={labelClass}>Email *</label>
-                  <input type="email" id="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
+                  <input type="email" id="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
                 </div>
                 <div>
                   <label htmlFor="phone" className={labelClass}>Phone</label>
-                  <input type="tel" id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />
+                  <input type="tel" id="phone" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />
                 </div>
                 <div>
                   <label htmlFor="company" className={labelClass}>Company / Organization</label>
-                  <input type="text" id="company" value={company} onChange={(e) => setCompany(e.target.value)} className={inputClass} />
+                  <input type="text" id="company" autoComplete="organization" value={company} onChange={(e) => setCompany(e.target.value)} className={inputClass} />
                 </div>
               </div>
             </div>
