@@ -9,7 +9,7 @@ export default function Footer() {
           <div>
             <h3 className="text-xl font-bold text-slate-900 mb-4"><JiTproWordmark variant="slate" /></h3>
             <p className="text-slate-600 leading-relaxed mb-4">
-              Procurement intelligence for construction schedule control.
+              Procurement control for construction schedule certainty.
             </p>
             <a
               href="https://www.linkedin.com/in/jeff-kaufman"
@@ -87,13 +87,18 @@ export default function Footer() {
                   About
                 </Link>
               </li>
+              <li>
+                <Link to="/faq" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  FAQ
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
 
         <div className="pt-8 border-t border-slate-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <p className="text-sm text-slate-600">
-            © {new Date().getFullYear()} JiTpro. Schedule certainty through procurement automation.
+            © {new Date().getFullYear()} JiTpro. Schedule certainty through procurement control.
           </p>
           <Link
             to="/investor"

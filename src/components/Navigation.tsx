@@ -16,6 +16,7 @@ const dropdowns = {
     items: [
       { to: '/why', label: 'Why JiTpro' },
       { to: '/documentation', label: 'Documentation & Risk' },
+      { to: '/faq', label: 'FAQ' },
     ],
   },
   about: {

@@ -27,10 +27,12 @@ import InvestorProduct from './pages/investor/InvestorProduct';
 import EconomicCase from './pages/investor/EconomicCase';
 import InvestorAppendix from './pages/investor/InvestorAppendix';
 import InvestorDeckPage from './pages/investor/InvestorDeckPage';
+import FAQ from './pages/FAQ';
 import MainLayout from './components/MainLayout';
 import Admin from './pages/Admin';
 import AdminApproved from './pages/AdminApproved';
 import BrokenBeforeJobStarts from './pages/BrokenBeforeJobStarts';
+import TheRealProcurementTimeline from './pages/TheRealProcurementTimeline';
 
 function App() {
   return (
@@ -43,6 +45,7 @@ function App() {
 
         {/* Unlisted LinkedIn landing page — standalone, not in main nav */}
         <Route path="/broken-before-the-job-starts" element={<BrokenBeforeJobStarts />} />
+        <Route path="/the-real-procurement-timeline" element={<TheRealProcurementTimeline />} />
 
         {/* Investor sub-site — own nav/footer */}
         <Route path="/investor" element={<InvestorLayout />}>
@@ -75,6 +78,7 @@ function App() {
           <Route path="/contact/contractor" element={<ContractorContact />} />
           <Route path="/contact/architect" element={<ArchitectContact />} />
           <Route path="/thank-you" element={<ThankYou />} />
+          <Route path="/faq" element={<FAQ />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="*" element={<Home />} />
         </Route>
