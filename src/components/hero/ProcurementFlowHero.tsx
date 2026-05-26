@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import MobileHeroSequence from './MobileHeroSequence';
 import {
   cardConfigs, cardGeometries, chaoticFragments, ambientFlows, ambientGlows,
   getTimingForCard, PAUSE_FRAC,
@@ -168,7 +169,14 @@ export default function ProcurementFlowHero() {
   const networkOpacity = phase === 'houseHold' || phase === 'houseFade' || phase === 'idle' ? 0.02 : 0.6;
 
   return (
-    <section className="relative overflow-hidden bg-[#030a19]" style={{ minHeight: '560px' }}>
+    <>
+    {/* Mobile/tablet hero — below lg */}
+    <div className="lg:hidden">
+      <MobileHeroSequence />
+    </div>
+
+    {/* Desktop hero — lg and above */}
+    <section className="relative overflow-hidden bg-[#030a19] hidden lg:block" style={{ minHeight: '560px' }}>
       {/* House render — behind SVG so cards layer in front */}
       <motion.div
         className="absolute right-0 bottom-0 pointer-events-none hidden md:block"
@@ -415,5 +423,6 @@ export default function ProcurementFlowHero() {
         </div>
       </div>
     </section>
+    </>
   );
 }
