@@ -1,0 +1,4736 @@
+[
+    {
+        "id": "3ebd7a3b-dafb-417a-8388-f6a366199e3d",
+        "name": "Fire Water Service",
+        "status": "draft",
+        "delivery_date": "2027-01-04",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 19,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "b54f0cc2-2a51-4158-987d-d61e17f4468c",
+        "name": "Permits",
+        "status": "draft",
+        "delivery_date": "2027-01-04",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 90,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "44af79bb-7e31-4ad1-968d-15fa92869b9c",
+        "name": "Dewatering Plan",
+        "status": "draft",
+        "delivery_date": "2027-01-04",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 12,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "173b7dd0-e933-43b8-8140-3a9a56eda317",
+        "name": "Underground Storm Drainage",
+        "status": "draft",
+        "delivery_date": "2027-01-04",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 7,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "edbf52be-7d1f-422f-9c9b-ec6c10d49e6f",
+        "name": "Underground Sanitary Sewer",
+        "status": "draft",
+        "delivery_date": "2027-01-04",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "b31fffb1-299a-4a6f-95bf-0d433b1d3d14",
+        "name": "Soil Stabilization - Soil Nail Wall Systems",
+        "status": "draft",
+        "delivery_date": "2027-01-11",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "ba2753ca-be4e-4903-bc67-d1a6d94939cb",
+        "name": "Vertical Waterproofing - Retaining walls",
+        "status": "draft",
+        "delivery_date": "2027-02-08",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 20,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "89a499fd-b48a-4896-8d78-dfc214c9b5c2",
+        "name": "Septic System",
+        "status": "draft",
+        "delivery_date": "2027-02-15",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 45,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "c121e6eb-ec8c-45e6-891b-eb4b84baea68",
+        "name": "Under-slab Vapor Barrier",
+        "status": "draft",
+        "delivery_date": "2027-03-25",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 2,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "e38875e3-7746-43d7-bbef-f20badf54642",
+        "name": "Exterior Doors - Not in Steel Window & Door Package",
+        "status": "draft",
+        "delivery_date": "2027-03-29",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 25,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 25,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 90,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "944f9819-61ea-4bb8-9721-265df48ec335",
+        "name": "Under Slab Plumbing Package",
+        "status": "draft",
+        "delivery_date": "2027-04-05",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "7c7e7080-19aa-4216-ba33-e62c32621bd0",
+        "name": "Under Slab Electrical",
+        "status": "draft",
+        "delivery_date": "2027-04-05",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "8c0fb074-29be-4268-a3b0-5d34e293739e",
+        "name": "Exterior Bi-Fold Door Systems",
+        "status": "draft",
+        "delivery_date": "2027-04-12",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 25,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 90,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "0ef66184-6760-4e66-a057-7bd723c0e707",
+        "name": "Concrete Embed Package",
+        "status": "draft",
+        "delivery_date": "2027-04-30",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 2,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 7,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 2,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "0f5828e5-b0c7-47eb-8594-5da67d83eb41",
+        "name": "Concrete Reinforcing Package",
+        "status": "draft",
+        "delivery_date": "2027-05-03",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 3,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "b4555ca7-3281-4217-b558-3d8b9b7d1cf3",
+        "name": "Concrete Mix Designs",
+        "status": "draft",
+        "delivery_date": "2027-05-12",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 4,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 4,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "5b221c38-e21c-413e-859f-842ccfcdba7c",
+        "name": "Structural Steel Package",
+        "status": "draft",
+        "delivery_date": "2027-06-07",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 130,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "422d9f5e-0df2-4347-9aca-20cc45b0bd11",
+        "name": "Framing Package",
+        "status": "draft",
+        "delivery_date": "2027-06-22",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 2,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "1a336222-0b36-4c34-ac57-28e26cd3fa6a",
+        "name": "Truss Package",
+        "status": "draft",
+        "delivery_date": "2027-06-30",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 2,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 2,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 2,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "592ee5f0-37fa-4482-a526-111d116ab5ab",
+        "name": "Skylights - Kalwall",
+        "status": "draft",
+        "delivery_date": "2027-07-19",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 25,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 45,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "a035e2b0-092b-40b4-bd00-618bf9c9cc25",
+        "name": "Standing Seam Metal Roofing",
+        "status": "draft",
+        "delivery_date": "2027-07-30",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 9,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 4,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 3,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 20,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 2,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "746a1830-3610-4c40-b571-289a98180f8b",
+        "name": "Water Proofing Package",
+        "status": "draft",
+        "delivery_date": "2027-08-01",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "7a046232-586b-4134-bec4-fefd9a7e23a7",
+        "name": "Steel Window and Door Package",
+        "status": "draft",
+        "delivery_date": "2027-08-18",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 130,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "94346c24-75d6-4f2d-88f9-7aa8d0cffac5",
+        "name": "Garage Door Package",
+        "status": "draft",
+        "delivery_date": "2027-08-25",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 20,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 2,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 45,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "3902324d-c770-4c2e-bf6f-808832f2d296",
+        "name": "Stone Veneer",
+        "status": "draft",
+        "delivery_date": "2027-08-25",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 20,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 2,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 20,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 7,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "7553ac42-83df-4139-83da-bddc3e8d0db8",
+        "name": "Electrical Switchgear",
+        "status": "draft",
+        "delivery_date": "2027-08-31",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 90,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "9d8bc0dc-af88-4de4-87d2-d0f336f0919c",
+        "name": "HVAC Equipment",
+        "status": "draft",
+        "delivery_date": "2027-09-07",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 25,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "640649f8-02c2-41b2-b37d-1e8eb47054b7",
+        "name": "HVAC - Rough-in",
+        "status": "draft",
+        "delivery_date": "2027-09-07",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 4,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 90,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "bfcdeab7-b88a-4adc-8233-6ea0daae9d0b",
+        "name": "Plumbing - Rough-In Fixtures",
+        "status": "draft",
+        "delivery_date": "2027-09-08",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 4,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 2,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 90,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "10e4d33b-9e96-41ce-adb9-2db3382f963c",
+        "name": "Exterior Plaster Systems",
+        "status": "draft",
+        "delivery_date": "2027-09-14",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 2,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 2,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 2,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "8fd8926e-0580-4a33-b635-2f113749657e",
+        "name": "Insulation Package",
+        "status": "draft",
+        "delivery_date": "2027-09-22",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "3bd9ec6d-c9d1-4e4a-9692-0396bef11058",
+        "name": "Art Backing Layout",
+        "status": "draft",
+        "delivery_date": "2027-09-29",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "99672c8c-6b70-4a17-be68-49545f34f2ba",
+        "name": "Lighting Package - Rough-in Fixtures",
+        "status": "draft",
+        "delivery_date": "2027-10-04",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 4,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "14fcb3de-e7ee-46fb-9c70-6339a87c83bc",
+        "name": "Wood Siding Submittals",
+        "status": "draft",
+        "delivery_date": "2027-10-20",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 20,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 14,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 7,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 4,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 21,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "75e3ded0-b9a5-404c-a9ce-f7cc9ecc109c",
+        "name": "Exterior Trim Package - Custom Mill",
+        "status": "draft",
+        "delivery_date": "2027-10-25",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 4,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 60,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "451a6b11-4f67-4d9d-8bad-ba38d8ee9e35",
+        "name": "Corten Steel Wall Panels",
+        "status": "draft",
+        "delivery_date": "2027-11-08",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 25,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 25,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 45,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "c678ee37-b355-47f3-a526-8297e88061ae",
+        "name": "Pedestal Paver Systems",
+        "status": "draft",
+        "delivery_date": "2027-12-06",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 25,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 45,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "4f2748cd-becb-4df4-a628-a318b3f918fd",
+        "name": "Glass Railings",
+        "status": "draft",
+        "delivery_date": "2027-12-13",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 90,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "482ef523-58b5-4239-86cb-b91fb4819816",
+        "name": "Drywall and details",
+        "status": "draft",
+        "delivery_date": "2028-03-31",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 4,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "688f6974-f789-49a5-8859-ab806f1472dd",
+        "name": "Interior Plaster",
+        "status": "draft",
+        "delivery_date": "2028-04-10",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 4,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 2,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 4,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "140b800f-8e39-454d-b81d-e14605519cd2",
+        "name": "Interior Casework",
+        "status": "draft",
+        "delivery_date": "2028-06-27",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 132,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    },
+    {
+        "id": "658c2f73-b6b8-4576-b0b3-d66fbe3b8d82",
+        "name": "Plumbing Fixtures",
+        "status": "draft",
+        "delivery_date": "2028-10-03",
+        "timeline_data": [
+            {
+                "days": 0,
+                "name": "Start Buyout",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 1,
+                "name": "Buyout",
+                "color": "#555"
+            },
+            {
+                "days": 0,
+                "name": "Buyout Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 22,
+                "name": "Submittal Coordination",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Coordination Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 30,
+                "name": "Submittal Preparation",
+                "color": "#1f77b4"
+            },
+            {
+                "days": 0,
+                "name": "Initial Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 15,
+                "name": "1st Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "Revise Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Vendor Rev 1",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 10,
+                "name": "REV 1 Review",
+                "color": "#d62728"
+            },
+            {
+                "days": 0,
+                "name": "REV 1 Response",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 5,
+                "name": "Vendor Rev 2",
+                "color": "#ff7f0e"
+            },
+            {
+                "days": 0,
+                "name": "REV 2 Submittal",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 6,
+                "name": "REV 2 Review",
+                "color": "#2ca02c"
+            },
+            {
+                "days": 0,
+                "name": "Approval",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 0,
+                "name": "Release to Fab",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 90,
+                "name": "Fabrication",
+                "color": "#9467bd"
+            },
+            {
+                "days": 0,
+                "name": "Fabrication Complete",
+                "color": "#111",
+                "milestone": true
+            },
+            {
+                "days": 8,
+                "name": "Shipping",
+                "color": "#17becf"
+            },
+            {
+                "days": 0,
+                "name": "Delivered - Ready for Install",
+                "color": "#111",
+                "milestone": true
+            }
+        ]
+    }
+]
