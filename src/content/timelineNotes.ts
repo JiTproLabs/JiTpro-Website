@@ -1,0 +1,63 @@
+// Hover-tooltip notes for the timeline page, keyed by MS Project task UID.
+// Edit freely — the page reads from this map at render time.
+// Original drafted source: scripts/notes-draft.md (review log).
+
+export const timelineNotes: Record<number, string> = {
+  // ── Happy Path ──────────────────────────────────────────────────────────
+  3: 'GC assumes 5 days for buyout, 30 for shop drawings, 15 for review and approval. 50 days total.',
+  39: 'Fab has to start today to make delivery. The steel sub blocks out their shop schedule based on this date.',
+  4: '45 days fabrication lead time, 5 days delivery — per the steel sub’s quote.',
+  6: 'GC adds a 15-day buffer because nothing ever goes to plan. The owner pushes back — doesn’t believe the buffer is warranted.',
+  5: 'Steel is actually needed earlier, but the GC says this is the soonest they can deliver. Buffer holds at 15 days. The GC believes they’re covered.',
+
+  // ── What Really Happens ────────────────────────────────────────────────
+  14: 'Buyout actually takes 20 days, not the 5 the Happy Path assumed.',
+  15: 'The steel contractor has a list of questions before they can start shop drawings.',
+  36: 'To hold the schedule, the GC tells the steel sub to push ahead — promising questions will get answered during review.',
+  40: 'The date fabrication needed to start to guarantee 10/7 delivery. It quietly slips by.',
+  16: 'GC receives the shop drawings and gives them a quick glance before sending on.',
+  17: 'GC does a hasty review before sending it off to the structural engineer.',
+  18: 'Multidisciplinary reviews get skipped to keep the process moving.',
+  19: 'Package goes to the structural engineer with a demand for expedited review.',
+  20: 'GC demands a 10-day expedited review. The engineer — already overloaded by other GCs’ expedited demands — can’t tell what’s actually urgent and ends up taking the contractual 15.',
+  21: 'Returns "Revise & Resubmit", not "Approved". The engineer red-marked the first pages hard, then sent the rest back rather than triage page-by-page. GC turns the heat up on the steel sub for a quick turnaround.',
+  22: 'Steel contractor dives in and rediscovers the design questions they had before this all started. They demand the GC get answers first. Tempers flare. The fab start date is long gone.',
+  38: 'RFIs land on the design team. The Architect can’t answer some — design for several rooms isn’t done. Decision: push ahead anyway and field-coordinate the steel when it shows up.',
+  23: 'Steel contractor moves ahead with revisions. Design is still catching up, so they make assumptions and expect the GC to adhere. Pressure mounts. Relationships strain.',
+  41: 'The date the GC committed to having steel onsite. It flies by. Pressure spikes.',
+  24: 'In the heat of the battle, the GC does little to no internal review before submitting to the engineer.',
+  25: 'GC submits with another expedited demand — explains the package is now the hottest item destroying the schedule. The engineer pushes back: "It’s not my fault. I need time without the constant pressure."',
+  26: 'Another "Revise & Resubmit". More notations than the first round. The GC blows up at the steel sub — who has already lost the fab window and is fitting this project in wherever they can across other late jobs.',
+  27: 'Steel contractor turns the revised drawings around in 10 days. GC submits again.',
+  29: 'GC submits again with an expedited review request.',
+  30: 'Engineer takes 7 days and finally moves the package off their desk.',
+  31: 'Engineer finds more problems but stamps it "Approved as Noted" to move the project forward. Should have been another R&R. Risk transfers back to the GC and steel sub.',
+  32: 'GC sends drawings back to the steel sub with an urgent message: start fabrication now.',
+  33: 'Steel sub somehow honors their original 45-day fab window. They push to capture all the "as noted" changes. The GC, swamped, hasn’t fully coordinated those changes with the field work already underway.',
+  34: '5 days from shop to site.',
+  35: 'Steel finally arrives. Crews mobilize. Then everything stops. Embeds don’t match base plates. Beams too long, posts too short. The team explodes. GC blames the steel sub. The sub: "We did what you told us to do." Engineers pulled in to find fixes that don’t require another shop trip. This is just the beginning.',
+
+  // ── What Should Happen ─────────────────────────────────────────────────
+  51: 'Real buyout time. Negotiate, finalize scope, issue contract.',
+  52: 'Trade partner and GC develop submittal information together. Questions answered upfront, not deferred.',
+  53: 'Trade partner hands off completed submittal. Day-zero of the review chain.',
+  54: 'GC reviews for completeness and contract compliance before sending to the design team.',
+  55: 'Architect, engineer, and other disciplines review in parallel. Not skipped, not sequential.',
+  56: 'Compiled review package goes to the engineer of record.',
+  57: 'Full contractual review window honored. No expedited demands.',
+  58: 'Engineer’s response goes back to the GC.',
+  59: 'Trade partner addresses notations carefully. Real time to fix things right.',
+  60: 'Revisions land back at the GC.',
+  61: 'GC reviews internally, then submits.',
+  62: 'Second-round review. Typically faster — most issues were caught the first time.',
+  63: 'Final round of notations.',
+  64: 'Trade partner addresses remaining items.',
+  65: 'Final submittal back to the GC.',
+  66: 'Internal review, then submit.',
+  67: 'Final review.',
+  68: 'Approved — clean. Not "as noted." No risk transfer.',
+  69: 'GC authorizes the trade partner to begin fabrication.',
+  70: 'Same 45-day fab duration the steel contractor always had — but used to actually build, not absorb late changes.',
+  71: 'Standard shipping window.',
+  72: 'Steel arrives. Crews mobilize. Field work begins as planned.',
+};
