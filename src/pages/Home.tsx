@@ -1,141 +1,53 @@
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-const painPoints = [
-  {
-    to: '/roles/general-contractors',
-    role: 'General Contractors',
-    headline: "You're losing money on jobs before they even start.",
-    body: (
-      <>
-        <p>
-          You commit to a schedule without fully knowing what it will take to actually procure the work.
-        </p>
-        <div className="mt-4 space-y-1">
-          <p>Missing design.</p>
-          <p>Undefined decisions.</p>
-          <p>Unclear ownership.</p>
-        </div>
-        <p className="mt-4">
-          It all shows up later — and now you're chasing the job, paying for it in change orders, expediting, and lost margin.
-        </p>
-      </>
-    ),
-  },
-  {
-    to: '/roles/owners-developers',
-    role: 'Owners / Developers',
-    headline: (
-      <>
-        Projects don't spiral late.
-        <br />
-        They spiral early—when no one is in control.
-      </>
-    ),
-    body: (
-      <>
-        <div className="space-y-1">
-          <p>Schedules slip.</p>
-          <p>Change orders stack.</p>
-          <p>Decisions become urgent.</p>
-          <p>And the project starts running you.</p>
-        </div>
-        <p className="mt-4 font-medium text-slate-900">
-          JiTpro brings control in early—before things break.
-        </p>
-        <div className="mt-4 space-y-1">
-          <p>Identify decisions before they become urgent</p>
-          <p>Sequence procurement before delays start</p>
-          <p>Build the schedule from real constraints</p>
-        </div>
-      </>
-    ),
-  },
-  {
-    to: '/roles/architects-engineers',
-    role: 'Architects / Engineers',
-    headline: 'Design continues during procurement — but no one owns the timing.',
-    body: (
-      <p>Submittals become the place where design gets finished instead of verified.</p>
-    ),
-  },
-];
+import { InteractiveProcurementSchedule } from '../components/InteractiveProcurementSchedule';
+import ProcurementFlowHero from '../components/hero/ProcurementFlowHero';
 
 export default function Home() {
   return (
     <div>
       {/* HERO */}
-      <section className="relative overflow-hidden px-6 py-24 md:py-32 lg:py-40">
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-        >
-          <source src={`${import.meta.env.BASE_URL}assets/video/hero-bg.mp4`} type="video/mp4" />
-        </video>
+      <ProcurementFlowHero />
 
-        <div className="absolute inset-0 bg-black/50" />
-
-        <div className="relative z-10 max-w-5xl mx-auto text-center">
-          <p className="text-sm md:text-base font-semibold uppercase tracking-[0.2em] text-amber-300 mb-8 leading-relaxed">
-            $31.2B is lost to construction rework every year.
-            <br />
-            Is some of it in your projects?
-          </p>
-
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-8 tracking-tight leading-[1.05]">
-            Control Before You Build.
-          </h1>
-
-          <p className="text-xl md:text-2xl text-slate-200 leading-relaxed">
-            JiTpro reveals and sequences the procurement constraints your schedule depends on—before they cost you.
-          </p>
-        </div>
-      </section>
-
-      {/* PAIN IDENTIFICATION */}
+      {/* PRIMARY ICP — GENERAL CONTRACTORS */}
       <section className="px-6 py-20 bg-slate-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="max-w-3xl mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
-              You've seen this.
-            </h2>
-          </div>
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-12">
+            You've seen this.
+          </h2>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {painPoints.map((item) => (
-              <Link
-                key={item.role}
-                to={item.to}
-                className="border border-slate-200 rounded-xl p-8 bg-white hover:border-slate-400 transition-colors group flex flex-col h-full"
-              >
-                <p className="text-sm font-semibold uppercase tracking-[0.15em] text-amber-600 mb-4">
-                  {item.role}
-                </p>
-                <h3 className="text-xl font-bold text-slate-900 mb-4 leading-snug group-hover:text-amber-700 transition-colors">
-                  {item.headline}
-                </h3>
-                <div className="text-slate-600 leading-relaxed mb-6">{item.body}</div>
-                <span className="inline-flex items-center gap-2 text-slate-900 font-medium group-hover:text-amber-600 transition-colors mt-auto">
-                  Read more
-                  <ArrowRight size={18} />
-                </span>
-              </Link>
-            ))}
+          <p className="text-sm md:text-base font-semibold uppercase tracking-[0.2em] text-amber-600 mb-6">
+            General Contractors
+          </p>
+          <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6 leading-snug">
+            You're losing money on jobs before they even start.
+          </h3>
+          <div className="text-lg text-slate-600 leading-relaxed space-y-4 mb-8">
+            <p>
+              You commit to a schedule without fully knowing what it will take to actually procure the work.
+            </p>
+            <div className="space-y-1">
+              <p>Missing design.</p>
+              <p>Undefined decisions.</p>
+              <p>Unclear ownership.</p>
+            </div>
+            <p>
+              It all shows up later — and now you're chasing the job, paying for it in change orders, expediting, and lost margin.
+            </p>
           </div>
+          <Link
+            to="/roles/general-contractors"
+            className="inline-flex items-center gap-2 text-slate-900 font-medium hover:text-amber-600 transition-colors"
+          >
+            Read more
+            <ArrowRight size={18} />
+          </Link>
         </div>
       </section>
 
       {/* DIAGNOSIS */}
       <section className="px-6 py-24">
         <div className="max-w-3xl mx-auto">
-          <p className="text-2xl md:text-3xl font-semibold text-slate-900 leading-snug mb-8">
-            These aren't isolated problems.
-            <br />
-            They're the same problem showing up in different roles.
-          </p>
           <p className="text-lg text-slate-600 leading-relaxed mb-6">
             Projects don't destabilize in the field. They destabilize in procurement — weeks or months before construction begins.
           </p>
@@ -145,12 +57,69 @@ export default function Home() {
         </div>
       </section>
 
+      {/* INTERACTIVE PROCUREMENT SCHEDULE */}
+      <section className="px-6 pb-24">
+        <div className="max-w-6xl mx-auto">
+          <div className="max-w-3xl mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4 leading-snug">
+              Here's what it looks like.
+            </h2>
+            <p className="text-lg text-slate-600 leading-relaxed">
+              A real procurement schedule. Hover any segment to see the phase, dates, and duration. Zoom across quarters, months, weeks, or days.
+            </p>
+          </div>
+          <InteractiveProcurementSchedule />
+        </div>
+      </section>
+
+      {/* STAKEHOLDER ROUTER */}
+      <section className="px-6 py-20 bg-slate-50">
+        <div className="max-w-3xl mx-auto">
+          <p className="text-lg text-slate-600 leading-relaxed mb-8">
+            These aren't isolated problems. They're the same problem showing up across the project ecosystem.
+          </p>
+          <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tight text-slate-900 mb-12 leading-snug">
+            WHEN PROCUREMENT IS CONTROLLED, THE WHOLE PROJECT STABILIZES.
+          </h2>
+          <div className="space-y-10">
+            <div>
+              <p className="text-lg text-slate-700 mb-3 leading-relaxed">
+                For owners: predictable outcomes, not mid-project surprises.
+              </p>
+              <Link
+                to="/roles/owners-developers"
+                className="inline-flex items-center gap-2 text-amber-600 hover:text-amber-700 font-medium transition-colors"
+              >
+                → See the Owners &amp; Developers page
+              </Link>
+            </div>
+            <div>
+              <p className="text-lg text-slate-700 mb-3 leading-relaxed">
+                For architects: clear decision timing that protects design intent.
+              </p>
+              <Link
+                to="/roles/architects-engineers"
+                className="inline-flex items-center gap-2 text-amber-600 hover:text-amber-700 font-medium transition-colors"
+              >
+                → See the Architects &amp; Engineers page
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CREDIBILITY */}
       <section className="px-6 py-16 bg-slate-900 text-white">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-lg md:text-xl text-slate-200 leading-relaxed">
-            Built from 38+ years managing complex residential and light commercial projects.
+          <p className="text-lg md:text-xl text-slate-200 leading-relaxed mb-4">
+            Built on three decades of complex residential and light commercial construction.
           </p>
+          <Link
+            to="/founder-story"
+            className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 font-medium transition-colors"
+          >
+            Founder Story →
+          </Link>
         </div>
       </section>
 
@@ -173,6 +142,15 @@ export default function Home() {
               Start a conversation
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* SOURCES */}
+      <section className="px-6 pb-12">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-xs text-slate-500 leading-relaxed">
+            ¹ PlanGrid/FMI, Construction Disconnected, 2018.
+          </p>
         </div>
       </section>
     </div>
