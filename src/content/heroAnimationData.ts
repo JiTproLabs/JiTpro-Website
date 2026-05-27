@@ -5,20 +5,27 @@
 
 function sr(s: number) { const x = Math.sin(s * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
 
-function makePath(start: [number, number], end: [number, number], seed: number, mids: number): [number, number][] {
-  const pts: [number, number][] = [start];
-  for (let i = 1; i <= mids; i++) {
-    const t = i / (mids + 1);
-    const baseX = start[0] + (end[0] - start[0]) * t;
-    const baseY = start[1] + (end[1] - start[1]) * t;
-    const wander = (1 - t * 0.6) * (sr(seed + i * 13) - 0.5) * 90;
-    pts.push([Math.round(baseX + (sr(seed + i * 7) - 0.5) * 25), Math.round(Math.max(30, Math.min(670, baseY + wander)))]);
-  }
-  pts.push(end);
-  return pts;
+function makePath(start: [number, number], end: [number, number], seed: number, curve: number = 30): [number, number][] {
+  const midX = (start[0] + end[0]) / 2;
+  const midY = (start[1] + end[1]) / 2;
+  const dx = end[0] - start[0];
+  const dy = end[1] - start[1];
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len < 1) return [start, end];
+  const perpX = -dy / len;
+  const perpY = dx / len;
+  const offset = (sr(seed) - 0.5) * curve;
+  const ctrl: [number, number] = [
+    Math.round(midX + perpX * offset),
+    Math.round(Math.max(50, Math.min(660, midY + perpY * offset))),
+  ];
+  return [start, ctrl, end];
 }
 
 function toPathStr(pts: [number, number][]): string {
+  if (pts.length === 3) {
+    return `M ${pts[0][0]} ${pts[0][1]} Q ${pts[1][0]} ${pts[1][1]} ${pts[2][0]} ${pts[2][1]}`;
+  }
   return pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0]} ${p[1]}`).join(' ');
 }
 
@@ -52,7 +59,7 @@ export const cardConfigs: CardConfig[] = [
     processNotes: ['Load Calcs Approved', 'Equipment Order Placed', 'Factory Testing Complete'],
   },
   {
-    label: 'Stone & Countertops',
+    label: 'Statuary Marble Countertops',
     yPosition: 300,
     processNotes: ['Selection Approved', 'Slab Layout Confirmed', 'Fabrication Complete'],
   },
@@ -93,37 +100,45 @@ function buildCardGeometry(cardY: number, seed: number, numConv: number): CardGe
   const spread = Math.max(80, Math.min(maxSpread, 120 + numStreams * 15));
 
   const startYs: number[] = [];
+  const startXs: number[] = [];
   for (let i = 0; i < numStreams; i++) {
     const t = numStreams === 1 ? 0.5 : i / (numStreams - 1);
-    const y = cardY + (t - 0.5) * spread * 2;
-    startYs.push(Math.max(140, Math.min(580, Math.round(y + (sr(seed + i) - 0.5) * 30))));
+    const y = cardY + (t - 0.5) * spread * 2.5;
+    startYs.push(Math.max(140, Math.min(580, Math.round(y + (sr(seed + i) - 0.5) * 60))));
+    startXs.push(Math.round(10 + sr(seed + i * 3 + 20) * 120));
   }
   startYs.sort((a, b) => a - b);
 
   const convergences: [number, number][] = [];
-  let mergedY = (startYs[0] + startYs[1]) / 2;
+  // First merge: randomly weight toward upper or lower stream
+  const firstBias = sr(seed + 50) > 0.5 ? 0.7 : 0.3;
+  let mergedY = startYs[0] * firstBias + startYs[1] * (1 - firstBias);
   for (let i = 0; i < numConv; i++) {
     const t = (i + 1) / (numConv + 1);
-    const cx = Math.round(200 + t * 560 + (sr(seed + 10 + i) - 0.5) * 40);
-    if (i > 0) mergedY = (mergedY + startYs[i + 1]) / 2;
-    const cy = Math.round(mergedY * (1 - t * 0.6) + cardY * t * 0.6);
+    const cx = Math.round(150 + t * 850 + (sr(seed + 10 + i) - 0.5) * 25);
+    if (i > 0) {
+      // Randomly weight toward the existing merged line or the incoming stream
+      const bias = sr(seed + 50 + i * 7) > 0.5 ? 0.7 : 0.3;
+      mergedY = mergedY * bias + startYs[i + 1] * (1 - bias);
+    }
+    const cy = Math.round(mergedY * (1 - t * 0.5) + cardY * t * 0.5);
     convergences.push([cx, Math.max(160, Math.min(560, cy))]);
   }
 
   // Stream 0 → conv0, Stream 1 → conv0, Stream i (i>=2) → conv[i-1]
   const streams: [number, number][][] = [];
-  streams.push(makePath([10, startYs[0]], convergences[0], seed * 100, 3));
-  streams.push(makePath([10, startYs[1]], convergences[0], seed * 100 + 50, 3));
+  streams.push(makePath([startXs[0], startYs[0]], convergences[0], seed * 100, 35));
+  streams.push(makePath([startXs[1], startYs[1]], convergences[0], seed * 100 + 50, 35));
   for (let i = 2; i < numStreams; i++) {
-    streams.push(makePath([10, startYs[i]], convergences[i - 1], seed * 100 + i * 50, 2 + i));
+    streams.push(makePath([startXs[i], startYs[i]], convergences[i - 1], seed * 100 + i * 50, 30));
   }
 
   // Merged paths: conv[i] → conv[i+1], last → card
   const merged: [number, number][][] = [];
   for (let i = 0; i < numConv - 1; i++) {
-    merged.push(makePath(convergences[i], convergences[i + 1], seed * 100 + 200 + i * 50, 2));
+    merged.push(makePath(convergences[i], convergences[i + 1], seed * 100 + 200 + i * 50, 18));
   }
-  merged.push(makePath(convergences[numConv - 1], [1100, cardY], seed * 100 + 300, 3));
+  merged.push(makePath(convergences[numConv - 1], [1100, cardY], seed * 100 + 300, 10));
 
   return {
     streams: streams.map(wp => ({ waypoints: wp, pathStr: toPathStr(wp) })),
@@ -201,9 +216,10 @@ export const ambientGlows = [
 
 // ===== TIMING =====
 
-export const CHAOS_MS = 1500;
+export const CHAOS_MS = 1000;
 export const FLOW_MS = 8500;
-export const COMPLETE_MS = 1800;
+export const COMPLETE_MS = 1200;
+export const OVERLAP_MS = 600;         // delay AFTER completing starts before next card begins
 export const CARD_TOTAL_MS = CHAOS_MS + FLOW_MS + COMPLETE_MS;
 
 export const HOUSE_HOLD_MS = 10000;

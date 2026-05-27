@@ -4,8 +4,7 @@ import MobileHeroSequence from './MobileHeroSequence';
 import {
   cardConfigs, cardGeometries, chaoticFragments, ambientFlows, ambientGlows,
   getTimingForCard, PAUSE_FRAC,
-  CHAOS_MS, FLOW_MS, COMPLETE_MS, CARD_TOTAL_MS,
-  HOUSE_HOLD_MS, HOUSE_FADE_MS,
+  CHAOS_MS, FLOW_MS, OVERLAP_MS,
 } from '../../content/heroAnimationData';
 
 type Phase = 'chaos' | 'flowing' | 'completing' | 'fading' | 'houseHold' | 'houseFade' | 'idle';
@@ -48,6 +47,8 @@ export default function ProcurementFlowHero() {
   const [cardCycleKey, setCardCycleKey] = useState(0);
   const [notes, setNotes] = useState<ActiveNote[]>([]);
   const [cardStatus, setCardStatus] = useState('');
+  const [prevCardIdx, setPrevCardIdx] = useState<number | null>(null);
+  const [prevCardKey, setPrevCardKey] = useState(0);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const noteTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -67,12 +68,21 @@ export default function ProcurementFlowHero() {
     noteTimers.current.push(setTimeout(() => setNotes(prev => prev.filter(n => n.id !== id)), FLOW_MS * PAUSE_FRAC));
   }, []);
 
-  const runCard = useCallback((cardIdx: number) => {
-    const geo = cardGeometries[cardIdx];
-    const config = cardConfigs[cardIdx];
-    const numConv = config.processNotes.length;
-    const { convFracs } = getTimingForCard(numConv);
+  const activeCardRef = useRef(0);
 
+  const runCard = useCallback((cardIdx: number) => {
+    clearTimers();
+    noteTimers.current.forEach(clearTimeout);
+    noteTimers.current = [];
+
+    // Save previous card for overlap fade (if not first card)
+    if (cardIdx > 0) {
+      setPrevCardIdx(activeCardRef.current);
+      setPrevCardKey(k => k + 1);
+      setTimeout(() => setPrevCardIdx(null), 1800);
+    }
+
+    activeCardRef.current = cardIdx;
     setActiveCard(cardIdx);
     setPhase('chaos');
     setNotes([]);
@@ -82,6 +92,11 @@ export default function ProcurementFlowHero() {
     addTimer(() => setPhase('flowing'), CHAOS_MS);
 
     const flowStart = CHAOS_MS;
+    const geo = cardGeometries[cardIdx];
+    const config = cardConfigs[cardIdx];
+    const numConv = config.processNotes.length;
+    const { convFracs } = getTimingForCard(numConv);
+
     for (let i = 0; i < numConv; i++) {
       const [cx, cy] = geo.convergences[i];
       addTimer(() => showNote(cx, cy, config.processNotes[i]), flowStart + FLOW_MS * convFracs[i]);
@@ -92,11 +107,7 @@ export default function ProcurementFlowHero() {
       setCardStatus('On-Time Delivery');
     }, CHAOS_MS + FLOW_MS);
 
-    addTimer(() => {
-      setPhase('fading');
-      setNotes([]);
-    }, CHAOS_MS + FLOW_MS + COMPLETE_MS - 400);
-
+    // Start NEXT card during completing phase (card is still visible via prevCard layer)
     addTimer(() => {
       completedRef.current += 1;
       setCompletedCards(completedRef.current);
@@ -104,19 +115,11 @@ export default function ProcurementFlowHero() {
       if (cardIdx < 5) {
         runCard(cardIdx + 1);
       } else {
+        clearTimers();
         setPhase('houseHold');
-        addTimer(() => setPhase('houseFade'), HOUSE_HOLD_MS);
-        addTimer(() => {
-          setPhase('idle');
-          addTimer(() => {
-            completedRef.current = 0;
-            setCompletedCards(0);
-            runCard(0);
-          }, 2000);
-        }, HOUSE_HOLD_MS + HOUSE_FADE_MS);
       }
-    }, CARD_TOTAL_MS);
-  }, [addTimer, showNote]);
+    }, CHAOS_MS + FLOW_MS + OVERLAP_MS);
+  }, [addTimer, showNote, clearTimers]);
 
   useEffect(() => {
     if (reducedMotion) { setPhase('houseHold'); setCompletedCards(6); return; }
@@ -139,32 +142,7 @@ export default function ProcurementFlowHero() {
     : phase === 'houseFade' || phase === 'idle' ? 0
     : completedCards / 6;
 
-  // Build primary dot keyframes dynamically
-  const startA = geo.streams[0].waypoints[0];
   const [cardX, cardY] = geo.cardEndpoint;
-
-  const dotCx: number[] = [startA[0]];
-  const dotCy: number[] = [startA[1]];
-  const dotGlowR: number[] = [6];
-  const dotCenterR: number[] = [2];
-  const dotGlowOp: number[] = [0.4];
-  const dotTimes: number[] = [0];
-
-  for (let i = 0; i < numConv; i++) {
-    const [cx, cy] = geo.convergences[i];
-    dotCx.push(cx, cx);
-    dotCy.push(cy, cy);
-    dotGlowR.push(6 + (i + 1) * 2, 6 + (i + 1) * 2 + 1);
-    dotCenterR.push(2 + (i + 1) * 0.4, 2 + (i + 1) * 0.4 + 0.3);
-    dotGlowOp.push(0.4 + (i + 1) * 0.08, 0.4 + (i + 1) * 0.08 + 0.02);
-    dotTimes.push(convFracs[i], convFracs[i] + PAUSE_FRAC);
-  }
-  dotCx.push(cardX);
-  dotCy.push(cardY);
-  dotGlowR.push(6 + (numConv + 1) * 2);
-  dotCenterR.push(2 + (numConv + 1) * 0.4);
-  dotGlowOp.push(0.8);
-  dotTimes.push(1);
 
   const networkOpacity = phase === 'houseHold' || phase === 'houseFade' || phase === 'idle' ? 0.02 : 0.6;
 
@@ -222,6 +200,38 @@ export default function ProcurementFlowHero() {
               style={{ animation: `heroAmbientGlow ${g.dur}s ease-in-out infinite`, animationDelay: `${i * 1.5}s` }} />
           ))}
 
+          {/* Previous card fading out (completed state, independent of current card) */}
+          {prevCardIdx !== null && (() => {
+            const pc = cardConfigs[prevCardIdx];
+            const pg = cardGeometries[prevCardIdx];
+            const [pcx, pcy] = pg.cardEndpoint;
+            return (
+              <motion.g
+                key={`prev-${prevCardKey}`}
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 0 }}
+                transition={{ duration: 1.8 }}
+              >
+                {pg.streams.map((s, si) => (
+                  <path key={`ps${si}`} d={s.pathStr} fill="none" stroke="rgb(245,158,11)" strokeWidth={0.8} opacity={0.2} />
+                ))}
+                {pg.mergedPaths.map((m, mi) => (
+                  <path key={`pm${mi}`} d={m.pathStr} fill="none" stroke="rgb(251,191,36)" strokeWidth={1.2} opacity={0.4} />
+                ))}
+                <rect x={pcx + 8} y={pcy - 20} width={195} height={42} rx={5}
+                  fill="rgba(245,158,11,0.25)" stroke="rgba(253,224,71,0.8)" strokeWidth={1.4} />
+                <rect x={pcx + 8} y={pcy - 20} width={3} height={42} rx={1} fill="rgb(253,224,71)" />
+                <circle cx={pcx + 22} cy={pcy} r={3} fill="rgb(253,224,71)" />
+                <text x={pcx + 32} y={pcy - 5} fill="rgba(255,255,255,0.95)"
+                  fontSize={10.5} fontWeight={600} fontFamily="system-ui,sans-serif">{pc.label}</text>
+                <text x={pcx + 32} y={pcy + 9} fill="#34d399"
+                  fontSize={8} fontFamily="system-ui,sans-serif">On-Time Delivery</text>
+                <text x={pcx + 183} y={pcy + 3} fill="rgb(253,224,71)"
+                  fontSize={13} fontFamily="system-ui,sans-serif">✓</text>
+              </motion.g>
+            );
+          })()}
+
           {/* Ambient background flows */}
           <g opacity={networkOpacity} style={{ transition: 'opacity 3s' }}>
             {ambientFlows.map((af, i) => (
@@ -233,7 +243,7 @@ export default function ProcurementFlowHero() {
           {/* === ACTIVE CARD ANIMATION === */}
           <AnimatePresence>
             {phase !== 'houseHold' && phase !== 'houseFade' && phase !== 'idle' && (
-              <motion.g key={`card-${cardCycleKey}`} exit={{ opacity: 0, transition: { duration: 0.5 } }}>
+              <motion.g key={`card-${cardCycleKey}`} exit={{ opacity: 0, transition: { duration: 1.5 } }}>
 
                 {/* Chaotic fragments */}
                 {(phase === 'chaos' || phase === 'flowing') && (
@@ -254,20 +264,28 @@ export default function ProcurementFlowHero() {
                   </motion.g>
                 )}
 
-                {isFlowing && (
+                {(isFlowing || phase === 'completing') && (
                   <g>
                     {/* === STREAM LINES (dynamic count) === */}
                     {geo.streams.map((stream, si) => {
-                      // Stream 0,1 → conv0. Stream i (i>=2) → conv[i-1]
                       const targetFrac = si <= 1 ? convFracs[0] : convFracs[si - 1];
                       const dur = flowDurSec * targetFrac;
-                      const brightness = 0.5 + (si === 0 ? 0.1 : 0);
+                      // Depth: stream 0 is foreground (brightest), higher indices are background
+                      const depth = si / (geo.streams.length - 1);
+                      const lineOp = 0.6 - depth * 0.25;
+                      const glowOp = 0.25 - depth * 0.1;
+                      const lineSw = 1.2 - depth * 0.4;
+                      const glowSw = 4 - depth * 1.5;
                       return (
                         <g key={`stream${si}`}>
-                          <motion.path d={stream.pathStr} fill="none" stroke="rgb(245,158,11)" strokeWidth={3} filter="url(#lineGlow)"
-                            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: dur, ease: 'linear' }} opacity={0.2} />
-                          <motion.path d={stream.pathStr} fill="none" stroke="rgb(245,158,11)" strokeWidth={1}
-                            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: dur, ease: 'linear' }} opacity={brightness} />
+                          {/* Dim base path (always visible) */}
+                          <path d={stream.pathStr} fill="none" stroke="rgb(180,130,40)" strokeWidth={lineSw * 0.5} opacity={0.06} />
+                          {/* Glow */}
+                          <motion.path d={stream.pathStr} fill="none" stroke="rgb(245,158,11)" strokeWidth={glowSw} filter="url(#lineGlow)"
+                            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: dur, ease: 'linear' }} opacity={glowOp} />
+                          {/* Crisp line */}
+                          <motion.path d={stream.pathStr} fill="none" stroke="rgb(245,158,11)" strokeWidth={lineSw}
+                            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: dur, ease: 'linear' }} opacity={lineOp} />
                         </g>
                       );
                     })}
@@ -291,36 +309,7 @@ export default function ProcurementFlowHero() {
                       );
                     })}
 
-                    {/* === PRIMARY DOT (grows brighter at each convergence) === */}
-                    <motion.circle fill="rgb(245,158,11)" filter="url(#dotGlow)"
-                      animate={{ cx: dotCx, cy: dotCy, r: dotGlowR, opacity: dotGlowOp }}
-                      transition={{ duration: flowDurSec, ease: 'linear', times: dotTimes }}
-                    />
-                    <motion.circle fill="rgb(253,224,71)"
-                      animate={{ cx: dotCx, cy: dotCy, r: dotCenterR }}
-                      transition={{ duration: flowDurSec, ease: 'linear', times: dotTimes }}
-                    />
-
-                    {/* === SECONDARY DOTS (merge and fade at convergence points) === */}
-                    {geo.streams.slice(1).map((stream, i) => {
-                      const targetConvIdx = i === 0 ? 0 : i;
-                      const [cx, cy] = geo.convergences[targetConvIdx];
-                      const arrivalFrac = convFracs[targetConvIdx];
-                      const dur = flowDurSec * arrivalFrac;
-                      const start = stream.waypoints[0];
-                      return (
-                        <g key={`sdot${i}`}>
-                          <motion.circle r={6} fill="rgb(245,158,11)" filter="url(#dotGlow)"
-                            animate={{ cx: [start[0], cx], cy: [start[1], cy], opacity: [0.4, 0] }}
-                            transition={{ duration: dur, ease: 'linear' }}
-                          />
-                          <motion.circle r={2} fill="rgb(253,224,71)"
-                            animate={{ cx: [start[0], cx], cy: [start[1], cy], opacity: [1, 0] }}
-                            transition={{ duration: dur, ease: 'linear' }}
-                          />
-                        </g>
-                      );
-                    })}
+                    {/* Dots removed — convergence flash dots appear via the notes system */}
                   </g>
                 )}
 
@@ -346,9 +335,9 @@ export default function ProcurementFlowHero() {
                       {config.label}
                     </text>
                     <text x={cardX + 32} y={cardY + 9}
-                      fill={statusColor(cardStatus || 'Processing')}
+                      fill={statusColor(cardStatus || 'Buyout')}
                       fontSize={8} fontFamily="system-ui,sans-serif">
-                      {cardStatus || 'Processing...'}
+                      {cardStatus || 'Buyout...'}
                     </text>
                     <text x={cardX + 183} y={cardY + 3}
                       fill={isCompleting ? 'rgb(253,224,71)' : 'rgba(255,255,255,0.12)'}
@@ -394,33 +383,26 @@ export default function ProcurementFlowHero() {
       <div className="absolute inset-0 bg-gradient-to-r from-[#030a19]/90 via-[#030a19]/30 to-transparent pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-t from-[#030a19]/60 via-transparent to-[#030a19]/30 pointer-events-none" />
 
-      {/* Hero text */}
+      {/* Hero text — hidden during animation, fades in after last card */}
       <div className="relative z-10 flex items-center justify-center px-6 py-24 md:py-32 lg:py-40" style={{ minHeight: '560px' }}>
-        <div className="max-w-5xl mx-auto text-center">
-          <motion.p
-            className="text-sm md:text-base font-semibold uppercase tracking-[0.2em] text-amber-300/90 mb-8 leading-relaxed"
-            animate={{ opacity: phase === 'houseHold' ? 1 : 0.75 }}
-            transition={{ duration: 2 }}
-          >
+        <motion.div
+          className="max-w-5xl mx-auto text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: phase === 'houseHold' ? 1 : 0 }}
+          transition={{ duration: 5 }}
+        >
+          <p className="text-sm md:text-base font-semibold uppercase tracking-[0.2em] text-amber-300/90 mb-8 leading-relaxed">
             $31.3B in U.S. construction rework is caused by poor data and miscommunication every year.¹
             <br />
             Is some of it in your projects?
-          </motion.p>
-          <motion.h1
-            className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-8 tracking-tight leading-[1.05]"
-            animate={{ opacity: phase === 'houseHold' ? 1 : 0.85 }}
-            transition={{ duration: 2 }}
-          >
+          </p>
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-8 tracking-tight leading-[1.05]">
             Control Before You Build.
-          </motion.h1>
-          <motion.p
-            className="text-lg md:text-xl lg:text-2xl text-slate-300 leading-relaxed max-w-2xl mx-auto"
-            animate={{ opacity: phase === 'houseHold' ? 1 : 0.7 }}
-            transition={{ duration: 2 }}
-          >
+          </h1>
+          <p className="text-lg md:text-xl lg:text-2xl text-slate-300 leading-relaxed max-w-2xl mx-auto">
             JiTpro reveals and sequences the procurement constraints your schedule depends on—before they cost you.
-          </motion.p>
-        </div>
+          </p>
+        </motion.div>
       </div>
     </section>
     </>
