@@ -81,7 +81,7 @@ JiTpro consolidates every procurement item, submittal, approval, and decision in
               </p>
             </div>
             <div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Automated notifications and escalation</h3>
+              <h3 className="text-xl font-bold text-slate-900 mb-3">Scheduled notifications and escalation</h3>
               <p className="text-lg text-slate-600 leading-relaxed">
 JiTpro sends advance notifications when deadlines are approaching and escalates items that are at risk. You do not have to remember what needs follow-up — the system handles it.
               </p>
@@ -110,7 +110,7 @@ JiTpro ties procurement timing to actual installation dates. You see whether mat
           <div className="grid md:grid-cols-2 gap-6">
             {[
               'One place to see every procurement item and its status',
-              'Automated follow-ups instead of manual tracking',
+              'Scheduled follow-ups instead of manual tracking',
               'Procurement timing tied to the actual construction schedule',
               'Less time building reports, more time managing the project',
               'Early visibility into items at risk of causing schedule delay',
@@ -131,7 +131,7 @@ JiTpro ties procurement timing to actual installation dates. You see whether mat
             Manage procurement the way you manage the schedule
           </h2>
           <p className="text-lg text-slate-300 leading-relaxed mb-10 max-w-3xl mx-auto">
-JiTpro gives project managers the structure to control procurement timing, the automation to reduce manual tracking, and the documentation to protect the project when decisions drift.
+JiTpro gives project managers the structure to control procurement timing, the playbook to reduce manual tracking, and the documentation to protect the project when decisions drift.
           </p>
           <Link
             to="/how-it-works"

@@ -7,13 +7,13 @@ export default function Product() {
       <section className="px-6 py-20 md:py-28">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-            Procurement intelligence and forecasting
+            Procurement control and forecasting
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed mb-6">
 JiTpro manages the full procurement lifecycle from scope identification to material delivery. It forecasts risk, enforces decision timing, and maintains complete accountability.
           </p>
           <p className="text-lg text-slate-600 leading-relaxed">
-Works alongside your existing project management tools—Procore, Planera, or any other system you use. JiTpro adds the procurement intelligence layer they don't provide.
+Works alongside your existing project management tools—Procore, Planera, or any other system you use. JiTpro adds the procurement control layer they don't provide.
           </p>
         </div>
       </section>

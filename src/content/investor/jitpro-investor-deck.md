@@ -1,7 +1,7 @@
 # JiTpro — Control Before Construction
 
 ## Tagline
-Procurement intelligence that protects your construction schedule.
+Procurement control that protects your construction schedule.
 
 ---
 

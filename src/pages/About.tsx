@@ -34,7 +34,7 @@ export default function About() {
               Construction schedules should succeed or fail based on execution, not procurement delays caused by late decisions.
             </p>
             <p className="text-lg text-slate-600 leading-relaxed">
-              JiTpro exists to give construction professionals control over procurement timing and clear accountability when delays occur. Schedule certainty through better procurement intelligence.
+              JiTpro exists to give construction professionals control over procurement timing and clear accountability when delays occur. Schedule certainty through better procurement control.
             </p>
           </div>
 

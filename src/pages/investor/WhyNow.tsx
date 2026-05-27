@@ -170,7 +170,7 @@ export default function WhyNow() {
                 {[
                   'No single source of truth',
                   'Version conflicts across team',
-                  'No automated deadline tracking',
+                  'No structured deadline tracking',
                   'Responsibility unclear',
                   'No constraint visibility',
                 ].map((item, i) => (
@@ -189,7 +189,7 @@ export default function WhyNow() {
                 {[
                   'Centralized procurement status',
                   'Real-time team alignment',
-                  'Automated deadline enforcement',
+                  'Structured deadline enforcement',
                   'Clear responsibility assignment',
                   'Constraints surfaced proactively',
                 ].map((item, i) => (

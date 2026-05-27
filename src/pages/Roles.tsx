@@ -30,7 +30,7 @@ const roles = [
     to: '/roles/project-managers',
     title: 'Project Managers & Construction Managers',
     description:
-      'You coordinate everything. JiTpro gives you a single view of all procurement, automated follow-ups, and ready-made documentation — so you spend less time tracking and more time managing.',
+      'You coordinate everything. JiTpro gives you a single view of all procurement, scheduled follow-ups, and ready-made documentation — so you spend less time tracking and more time managing.',
   },
 ];
 

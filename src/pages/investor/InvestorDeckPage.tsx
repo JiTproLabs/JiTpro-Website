@@ -426,7 +426,7 @@ export default function InvestorDeckPage() {
           <SectionLabel>03 — Unique Value Proposition</SectionLabel>
         </Reveal>
         <Reveal delay={60}>
-          <SectionTitle>Procurement intelligence that protects your schedule</SectionTitle>
+          <SectionTitle>Procurement control that protects your schedule</SectionTitle>
         </Reveal>
         <Reveal delay={160}>
           <Body>
@@ -459,7 +459,7 @@ export default function InvestorDeckPage() {
           </TimelineNode>
         </TimelineContainer>
         <Reveal delay={390}>
-          <Emphasis>Institutionalized construction intelligence</Emphasis>
+          <Emphasis>Institutionalized construction expertise</Emphasis>
         </Reveal>
       </DeckSection>
 
@@ -544,7 +544,7 @@ export default function InvestorDeckPage() {
           />
         </Reveal>
         <Reveal delay={220}>
-          <Label>PM Platforms</Label>
+          <Label>PM Systems</Label>
           <Bullets items={['Track submittals', 'Do not sequence procurement']} />
         </Reveal>
         <Reveal delay={320}>

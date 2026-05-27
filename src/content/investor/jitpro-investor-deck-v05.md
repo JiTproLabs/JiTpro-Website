@@ -42,7 +42,7 @@ A structured procurement execution plan tied to real constraints.
 
 JiTpro enables contractors to control early execution by making procurement risk visible, assignable, and sequenced before it impacts the schedule.
 
-**Procurement intelligence that protects your schedule**
+**Procurement control that protects your schedule**
 
 ---
 
@@ -55,7 +55,7 @@ JiTpro identifies procurement risk before others do.
 - Deep sequencing expertise not formalized in industry tools
 - A system that converts experience into repeatable execution
 
-**Institutionalized construction intelligence**
+**Institutionalized construction expertise**
 
 ---
 
@@ -100,7 +100,7 @@ Prove early procurement control stabilizes execution and protects margin.
 - Reactive execution
 - Spreadsheet tracking
 
-**PM Platforms:**
+**PM Systems:**
 - Track submittals
 - Do not sequence procurement
 
