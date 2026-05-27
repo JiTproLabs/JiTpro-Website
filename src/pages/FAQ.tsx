@@ -48,19 +48,36 @@ export default function FAQ() {
 
   useEffect(() => {
     if (!openItem) return;
-    // Wait for the 300ms accordion CSS transition to finish so layout is stable
-    const timer = setTimeout(() => {
-      const el = document.getElementById(`faq-${openItem.sectionId}-${openItem.itemIndex}`);
-      if (!el) return;
-      const stickyHeight = 148;
+    const el = document.getElementById(`faq-${openItem.sectionId}-${openItem.itemIndex}`);
+    if (!el) return;
+
+    const stickyHeight = 148;
+    const start = performance.now();
+    const duration = 800;
+    let rafId: number;
+
+    const step = () => {
+      const elapsed = performance.now() - start;
       const rect = el.getBoundingClientRect();
-      // Always scroll the opened item's top to just below the sticky headers
-      window.scrollTo({
-        top: window.scrollY + rect.top - stickyHeight,
-        behavior: 'smooth',
-      });
-    }, 320);
-    return () => clearTimeout(timer);
+      const offset = rect.top - stickyHeight;
+
+      if (Math.abs(offset) > 1) {
+        window.scrollBy(0, offset * 0.12);
+      }
+
+      if (elapsed < duration) {
+        rafId = requestAnimationFrame(step);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      rafId = requestAnimationFrame(step);
+    }, 10);
+
+    return () => {
+      clearTimeout(timer);
+      cancelAnimationFrame(rafId);
+    };
   }, [openItem]);
 
   const scrollToSection = useCallback((id: string) => {

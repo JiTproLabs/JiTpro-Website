@@ -24,12 +24,12 @@ export default function FaqAccordionItem({ itemId, question, answer, isOpen, onT
           </span>
           <ChevronDown
             size={18}
-            className={`mt-0.5 flex-shrink-0 text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+            className={`mt-0.5 flex-shrink-0 text-slate-400 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}
           />
         </button>
       </h3>
       <div
-        className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
+        className={`grid transition-[grid-template-rows] duration-500 ease-in-out ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
       >
         <div className="overflow-hidden">
           <div className="px-6 pb-6 space-y-4">
