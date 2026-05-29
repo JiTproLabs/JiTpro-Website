@@ -201,9 +201,7 @@ export default function MobileHeroSequence() {
               transition={{ duration: TIMING.TEXT_FADE_IN / 1000 }}
             >
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300/90 mb-5 leading-relaxed">
-                $31.3B in U.S. construction rework is caused by poor data and miscommunication every year.¹
-                <br />
-                Is some of it in your projects?
+                Construction schedules are only as reliable as the procurement plan behind them.
               </p>
               <h1 className="text-4xl font-bold text-white mb-5 tracking-tight leading-[1.08]">
                 Control Before You Build.

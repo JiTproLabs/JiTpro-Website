@@ -1,17 +1,37 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+// Procurement failure hero.
+//
+// Phases (in order, see heroAnimationData.PHASES for durations):
+//   1. traditional_intro    — chart + title fade in
+//   2. traditional_failure  — time cursor traverses the simplified plan, failure notes appear,
+//                             bar 1 extends past its planned end, bar 2 is pushed and locked once
+//                             cursor passes BAR_LOCK_AT_CURSOR, buffer is consumed
+//   3. late_delivery        — brief dwell at the end of the (now late) bar 2
+//   4. reset                — chart fades out, house begins fading in
+//   5. final_hero           — hero copy fades in over the fully-visible house
+//
+// The detailed-Gantt → compressed-bar JiTpro animation that used to follow this
+// one has been moved to _archive/JitproGanttAnimation.tsx for reuse elsewhere.
+//
+// Adjust pacing in heroAnimationData.PHASES. Adjust labels in traditionalScenario there too.
+import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import MobileHeroSequence from './MobileHeroSequence';
 import {
-  cardConfigs, cardGeometries, chaoticFragments, ambientFlows, ambientGlows,
-  getTimingForCard, PAUSE_FRAC,
-  CHAOS_MS, FLOW_MS, OVERLAP_MS,
+  TOTAL_MS, TRADITIONAL_PAUSE_MS,
+  FAILURE_PRE_ROLL_MS, FAILURE_CURSOR_FADE_MS, FAILURE_MOTION_BUDGET_MS,
+  BAR_LOCK_AT_CURSOR,
+  phaseStart, currentPhase, phaseProgress,
+  traditionalScenario, HERO_MIN_HEIGHT,
+  type PhaseId,
 } from '../../content/heroAnimationData';
 
-type Phase = 'chaos' | 'flowing' | 'completing' | 'fading' | 'houseHold' | 'houseFade' | 'idle';
-
-interface ActiveNote { id: number; text: string; x: number; y: number }
-
-let noteIdCounter = 0;
+// Derived geometry — bar 2 length comes from the planned data and combines with
+// the lock position to determine where the cursor (and bar 2's right edge) end up.
+const FAB_PLANNED_LENGTH = (() => {
+  const f = traditionalScenario.bars.find(b => b.id === 'fab')!;
+  return f.end - f.start;
+})();
+const LATE_BAR2_END = BAR_LOCK_AT_CURSOR + FAB_PLANNED_LENGTH;
 
 function useReducedMotion() {
   const [r, setR] = useState(false);
@@ -25,386 +45,536 @@ function useReducedMotion() {
   return r;
 }
 
-const statusColors: Record<string, string> = {
-  'Approved': '#34d399', 'Released': '#fbbf24', 'Complete': '#34d399',
-  'Confirmed': '#6ee7b7', 'Submitted': '#38bdf8', 'Started': '#fcd34d',
-  'On-Time Delivery': '#34d399',
-};
+// ===== Visual constants =====
 
-function statusColor(text: string): string {
-  for (const [key, color] of Object.entries(statusColors)) {
-    if (text.includes(key)) return color;
-  }
-  return '#fbbf24';
+const ROW_HEIGHT_PCT = 11;       // % of gantt area per row
+const ROW_GAP_PCT    = 2;        // % gap between rows
+/** Top offset positions the bar block in the upper portion of the chart area
+ *  (optical-center territory, ~42% from top), matching where the hero copy
+ *  appears after fade-in. */
+const ROW_TOP_OFFSET_PCT = 15;
+const TIMELINE_LEFT_PCT  = 22;   // left padding for row labels
+const TIMELINE_RIGHT_PCT = 6;    // right padding for breathing room
+const TIMELINE_WIDTH_PCT = 100 - TIMELINE_LEFT_PCT - TIMELINE_RIGHT_PCT;
+
+const STAGE_COLORS = [
+  // 0 = neutral (planned)
+  { bar: 'rgba(100,116,139,0.35)', border: 'rgba(148,163,184,0.55)', text: 'rgba(226,232,240,0.9)' },
+  // 1 = warning (cursor inside / risk emerging)
+  { bar: 'rgba(245,158,11,0.32)',  border: 'rgba(245,158,11,0.85)',  text: 'rgba(254,243,199,0.95)' },
+  // 2 = critical (cursor past planned end / failure)
+  { bar: 'rgba(220,38,38,0.34)',   border: 'rgba(220,38,38,0.85)',   text: 'rgba(254,226,226,0.95)' },
+];
+
+/**
+ * Convert timeline fraction (0..max) into absolute % across the section, accounting for label padding.
+ * Default max = 1 (used by JiTpro scenarios). The traditional Gantt passes
+ * LATE_BAR2_END so the visible chart area expands to include Bar 2's overshoot.
+ */
+function timelineX(frac: number, max: number = 1): number {
+  return TIMELINE_LEFT_PCT + (Math.max(0, Math.min(max, frac)) / max) * TIMELINE_WIDTH_PCT;
 }
+
+/** Row Y position (% from top of gantt area) for the given row index. */
+function rowY(row: number): number {
+  return ROW_TOP_OFFSET_PCT + row * (ROW_HEIGHT_PCT + ROW_GAP_PCT);
+}
+
+// ===== Main hero =====
 
 export default function ProcurementFlowHero() {
   const reducedMotion = useReducedMotion();
-  const [activeCard, setActiveCard] = useState(0);
-  const [phase, setPhase] = useState<Phase>('chaos');
-  const [completedCards, setCompletedCards] = useState(0);
-  const completedRef = useRef(0);
-  const [cardCycleKey, setCardCycleKey] = useState(0);
-  const [notes, setNotes] = useState<ActiveNote[]>([]);
-  const [cardStatus, setCardStatus] = useState('');
-  const [prevCardIdx, setPrevCardIdx] = useState<number | null>(null);
-  const [prevCardKey, setPrevCardKey] = useState(0);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const noteTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [elapsed, setElapsed] = useState(0);
+  const [skipped, setSkipped] = useState(false);
+  const rafRef = useRef<number | null>(null);
+  const startRef = useRef<number | null>(null);
 
-  const clearTimers = useCallback(() => {
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
-  }, []);
-
-  const addTimer = useCallback((fn: () => void, ms: number) => {
-    timers.current.push(setTimeout(fn, ms));
-  }, []);
-
-  const showNote = useCallback((x: number, y: number, text: string) => {
-    const id = ++noteIdCounter;
-    setNotes(prev => [...prev, { id, text, x, y }]);
-    setCardStatus(text);
-    noteTimers.current.push(setTimeout(() => setNotes(prev => prev.filter(n => n.id !== id)), FLOW_MS * PAUSE_FRAC));
-  }, []);
-
-  const activeCardRef = useRef(0);
-
-  const runCard = useCallback((cardIdx: number) => {
-    clearTimers();
-    noteTimers.current.forEach(clearTimeout);
-    noteTimers.current = [];
-
-    // Save previous card for overlap fade (if not first card)
-    if (cardIdx > 0) {
-      setPrevCardIdx(activeCardRef.current);
-      setPrevCardKey(k => k + 1);
-      setTimeout(() => setPrevCardIdx(null), 1800);
-    }
-
-    activeCardRef.current = cardIdx;
-    setActiveCard(cardIdx);
-    setPhase('chaos');
-    setNotes([]);
-    setCardStatus('');
-    setCardCycleKey(k => k + 1);
-
-    addTimer(() => setPhase('flowing'), CHAOS_MS);
-
-    const flowStart = CHAOS_MS;
-    const geo = cardGeometries[cardIdx];
-    const config = cardConfigs[cardIdx];
-    const numConv = config.processNotes.length;
-    const { convFracs } = getTimingForCard(numConv);
-
-    for (let i = 0; i < numConv; i++) {
-      const [cx, cy] = geo.convergences[i];
-      addTimer(() => showNote(cx, cy, config.processNotes[i]), flowStart + FLOW_MS * convFracs[i]);
-    }
-
-    addTimer(() => {
-      setPhase('completing');
-      setCardStatus('On-Time Delivery');
-    }, CHAOS_MS + FLOW_MS);
-
-    // Start NEXT card during completing phase (card is still visible via prevCard layer)
-    addTimer(() => {
-      completedRef.current += 1;
-      setCompletedCards(completedRef.current);
-
-      if (cardIdx < 5) {
-        runCard(cardIdx + 1);
-      } else {
-        clearTimers();
-        setPhase('houseHold');
-      }
-    }, CHAOS_MS + FLOW_MS + OVERLAP_MS);
-  }, [addTimer, showNote, clearTimers]);
-
+  // Drive elapsed via requestAnimationFrame
   useEffect(() => {
-    if (reducedMotion) { setPhase('houseHold'); setCompletedCards(6); return; }
-    runCard(0);
-    return () => { clearTimers(); noteTimers.current.forEach(clearTimeout); };
-  }, [reducedMotion]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (reducedMotion || skipped) {
+      setElapsed(TOTAL_MS);
+      return;
+    }
+    const step = (now: number) => {
+      if (startRef.current === null) startRef.current = now;
+      const e = now - startRef.current;
+      setElapsed(Math.min(e, TOTAL_MS));
+      if (e < TOTAL_MS) {
+        rafRef.current = requestAnimationFrame(step);
+      }
+    };
+    rafRef.current = requestAnimationFrame(step);
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      startRef.current = null;
+    };
+  }, [reducedMotion, skipped]);
 
-  const config = cardConfigs[activeCard];
-  const geo = cardGeometries[activeCard];
-  const fragments = chaoticFragments[activeCard];
-  const numConv = config.processNotes.length;
-  const { convFracs } = getTimingForCard(numConv);
-  const flowDurSec = FLOW_MS / 1000;
-  const isFlowing = phase === 'flowing';
-  const isCompleting = phase === 'completing';
-  const showingCard = phase !== 'chaos' && phase !== 'houseHold' && phase !== 'houseFade' && phase !== 'idle';
+  const phase = currentPhase(elapsed);
 
-  const buildProgress =
-    phase === 'houseHold' ? 1
-    : phase === 'houseFade' || phase === 'idle' ? 0
-    : completedCards / 6;
+  // Skip control: appears after 3s, hidden in the last ~2.5s of the run
+  const showSkip = !reducedMotion && !skipped && elapsed > 3000 && elapsed < TOTAL_MS - 2500;
 
-  const [cardX, cardY] = geo.cardEndpoint;
+  // House fades in during reset (while the chart fades out); stays on through final_hero
+  const houseOpacity = (() => {
+    if (phase === 'reset') return phaseProgress('reset', elapsed) * 0.95;
+    if (phase === 'final_hero') return 0.95;
+    return 0;
+  })();
 
-  const networkOpacity = phase === 'houseHold' || phase === 'houseFade' || phase === 'idle' ? 0.02 : 0.6;
+  // Hero copy fades in during final_hero
+  const heroCopyOpacity = phase === 'final_hero' ? phaseProgress('final_hero', elapsed) : 0;
 
   return (
     <>
-    {/* Mobile/tablet hero — below lg */}
-    <div className="lg:hidden">
-      <MobileHeroSequence />
-    </div>
+      {/* Mobile — untouched */}
+      <div className="lg:hidden">
+        <MobileHeroSequence />
+      </div>
 
-    {/* Desktop hero — lg and above */}
-    <section className="relative overflow-hidden bg-[#030a19] hidden lg:block" style={{ minHeight: '560px' }}>
-      {/* House render — behind SVG so cards layer in front */}
-      <motion.div
-        className="absolute right-0 bottom-0 pointer-events-none hidden md:block"
-        style={{
-          width: '42%', maxWidth: '620px',
-          maskImage: 'linear-gradient(to right, transparent 0%, black 8%), linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 8%), linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%)',
-          maskComposite: 'intersect',
-          WebkitMaskComposite: 'destination-in',
-        }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: buildProgress * 0.95 }}
-        transition={{ duration: phase === 'houseFade' || phase === 'idle' ? 3 : 2 }}
+      {/* Desktop hero */}
+      <section
+        className="relative overflow-hidden bg-[#030a19] hidden lg:block"
+        style={{ minHeight: `${HERO_MIN_HEIGHT}px` }}
+        aria-label="Procurement control hero animation"
       >
-        <img
-          src={`${import.meta.env.BASE_URL}assets/hero/house-render.png`}
-          alt="" aria-hidden="true"
-          className="w-full h-auto object-contain"
-          style={{ mixBlendMode: 'lighten' }}
-        />
-      </motion.div>
-
-      <div className="absolute inset-0 pointer-events-none">
-        <svg viewBox="0 0 1400 700" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
-          <defs>
-            <filter id="lineGlow" x="-40%" y="-40%" width="180%" height="180%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="4" />
-            </filter>
-            <filter id="dotGlow" x="-300%" y="-300%" width="700%" height="700%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="10" />
-            </filter>
-            <filter id="noteGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
-            </filter>
-            <filter id="aglow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="28" />
-            </filter>
-          </defs>
-
-          {/* Ambient glow */}
-          {ambientGlows.map((g, i) => (
-            <circle key={`ag${i}`} cx={g.cx} cy={g.cy} r={g.r} fill="rgba(160,110,30,0.04)" filter="url(#aglow)"
-              style={{ animation: `heroAmbientGlow ${g.dur}s ease-in-out infinite`, animationDelay: `${i * 1.5}s` }} />
-          ))}
-
-          {/* Previous card fading out (completed state, independent of current card) */}
-          {prevCardIdx !== null && (() => {
-            const pc = cardConfigs[prevCardIdx];
-            const pg = cardGeometries[prevCardIdx];
-            const [pcx, pcy] = pg.cardEndpoint;
-            return (
-              <motion.g
-                key={`prev-${prevCardKey}`}
-                initial={{ opacity: 1 }}
-                animate={{ opacity: 0 }}
-                transition={{ duration: 1.8 }}
-              >
-                {pg.streams.map((s, si) => (
-                  <path key={`ps${si}`} d={s.pathStr} fill="none" stroke="rgb(245,158,11)" strokeWidth={0.8} opacity={0.2} />
-                ))}
-                {pg.mergedPaths.map((m, mi) => (
-                  <path key={`pm${mi}`} d={m.pathStr} fill="none" stroke="rgb(251,191,36)" strokeWidth={1.2} opacity={0.4} />
-                ))}
-                <rect x={pcx + 8} y={pcy - 20} width={195} height={42} rx={5}
-                  fill="rgba(245,158,11,0.25)" stroke="rgba(253,224,71,0.8)" strokeWidth={1.4} />
-                <rect x={pcx + 8} y={pcy - 20} width={3} height={42} rx={1} fill="rgb(253,224,71)" />
-                <circle cx={pcx + 22} cy={pcy} r={3} fill="rgb(253,224,71)" />
-                <text x={pcx + 32} y={pcy - 5} fill="rgba(255,255,255,0.95)"
-                  fontSize={10.5} fontWeight={600} fontFamily="system-ui,sans-serif">{pc.label}</text>
-                <text x={pcx + 32} y={pcy + 9} fill="#34d399"
-                  fontSize={8} fontFamily="system-ui,sans-serif">On-Time Delivery</text>
-                <text x={pcx + 183} y={pcy + 3} fill="rgb(253,224,71)"
-                  fontSize={13} fontFamily="system-ui,sans-serif">✓</text>
-              </motion.g>
-            );
-          })()}
-
-          {/* Ambient background flows */}
-          <g opacity={networkOpacity} style={{ transition: 'opacity 3s' }}>
-            {ambientFlows.map((af, i) => (
-              <path key={`af${i}`} d={af.path} fill="none" stroke="rgb(180,130,40)" strokeWidth={0.5} opacity={af.opacity}
-                style={{ strokeDasharray: `${af.dashLen} ${1400 - af.dashLen}`, animation: `heroFlowMove ${af.dur}s linear infinite`, animationDelay: `${i * 0.5}s` }} />
-            ))}
-          </g>
-
-          {/* === ACTIVE CARD ANIMATION === */}
-          <AnimatePresence>
-            {phase !== 'houseHold' && phase !== 'houseFade' && phase !== 'idle' && (
-              <motion.g key={`card-${cardCycleKey}`} exit={{ opacity: 0, transition: { duration: 1.5 } }}>
-
-                {/* Chaotic fragments */}
-                {(phase === 'chaos' || phase === 'flowing') && (
-                  <motion.g
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: phase === 'chaos' ? 0.6 : 0 }}
-                    transition={{ duration: phase === 'chaos' ? 0.8 : 2 }}
-                  >
-                    {fragments.map((f, i) => (
-                      <path key={`frag${i}`} d={f} fill="none" stroke="rgb(220,160,50)" strokeWidth={0.7}
-                        opacity={0.15 + (i % 5) * 0.06}
-                        style={{
-                          strokeDasharray: '8 12',
-                          animation: `heroFlowMove ${1.5 + (i % 4) * 0.5}s linear infinite`,
-                          animationDelay: `${(i % 7) * 0.15}s`,
-                        }} />
-                    ))}
-                  </motion.g>
-                )}
-
-                {(isFlowing || phase === 'completing') && (
-                  <g>
-                    {/* === STREAM LINES (dynamic count) === */}
-                    {geo.streams.map((stream, si) => {
-                      const targetFrac = si <= 1 ? convFracs[0] : convFracs[si - 1];
-                      const dur = flowDurSec * targetFrac;
-                      // Depth: stream 0 is foreground (brightest), higher indices are background
-                      const depth = si / (geo.streams.length - 1);
-                      const lineOp = 0.6 - depth * 0.25;
-                      const glowOp = 0.25 - depth * 0.1;
-                      const lineSw = 1.2 - depth * 0.4;
-                      const glowSw = 4 - depth * 1.5;
-                      return (
-                        <g key={`stream${si}`}>
-                          {/* Dim base path (always visible) */}
-                          <path d={stream.pathStr} fill="none" stroke="rgb(180,130,40)" strokeWidth={lineSw * 0.5} opacity={0.06} />
-                          {/* Glow */}
-                          <motion.path d={stream.pathStr} fill="none" stroke="rgb(245,158,11)" strokeWidth={glowSw} filter="url(#lineGlow)"
-                            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: dur, ease: 'linear' }} opacity={glowOp} />
-                          {/* Crisp line */}
-                          <motion.path d={stream.pathStr} fill="none" stroke="rgb(245,158,11)" strokeWidth={lineSw}
-                            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: dur, ease: 'linear' }} opacity={lineOp} />
-                        </g>
-                      );
-                    })}
-
-                    {/* === MERGED PATH LINES (dynamic count) === */}
-                    {geo.mergedPaths.map((merged, mi) => {
-                      const startFrac = convFracs[mi] + PAUSE_FRAC;
-                      const endFrac = mi < convFracs.length - 1 ? convFracs[mi + 1] : 1;
-                      const dur = flowDurSec * (endFrac - startFrac);
-                      const delay = flowDurSec * startFrac;
-                      const t = (mi + 1) / geo.mergedPaths.length;
-                      const sw = 1 + t * 1.2;
-                      const glowSw = 3 + t * 4;
-                      return (
-                        <g key={`merged${mi}`}>
-                          <motion.path d={merged.pathStr} fill="none" stroke="rgb(251,191,36)" strokeWidth={glowSw} filter="url(#lineGlow)"
-                            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: dur, delay, ease: 'linear' }} opacity={0.2 + t * 0.15} />
-                          <motion.path d={merged.pathStr} fill="none" stroke="rgb(253,224,71)" strokeWidth={sw}
-                            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: dur, delay, ease: 'linear' }} opacity={0.6 + t * 0.3} />
-                        </g>
-                      );
-                    })}
-
-                    {/* Dots removed — convergence flash dots appear via the notes system */}
-                  </g>
-                )}
-
-                {/* PI Card */}
-                {showingCard && (
-                  <motion.g
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: phase === 'fading' ? 0 : 1 }}
-                    transition={{ duration: phase === 'fading' ? 0.5 : 0.6 }}
-                  >
-                    <rect x={cardX + 8} y={cardY - 20} width={195} height={42} rx={5}
-                      fill={isCompleting ? 'rgba(245,158,11,0.25)' : 'rgba(15,23,42,0.88)'}
-                      stroke={isCompleting ? 'rgba(253,224,71,0.8)' : 'rgba(245,158,11,0.35)'}
-                      strokeWidth={isCompleting ? 1.4 : 0.8}
-                    />
-                    <rect x={cardX + 8} y={cardY - 20} width={3} height={42} rx={1}
-                      fill={isCompleting ? 'rgb(253,224,71)' : 'rgb(245,158,11)'} opacity={isCompleting ? 1 : 0.6}
-                    />
-                    <circle cx={cardX + 22} cy={cardY} r={3}
-                      fill={isCompleting ? 'rgb(253,224,71)' : 'rgba(245,158,11,0.5)'} />
-                    <text x={cardX + 32} y={cardY - 5} fill="rgba(255,255,255,0.95)"
-                      fontSize={10.5} fontWeight={600} fontFamily="system-ui,sans-serif">
-                      {config.label}
-                    </text>
-                    <text x={cardX + 32} y={cardY + 9}
-                      fill={statusColor(cardStatus || 'Buyout')}
-                      fontSize={8} fontFamily="system-ui,sans-serif">
-                      {cardStatus || 'Buyout...'}
-                    </text>
-                    <text x={cardX + 183} y={cardY + 3}
-                      fill={isCompleting ? 'rgb(253,224,71)' : 'rgba(255,255,255,0.12)'}
-                      fontSize={13} fontFamily="system-ui,sans-serif">
-                      ✓
-                    </text>
-                    {isCompleting && (
-                      <motion.rect x={cardX + 6} y={cardY - 22} width={199} height={46} rx={6}
-                        fill="none" stroke="rgba(253,224,71,0.6)" strokeWidth={1.5}
-                        initial={{ opacity: 0.9 }} animate={{ opacity: 0 }}
-                        transition={{ duration: 0.8 }}
-                      />
-                    )}
-                  </motion.g>
-                )}
-              </motion.g>
-            )}
-          </AnimatePresence>
-
-          {/* Convergence notes */}
-          <AnimatePresence>
-            {notes.map(note => (
-              <motion.g key={note.id}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                transition={{ duration: 0.35 }}>
-                <text x={note.x + 12} y={note.y - 14} fill="rgb(253,224,71)" fontSize={9}
-                  fontWeight={500} fontFamily="system-ui,sans-serif" filter="url(#noteGlow)" opacity={0.6}>
-                  {note.text}
-                </text>
-                <text x={note.x + 12} y={note.y - 14} fill="rgb(253,224,71)" fontSize={9}
-                  fontWeight={500} fontFamily="system-ui,sans-serif" opacity={0.9}>
-                  {note.text}
-                </text>
-                <circle cx={note.x} cy={note.y} r={4} fill="rgb(253,224,71)" opacity={0.7} />
-                <circle cx={note.x} cy={note.y} r={10} fill="rgb(245,158,11)" filter="url(#dotGlow)" opacity={0.25} />
-              </motion.g>
-            ))}
-          </AnimatePresence>
-        </svg>
-      </div>
-
-      {/* Gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#030a19]/90 via-[#030a19]/30 to-transparent pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#030a19]/60 via-transparent to-[#030a19]/30 pointer-events-none" />
-
-      {/* Hero text — hidden during animation, fades in after last card */}
-      <div className="relative z-10 flex items-center justify-center px-6 py-24 md:py-32 lg:py-40" style={{ minHeight: '560px' }}>
+        {/* House background — fades in during JiTpro execution */}
         <motion.div
-          className="max-w-5xl mx-auto text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: phase === 'houseHold' ? 1 : 0 }}
-          transition={{ duration: 5 }}
+          className="absolute right-0 bottom-0 pointer-events-none"
+          style={{
+            width: '42%', maxWidth: '620px',
+            maskImage: 'linear-gradient(to right, transparent 0%, black 8%), linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 8%), linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%)',
+            maskComposite: 'intersect',
+            WebkitMaskComposite: 'destination-in',
+          }}
+          animate={{ opacity: houseOpacity }}
+          transition={{ duration: 0.5, ease: 'linear' }}
         >
-          <p className="text-sm md:text-base font-semibold uppercase tracking-[0.2em] text-amber-300/90 mb-8 leading-relaxed">
-            $31.3B in U.S. construction rework is caused by poor data and miscommunication every year.¹
-            <br />
-            Is some of it in your projects?
-          </p>
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-8 tracking-tight leading-[1.05]">
-            Control Before You Build.
-          </h1>
-          <p className="text-lg md:text-xl lg:text-2xl text-slate-300 leading-relaxed max-w-2xl mx-auto">
-            JiTpro reveals and sequences the procurement constraints your schedule depends on—before they cost you.
-          </p>
+          <img
+            src={`${import.meta.env.BASE_URL}assets/hero/house-render.png`}
+            alt="" aria-hidden="true"
+            className="w-full h-auto object-contain"
+            style={{ mixBlendMode: 'lighten' }}
+          />
         </motion.div>
-      </div>
-    </section>
+
+        {/* Gantt stage */}
+        {!reducedMotion && <GanttStage phase={phase} elapsed={elapsed} />}
+
+        {/* Gradient overlays for readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#030a19]/85 via-[#030a19]/20 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#030a19]/55 via-transparent to-[#030a19]/30 pointer-events-none" />
+
+        {/* Hero copy — fades in during final_hero. Asymmetric padding on lg
+            shifts the centered content to optical center (~42% from top) so it
+            aligns with the animation's bar block. */}
+        <div
+          className="relative z-10 flex items-center justify-center px-6 py-24 md:py-32 lg:pt-20 lg:pb-40 pointer-events-none"
+          style={{ minHeight: `${HERO_MIN_HEIGHT}px` }}
+        >
+          <div
+            className="max-w-5xl mx-auto text-center"
+            style={{ opacity: heroCopyOpacity }}
+          >
+            <p className="text-sm md:text-base font-semibold uppercase tracking-[0.2em] text-amber-300/90 mb-8 leading-relaxed">
+              Construction schedules are only as reliable as the procurement plan behind them.
+            </p>
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-8 tracking-tight leading-[1.05]">
+              Control Before You Build.
+            </h1>
+            <p className="text-lg md:text-xl lg:text-2xl text-slate-300 leading-relaxed max-w-2xl mx-auto">
+              JiTpro reveals and sequences the procurement constraints your schedule depends on—before they cost you.
+            </p>
+          </div>
+        </div>
+
+        {/* Skip animation control */}
+        {showSkip && (
+          <button
+            onClick={() => setSkipped(true)}
+            className="absolute top-5 right-5 z-30 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.18em] font-medium text-white/45 hover:text-white/85 border border-white/10 hover:border-white/30 rounded-full transition-colors bg-[#030a19]/40 backdrop-blur-sm"
+          >
+            Skip animation
+          </button>
+        )}
+      </section>
     </>
   );
 }
+
+// ===== Gantt stage =====
+
+interface GanttStageProps { phase: PhaseId; elapsed: number; }
+
+function GanttStage({ phase, elapsed }: GanttStageProps) {
+  const traditionalVisible = ['traditional_intro', 'traditional_failure', 'late_delivery', 'reset'].includes(phase);
+
+  const traditionalOpacity = (() => {
+    if (phase === 'traditional_intro') return phaseProgress('traditional_intro', elapsed);
+    if (phase === 'traditional_failure' || phase === 'late_delivery') return 1;
+    if (phase === 'reset') return 1 - phaseProgress('reset', elapsed);
+    return 0;
+  })();
+
+  const titleOpacity = (() => {
+    if (phase === 'traditional_intro') return phaseProgress('traditional_intro', elapsed);
+    if (phase === 'reset') return 1 - phaseProgress('reset', elapsed);
+    if (phase === 'final_hero') return 0;
+    return 1;
+  })();
+
+  return (
+    <div className="absolute inset-0 z-20 pointer-events-none">
+      {/* Title band — pt sized so the title sits just above the bar block (which starts at ROW_TOP_OFFSET_PCT). */}
+      <div className="absolute top-0 left-0 right-0 px-8 pt-24 pb-2">
+        <div className="max-w-6xl mx-auto text-center">
+          <h2
+            className="text-lg md:text-xl lg:text-2xl font-semibold text-slate-200 tracking-tight transition-opacity"
+            style={{ opacity: titleOpacity, transitionDuration: '400ms' }}
+          >
+            {traditionalScenario.title}
+          </h2>
+        </div>
+      </div>
+
+      {/* Chart area */}
+      <div className="absolute left-0 right-0 px-8" style={{ top: '90px', bottom: '90px' }}>
+        <div className="relative max-w-6xl mx-auto h-full">
+          {traditionalVisible && (
+            <div className="absolute inset-0 transition-opacity duration-300" style={{ opacity: traditionalOpacity }}>
+              <TraditionalGantt phase={phase} elapsed={elapsed} />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ===== Scenario 1: Traditional Gantt =====
+
+/** Window during which a note fades in/out around its pause. */
+const NOTE_FADE_MS = 320;
+
+/**
+ * Piecewise "Today" cursor for the failure phase.
+ *
+ * The cursor smoothly traverses each motion segment between notes, then pauses
+ * for TRADITIONAL_PAUSE_MS at the note (long enough to read), then continues.
+ *
+ * Returns the current cursor x plus a per-note opacity array. A note ramps from
+ * 0 → 1 during the last NOTE_FADE_MS of the cursor's approach, holds at 1 during
+ * the pause, and ramps from 1 → 0 during the first NOTE_FADE_MS of departure.
+ */
+function computeFailureCursor(elapsedInPhase: number): {
+  x: number;
+  cursorOpacity: number;
+  noteOpacity: number[];
+} {
+  const triggers = traditionalScenario.failureNotes.map(n => n.trigger);
+  // Cursor finishes the failure phase at the locked right edge of Bar 2 — well past
+  // the original onsite milestone. The last note ("Original Onsite Date Missed")
+  // sits at 0.92, so the final motion segment 0.92 → LATE_BAR2_END is where the
+  // cursor visually slips past the planned date into late delivery.
+  const endPos = LATE_BAR2_END;
+  const totalPauseMs = triggers.length * TRADITIONAL_PAUSE_MS;
+  const totalMotionMs = Math.max(0, FAILURE_MOTION_BUDGET_MS - totalPauseMs);
+  const noteOpacity = triggers.map(() => 0);
+
+  // Stage 1 — pre-roll: chart sits alone; cursor not yet visible
+  if (elapsedInPhase < FAILURE_PRE_ROLL_MS) {
+    return { x: 0, cursorOpacity: 0, noteOpacity };
+  }
+
+  // Stage 2 — cursor fades in at position 0, motion has not begun
+  const elapsedAfterPreRoll = elapsedInPhase - FAILURE_PRE_ROLL_MS;
+  if (elapsedAfterPreRoll < FAILURE_CURSOR_FADE_MS) {
+    return {
+      x: 0,
+      cursorOpacity: elapsedAfterPreRoll / FAILURE_CURSOR_FADE_MS,
+      noteOpacity,
+    };
+  }
+
+  // Stage 3 — motion begins (cursor fully visible)
+  const elapsedAfterFade = elapsedAfterPreRoll - FAILURE_CURSOR_FADE_MS;
+
+  // Segments between checkpoints: [0 → n0, n0 → n1, ..., nk → endPos]
+  const checkpoints = [0, ...triggers, endPos];
+  const segLengths: number[] = [];
+  for (let i = 1; i < checkpoints.length; i++) {
+    segLengths.push(checkpoints[i] - checkpoints[i - 1]);
+  }
+
+  let timeAccum = 0;
+  let posAccum = 0;
+  for (let i = 0; i < segLengths.length; i++) {
+    const segLen = segLengths[i];
+    const segDur = totalMotionMs * (segLen / endPos);
+
+    // Motion segment i: cursor approaches checkpoint i (which is a note if i < triggers.length)
+    if (elapsedAfterFade < timeAccum + segDur) {
+      const t = (elapsedAfterFade - timeAccum) / segDur;
+      const eased = t * t * (3 - 2 * t); // smoothstep — eases in/out of each rest
+      const x = posAccum + segLen * eased;
+
+      // Fade-in for the upcoming note (this segment terminates at a note)
+      if (i < triggers.length) {
+        const timeUntilPause = (timeAccum + segDur) - elapsedAfterFade;
+        if (timeUntilPause < NOTE_FADE_MS) {
+          noteOpacity[i] = 1 - timeUntilPause / NOTE_FADE_MS;
+        }
+      }
+      // Fade-out for the previous note (this segment departed from it)
+      if (i > 0) {
+        const timeSinceDeparture = elapsedAfterFade - timeAccum;
+        if (timeSinceDeparture < NOTE_FADE_MS) {
+          noteOpacity[i - 1] = 1 - timeSinceDeparture / NOTE_FADE_MS;
+        }
+      }
+      return { x, cursorOpacity: 1, noteOpacity };
+    }
+    timeAccum += segDur;
+    posAccum += segLen;
+
+    // Pause at note i
+    if (i < triggers.length) {
+      if (elapsedAfterFade < timeAccum + TRADITIONAL_PAUSE_MS) {
+        noteOpacity[i] = 1;
+        return { x: posAccum, cursorOpacity: 1, noteOpacity };
+      }
+      timeAccum += TRADITIONAL_PAUSE_MS;
+    }
+  }
+  return { x: endPos, cursorOpacity: 1, noteOpacity };
+}
+
+function TraditionalGantt({ phase, elapsed }: { phase: PhaseId; elapsed: number }) {
+  // Cursor x (0..~1.10 — overshoots past the onsite date during late_delivery)
+  const elapsedInFailure = elapsed - phaseStart('traditional_failure');
+  const emptyOpacity = traditionalScenario.failureNotes.map(() => 0);
+  const failureCursor = phase === 'traditional_failure'
+    ? computeFailureCursor(elapsedInFailure)
+    : {
+        x: phase === 'late_delivery' || phase === 'reset' ? LATE_BAR2_END : 0,
+        cursorOpacity: phase === 'late_delivery' ? 1 : 0,
+        noteOpacity: emptyOpacity,
+      };
+
+  const cursorX = (() => {
+    if (phase === 'traditional_intro') return 0;
+    if (phase === 'traditional_failure') return failureCursor.x;
+    // Cursor reached LATE_BAR2_END at end of failure phase; hold there during late_delivery / reset
+    if (phase === 'late_delivery' || phase === 'reset') return LATE_BAR2_END;
+    return 0;
+  })();
+
+  const cursorOpacity = failureCursor.cursorOpacity;
+  const noteOpacities = failureCursor.noteOpacity;
+
+  const showCursor = phase === 'traditional_failure' || phase === 'late_delivery';
+  const cursorBeyondOnsite = cursorX > 0.92;
+
+  // ===== Dynamic schedule slip =====
+  // Bar 1 (Buyout) right edge follows the cursor once it passes the planned end.
+  // Bar 2 (Fabrication) preserves its planned length but slides right with Bar 1.
+  // Buffer shrinks from the left as Bar 2's end pushes into it. When the cursor
+  // has pushed Bar 2's end past the onsite milestone, Bar 2 turns red (will be late).
+  const planned = {
+    buyoutEnd: traditionalScenario.bars.find(b => b.id === 'buyout')!.end,
+    fabLength: (() => {
+      const f = traditionalScenario.bars.find(b => b.id === 'fab')!;
+      return f.end - f.start;
+    })(),
+    bufferStart: traditionalScenario.bars.find(b => b.id === 'buffer')!.start,
+    onsite: traditionalScenario.onsite.position,
+  };
+
+  const dyn = (() => {
+    // Bar 1 right edge follows the cursor until BAR_LOCK_AT_CURSOR; from that
+    // point on, Bar 1 (and therefore Bar 2's pushed position) is locked. The
+    // cursor then continues alone, representing time slipping past the schedule.
+    const buyoutEnd = Math.max(planned.buyoutEnd, Math.min(cursorX, BAR_LOCK_AT_CURSOR));
+    const fabStart = buyoutEnd;
+    const fabEnd = fabStart + planned.fabLength;
+    const bufferStart = Math.max(planned.bufferStart, fabEnd);
+    const bufferWidth = Math.max(0, planned.onsite - bufferStart);
+    return { buyoutEnd, fabStart, fabEnd, bufferStart, bufferWidth };
+  })();
+
+  // Bar stage from the dynamic positions
+  const dynamicBarStage = (id: string): 0 | 1 | 2 => {
+    if (id === 'buyout') {
+      if (cursorX <= 0) return 0;                        // planned, nothing happening yet
+      if (cursorX > planned.buyoutEnd) return 2;         // running long → critical
+      return 1;                                          // in progress
+    }
+    if (id === 'fab') {
+      if (cursorX < planned.buyoutEnd) return 0;         // not yet shifted
+      if (dyn.fabEnd > planned.onsite) return 2;         // shifted past onsite → critical
+      return 1;                                          // shifted but recoverable
+    }
+    // buffer
+    return dyn.bufferStart > planned.bufferStart ? 1 : 0;
+  };
+
+  // The traditional Gantt's timeline runs 0 → LATE_BAR2_END so that the late
+  // overshoot of Bar 2 (past the original onsite milestone) stays within the visible chart.
+  const TMAX = LATE_BAR2_END;
+
+  return (
+    <div className="relative w-full h-full">
+      {/* Timeline baseline (axis) */}
+      <div
+        className="absolute h-px bg-slate-500/30"
+        style={{ left: `${TIMELINE_LEFT_PCT}%`, width: `${TIMELINE_WIDTH_PCT}%`, top: `${rowY(4) - 2}%` }}
+      />
+
+      {/* Bars — positions are dynamic, driven by the cursor */}
+      {traditionalScenario.bars.map(bar => {
+        const stage = dynamicBarStage(bar.id);
+        const colors = STAGE_COLORS[stage];
+
+        let visibleStart = 0;
+        let visibleWidth = 0;
+        if (bar.id === 'buyout') {
+          visibleStart = 0;
+          visibleWidth = dyn.buyoutEnd;
+        } else if (bar.id === 'fab') {
+          visibleStart = dyn.fabStart;
+          visibleWidth = dyn.fabEnd - dyn.fabStart;
+        } else if (bar.id === 'buffer') {
+          visibleStart = dyn.bufferStart;
+          visibleWidth = dyn.bufferWidth;
+        }
+        const left = timelineX(visibleStart, TMAX);
+        const width = (visibleWidth / TMAX) * TIMELINE_WIDTH_PCT;
+
+        return (
+          <div key={bar.id} className="absolute" style={{ top: `${rowY(bar.row)}%`, left: 0, right: 0, height: `${ROW_HEIGHT_PCT}%` }}>
+            {/* Row label */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 text-[11px] font-medium text-slate-400 pr-3 text-right"
+              style={{ left: 0, width: `${TIMELINE_LEFT_PCT - 1}%` }}
+            >
+              {bar.label}
+            </div>
+            {/* Bar */}
+            {visibleWidth > 0.001 && (
+              <div
+                className="absolute top-1/2 -translate-y-1/2 rounded-[3px] border transition-colors duration-300 flex items-center px-2 overflow-hidden"
+                style={{
+                  left: `${left}%`,
+                  width: `${width}%`,
+                  height: '60%',
+                  background: colors.bar,
+                  borderColor: colors.border,
+                }}
+              >
+                {bar.isBuffer && (
+                  <span className="text-[10px] font-medium tracking-wide uppercase opacity-80 whitespace-nowrap" style={{ color: colors.text }}>
+                    Hidden Buffer
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Required Onsite Date milestone (diamond) */}
+      <div className="absolute" style={{ top: `${rowY(traditionalScenario.onsite.row)}%`, left: 0, right: 0, height: `${ROW_HEIGHT_PCT}%` }}>
+        <div className="absolute top-1/2 -translate-y-1/2 text-[11px] font-medium text-slate-400 pr-3 text-right"
+          style={{ left: 0, width: `${TIMELINE_LEFT_PCT - 1}%` }}>
+          {traditionalScenario.onsite.label}
+        </div>
+        <div
+          className="absolute top-1/2"
+          style={{
+            left: `calc(${timelineX(traditionalScenario.onsite.position, TMAX)}% - 7px)`,
+            transform: 'translateY(-50%) rotate(45deg)',
+            width: '14px', height: '14px',
+            background: cursorBeyondOnsite ? 'rgba(220,38,38,0.85)' : 'rgba(148,163,184,0.6)',
+            border: '1.5px solid',
+            borderColor: cursorBeyondOnsite ? 'rgba(254,226,226,0.95)' : 'rgba(203,213,225,0.85)',
+            transition: 'background 400ms, border-color 400ms',
+          }}
+        />
+      </div>
+
+      {/* Time cursor — extends from the top of row 0 to ~1/4" below the axis line.
+          With ROW_TOP_OFFSET_PCT=25 and axis at 75%, height 56% reaches ~6% past the axis. */}
+      {showCursor && cursorOpacity > 0.001 && (
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            top: `${ROW_TOP_OFFSET_PCT}%`,
+            left: `calc(${timelineX(cursorX, TMAX)}% - 1px)`,
+            width: '2px',
+            height: '56%',
+            opacity: cursorOpacity,
+            background: cursorBeyondOnsite
+              ? 'linear-gradient(to bottom, rgba(220,38,38,0.95), rgba(220,38,38,0.55))'
+              : 'linear-gradient(to bottom, rgba(253,224,71,0.95), rgba(245,158,11,0.55))',
+            boxShadow: cursorBeyondOnsite ? '0 0 12px rgba(220,38,38,0.45)' : '0 0 12px rgba(245,158,11,0.4)',
+          }}
+        />
+      )}
+
+      {/* Failure notes — opacity ramps in as the cursor approaches, holds during pause, ramps out as it leaves */}
+      {traditionalScenario.failureNotes.map((note, i) => (
+        <FailureNoteBubble key={i} note={note} opacity={noteOpacities[i]} timelineMax={TMAX} />
+      ))}
+
+      {/* Final consequence note — anchored at the cursor's terminal position, text extends left so it
+          doesn't overflow the chart. Fades in during late_delivery, fades out during reset. */}
+      {(phase === 'late_delivery' || phase === 'reset') && (
+        <div
+          className="absolute pointer-events-none whitespace-nowrap text-[11px] font-semibold text-red-300"
+          style={{
+            left: `${timelineX(LATE_BAR2_END, TMAX)}%`,
+            top: `${rowY(traditionalScenario.lateNote.row) + ROW_HEIGHT_PCT + 0.5}%`,
+            opacity: phase === 'late_delivery'
+              ? Math.min(1, phaseProgress('late_delivery', elapsed) * 4)
+              : Math.max(0, 1 - phaseProgress('reset', elapsed) * 2),
+            transform: 'translate(calc(-100% - 8px), 0)',
+            textShadow: '0 0 8px rgba(248,113,113,0.45)',
+          }}
+        >
+          {traditionalScenario.lateNote.text}
+          <span className="inline-block w-1 h-1 ml-1.5 rounded-full bg-red-300 align-middle" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FailureNoteBubble({
+  note, opacity, timelineMax,
+}: {
+  note: { text: string; trigger: number; row: number };
+  opacity: number;
+  timelineMax: number;
+}) {
+  if (opacity <= 0.001) return null;
+  const left = timelineX(note.trigger, timelineMax);
+  const top = rowY(note.row) + ROW_HEIGHT_PCT + 0.5;
+
+  return (
+    <div
+      className="absolute pointer-events-none whitespace-nowrap text-[11px] font-medium text-amber-200/95"
+      style={{
+        left: `${left}%`,
+        top: `${top}%`,
+        opacity,
+        transform: 'translateX(-2px)',
+        textShadow: '0 0 8px rgba(245,158,11,0.4)',
+      }}
+    >
+      <span className="inline-block w-1 h-1 mr-1.5 rounded-full bg-amber-300 align-middle" />
+      {note.text}
+    </div>
+  );
+}
+
