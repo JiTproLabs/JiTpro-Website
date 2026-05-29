@@ -33,6 +33,7 @@ import Admin from './pages/Admin';
 import AdminApproved from './pages/AdminApproved';
 import BrokenBeforeJobStarts from './pages/BrokenBeforeJobStarts';
 import TheRealProcurementTimeline from './pages/TheRealProcurementTimeline';
+import ProcurementSchedule from './pages/ProcurementSchedule';
 
 function App() {
   return (
@@ -80,6 +81,8 @@ function App() {
           <Route path="/thank-you" element={<ThankYou />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/demo" element={<Demo />} />
+          {/* Unlisted — not in nav. Direct-link only. Plan to re-integrate later. */}
+          <Route path="/procurement-schedule" element={<ProcurementSchedule />} />
           <Route path="*" element={<Home />} />
         </Route>
       </Routes>

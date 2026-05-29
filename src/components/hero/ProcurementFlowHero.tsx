@@ -493,7 +493,7 @@ function TraditionalGantt({ phase, elapsed }: { phase: PhaseId; elapsed: number 
               >
                 {bar.isBuffer && (
                   <span className="text-[10px] font-medium tracking-wide uppercase opacity-80 whitespace-nowrap" style={{ color: colors.text }}>
-                    Hidden Buffer
+                    Buffer
                   </span>
                 )}
               </div>

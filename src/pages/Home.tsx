@@ -1,6 +1,5 @@
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { InteractiveProcurementSchedule } from '../components/InteractiveProcurementSchedule';
 import ProcurementFlowHero from '../components/hero/ProcurementFlowHero';
 
 export default function Home() {
@@ -54,21 +53,6 @@ export default function Home() {
           <p className="text-lg text-slate-900 leading-relaxed font-medium">
             JiTpro makes those constraints visible before they impact the schedule.
           </p>
-        </div>
-      </section>
-
-      {/* INTERACTIVE PROCUREMENT SCHEDULE */}
-      <section className="px-6 pb-24">
-        <div className="max-w-6xl mx-auto">
-          <div className="max-w-3xl mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4 leading-snug">
-              Here's what it looks like.
-            </h2>
-            <p className="text-lg text-slate-600 leading-relaxed">
-              A real procurement schedule. Hover any segment to see the phase, dates, and duration. Zoom across quarters, months, weeks, or days.
-            </p>
-          </div>
-          <InteractiveProcurementSchedule />
         </div>
       </section>
 

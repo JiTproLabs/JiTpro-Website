@@ -16,8 +16,9 @@ export interface Phase {
   duration: number;
 }
 
-/** Pause duration at each failure note in Scenario 1. The cursor stops here. */
-export const TRADITIONAL_PAUSE_MS = 900;
+/** Pause duration at each failure note in Scenario 1. The cursor stops here.
+ *  Bump higher for more read time per note; lower for a snappier pace. */
+export const TRADITIONAL_PAUSE_MS = 1300;
 
 /**
  * Time the chart sits alone at the start of the failure phase, before the
@@ -37,7 +38,7 @@ export const FAILURE_CURSOR_FADE_MS = 600;
  * slow the cursor down further; the per-note pauses (TRADITIONAL_PAUSE_MS)
  * are absorbed from this budget so motion time scales accordingly.
  */
-export const FAILURE_MOTION_BUDGET_MS = 16200;
+export const FAILURE_MOTION_BUDGET_MS = 21000;
 
 /**
  * Once the cursor passes this position, Bar 1 (Buyout) stops extending and
@@ -115,7 +116,7 @@ export const traditionalScenario = {
   bars: [
     { id: 'buyout', label: 'Buyout / Submittal / Approval', start: 0.00, end: 0.32, row: 0 },
     { id: 'fab',    label: 'Fabrication / Delivery',        start: 0.32, end: 0.78, row: 1 },
-    { id: 'buffer', label: 'Hidden Buffer',                 start: 0.78, end: 0.92, row: 2, isBuffer: true },
+    { id: 'buffer', label: 'Buffer',                        start: 0.78, end: 0.92, row: 2, isBuffer: true },
   ] as TraditionalBar[],
   onsite: { label: 'Required Onsite Date', position: 0.92, row: 3 },
   failureNotes: [
