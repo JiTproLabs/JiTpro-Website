@@ -45,6 +45,12 @@ function useReducedMotion() {
   return r;
 }
 
+// Per-page-load "already played" flag (module-level, not persisted).
+// Resets when the JS bundle reloads — i.e., on any page refresh — so a refresh
+// of the homepage replays the animation. Persists across SPA navigation, so
+// returning to the homepage via an internal Link finds the flag set and skips.
+let heroPlayedThisLoad = false;
+
 // ===== Visual constants =====
 
 const ROW_HEIGHT_PCT = 11;       // % of gantt area per row
@@ -85,9 +91,16 @@ function rowY(row: number): number {
 export default function ProcurementFlowHero() {
   const reducedMotion = useReducedMotion();
   const [elapsed, setElapsed] = useState(0);
-  const [skipped, setSkipped] = useState(false);
+  // Read the module-level flag synchronously so the first render already knows
+  // whether to skip. On a fresh page load the flag is false (animation plays);
+  // on SPA re-mount after returning to the homepage the flag is true (skipped).
+  const [skipped, setSkipped] = useState(() => heroPlayedThisLoad);
   const rafRef = useRef<number | null>(null);
   const startRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!skipped) heroPlayedThisLoad = true;
+  }, [skipped]);
 
   // Drive elapsed via requestAnimationFrame
   useEffect(() => {
@@ -230,23 +243,25 @@ function GanttStage({ phase, elapsed }: GanttStageProps) {
 
   return (
     <div className="absolute inset-0 z-20 pointer-events-none">
-      {/* Title band — pt sized so the title sits just above the bar block (which starts at ROW_TOP_OFFSET_PCT). */}
+      {/* Title band — pt sized so the title sits just above the bar block (which starts at ROW_TOP_OFFSET_PCT).
+          No CSS transition here; opacity is driven per-frame from phaseProgress so adding a transition
+          would cause the same lag/catch-up jerk the hero copy had. */}
       <div className="absolute top-0 left-0 right-0 px-8 pt-24 pb-2">
         <div className="max-w-6xl mx-auto text-center">
           <h2
-            className="text-lg md:text-xl lg:text-2xl font-semibold text-slate-200 tracking-tight transition-opacity"
-            style={{ opacity: titleOpacity, transitionDuration: '400ms' }}
+            className="text-lg md:text-xl lg:text-2xl font-semibold text-slate-200 tracking-tight"
+            style={{ opacity: titleOpacity }}
           >
             {traditionalScenario.title}
           </h2>
         </div>
       </div>
 
-      {/* Chart area */}
+      {/* Chart area — opacity is rAF-driven; no CSS transition. */}
       <div className="absolute left-0 right-0 px-8" style={{ top: '90px', bottom: '90px' }}>
         <div className="relative max-w-6xl mx-auto h-full">
           {traditionalVisible && (
-            <div className="absolute inset-0 transition-opacity duration-300" style={{ opacity: traditionalOpacity }}>
+            <div className="absolute inset-0" style={{ opacity: traditionalOpacity }}>
               <TraditionalGantt phase={phase} elapsed={elapsed} />
             </div>
           )}
