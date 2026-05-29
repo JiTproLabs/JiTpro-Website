@@ -138,16 +138,20 @@ export default function ProcurementFlowHero() {
         style={{ minHeight: `${HERO_MIN_HEIGHT}px` }}
         aria-label="Procurement control hero animation"
       >
-        {/* House background — fades in during JiTpro execution */}
+        {/* House background — hidden on mount; fades in during reset and stays through final_hero.
+            `initial: { opacity: 0 }` paints opacity 0 on the very first frame so the image
+            does not flash visible before the animation logic engages. */}
         <motion.div
           className="absolute right-0 bottom-0 pointer-events-none"
           style={{
             width: '42%', maxWidth: '620px',
+            opacity: 0,
             maskImage: 'linear-gradient(to right, transparent 0%, black 8%), linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%)',
             WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 8%), linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%)',
             maskComposite: 'intersect',
             WebkitMaskComposite: 'destination-in',
           }}
+          initial={{ opacity: 0 }}
           animate={{ opacity: houseOpacity }}
           transition={{ duration: 0.5, ease: 'linear' }}
         >
