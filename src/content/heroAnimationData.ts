@@ -21,6 +21,32 @@ export interface Phase {
 export const TRADITIONAL_PAUSE_MS = 1300;
 
 /**
+ * Intro sub-stage timings. The intro plays as four back-to-back stages:
+ *   1. INTRO_TITLE_FADE_IN_MS   — title fades in alone, chart hidden
+ *   2. INTRO_TITLE_READ_MS      — title held at full opacity, chart still hidden (read time)
+ *   3. INTRO_CHART_FADE_IN_MS   — chart fades in while title stays at full opacity
+ *   4. INTRO_TITLE_FADE_OUT_MS  — title fades out, chart at full opacity
+ * The traditional_intro phase duration is derived from these.
+ */
+export const INTRO_TITLE_FADE_IN_MS = 700;
+export const INTRO_TITLE_READ_MS    = 2200;
+export const INTRO_CHART_FADE_IN_MS = 900;
+export const INTRO_TITLE_FADE_OUT_MS = 600;
+
+/** Per-stage opacities for the intro, given ms elapsed inside traditional_intro. */
+export function introOpacities(elapsedInIntro: number): { title: number; chart: number } {
+  const s1 = INTRO_TITLE_FADE_IN_MS;
+  const s2 = s1 + INTRO_TITLE_READ_MS;
+  const s3 = s2 + INTRO_CHART_FADE_IN_MS;
+  const s4 = s3 + INTRO_TITLE_FADE_OUT_MS;
+  if (elapsedInIntro < s1) return { title: elapsedInIntro / INTRO_TITLE_FADE_IN_MS, chart: 0 };
+  if (elapsedInIntro < s2) return { title: 1, chart: 0 };
+  if (elapsedInIntro < s3) return { title: 1, chart: (elapsedInIntro - s2) / INTRO_CHART_FADE_IN_MS };
+  if (elapsedInIntro < s4) return { title: 1 - (elapsedInIntro - s3) / INTRO_TITLE_FADE_OUT_MS, chart: 1 };
+  return { title: 0, chart: 1 };
+}
+
+/**
  * Time the chart sits alone at the start of the failure phase, before the
  * "Today" cursor appears. Gives the visitor a moment to digest the chart.
  */
@@ -50,7 +76,7 @@ export const BAR_LOCK_AT_CURSOR = 0.72;
 
 // Total ≈ 26.3s — single (traditional/failure) scenario only.
 export const PHASES: Phase[] = [
-  { id: 'traditional_intro',    duration: 1400 },
+  { id: 'traditional_intro',    duration: INTRO_TITLE_FADE_IN_MS + INTRO_TITLE_READ_MS + INTRO_CHART_FADE_IN_MS + INTRO_TITLE_FADE_OUT_MS },
   { id: 'traditional_failure',  duration: FAILURE_PRE_ROLL_MS + FAILURE_CURSOR_FADE_MS + FAILURE_MOTION_BUDGET_MS },
   { id: 'late_delivery',        duration: 2800 }, // dwell at terminal; lateNote is read here
   { id: 'reset',                duration: 1800 }, // chart fades out, house fades in

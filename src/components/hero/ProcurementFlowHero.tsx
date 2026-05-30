@@ -20,6 +20,7 @@ import {
   TOTAL_MS, TRADITIONAL_PAUSE_MS,
   FAILURE_PRE_ROLL_MS, FAILURE_CURSOR_FADE_MS, FAILURE_MOTION_BUDGET_MS,
   BAR_LOCK_AT_CURSOR,
+  introOpacities,
   phaseStart, currentPhase, phaseProgress,
   traditionalScenario, HERO_MIN_HEIGHT,
   type PhaseId,
@@ -227,18 +228,22 @@ interface GanttStageProps { phase: PhaseId; elapsed: number; }
 function GanttStage({ phase, elapsed }: GanttStageProps) {
   const traditionalVisible = ['traditional_intro', 'traditional_failure', 'late_delivery', 'reset'].includes(phase);
 
+  // During traditional_intro the title plays first (fade-in → read → chart fade-in → title fade-out).
+  // After intro the title stays gone; the animation runs alone.
+  const intro = phase === 'traditional_intro'
+    ? introOpacities(elapsed - phaseStart('traditional_intro'))
+    : null;
+
   const traditionalOpacity = (() => {
-    if (phase === 'traditional_intro') return phaseProgress('traditional_intro', elapsed);
+    if (intro) return intro.chart;
     if (phase === 'traditional_failure' || phase === 'late_delivery') return 1;
     if (phase === 'reset') return 1 - phaseProgress('reset', elapsed);
     return 0;
   })();
 
   const titleOpacity = (() => {
-    if (phase === 'traditional_intro') return phaseProgress('traditional_intro', elapsed);
-    if (phase === 'reset') return 1 - phaseProgress('reset', elapsed);
-    if (phase === 'final_hero') return 0;
-    return 1;
+    if (intro) return intro.title;
+    return 0; // title is faded out by the end of intro and stays gone
   })();
 
   return (
@@ -249,7 +254,7 @@ function GanttStage({ phase, elapsed }: GanttStageProps) {
       <div className="absolute top-0 left-0 right-0 px-8 pt-24 pb-2">
         <div className="max-w-6xl mx-auto text-center">
           <h2
-            className="text-lg md:text-xl lg:text-2xl font-semibold text-slate-200 tracking-tight"
+            className="text-lg md:text-xl lg:text-2xl font-semibold text-amber-300/90 tracking-tight"
             style={{ opacity: titleOpacity }}
           >
             {traditionalScenario.title}
