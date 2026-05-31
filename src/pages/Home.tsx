@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ProcurementFlowHero from '../components/hero/ProcurementFlowHero';
+import TypicalScheduleSection from '../components/TypicalScheduleSection';
 
 export default function Home() {
   return (
@@ -8,53 +9,60 @@ export default function Home() {
       {/* HERO */}
       <ProcurementFlowHero />
 
-      {/* PRIMARY ICP — GENERAL CONTRACTORS */}
+      {/* SEQUENCED PROCUREMENT */}
       <section className="px-6 py-20 bg-slate-50">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-12">
-            You've seen this.
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-8 leading-snug">
+            Sequenced Procurement Supports Healthy Margins
           </h2>
-
-          <p className="text-sm md:text-base font-semibold uppercase tracking-[0.2em] text-amber-600 mb-6">
-            General Contractors
-          </p>
-          <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-6 leading-snug">
-            You're losing money on jobs before they even start.
-          </h3>
-          <div className="text-lg text-slate-600 leading-relaxed space-y-4 mb-8">
+          <div className="text-lg text-slate-600 leading-relaxed space-y-5">
             <p>
-              You commit to a schedule without fully knowing what it will take to actually procure the work.
+              Projects perform best when procurement activities are aligned to the work they support.
             </p>
-            <div className="space-y-1">
-              <p>Missing design.</p>
-              <p>Undefined decisions.</p>
-              <p>Unclear ownership.</p>
-            </div>
             <p>
-              It all shows up later — and now you're chasing the job, paying for it in change orders, expediting, and lost margin.
+              When decisions, approvals, buyout, submittals, fabrication, and delivery are properly sequenced, teams spend less time reacting to problems and more time executing the work as planned.
+            </p>
+            <p className="text-slate-900 font-medium">
+              Healthy schedules support healthy margins.
             </p>
           </div>
-          <Link
-            to="/roles/general-contractors"
-            className="inline-flex items-center gap-2 text-slate-900 font-medium hover:text-amber-600 transition-colors"
-          >
-            Read more
-            <ArrowRight size={18} />
-          </Link>
         </div>
       </section>
 
-      {/* DIAGNOSIS */}
+      {/* PROCUREMENT IS NOT OPTIONAL */}
       <section className="px-6 py-24">
         <div className="max-w-3xl mx-auto">
-          <p className="text-lg text-slate-600 leading-relaxed mb-6">
-            Projects don't destabilize in the field. They destabilize in procurement — weeks or months before construction begins.
-          </p>
-          <p className="text-lg text-slate-900 leading-relaxed font-medium">
-            JiTpro makes those constraints visible before they impact the schedule.
-          </p>
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-8 leading-snug">
+            Procurement Is Not Optional
+          </h2>
+          <div className="text-lg text-slate-600 leading-relaxed space-y-5">
+            <p>
+              Every construction project relies on materials, products, services, decisions, approvals, and information arriving at the right place and the right time.
+            </p>
+            <p>
+              When they do, work progresses as planned.
+            </p>
+            <p>
+              When they don't, schedules compress, teams react, and margin begins to erode.
+            </p>
+            <p>
+              No contractor, owner, architect, or supplier can bypass this reality.
+            </p>
+            <p>
+              The choice is not whether procurement will affect the project.
+            </p>
+            <p>
+              The choice is whether procurement will be managed deliberately or allowed to dictate outcomes after the fact.
+            </p>
+            <p className="text-slate-900 font-medium">
+              JiTpro helps teams take control before procurement takes control of them.
+            </p>
+          </div>
         </div>
       </section>
+
+      {/* TYPICAL SCHEDULE — interactive */}
+      <TypicalScheduleSection />
 
       {/* STAKEHOLDER ROUTER */}
       <section className="px-6 py-20 bg-slate-50">
