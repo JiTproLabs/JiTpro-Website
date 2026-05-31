@@ -79,7 +79,7 @@ export const PHASES: Phase[] = [
   { id: 'traditional_intro',    duration: INTRO_TITLE_FADE_IN_MS + INTRO_TITLE_READ_MS + INTRO_CHART_FADE_IN_MS + INTRO_TITLE_FADE_OUT_MS },
   { id: 'traditional_failure',  duration: FAILURE_PRE_ROLL_MS + FAILURE_CURSOR_FADE_MS + FAILURE_MOTION_BUDGET_MS },
   { id: 'late_delivery',        duration: 2800 }, // dwell at terminal; lateNote is read here
-  { id: 'reset',                duration: 1800 }, // chart fades out, house fades in
+  { id: 'reset',                duration: 4000 }, // chart fades, final card slides+morphs together (one motion), lingers as amber, fades out
   { id: 'final_hero',           duration: 2800 }, // hero text fades in over the house
 ];
 
@@ -147,16 +147,31 @@ export const traditionalScenario = {
   onsite: { label: 'Required Onsite Date', position: 0.92, row: 3 },
   failureNotes: [
     { text: 'Subcontract Buyout Takes Longer Than Planned', trigger: 0.08, row: 0 },
-    { text: 'Submittal Stalls Due to Missing Design',       trigger: 0.20, row: 0 },
-    { text: 'Fabrication Start Missed',         trigger: 0.32, row: 0 },
-    { text: 'Buffer Gone',                      trigger: 0.46, row: 2 },
-    { text: 'Multiple Rounds of Review',        trigger: 0.58, row: 1 },
-    { text: 'Fabrication Starts Late',          trigger: 0.72, row: 1 },
-    { text: 'Original Onsite Date Missed',      trigger: 0.92, row: 3 },
+    { text: 'Submittals Stall Due to Incomplete Design',       trigger: 0.20, row: 0 },
+    { text: 'Fabrication Start Dates Continually Missed',         trigger: 0.32, row: 0 },
+    { text: 'Buffers Vanish',                      trigger: 0.46, row: 0 },
+    { text: 'Multiple Rounds of Review',        trigger: 0.58, row: 0 },
+    { text: 'Fabrication Starts Late',          trigger: 0.72, row: 0 },
+    { text: 'Original Onsite Date Missed',      trigger: 0.92, row: 0 },
   ] as FailureNote[],
+  // Procurement package names shown in the title card above the chart. One per
+  // failure note, in order. The first package is shown during intro and through
+  // the first note's pause; each subsequent note swaps in the next package,
+  // visualizing multiple packages each struggling through procurement.
+  procurementPackages: [
+    'Structural Steel Package',
+    'Steel Windows & Doors',
+    'Electrical Switch Gear',
+    'Plumbing Rough-In Package',
+    'Statuary Marble Slabs',
+    'Cabinet Submittal',
+    'Swimming Pool',
+    'Interior Finishes',
+    'Procurement Delays Compound. Margin Disappears.',
+  ],
   // Shown after the cursor reaches its terminal position (end of the late bar 2),
   // during the late_delivery dwell. The final consequence beat.
-  lateNote: { text: 'Late Material Delivery Impacts Downstream Work', row: 1 },
+  lateNote: { text: 'Late Material Delivery Impacts Downstream Work', row: 0 },
 };
 
 // The JiTpro detailed Gantt + compressed bar animation that used to live here
