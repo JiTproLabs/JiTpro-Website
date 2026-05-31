@@ -167,7 +167,7 @@ export const traditionalScenario = {
     'Cabinet Submittal',
     'Swimming Pool',
     'Interior Finishes',
-    'Procurement Delays Compound. Margin Disappears.',
+    'When Procurement Delays Compound, Margin Disappears.',
   ],
   // Shown after the cursor reaches its terminal position (end of the late bar 2),
   // during the late_delivery dwell. The final consequence beat.
