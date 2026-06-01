@@ -45,8 +45,8 @@ can never drift again.
 | 1 | `intro` | 1.5s | Dark hold, then the vertical spine fades in: 4 stage nodes labeled + Required Onsite diamond at the bottom. Marker hidden. Brief read. |
 | 2 | `descend` | 7s | A horizontal **"Today"** marker sweeps down the spine, pausing at each stage. At each stop: the stage reddens, its failure note fades in beside it, and the **package label at the top swaps**. 4 stops. |
 | 3 | `missed` | 1.5s | Marker reaches Required Onsite; diamond turns red; the missed-delivery line (`lateNote`) appears. Dwell. |
-| 4 | `thesis` | 2.5s | Spine clears; the thesis line scales up in amber with a soft glow and holds. |
-| 5 | `resolve` | — | House render fades in, then hero copy (eyebrow / headline / subhead). Holds. |
+| 4 | `thesis` | 2.5s | Spine clears; the thesis line *"When Procurement Delays Compound, Margin Disappears."* scales up in amber with a soft glow and holds. |
+| 5 | `resolve` | — | The thesis line **fades out as** the house render and hero copy (eyebrow / headline / subhead) fade in, mirroring desktop's morph→linger→fade handoff. Holds on the hero message. |
 
 ### The 4 condensed stops
 
