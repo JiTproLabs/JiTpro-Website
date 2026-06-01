@@ -27,7 +27,7 @@ const ITEMS_RAW: RawItem[] = [
   { id: 'approved-submittal',  type: 'milestone', name: 'Approved Submittal',        duration: 0  },
   { id: 'fab-starts',          type: 'milestone', name: 'Fabrication Starts',        duration: 0  },
   { id: 'fabrication',         type: 'task',      name: 'Fabrication',               duration: 90 },
-  { id: 'trucking',            type: 'task',      name: 'Trucking',                  duration: 8  },
+  { id: 'trucking',            type: 'task',      name: 'Shipping',                  duration: 8  },
   { id: 'onsite-date',         type: 'milestone', name: 'Required Onsite Date',      duration: 0  },
 ];
 
@@ -87,8 +87,10 @@ const AXIS_TICKS = [1, 30, 60, 90, 120, 150, 180, 210, 230];
 // LAYOUT
 // ============================================================================
 
-const LABEL_COL_PX  = 240;
-const ROW_HEIGHT_PX = 32;
+// Row label column width and row height are now expressed as Tailwind responsive
+// classes (`w-[150px] md:w-[240px]`, `h-10 md:h-8`) so the mobile chart can shrink
+// the label gutter and give labels a second line if needed. The mobile label width
+// is mirrored as a JS constant (MOBILE_LABEL_W) for the auto-scroll math.
 const AXIS_HEIGHT_PX = 56;
 
 /** Day → percentage across the bar area (0..100). Day 1 starts at 0%. */
@@ -111,13 +113,39 @@ const ROW_STAGGER_MS = 400; // gap between successive row starts
 const ROW_FADE_MS    = 500; // each row's fade/draw-in duration
 const TOTAL_ANIM_MS  = (ITEMS.length - 1) * ROW_STAGGER_MS + ROW_FADE_MS;
 
+// Mobile: chart is forced wider than the viewport so the date axis breathes; rows are
+// horizontally pannable. MUST stay in sync with the Tailwind w-[150px] / min-w-[900px]
+// classes on the row labels and the scroll wrapper's inner div — the JS auto-scroll
+// math reads them as plain numbers.
+const MOBILE_LABEL_W = 150;
+
+/** Right-most "drawn-to" day at this elapsed time — the leading edge that the mobile
+ *  auto-scroll follows. Items are in calendar order so the most-recently-started row
+ *  always dominates; we still scan all to keep the function robust if that changes. */
+function leadingDayAt(elapsed: number): number {
+  let max = 0;
+  for (let i = 0; i < ITEMS.length; i++) {
+    const rowStart = i * ROW_STAGGER_MS;
+    if (elapsed < rowStart) break;
+    const t = Math.min(1, (elapsed - rowStart) / ROW_FADE_MS);
+    const item = ITEMS[i];
+    const day = item.type === 'milestone'
+      ? item.endDay
+      : (item.startDay - 1) + item.duration * t;
+    if (day > max) max = day;
+  }
+  return max;
+}
+
 // ============================================================================
 // SECTION
 // ============================================================================
 
 export default function ControlledProcurementSection() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const startedRef = useRef(false);
+  const userInteractedRef = useRef(false);
   const [startMs, setStartMs] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
 
@@ -136,7 +164,25 @@ export default function ControlledProcurementSection() {
     return () => observer.disconnect();
   }, []);
 
-  // rAF loop that ticks elapsed up to TOTAL_ANIM_MS once startMs is set.
+  // First touch / pointer / wheel inside the scroll wrapper releases auto-scroll —
+  // we never fight the user's finger.
+  useEffect(() => {
+    const sc = scrollRef.current;
+    if (!sc) return;
+    const onInteract = () => { userInteractedRef.current = true; };
+    sc.addEventListener('touchstart', onInteract, { passive: true });
+    sc.addEventListener('pointerdown', onInteract, { passive: true });
+    sc.addEventListener('wheel',       onInteract, { passive: true });
+    return () => {
+      sc.removeEventListener('touchstart', onInteract);
+      sc.removeEventListener('pointerdown', onInteract);
+      sc.removeEventListener('wheel',       onInteract);
+    };
+  }, []);
+
+  // rAF loop: ticks elapsed up to TOTAL_ANIM_MS. On mobile (only when the inner chart
+  // is wider than the visible viewport) it also follows the leading edge horizontally
+  // so the row currently being drawn stays in view.
   useEffect(() => {
     if (startMs === null) return;
     let raf = 0;
@@ -145,17 +191,32 @@ export default function ControlledProcurementSection() {
       if (cancelled) return;
       const e = now - startMs;
       setElapsed(Math.min(e, TOTAL_ANIM_MS));
+
+      const sc = scrollRef.current;
+      if (sc && !userInteractedRef.current && sc.scrollWidth > sc.clientWidth) {
+        const sw = sc.scrollWidth;
+        const cw = sc.clientWidth;
+        const barAreaW = sw - MOBILE_LABEL_W;
+        const leadX = MOBILE_LABEL_W + (leadingDayAt(e) / CHART_DAYS) * barAreaW;
+        // Keep the leading edge at ~75% across the viewport so the just-drawn portion
+        // is visible and there's a small buffer of what's coming.
+        const target = leadX - cw * 0.75;
+        sc.scrollLeft = Math.max(0, Math.min(target, sw - cw));
+      }
+
       if (e < TOTAL_ANIM_MS) raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
     return () => { cancelled = true; if (raf) cancelAnimationFrame(raf); };
   }, [startMs]);
 
+  const complete = elapsed >= TOTAL_ANIM_MS;
+
   return (
     <section className="px-6 py-24 bg-slate-50">
       <div className="max-w-6xl mx-auto">
         {/* Header copy */}
-        <div className="max-w-3xl mb-12">
+        <div className="max-w-3xl mx-auto mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6 leading-snug">
             What Controlled Procurement Looks Like
           </h2>
@@ -169,9 +230,9 @@ export default function ControlledProcurementSection() {
         {/* Gantt card */}
         <div
           ref={containerRef}
-          className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden"
+          className="relative bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden"
         >
-          {/* Header strip */}
+          {/* Header strip — pinned at viewport width; doesn't scroll horizontally */}
           <div className="px-5 py-3 border-b border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-y-1 text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-500">
             <span>Detailed Procurement Schedule</span>
             <span className="text-slate-400">
@@ -180,15 +241,33 @@ export default function ControlledProcurementSection() {
             </span>
           </div>
 
-          {/* Rows */}
-          <div>
-            {ITEMS.map((item, i) => (
-              <Row key={item.id} item={item} index={i} elapsed={elapsed} />
-            ))}
+          {/* Horizontally scrollable area. The inner div is forced to min-w-[900px] on
+              mobile so the chart overflows and pans; on md+ min-w-0 lets it fit the
+              container exactly (no scroll, no layout change from before). */}
+          <div
+            ref={scrollRef}
+            className="overflow-x-auto overflow-y-hidden"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            <div className="min-w-[900px] md:min-w-0">
+              {/* Rows */}
+              <div>
+                {ITEMS.map((item, i) => (
+                  <Row key={item.id} item={item} index={i} elapsed={elapsed} />
+                ))}
+              </div>
+
+              {/* Date axis */}
+              <DateAxis />
+            </div>
           </div>
 
-          {/* Date axis */}
-          <DateAxis />
+          {/* Right-edge scroll affordance — mobile only; fades in once the build
+              completes so it doesn't compete with the auto-scroll animation. */}
+          <div
+            className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-white to-transparent md:hidden"
+            style={{ opacity: complete ? 1 : 0, transition: 'opacity 400ms' }}
+          />
         </div>
 
         {/* Legend below chart */}
@@ -218,24 +297,24 @@ function Row({ item, index, elapsed }: { item: ComputedItem; index: number; elap
   const rowStartMs = index * ROW_STAGGER_MS;
   const localT = Math.max(0, Math.min(1, (elapsed - rowStartMs) / ROW_FADE_MS));
 
-  // Subtly alternate row backgrounds for readability across 15 rows
-  const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50';
+  // Solid (no alpha) alternation so the sticky mobile label fully occludes bars
+  // sliding behind it during horizontal scroll.
+  const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-slate-50';
 
   return (
-    <div
-      className={`flex items-center border-b border-slate-100 ${rowBg}`}
-      style={{ height: ROW_HEIGHT_PX }}
-    >
-      {/* Label */}
+    <div className={`flex items-stretch border-b border-slate-100 h-10 md:h-8 ${rowBg}`}>
+      {/* Label — sticky on mobile so it stays visible while the bar area pans */}
       <div
-        className="flex-shrink-0 pr-3 text-right text-xs font-medium text-slate-700 overflow-hidden whitespace-nowrap"
-        style={{ width: LABEL_COL_PX, opacity: localT }}
+        className={`sticky left-0 z-10 flex-shrink-0 flex items-center justify-end pr-3 w-[150px] md:w-[240px] border-r border-slate-100 md:border-r-0 ${rowBg}`}
+        style={{ opacity: localT }}
       >
-        {item.name}
+        <span className="text-right text-[10px] md:text-xs font-medium text-slate-700 leading-tight whitespace-normal md:whitespace-nowrap">
+          {item.name}
+        </span>
       </div>
 
       {/* Bar area */}
-      <div className="flex-1 relative h-full">
+      <div className="flex-1 relative">
         {item.type === 'task'
           ? <TaskBar item={item} progress={localT} />
           : <MilestoneMark item={item} opacity={localT} />
@@ -306,7 +385,7 @@ function MilestoneMark({ item, opacity }: { item: ComputedItem; opacity: number 
 function DateAxis() {
   return (
     <div className="flex border-t border-slate-200 bg-slate-50">
-      <div className="flex-shrink-0" style={{ width: LABEL_COL_PX }} />
+      <div className="sticky left-0 z-10 flex-shrink-0 bg-slate-50 border-r border-slate-100 md:border-r-0 w-[150px] md:w-[240px]" />
       <div className="flex-1 relative" style={{ height: AXIS_HEIGHT_PX }}>
         {/* Axis baseline */}
         <div className="absolute left-0 right-0 h-px bg-slate-300" style={{ top: 0 }} />
