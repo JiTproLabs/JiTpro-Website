@@ -161,8 +161,8 @@ export default function ControlledProcurementSection() {
           </h2>
           <p className="text-lg text-slate-600 leading-relaxed">
             Most schedules collapse procurement into 1–2 bars. A real plan accounts for every
-            step — design gates, multiple submittal rounds, vendor revisions, and the trucking
-            window. This is what JiTpro builds, and what it tracks against.
+            step — constraints that prevent forward movement, multiple submittal rounds, vendor
+            revisions, and real, defensible durations for everything.
           </p>
         </div>
 
