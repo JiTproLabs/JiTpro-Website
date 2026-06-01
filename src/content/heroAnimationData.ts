@@ -167,12 +167,56 @@ export const traditionalScenario = {
     'Cabinet Submittal',
     'Swimming Pool',
     'Interior Finishes',
-    'When Procurement Delays Compound, Margin Disappears.',
+    'When Procurement Delays Compound, Margin Disappears',
   ],
   // Shown after the cursor reaches its terminal position (end of the late bar 2),
   // during the late_delivery dwell. The final consequence beat.
   lateNote: { text: 'Late Material Delivery Impacts Downstream Work', row: 0 },
 };
+
+// ===== Shared hero copy =====
+// The eyebrow / headline / subhead that fade in at the end of the animation.
+// Consumed by BOTH the desktop hero (ProcurementFlowHero) and the mobile hero
+// (MobileHeroSequence) so the two can never drift apart.
+export const heroCopy = {
+  eyebrow: 'Construction schedules are only as reliable as the procurement plan behind them.',
+  headline: 'Control Before You Build.',
+  subhead: 'JiTpro reveals and sequences the procurement constraints your schedule depends on—before they cost you.',
+};
+
+// The intro framing line shown before the schedule appears (desktop intro title /
+// mobile opening beat). Referenced by name so both heroes use the identical string.
+export const introTitle = traditionalScenario.title;
+
+// The thesis line that scales in (desktop morph / mobile thesis beat) right before
+// the hero copy. It is the final procurementPackages entry — referenced by name here
+// so both heroes use the identical string.
+export const thesisLine = traditionalScenario.procurementPackages[
+  traditionalScenario.procurementPackages.length - 1
+];
+
+// ===== Mobile scrolling-Gantt stops =====
+// The 5 pause-stops for the portrait mobile hero. Each maps a `trigger` position
+// (0..1 — the same plan-fraction coordinate as the desktop failureNotes and the
+// scrolling chart's `progress`) to a failure note and the procurement package
+// shown while it fires. Notes and packages are drawn verbatim from
+// traditionalScenario above so the mobile story stays identical to desktop's.
+export interface MobileStop {
+  trigger: number;
+  note: string;
+  package: string;
+}
+
+export const mobileStops: MobileStop[] = [
+  { trigger: 0.08, note: 'Subcontract Buyout Takes Longer Than Planned', package: 'Structural Steel Package' },
+  { trigger: 0.20, note: 'Submittals Stall Due to Incomplete Design',    package: 'Steel Windows & Doors' },
+  { trigger: 0.46, note: 'Buffers Vanish',                                package: 'Electrical Switch Gear' },
+  { trigger: 0.72, note: 'Fabrication Starts Late',                       package: 'Plumbing Rough-In Package' },
+  { trigger: 0.92, note: 'Original Onsite Date Missed',                   package: 'Statuary Marble Slabs' },
+];
+
+// The missed-delivery dwell line, reused from the scenario's lateNote.
+export const mobileLateLine = traditionalScenario.lateNote.text;
 
 // The JiTpro detailed Gantt + compressed bar animation that used to live here
 // has been archived to src/components/hero/_archive/JitproGanttAnimation.tsx

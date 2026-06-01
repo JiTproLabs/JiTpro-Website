@@ -22,7 +22,7 @@ import {
   BAR_LOCK_AT_CURSOR,
   introOpacities,
   phaseStart, currentPhase, phaseProgress,
-  traditionalScenario, HERO_MIN_HEIGHT,
+  traditionalScenario, HERO_MIN_HEIGHT, heroCopy,
   type PhaseId,
 } from '../../content/heroAnimationData';
 
@@ -210,13 +210,13 @@ export default function ProcurementFlowHero() {
             style={{ opacity: heroCopyOpacity }}
           >
             <p className="text-sm md:text-base font-semibold uppercase tracking-[0.2em] text-amber-300/90 mb-8 leading-relaxed">
-              Construction schedules are only as reliable as the procurement plan behind them.
+              {heroCopy.eyebrow}
             </p>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-8 tracking-tight leading-[1.05]">
-              Control Before You Build.
+              {heroCopy.headline}
             </h1>
             <p className="text-lg md:text-xl lg:text-2xl text-slate-300 leading-relaxed max-w-2xl mx-auto">
-              JiTpro reveals and sequences the procurement constraints your schedule depends on—before they cost you.
+              {heroCopy.subhead}
             </p>
           </div>
         </div>

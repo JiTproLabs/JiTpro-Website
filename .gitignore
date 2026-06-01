@@ -14,3 +14,7 @@ dist/
 
 # Supabase temp
 supabase/.temp/
+.gstack/
+
+# macOS
+.DS_Store
