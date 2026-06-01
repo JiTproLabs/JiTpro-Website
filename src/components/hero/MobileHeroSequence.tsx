@@ -299,7 +299,7 @@ export default function MobileHeroSequence() {
       )}
 
       {/* Package label — pinned near the top, cycles per stop */}
-      <div className="absolute left-6 right-6 pointer-events-none" style={{ top: '16%' }}>
+      <div className="absolute left-6 right-6 flex justify-center pointer-events-none" style={{ top: '16%' }}>
         <AnimatePresence mode="wait">
           {packageIdx >= 0 && (
             <motion.div

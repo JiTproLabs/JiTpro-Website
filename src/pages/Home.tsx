@@ -14,17 +14,20 @@ export default function Home() {
       <section className="px-6 py-20 bg-slate-50">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-8 leading-snug">
-            Sequenced Procurement Supports Healthy Margins
+            Construction Schedules Depend on Procurement. So Do Healthy Margins.
           </h2>
           <div className="text-lg text-slate-600 leading-relaxed space-y-5">
             <p>
-              Projects perform best when procurement activities are aligned to the work they support.
+              Every material, product, service, approval, and decision required to build a project must arrive when needed to support the construction schedule.
             </p>
             <p>
-              When decisions, approvals, buyout, submittals, fabrication, and delivery are properly sequenced, teams spend less time reacting to problems and more time executing the work as planned.
+              When procurement is sequenced correctly, work flows as planned, trade partners remain productive, and margins are protected.
             </p>
-            <p className="text-slate-900 font-medium">
-              Healthy schedules support healthy margins.
+            <p>
+              When procurement falls behind, the cost of recovery compounds through expediting, rework, remobilization, and lost productivity.
+            </p>
+            <p className="text-slate-900 font-bold">
+              Healthy schedules create the conditions for healthy margins.
             </p>
           </div>
         </div>
