@@ -1,35 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Pause, MousePointer2, Hand } from 'lucide-react';
+import { Play, Pause, Pointer } from 'lucide-react';
 
 // ============================================================================
 // SCHEDULE DATA — real day counts per the user's spec
 // ============================================================================
 
-// Planned sub-phases for Bar 1 (Buyout / Submittal / Approval)
-const PLANNED_BAR1 = [
-  { id: 'buyout',    start: 0,  end: 5,  label: 'Buyout' },
-  { id: 'submittal', start: 5,  end: 35, label: 'Submittal' },
-  { id: 'review',    start: 35, end: 50, label: 'Review' },
-];
-// Planned sub-phases for Bar 2 (Fabrication / Delivery)
-const PLANNED_BAR2 = [
-  { id: 'fab',  start: 50,  end: 145, label: 'Fabrication' },
-  { id: 'ship', start: 145, end: 153, label: 'Shipping' },
-];
+// Planned bars — one continuous bar per row. Day extents come from the user's
+// spec (Buyout 5 + Submittal 30 + Review 15 = 50d for Bar 1; Fab 95 + Ship 8 =
+// 103d for Bar 2). Bubble copy carries the sub-phase detail; the bar stays clean.
+const PLANNED_BAR1 = { start: 0,   end: 50 };
+const PLANNED_BAR2 = { start: 50,  end: 153 };
 const PLANNED_BUFFER = { start: 153, end: 168 };
 const PLANNED_ONSITE = 168;
 
-// Actual sub-phases — Bar 1 stretches considerably due to slips
-const ACTUAL_BAR1 = [
-  { id: 'a-buyout',    start: 0,   end: 20,  label: 'Buyout',    tint: 'amber' as const },
-  { id: 'a-submittal', start: 20,  end: 80,  label: 'Submittal', tint: 'amber' as const },
-  { id: 'a-r1',        start: 80,  end: 95,  label: 'Review 1',  tint: 'amber' as const },
-  { id: 'a-rev1',      start: 95,  end: 110, label: 'Rev. 1',    tint: 'red'   as const },
-  { id: 'a-r2',        start: 110, end: 120, label: 'Review 2',  tint: 'amber' as const },
-  { id: 'a-rev2',      start: 120, end: 128, label: 'Rev. 2',    tint: 'red'   as const },
-  { id: 'a-r3',        start: 128, end: 137, label: 'Review 3',  tint: 'amber' as const },
-];
-const ACTUAL_BAR2 = { start: 137, end: 257, label: 'Fab + Delivery' };
+// Actual bars — one continuous bar per row. Bar 1 stretches to 137 days due to
+// slips (detail explained in bubbles, not visible sub-segments). Bar 2 is split
+// only at the onsite milestone into on-time amber + late-delivery red, since
+// that's the central visual story of the scene.
+const ACTUAL_BAR1 = { start: 0, end: 137 };
+const ACTUAL_BAR2 = { start: 137, end: 257 };
 const ACTUAL_END   = 257;
 const ACTUAL_ONSITE = 168; // same milestone
 
@@ -55,22 +44,22 @@ const BUBBLE_HOLD_MS = 1900;
 const BUBBLE_CYCLE_MS = BUBBLE_FADE_MS * 2 + BUBBLE_HOLD_MS; // 2600
 
 const PLANNED_ANCHORS: Anchor[] = [
-  { day: 3,   motion: 1000, row: 'bar1',   text: 'Buyout planned for 5 days' },
-  { day: 20,  motion: 1400, row: 'bar1',   text: '30-day submittal prep — confirmed by subcontractor' },
-  { day: 45,  motion: 1400, row: 'bar1',   text: 'Assumed 1 round of review since this item is being expedited' },
-  { day: 60,  motion: 1000, row: 'bar2',   text: 'Fabrication start date is critical' },
-  { day: 130, motion: 2600, row: 'bar2',   text: '95 days for fabrication, 8 days for shipping' },
-  { day: 160, motion: 1400, row: 'buffer', text: '15 days of buffer added' },
+  { day: 3,   motion: 550,  row: 'bar1',   text: 'Buyout planned for 5 days' },
+  { day: 20,  motion: 800,  row: 'bar1',   text: '30-day submittal prep — confirmed by subcontractor' },
+  { day: 45,  motion: 800,  row: 'bar1',   text: 'Assumed 1 round of review since this item is being expedited' },
+  { day: 60,  motion: 550,  row: 'bar2',   text: 'Fabrication start date is critical' },
+  { day: 130, motion: 1500, row: 'bar2',   text: '95 days for fabrication, 8 days for shipping' },
+  { day: 160, motion: 800,  row: 'buffer', text: '15 days of buffer added' },
 ];
 
 const ACTUAL_ANCHORS: Anchor[] = [
-  { day: 20,  motion: 2200, row: 'bar1', text: 'Buyout actually takes 20 days, not 5' },
-  { day: 50,  motion: 1500, row: 'bar1', text: 'Submittal delayed while design catches up — adds 30 days' },
-  { day: 110, motion: 2400, row: 'bar1', text: 'Review cycle 1: 15 days, then 15 days of revisions' },
-  { day: 125, motion: 800,  row: 'bar1', text: 'Review cycle 2: 10 days, then 8 days of revisions' },
-  { day: 137, motion: 700,  row: 'bar1', text: 'Review cycle 3 finally approves — 137 days in' },
-  { day: 200, motion: 2600, row: 'bar2', text: 'Contractor missed fab window — vendor takes 120 days, not 103' },
-  { day: 250, motion: 2000, row: 'bar2', text: 'Material arrives 89 days past required onsite date' },
+  { day: 20,  motion: 1200, row: 'bar1', text: 'Buyout actually takes 20 days, not 5' },
+  { day: 50,  motion: 800,  row: 'bar1', text: 'Submittal delayed while design catches up — adds 30 days' },
+  { day: 110, motion: 1300, row: 'bar1', text: 'Review cycle 1: 15 days, then 15 days of revisions' },
+  { day: 125, motion: 450,  row: 'bar1', text: 'Review cycle 2: 10 days, then 8 days of revisions' },
+  { day: 137, motion: 400,  row: 'bar1', text: 'Review cycle 3 finally approves — 137 days in' },
+  { day: 200, motion: 1400, row: 'bar2', text: 'Contractor missed fab window — vendor takes 120 days, not 103' },
+  { day: 250, motion: 1100, row: 'bar2', text: 'Material arrives 89 days past required onsite date' },
 ];
 
 // Transition timing between planned → actual scenes
@@ -80,8 +69,24 @@ const TRANS_POST_MS = 500;  // settle before actual
 const TRANSITION_MS = TRANS_PRE_MS + TRANS_ANIM_MS + TRANS_POST_MS;
 
 // Final motion after the last anchor in each scene
-const FINAL_MOTION_PLANNED_MS = 800; // → onsite milestone
-const FINAL_MOTION_ACTUAL_MS  = 700; // → end of late delivery
+const FINAL_MOTION_PLANNED_MS = 450; // → onsite milestone
+const FINAL_MOTION_ACTUAL_MS  = 400; // → end of late delivery
+
+// Closing phase — after the actual scene the chart fades out, a comparison
+// message fades in, holds for read time, then fades back out so the screen
+// is dark at the very end (before the Replay overlay appears).
+const CLOSING_CHART_FADE_MS   = 900;   // chart fades out
+const CLOSING_MSG_DELAY_MS    = 600;   // message starts fading in within the closing phase
+const CLOSING_MSG_FADE_MS     = 700;   // message fade-in duration
+const CLOSING_HOLD_MS         = 7000;  // hold the message at full opacity
+const CLOSING_MSG_FADE_OUT_MS = 1000;  // fade the message out so the screen is dark at end
+const CLOSING_MS =
+  CLOSING_MSG_DELAY_MS + CLOSING_MSG_FADE_MS + CLOSING_HOLD_MS + CLOSING_MSG_FADE_OUT_MS;
+
+// Comparison numbers used in the closing message
+const PLANNED_TOTAL_DAYS = 168;
+const ACTUAL_TOTAL_DAYS  = 257;
+const LATE_DAYS          = ACTUAL_TOTAL_DAYS - PLANNED_TOTAL_DAYS;
 
 // ============================================================================
 // SEGMENT BUILDER — derives one flat list of timed events from the anchors
@@ -91,7 +96,7 @@ type Scene = 'planned' | 'actual';
 type RowKey = AnchorRow | 'onsite';
 
 interface Segment {
-  type: 'motion' | 'pause' | 'transition';
+  type: 'motion' | 'pause' | 'transition' | 'closing';
   startMs: number;
   endMs: number;
   // motion:
@@ -141,6 +146,10 @@ function buildSegments(): Segment[] {
   segs.push({ type: 'motion', startMs: t, endMs: t + FINAL_MOTION_ACTUAL_MS, fromDay: lastDay, toDay: ACTUAL_END, fromRow: lastRow, toRow: 'bar2', scene: 'actual' });
   t += FINAL_MOTION_ACTUAL_MS;
 
+  // Closing — schedule fades out, comparison message fades in and holds
+  segs.push({ type: 'closing', startMs: t, endMs: t + CLOSING_MS });
+  t += CLOSING_MS;
+
   return segs;
 }
 
@@ -183,18 +192,49 @@ function formatDate(day: number): string {
 // STATE EXTRACTORS — pure functions of elapsedMs
 // ============================================================================
 
-function getCurrentScene(elapsedMs: number): Scene | 'transition' {
+function getCurrentScene(elapsedMs: number): Scene | 'transition' | 'closing' {
   for (const s of SEGMENTS) {
-    if (elapsedMs < s.endMs) return s.type === 'transition' ? 'transition' : s.scene!;
+    if (elapsedMs < s.endMs) {
+      if (s.type === 'transition') return 'transition';
+      if (s.type === 'closing') return 'closing';
+      return s.scene!;
+    }
   }
-  return 'actual';
+  return 'closing';
+}
+
+function getChartOpacity(elapsedMs: number): number {
+  const seg = SEGMENTS.find(s => s.type === 'closing');
+  if (!seg || elapsedMs < seg.startMs) return 1;
+  const into = elapsedMs - seg.startMs;
+  if (into >= CLOSING_CHART_FADE_MS) return 0;
+  return 1 - into / CLOSING_CHART_FADE_MS;
+}
+
+function getClosingMessageOpacity(elapsedMs: number): number {
+  const seg = SEGMENTS.find(s => s.type === 'closing');
+  if (!seg || elapsedMs < seg.startMs) return 0;
+  const into = elapsedMs - seg.startMs;
+  // Phase boundaries within closing:
+  //   [0 → A): hidden (chart still fading)
+  //   [A → B): fading in
+  //   [B → C): held at full opacity
+  //   [C → D): fading out so the screen ends dark
+  const A = CLOSING_MSG_DELAY_MS;
+  const B = A + CLOSING_MSG_FADE_MS;
+  const C = B + CLOSING_HOLD_MS;
+  const D = C + CLOSING_MSG_FADE_OUT_MS;
+  if (into < A) return 0;
+  if (into < B) return (into - A) / CLOSING_MSG_FADE_MS;
+  if (into < C) return 1;
+  if (into < D) return Math.max(0, 1 - (into - C) / CLOSING_MSG_FADE_OUT_MS);
+  return 0;
 }
 
 interface CursorState {
   day: number;
   yPct: number;
   visible: boolean;
-  isHand: boolean;
 }
 
 function getCursorState(elapsedMs: number): CursorState {
@@ -207,20 +247,24 @@ function getCursorState(elapsedMs: number): CursorState {
     const day = (seg.fromDay ?? 0) + ((seg.toDay ?? 0) - (seg.fromDay ?? 0)) * e;
     const fromY = ROW_Y_PCT[seg.fromRow ?? 'bar1'];
     const toY   = ROW_Y_PCT[seg.toRow   ?? 'bar1'];
-    return { day, yPct: fromY + (toY - fromY) * e, visible: true, isHand: false };
+    return { day, yPct: fromY + (toY - fromY) * e, visible: true };
   }
   if (seg.type === 'pause') {
-    return { day: seg.atDay ?? 0, yPct: ROW_Y_PCT[seg.atRow ?? 'bar1'], visible: true, isHand: true };
+    return { day: seg.atDay ?? 0, yPct: ROW_Y_PCT[seg.atRow ?? 'bar1'], visible: true };
+  }
+  if (seg.type === 'closing') {
+    // Hide cursor during closing — schedule is fading out.
+    return { day: 0, yPct: 0, visible: false };
   }
   // Transition — cursor visible at last planned position during PRE, fades during anim, hidden after.
   const into = elapsedMs - seg.startMs;
   if (into < TRANS_PRE_MS) {
-    return { day: PLANNED_ONSITE, yPct: ROW_Y_PCT.onsite, visible: true, isHand: false };
+    return { day: PLANNED_ONSITE, yPct: ROW_Y_PCT.onsite, visible: true };
   }
   if (into < TRANS_PRE_MS + TRANS_ANIM_MS / 2) {
-    return { day: PLANNED_ONSITE, yPct: ROW_Y_PCT.onsite, visible: true, isHand: false };
+    return { day: PLANNED_ONSITE, yPct: ROW_Y_PCT.onsite, visible: true };
   }
-  return { day: 0, yPct: ROW_Y_PCT.bar1, visible: false, isHand: false };
+  return { day: 0, yPct: ROW_Y_PCT.bar1, visible: false };
 }
 
 interface BubbleState {
@@ -296,14 +340,15 @@ export default function TypicalScheduleSection() {
           {/* LEFT — context */}
           <div>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6 leading-snug">
-              Typical Procurement Schedules Hide the Real Risks
+              Most Procurement Schedules Hide the Real Risks
             </h2>
             <div className="text-lg text-slate-600 leading-relaxed space-y-5 mb-6">
               <p>Most schedules show a clean sequence: buyout, fabrication, delivery, onsite.</p>
               <p>
-                What they don't show is everything that quietly slips inside each phase — the
-                design that wasn't ready, the buyout that took an extra cycle, the buffers that
-                get consumed without anyone noticing.
+                What they don't show is everything that quietly impacts each phase — the
+                design that wasn't ready, specifications that were not complete, buyout that
+                took more time, extra review cycles, the buffers that get consumed without
+                anyone noticing.
               </p>
               <p className="text-slate-900 font-medium">
                 The result: late deliveries that didn't have to happen.
@@ -341,15 +386,18 @@ function VideoPlayer({
   onPlay: () => void;
   onPause: () => void;
 }) {
-  const scene    = getCurrentScene(elapsed);
-  const cursor   = getCursorState(elapsed);
-  const bubble   = getActiveBubble(elapsed);
-  const transT   = getTransitionT(elapsed);
-  const progress = elapsed / TOTAL_MS;
+  const scene          = getCurrentScene(elapsed);
+  const cursor         = getCursorState(elapsed);
+  const bubble         = getActiveBubble(elapsed);
+  const transT         = getTransitionT(elapsed);
+  const chartOpacity   = getChartOpacity(elapsed);
+  const messageOpacity = getClosingMessageOpacity(elapsed);
+  const progress       = elapsed / TOTAL_MS;
 
   const title =
-    scene === 'planned'    ? 'Planned Procurement Schedule' :
-    scene === 'transition' ? "What Actually Happens…" :
+    scene === 'planned'    ? 'Planned Procurement Schedule'   :
+    scene === 'transition' ? "What Actually Happens…"        :
+    scene === 'closing'    ? 'Summary'                         :
                              'Actual Procurement Schedule';
 
   return (
@@ -362,9 +410,12 @@ function VideoPlayer({
         {title}
       </div>
 
-      {/* Chart area */}
+      {/* Chart area — schedule fades out during closing; comparison message fades in over it */}
       <div className="flex-1 relative bg-[#0f172a]">
-        <ChartArea scene={scene} transT={transT} cursor={cursor} bubble={bubble} />
+        <div className="absolute inset-0" style={{ opacity: chartOpacity }}>
+          <ChartArea scene={scene} transT={transT} cursor={cursor} bubble={bubble} />
+        </div>
+        <ClosingMessage opacity={messageOpacity} />
       </div>
 
       {/* Bottom controls strip */}
@@ -416,7 +467,7 @@ function VideoPlayer({
 function ChartArea({
   scene, transT, cursor, bubble,
 }: {
-  scene: Scene | 'transition';
+  scene: Scene | 'transition' | 'closing';
   transT: number;
   cursor: CursorState;
   bubble: BubbleState | null;
@@ -480,95 +531,146 @@ function RowLabel({ y, children, faded = false }: { y: number; children: React.R
 // ============================================================================
 
 function Bars({ transT }: { transT: number }) {
-  // For each "logical bar", we interpolate sub-segment positions between
-  // planned and actual. To keep things sane we crossfade between the two sets:
-  //  - Planned set fully visible at transT=0, fades out toward transT=0.5
-  //  - Actual set fades in from transT=0.5 to transT=1
-  // The Onsite milestone and Buffer follow similar rules.
+  // Crossfade between planned and actual bar sets during the transition.
   const plannedOpacity = transT < 0.5 ? 1 - transT * 1.4 : 0;
   const actualOpacity  = transT > 0.4 ? Math.min(1, (transT - 0.4) / 0.5) : 0;
 
   return (
     <>
-      {/* Planned bars */}
-      <g style={{ opacity: Math.max(0, plannedOpacity) }}>
-        {/* Bar 1 sub-segments */}
-        {PLANNED_BAR1.map(s => (
-          <Segment key={s.id}
-            startDay={s.start} endDay={s.end}
-            y={ROW_Y_PCT.bar1}
-            tint="planned" label={s.label}
-          />
-        ))}
-        {/* Bar 2 sub-segments */}
-        {PLANNED_BAR2.map(s => (
-          <Segment key={s.id}
-            startDay={s.start} endDay={s.end}
-            y={ROW_Y_PCT.bar2}
-            tint="planned" label={s.label}
-          />
-        ))}
-        {/* Buffer */}
+      {/* Planned bars — one bar per row, no sub-segments */}
+      <div style={{ opacity: Math.max(0, plannedOpacity) }}>
+        <SummaryBracket
+          startDay={0} endDay={PLANNED_ONSITE}
+          label={`Overall Duration: ${PLANNED_TOTAL_DAYS} Days`}
+        />
+        <Segment
+          startDay={PLANNED_BAR1.start} endDay={PLANNED_BAR1.end}
+          y={ROW_Y_PCT.bar1} tint="planned"
+        />
+        <Segment
+          startDay={PLANNED_BAR2.start} endDay={PLANNED_BAR2.end}
+          y={ROW_Y_PCT.bar2} tint="planned"
+        />
         <Segment
           startDay={PLANNED_BUFFER.start} endDay={PLANNED_BUFFER.end}
-          y={ROW_Y_PCT.buffer}
-          tint="buffer" label="Buffer"
+          y={ROW_Y_PCT.buffer} tint="buffer"
         />
-      </g>
+      </div>
 
-      {/* Actual bars */}
-      <g style={{ opacity: Math.max(0, actualOpacity) }}>
-        {ACTUAL_BAR1.map(s => (
-          <Segment key={s.id}
-            startDay={s.start} endDay={s.end}
-            y={ROW_Y_PCT.bar1}
-            tint={s.tint === 'red' ? 'actualBad' : 'actual'}
-            label={s.label}
-          />
-        ))}
-        {/* Actual Bar 2 — split visually at onsite into amber (on-time portion) + red (late portion) */}
+      {/* Actual bars — one bar per row; Bar 2 splits only at the onsite line
+          into on-time amber + late-delivery red (the central visual story). */}
+      <div style={{ opacity: Math.max(0, actualOpacity) }}>
+        <SummaryBracket
+          startDay={0} endDay={ACTUAL_END}
+          label={`Overall Duration: ${ACTUAL_TOTAL_DAYS} Days`}
+        />
+        <Segment
+          startDay={ACTUAL_BAR1.start} endDay={ACTUAL_BAR1.end}
+          y={ROW_Y_PCT.bar1} tint="actual"
+        />
         <Segment
           startDay={ACTUAL_BAR2.start}
           endDay={Math.min(ACTUAL_ONSITE, ACTUAL_BAR2.end)}
-          y={ROW_Y_PCT.bar2}
-          tint="actual" label="Fab + Delivery"
+          y={ROW_Y_PCT.bar2} tint="actual"
         />
         {ACTUAL_BAR2.end > ACTUAL_ONSITE && (
           <Segment
-            startDay={ACTUAL_ONSITE}
-            endDay={ACTUAL_BAR2.end}
-            y={ROW_Y_PCT.bar2}
-            tint="late" label="Late"
+            startDay={ACTUAL_ONSITE} endDay={ACTUAL_BAR2.end}
+            y={ROW_Y_PCT.bar2} tint="late"
           />
         )}
-      </g>
+      </div>
+    </>
+  );
+}
+
+// ============================================================================
+// SUMMARY BRACKET — MS Project-style summary task line above the bars
+// ============================================================================
+
+// Y positions (% of chart) for the summary bracket area, just above Bar 1.
+const SUMMARY_LABEL_Y_PCT = 5;   // text label
+const SUMMARY_LINE_Y_PCT  = 13;  // thin line
+const SUMMARY_BRACKET_DROP_PX = 5;
+
+function SummaryBracket({
+  startDay, endDay, label,
+}: { startDay: number; endDay: number; label: string }) {
+  const x1 = dayToXPct(startDay);
+  const x2 = dayToXPct(endDay);
+  const midX = (x1 + x2) / 2;
+  const stroke = 'rgba(203, 213, 225, 0.9)'; // slate-300
+
+  return (
+    <>
+      {/* Label centered above the line */}
+      <div
+        className="absolute text-[10px] uppercase tracking-[0.16em] font-semibold text-slate-300 whitespace-nowrap"
+        style={{
+          left: `${midX}%`,
+          top: `${SUMMARY_LABEL_Y_PCT}%`,
+          transform: 'translateX(-50%)',
+        }}
+      >
+        {label}
+      </div>
+      {/* Horizontal summary line */}
+      <div
+        className="absolute"
+        style={{
+          left: `${x1}%`,
+          width: `${x2 - x1}%`,
+          top: `${SUMMARY_LINE_Y_PCT}%`,
+          height: 1,
+          background: stroke,
+        }}
+      />
+      {/* Left bracket — short vertical drop */}
+      <div
+        className="absolute"
+        style={{
+          left: `${x1}%`,
+          top: `${SUMMARY_LINE_Y_PCT}%`,
+          width: 1,
+          height: SUMMARY_BRACKET_DROP_PX,
+          background: stroke,
+        }}
+      />
+      {/* Right bracket — short vertical drop */}
+      <div
+        className="absolute"
+        style={{
+          left: `calc(${x2}% - 1px)`,
+          top: `${SUMMARY_LINE_Y_PCT}%`,
+          width: 1,
+          height: SUMMARY_BRACKET_DROP_PX,
+          background: stroke,
+        }}
+      />
     </>
   );
 }
 
 function Segment({
-  startDay, endDay, y, tint, label,
+  startDay, endDay, y, tint,
 }: {
   startDay: number; endDay: number; y: number;
-  tint: 'planned' | 'actual' | 'actualBad' | 'late' | 'buffer';
-  label: string;
+  tint: 'planned' | 'actual' | 'late' | 'buffer';
 }) {
   const palette = {
-    planned:   { bg: 'rgba(148, 163, 184, 0.45)', border: 'rgba(148, 163, 184, 0.95)', text: 'rgb(226, 232, 240)' },
-    actual:    { bg: 'rgba(252, 211, 77, 0.70)',  border: 'rgba(245, 158, 11, 1)',     text: 'rgb(120, 53, 15)' },
-    actualBad: { bg: 'rgba(251, 146, 60, 0.75)',  border: 'rgba(234, 88, 12, 1)',      text: 'rgb(120, 53, 15)' },
-    late:      { bg: 'rgba(248, 113, 113, 0.85)', border: 'rgba(220, 38, 38, 1)',      text: 'rgb(127, 29, 29)' },
-    buffer:    { bg: 'transparent',                border: 'rgba(148, 163, 184, 0.85)', text: 'rgb(148, 163, 184)' },
+    planned: { bg: 'rgba(148, 163, 184, 0.45)', border: 'rgba(148, 163, 184, 0.95)' },
+    actual:  { bg: 'rgba(252, 211, 77, 0.70)',  border: 'rgba(245, 158, 11, 1)'     },
+    late:    { bg: 'rgba(248, 113, 113, 0.85)', border: 'rgba(220, 38, 38, 1)'      },
+    buffer:  { bg: 'transparent',                border: 'rgba(148, 163, 184, 0.85)' },
   }[tint];
 
-  const w = dayWidthPct(endDay - startDay);
   return (
     <div
-      className="absolute rounded-[2px] flex items-center overflow-hidden"
+      className="absolute rounded-[2px]"
       style={{
         left: `${dayToXPct(startDay)}%`,
         top:  `${y}%`,
-        width: `${w}%`,
+        width: `${dayWidthPct(endDay - startDay)}%`,
         height: `${BAR_HEIGHT_PCT}%`,
         transform: 'translateY(-50%)',
         background: palette.bg,
@@ -577,17 +679,7 @@ function Segment({
           : undefined,
         border: `1px ${tint === 'buffer' ? 'dashed' : 'solid'} ${palette.border}`,
       }}
-    >
-      {/* Sub-segment label — only render when bar is wide enough */}
-      {w > 5 && (
-        <span
-          className="px-1.5 text-[9px] font-medium tracking-wide whitespace-nowrap"
-          style={{ color: palette.text }}
-        >
-          {label}
-        </span>
-      )}
-    </div>
+    />
   );
 }
 
@@ -610,27 +702,29 @@ function OnsiteMilestone({ alarmed }: { alarmed: boolean }) {
 }
 
 // ============================================================================
-// CURSOR — mouse-pointer SVG that flips to a hand on bar hover
+// CURSOR — small solid pointing-hand marker, same icon throughout
 // ============================================================================
 
 function Cursor({ cursor }: { cursor: CursorState }) {
   if (!cursor.visible) return null;
-  const Icon = cursor.isHand ? Hand : MousePointer2;
   return (
     <div
-      className="absolute pointer-events-none transition-opacity duration-150"
+      className="absolute pointer-events-none"
       style={{
         left: `${dayToXPct(cursor.day)}%`,
-        top:  `${cursor.yPct}%`,
-        transform: 'translate(-3px, -3px)',
-        filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.55))',
+        // Icon's top edge sits at the bar's BOTTOM edge, so the upward-pointing
+        // fingertip (top of the icon) lands at the bar's bottom and the hand
+        // body extends down into the space below the bar.
+        top:  `calc(${cursor.yPct}% + ${BAR_HEIGHT_PCT / 2}%)`,
+        transform: 'translate(-4px, 0)',
+        filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.6))',
       }}
     >
-      <Icon
-        className="w-5 h-5"
+      <Pointer
+        className="w-[18px] h-[18px]"
         color="white"
         strokeWidth={1.5}
-        fill={cursor.isHand ? 'rgba(255,255,255,0.15)' : 'white'}
+        fill="white"
       />
     </div>
   );
@@ -645,50 +739,55 @@ function BubbleCallout({ bubble }: { bubble: BubbleState }) {
   const anchorX = dayToXPct(bubble.anchorDay);
   const anchorY = ROW_Y_PCT[bubble.anchorRow];
 
-  // Bubble vertical: sits above the anchor row. Keep distance modest so leader fits.
-  const bubbleBottomPct = 100 - (anchorY - BAR_HEIGHT_PCT / 2 - 1); // 1% gap above bar
-  // Bubble horizontal: anchored at anchorX, but clamped to stay in chart.
-  // We use translate(-50%) for centering and then clamp via two helper offsets:
-  //  - If anchorX is in the left edge zone, shift right; right edge zone shift left.
+  // Bubble sits BELOW the anchor row's bar; the leader + triangular arrow
+  // tip extend up out of the bubble and land on the bar's BOTTOM edge.
+  const bubbleTopPct = anchorY + BAR_HEIGHT_PCT / 2 + 1; // 1% gap below bar
+
+  // Horizontal clamp so the bubble stays inside the chart even when the anchor
+  // is near a horizontal edge.
   let shift = '-50%';
   if (anchorX < LABEL_COL_PCT + 12) shift = '-10%';
   else if (anchorX > 100 - 12)       shift = '-90%';
+  const leaderX = shift === '-10%' ? '10%' : shift === '-90%' ? '90%' : '50%';
 
   return (
     <div
       className="absolute pointer-events-none"
       style={{
         left: `${anchorX}%`,
-        bottom: `${bubbleBottomPct}%`,
+        top: `${bubbleTopPct}%`,
         transform: `translateX(${shift})`,
         opacity: bubble.opacity,
         maxWidth: '220px',
         minWidth: '160px',
       }}
     >
-      <div className="relative bg-white border border-slate-300 rounded-md px-3 py-2 shadow-[0_4px_14px_rgba(0,0,0,0.35)] text-[11px] leading-snug text-slate-800 font-medium">
-        {bubble.text}
-      </div>
-      {/* Leader line + arrow tip pointing down at the anchor */}
+      {/* Leader line — above the bubble, going UP to the bar's bottom edge */}
       <div
         className="absolute"
         style={{
-          left: shift === '-10%' ? '10%' : shift === '-90%' ? '90%' : '50%',
-          top: '100%',
+          left: leaderX,
+          bottom: '100%',
           width: '1px',
           height: '10px',
           background: 'rgba(148, 163, 184, 0.85)',
           transform: 'translateX(-50%)',
         }}
       />
+      {/* Arrow tip — above the leader, pointing UP. border-l + border-t
+          after rotate(45deg) renders as an upward "^" with white fill. */}
       <div
-        className="absolute w-2 h-2 bg-white border-r border-b border-slate-300 rotate-45"
+        className="absolute w-2 h-2 bg-white border-l border-t border-slate-300"
         style={{
-          left: shift === '-10%' ? '10%' : shift === '-90%' ? '90%' : '50%',
-          top: 'calc(100% + 4px)',
+          left: leaderX,
+          bottom: 'calc(100% + 4px)',
           transform: 'translateX(-50%) rotate(45deg)',
         }}
       />
+      {/* Bubble box */}
+      <div className="relative bg-white border border-slate-300 rounded-md px-3 py-2 shadow-[0_4px_14px_rgba(0,0,0,0.35)] text-[11px] leading-snug text-slate-800 font-medium">
+        {bubble.text}
+      </div>
     </div>
   );
 }
@@ -715,6 +814,43 @@ function DateAxis() {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+// ============================================================================
+// CLOSING MESSAGE — fades in over the dimmed schedule at the end of the video
+// ============================================================================
+
+function ClosingMessage({ opacity }: { opacity: number }) {
+  if (opacity <= 0.001) return null;
+  return (
+    <div
+      className="absolute inset-0 flex items-center justify-center px-10 pointer-events-none"
+      style={{ opacity }}
+    >
+      <div className="max-w-lg text-center">
+        <div className="text-[10px] uppercase tracking-[0.22em] text-amber-300/80 font-semibold mb-5">
+          The Result
+        </div>
+        <p className="text-sm md:text-base text-slate-200 leading-relaxed mb-4">
+          The original procurement plan called for{' '}
+          <span className="text-xl md:text-2xl font-bold text-white whitespace-nowrap">
+            {PLANNED_TOTAL_DAYS} days
+          </span>
+          {' '}from buyout to materials arriving onsite.
+        </p>
+        <p className="text-sm md:text-base text-slate-200 leading-relaxed">
+          Reality:{' '}
+          <span className="text-xl md:text-2xl font-bold text-red-400 whitespace-nowrap">
+            {ACTUAL_TOTAL_DAYS} days
+          </span>
+          {' '}—{' '}
+          <span className="text-amber-300 font-semibold whitespace-nowrap">
+            {LATE_DAYS} days late
+          </span>.
+        </p>
+      </div>
     </div>
   );
 }

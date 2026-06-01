@@ -2,6 +2,7 @@ import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ProcurementFlowHero from '../components/hero/ProcurementFlowHero';
 import TypicalScheduleSection from '../components/TypicalScheduleSection';
+import ControlledProcurementSection from '../components/ControlledProcurementSection';
 
 export default function Home() {
   return (
@@ -63,6 +64,9 @@ export default function Home() {
 
       {/* TYPICAL SCHEDULE — interactive */}
       <TypicalScheduleSection />
+
+      {/* CONTROLLED PROCUREMENT — animated detailed Gantt */}
+      <ControlledProcurementSection />
 
       {/* STAKEHOLDER ROUTER */}
       <section className="px-6 py-20 bg-slate-50">
