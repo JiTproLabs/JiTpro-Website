@@ -23,86 +23,47 @@ export default function FounderStory() {
               It begins before construction ever starts.
             </h1>
             <p className="text-lg md:text-xl text-slate-600 leading-relaxed">
-              I've spent 38 years watching that play out — on jobsites, in project offices, across more than $450 million in managed work over the past 20 years — with nearly four decades in construction behind it.
+              Over nearly four decades in construction, I've seen the same pattern repeat itself across different projects, teams, and markets.
             </p>
           </div>
         </div>
       </section>
 
       {/* The pattern */}
-      <section className="px-6 py-12">
-        <div className="max-w-3xl mx-auto space-y-10 text-lg text-slate-700 leading-relaxed">
-          <div className="text-xl md:text-2xl font-semibold text-slate-900 leading-snug">
-            <p>Different markets.</p>
-            <p>Different teams.</p>
-            <p>Different decades.</p>
-            <p className="mt-4">Same pattern.</p>
-          </div>
-
+      <section className="px-6 py-16">
+        <div className="max-w-3xl mx-auto space-y-8 text-lg text-slate-700 leading-relaxed">
           <div>
-            <p>Projects awarded with incomplete drawings.</p>
-            <p>Selections unresolved.</p>
-            <p>Procurement timelines that never had a chance of supporting the schedule.</p>
+            <p>Projects are awarded with incomplete information.</p>
+            <p>Critical decisions remain unresolved.</p>
+            <p>Procurement timelines are assumed rather than understood.</p>
           </div>
 
-          <p>Those aren't minor oversights.</p>
+          <p>Those conditions don't disappear once construction begins.</p>
 
-          <p className="text-xl font-medium text-slate-900">
-            They're constraints built into the job before anyone mobilizes.
+          <p>
+            They become schedule delays, stacked trades, expediting, rework, lost productivity, and margin erosion.
           </p>
 
-          <div>
-            <p>The instability is already there.</p>
-            <p>
-              It just shows up later — when the schedule starts slipping, trades stack on top of each other, and the project begins to bleed.
-            </p>
-          </div>
-        </div>
-      </section>
+          <p className="text-xl md:text-2xl font-semibold text-slate-900 leading-snug">
+            The instability was there from the beginning.
+          </p>
 
-      {/* What I watched */}
-      <section className="px-6 py-16 bg-slate-50">
-        <div className="max-w-3xl mx-auto space-y-10 text-lg text-slate-700 leading-relaxed">
-          <div className="space-y-4">
-            <p>I watched great project managers hold that together through sheer effort.</p>
-            <p>
-              Late nights. Constant calls.
-              <br />
-              Tracking things no system was tracking.
-            </p>
-            <p>And when they left — the system left with them.</p>
-          </div>
-
-          <div className="space-y-4">
-            <p>I watched contractors promise expedited delivery dates they had no realistic way to meet.</p>
-            <p>
-              Not because they were careless.
-              <br />
-              Because they didn't have visibility into what procurement actually required.
-            </p>
-            <p>Those promises don't disappear.</p>
-            <div>
-              <p>They turn into pressure.</p>
-              <p>Rework.</p>
-              <p>Cost.</p>
-              <p>And months of trying to recover time that was never there.</p>
-            </div>
-          </div>
+          <p>Most contractors don't see it until they're paying for it.</p>
         </div>
       </section>
 
       {/* The turn — discipline */}
-      <section className="px-6 py-16">
+      <section className="px-6 py-16 bg-slate-50">
         <div className="max-w-3xl mx-auto space-y-8 text-lg text-slate-700 leading-relaxed">
           <p className="text-xl md:text-2xl font-semibold text-slate-900 leading-snug">
-            At some point, I stopped accepting that as normal.
+            After watching this happen over and over, I stopped accepting it as normal.
           </p>
-          <p>I made it a discipline:</p>
+          <p>I developed a simple discipline:</p>
           <ul className="space-y-3 border-l-2 border-amber-500 pl-6">
-            <li>Identify constraints at project award</li>
-            <li>Assign responsibility for unresolved information</li>
-            <li>Sequence procurement backward from required onsite dates</li>
-            <li>And never commit to a schedule I couldn't defend</li>
+            <li>Identify constraints early</li>
+            <li>Assign ownership for unresolved information</li>
+            <li>Sequence procurement from the date materials, products, and services are required onsite</li>
+            <li>Commit only to schedules that can be supported</li>
           </ul>
         </div>
       </section>
@@ -111,22 +72,19 @@ export default function FounderStory() {
       <section className="px-6 py-20 bg-slate-900 text-white">
         <div className="max-w-3xl mx-auto space-y-8 text-lg leading-relaxed">
           <p className="text-2xl md:text-3xl font-semibold leading-snug">
-            That discipline is what JiTpro is.
-          </p>
-          <p className="text-xl text-slate-200">
-            JiTpro is the system I wish I had for 38 years.
+            That discipline became JiTpro.
           </p>
           <div className="space-y-3 text-slate-300">
-            <p>It makes procurement constraints visible early.</p>
-            <p>It gives every missing decision an owner and a deadline.</p>
-            <p>It aligns real lead times with the schedule before construction begins.</p>
+            <p>JiTpro makes procurement constraints visible before they impact the schedule.</p>
+            <p>It gives missing decisions an owner and a deadline.</p>
+            <p>It aligns procurement with the realities of construction before work begins.</p>
           </div>
           <div className="space-y-2 text-slate-300">
-            <p>It's not a field management tool.</p>
             <p>It's not a scheduling tool.</p>
+            <p>It's not a field management tool.</p>
           </div>
           <p className="text-xl text-white font-medium">
-            It's the layer before execution that construction has always been missing.
+            It's the layer of procurement control that should exist before execution ever starts.
           </p>
         </div>
       </section>
@@ -134,7 +92,7 @@ export default function FounderStory() {
       {/* Closing + signature */}
       <section className="px-6 py-20">
         <div className="max-w-3xl mx-auto space-y-8 text-lg text-slate-700 leading-relaxed">
-          <p>I built it because this pattern doesn't have to repeat.</p>
+          <p>I built JiTpro because projects shouldn't have to absorb preventable instability.</p>
           <p className="text-xl md:text-2xl font-semibold text-slate-900 leading-snug">
             Construction schedules should be something you can stand behind.
           </p>
