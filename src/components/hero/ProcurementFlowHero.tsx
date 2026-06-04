@@ -609,23 +609,24 @@ function computeFailureCursor(elapsedInPhase: number): {
   const totalMotionMs = Math.max(0, FAILURE_MOTION_BUDGET_MS - totalPauseMs);
   const noteOpacity = triggers.map(() => 0);
 
-  // Stage 1 — pre-roll: chart sits alone; cursor not yet visible
-  if (elapsedInPhase < FAILURE_PRE_ROLL_MS) {
-    return { x: 0, cursorOpacity: 0, noteOpacity };
-  }
-
-  // Stage 2 — cursor fades in at position 0, motion has not begun
-  const elapsedAfterPreRoll = elapsedInPhase - FAILURE_PRE_ROLL_MS;
-  if (elapsedAfterPreRoll < FAILURE_CURSOR_FADE_MS) {
+  // Stage 1 — cursor fades in at position 0 in unison with the first package
+  // card (both run from t=0 of the failure phase over FAILURE_CURSOR_FADE_MS).
+  if (elapsedInPhase < FAILURE_CURSOR_FADE_MS) {
     return {
       x: 0,
-      cursorOpacity: elapsedAfterPreRoll / FAILURE_CURSOR_FADE_MS,
+      cursorOpacity: elapsedInPhase / FAILURE_CURSOR_FADE_MS,
       noteOpacity,
     };
   }
 
+  // Stage 2 — cursor sits at full opacity at position 0 for the rest of the
+  // pre-roll, giving the viewer time to read the chart before motion starts.
+  if (elapsedInPhase < FAILURE_PRE_ROLL_MS + FAILURE_CURSOR_FADE_MS) {
+    return { x: 0, cursorOpacity: 1, noteOpacity };
+  }
+
   // Stage 3 — motion begins (cursor fully visible)
-  const elapsedAfterFade = elapsedAfterPreRoll - FAILURE_CURSOR_FADE_MS;
+  const elapsedAfterFade = elapsedInPhase - FAILURE_PRE_ROLL_MS - FAILURE_CURSOR_FADE_MS;
 
   // Segments between checkpoints: [0 → n0, n0 → n1, ..., nk → endPos]
   const checkpoints = [0, ...triggers, endPos];
