@@ -1,5 +1,5 @@
 import ProcurementFlowHero from '../components/hero/ProcurementFlowHero';
-import TypicalScheduleSection from '../components/TypicalScheduleSection';
+import ProcurementFailureSection from '../components/ProcurementFailureSection';
 import ControlledProcurementSection from '../components/ControlledProcurementSection';
 
 export default function Home() {
@@ -34,8 +34,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TYPICAL SCHEDULE — interactive */}
-      <TypicalScheduleSection />
+      {/* PROCUREMENT FAILURE — play-button video */}
+      <ProcurementFailureSection />
 
       {/* CONTROLLED PROCUREMENT — animated detailed Gantt */}
       <ControlledProcurementSection />
