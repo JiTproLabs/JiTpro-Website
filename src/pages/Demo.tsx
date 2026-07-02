@@ -52,12 +52,12 @@ export default function Demo() {
 
   if (submitted) {
     return (
-      <div className="px-6 py-20 md:py-32">
+      <div className="min-h-screen bg-slate-950 text-slate-100 px-6 py-20 md:py-32">
         <div className="max-w-2xl mx-auto text-center">
-          <h1 className="text-4xl font-bold text-slate-900 mb-6">
+          <h1 className="font-heading text-4xl font-bold tracking-tight text-slate-50 mb-6">
             Request received
           </h1>
-          <p className="text-xl text-slate-600 leading-relaxed">
+          <p className="text-xl text-slate-300 leading-relaxed">
             We'll contact you within one business day to schedule your demonstration of JiTpro.
           </p>
         </div>
@@ -66,19 +66,19 @@ export default function Demo() {
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-slate-950 text-slate-100">
       <section className="px-6 py-20 md:py-28">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+          <h1 className="font-heading text-4xl md:text-5xl font-bold tracking-tight text-slate-50 mb-6">
             Request a demonstration
           </h1>
-          <p className="text-xl text-slate-600 leading-relaxed mb-12">
+          <p className="text-xl text-slate-300 leading-relaxed mb-12">
 See how JiTpro enforces procurement timing and maintains accountability across your projects.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-bold text-slate-900 mb-2">
+              <label htmlFor="name" className="block text-sm font-semibold text-slate-200 mb-2">
                 Name
               </label>
               <input
@@ -89,12 +89,12 @@ See how JiTpro enforces procurement timing and maintains accountability across y
                 autoComplete="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border-2 border-slate-300 text-slate-900 focus:border-slate-900 focus:outline-none text-lg"
+                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
               />
             </div>
 
             <div>
-              <label htmlFor="company" className="block text-sm font-bold text-slate-900 mb-2">
+              <label htmlFor="company" className="block text-sm font-semibold text-slate-200 mb-2">
                 Company
               </label>
               <input
@@ -105,12 +105,12 @@ See how JiTpro enforces procurement timing and maintains accountability across y
                 autoComplete="organization"
                 value={formData.company}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border-2 border-slate-300 text-slate-900 focus:border-slate-900 focus:outline-none text-lg"
+                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-bold text-slate-900 mb-2">
+              <label htmlFor="email" className="block text-sm font-semibold text-slate-200 mb-2">
                 Email
               </label>
               <input
@@ -121,12 +121,12 @@ See how JiTpro enforces procurement timing and maintains accountability across y
                 autoComplete="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border-2 border-slate-300 text-slate-900 focus:border-slate-900 focus:outline-none text-lg"
+                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
               />
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-sm font-bold text-slate-900 mb-2">
+              <label htmlFor="phone" className="block text-sm font-semibold text-slate-200 mb-2">
                 Phone
               </label>
               <input
@@ -137,12 +137,12 @@ See how JiTpro enforces procurement timing and maintains accountability across y
                 autoComplete="tel"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border-2 border-slate-300 text-slate-900 focus:border-slate-900 focus:outline-none text-lg"
+                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
               />
             </div>
 
             <div>
-              <label htmlFor="role" className="block text-sm font-bold text-slate-900 mb-2">
+              <label htmlFor="role" className="block text-sm font-semibold text-slate-200 mb-2">
                 Role
               </label>
               <select
@@ -151,7 +151,7 @@ See how JiTpro enforces procurement timing and maintains accountability across y
                 required
                 value={formData.role}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border-2 border-slate-300 text-slate-900 focus:border-slate-900 focus:outline-none text-lg"
+                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
               >
                 <option value="">Select your role</option>
                 <option value="gc">General Contractor</option>
@@ -164,7 +164,7 @@ See how JiTpro enforces procurement timing and maintains accountability across y
             </div>
 
             {error && (
-              <div className="p-4 bg-red-50 border-2 border-red-200 text-red-800">
+              <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-4 text-red-200">
                 {error}
               </div>
             )}
@@ -172,17 +172,17 @@ See how JiTpro enforces procurement timing and maintains accountability across y
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-slate-900 text-white px-8 py-4 text-lg font-medium hover:bg-slate-800 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-amber-500 px-8 py-4 text-lg font-semibold text-slate-950 transition-colors hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
             >
               {loading ? 'Submitting...' : 'Request Demo'}
             </button>
           </form>
 
-          <div className="mt-12 pt-12 border-t-2 border-slate-200">
-            <h3 className="text-xl font-bold text-slate-900 mb-4">
+          <div className="mt-12 pt-12 border-t border-white/10">
+            <h3 className="font-heading text-xl font-bold text-slate-100 mb-4">
               What you'll see
             </h3>
-            <ul className="space-y-3 text-lg text-slate-600">
+            <ul className="space-y-3 text-lg text-slate-300">
               <li>How JiTpro enforces procurement decision deadlines</li>
               <li>Approval routing and accountability tracking</li>
               <li>Delay attribution and locked audit trails</li>

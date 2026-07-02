@@ -8,6 +8,7 @@ declare global {
         callback: (token: string) => void;
         'expired-callback'?: () => void;
         'error-callback'?: () => void;
+        theme?: 'light' | 'dark' | 'auto';
       }) => string;
       reset: (widgetId: string) => void;
       remove: (widgetId: string) => void;
@@ -18,9 +19,10 @@ declare global {
 interface TurnstileProps {
   onToken: (token: string) => void;
   onExpire?: () => void;
+  theme?: 'light' | 'dark' | 'auto';
 }
 
-export default function Turnstile({ onToken, onExpire }: TurnstileProps) {
+export default function Turnstile({ onToken, onExpire, theme }: TurnstileProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
 
@@ -41,6 +43,7 @@ export default function Turnstile({ onToken, onExpire }: TurnstileProps) {
         'error-callback': () => {
           onExpire?.();
         },
+        ...(theme ? { theme } : {}),
       });
     };
 
@@ -63,7 +66,7 @@ export default function Turnstile({ onToken, onExpire }: TurnstileProps) {
         widgetIdRef.current = null;
       }
     };
-  }, [onToken, onExpire]);
+  }, [onToken, onExpire, theme]);
 
   return <div ref={containerRef} className="mt-2" />;
 }

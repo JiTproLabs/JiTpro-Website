@@ -36,13 +36,13 @@ const roles = [
 
 export default function Roles() {
   return (
-    <div>
+    <div className="min-h-screen bg-slate-950 text-slate-100">
       <section className="px-6 py-20 md:py-28">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+          <h1 className="font-heading text-4xl md:text-5xl font-bold tracking-tight text-slate-50 mb-6">
             Built for your role
           </h1>
-          <p className="text-xl text-slate-600 leading-relaxed">
+          <p className="text-xl text-slate-300 leading-relaxed">
 Every stakeholder on a construction project has a different relationship with procurement. JiTpro gives each role the visibility, accountability, and documentation they need to protect the schedule and their position.
           </p>
         </div>
@@ -54,35 +54,35 @@ Every stakeholder on a construction project has a different relationship with pr
             <Link
               key={role.to}
               to={role.to}
-              className="block border border-slate-200 rounded-xl p-8 bg-white hover:border-slate-400 transition-colors group"
+              className="block rounded-xl border border-slate-800 bg-white/[0.03] p-8 hover:border-white/25 transition-colors group"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900 mb-3 group-hover:text-amber-600 transition-colors">
+                  <h2 className="font-heading text-2xl font-bold text-slate-100 mb-3 group-hover:text-amber-400 transition-colors">
                     {role.title}
                   </h2>
-                  <p className="text-lg text-slate-600 leading-relaxed">
+                  <p className="text-lg text-slate-300 leading-relaxed">
                     {role.description}
                   </p>
                 </div>
-                <ArrowRight className="text-slate-400 group-hover:text-amber-600 transition-colors flex-shrink-0 mt-1" size={24} />
+                <ArrowRight className="text-slate-500 group-hover:text-amber-400 transition-colors flex-shrink-0 mt-1" size={24} />
               </div>
             </Link>
           ))}
         </div>
       </section>
 
-      <section className="px-6 py-20 bg-slate-50">
+      <section className="border-t border-white/10 bg-slate-900 px-6 py-20">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-slate-900 mb-6">
+          <h2 className="font-heading text-3xl font-bold text-slate-50 mb-6">
             Procurement affects everyone on the project
           </h2>
-          <p className="text-lg text-slate-600 mb-10 leading-relaxed max-w-3xl mx-auto">
+          <p className="text-lg text-slate-300 mb-10 leading-relaxed max-w-3xl mx-auto">
             When procurement decisions are visible early and accountability is clear, every stakeholder benefits. Fewer surprises, fewer disputes, and better schedule outcomes.
           </p>
           <Link
             to="/how-it-works"
-            className="inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-4 text-lg font-medium hover:bg-slate-800 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-8 py-4 text-lg font-semibold text-slate-950 transition-colors hover:bg-amber-400"
           >
             See the JiTpro Control Process
             <ArrowRight size={20} />

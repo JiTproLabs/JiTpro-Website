@@ -10,13 +10,13 @@ export default function ThankYou() {
   const wantsCall = state?.scheduleCall ?? false;
 
   return (
-    <div>
+    <div className="min-h-screen bg-slate-950 text-slate-100">
       <section className="px-6 py-20 md:py-32">
         <div className="max-w-2xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+          <h1 className="font-heading text-4xl md:text-5xl font-bold tracking-tight text-slate-50 mb-6">
             Thank you for reaching out.
           </h1>
-          <p className="text-xl text-slate-600 leading-relaxed mb-12">
+          <p className="text-xl text-slate-300 leading-relaxed mb-12">
             We've received your message and will review your information.
           </p>
 
@@ -26,7 +26,7 @@ export default function ThankYou() {
                 href={SCHEDULER_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-4 text-lg font-medium hover:bg-slate-800 transition-colors"
+                className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-8 py-4 text-lg font-semibold text-slate-950 transition-colors hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 focus:ring-offset-slate-950"
               >
                 <Calendar size={20} />
                 Schedule a Call
@@ -34,10 +34,10 @@ export default function ThankYou() {
             )}
             <Link
               to="/"
-              className={`inline-flex items-center gap-2 px-8 py-4 text-lg font-medium transition-colors ${
+              className={`inline-flex items-center gap-2 rounded-lg px-8 py-4 text-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-950 ${
                 wantsCall
-                  ? 'border-2 border-slate-900 text-slate-900 hover:bg-slate-50'
-                  : 'bg-slate-900 text-white hover:bg-slate-800'
+                  ? 'border border-white/10 bg-white/[0.03] font-medium text-slate-200 hover:border-white/20 hover:bg-white/[0.06] focus:ring-slate-400'
+                  : 'bg-amber-500 font-semibold text-slate-950 hover:bg-amber-400 focus:ring-amber-300'
               }`}
             >
               Return Home
@@ -51,7 +51,7 @@ export default function ThankYou() {
                 href={SCHEDULER_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 text-lg transition-colors"
+                className="inline-flex items-center gap-2 text-slate-300 hover:text-slate-100 text-lg transition-colors"
               >
                 <Calendar size={18} />
                 Or schedule a call

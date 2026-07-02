@@ -12,14 +12,14 @@ interface FaqAccordionItemProps {
 
 export default function FaqAccordionItem({ itemId, question, answer, isOpen, onToggle, isLast }: FaqAccordionItemProps) {
   return (
-    <div id={itemId} className={!isLast ? 'border-b border-slate-100' : ''}>
+    <div id={itemId} className={!isLast ? 'border-b border-slate-800' : ''}>
       <h3>
         <button
           onClick={onToggle}
           aria-expanded={isOpen}
           className="flex items-start justify-between w-full py-5 px-6 text-left group"
         >
-          <span className="text-base font-semibold text-slate-900 pr-4 leading-snug group-hover:text-slate-700 transition-colors">
+          <span className="text-base font-semibold text-slate-100 pr-4 leading-snug group-hover:text-slate-300 transition-colors">
             {question}
           </span>
           <ChevronDown
@@ -37,11 +37,11 @@ export default function FaqAccordionItem({ itemId, question, answer, isOpen, onT
               Array.isArray(block) ? (
                 <ul key={i} className="list-disc pl-5 space-y-1.5">
                   {block.map((item, j) => (
-                    <li key={j} className="text-slate-600 leading-relaxed">{item}</li>
+                    <li key={j} className="text-slate-300 leading-relaxed">{item}</li>
                   ))}
                 </ul>
               ) : (
-                <p key={i} className="text-slate-600 leading-relaxed">{block}</p>
+                <p key={i} className="text-slate-300 leading-relaxed">{block}</p>
               )
             )}
           </div>

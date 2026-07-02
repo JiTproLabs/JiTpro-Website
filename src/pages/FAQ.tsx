@@ -137,16 +137,16 @@ export default function FAQ() {
   }, [activeSection]);
 
   return (
-    <div>
+    <div className="min-h-screen bg-slate-950 text-slate-100">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(generateStructuredData()) }}
       />
 
       {/* Hero */}
-      <section className="px-6 py-16 md:py-20 bg-slate-900">
+      <section className="border-b border-white/10 bg-slate-900 px-6 py-16 md:py-20">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 tracking-tight">
+          <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-slate-50 mb-4 tracking-tight">
             Frequently Asked Questions
           </h1>
           <p className="text-lg md:text-xl text-slate-300 leading-relaxed mb-6">
@@ -159,14 +159,14 @@ export default function FAQ() {
       </section>
 
       {/* Sticky Category Nav */}
-      <nav className="sticky top-20 z-40 bg-white border-b border-slate-200" aria-label="FAQ categories">
+      <nav className="sticky top-20 z-40 border-b border-white/10 bg-slate-950/95 backdrop-blur" aria-label="FAQ categories">
         <div className="max-w-5xl mx-auto px-6">
           <div className="relative">
             {canScrollLeft && (
-              <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-r from-white via-white/80 to-transparent pr-4">
+              <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent pr-4">
                 <button
                   onClick={() => scrollNav('left')}
-                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                  className="p-1.5 rounded-full text-slate-500 hover:text-slate-200 hover:bg-white/10 transition-colors"
                   aria-label="Scroll categories left"
                 >
                   <ChevronLeft size={16} />
@@ -187,8 +187,8 @@ export default function FAQ() {
                   onClick={() => scrollToSection(section.id)}
                   className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-colors ${
                     activeSection === section.id
-                      ? 'bg-amber-50 text-slate-900 border border-amber-200'
-                      : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 border border-transparent'
+                      ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
+                      : 'text-slate-400 hover:bg-white/5 hover:text-slate-200 border border-transparent'
                   }`}
                 >
                   {section.title}
@@ -197,10 +197,10 @@ export default function FAQ() {
             </div>
 
             {canScrollRight && (
-              <div className="absolute right-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-l from-white via-white/80 to-transparent pl-4">
+              <div className="absolute right-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-l from-slate-950 via-slate-950/80 to-transparent pl-4">
                 <button
                   onClick={() => scrollNav('right')}
-                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                  className="p-1.5 rounded-full text-slate-500 hover:text-slate-200 hover:bg-white/10 transition-colors"
                   aria-label="Scroll categories right"
                 >
                   <ChevronRight size={16} />
@@ -217,17 +217,17 @@ export default function FAQ() {
           <section
             key={section.id}
             id={section.id}
-            className={`px-6 py-16 ${sectionIndex % 2 === 1 ? 'bg-slate-50' : ''}`}
+            className={`px-6 py-16 ${sectionIndex % 2 === 1 ? 'border-y border-white/10 bg-slate-900' : ''}`}
           >
             <div className="max-w-3xl mx-auto">
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3 tracking-tight">
+              <h2 className="font-heading text-2xl md:text-3xl font-bold text-slate-50 mb-3 tracking-tight">
                 {section.title}
               </h2>
-              <p className="text-base text-slate-500 leading-relaxed mb-10">
+              <p className="text-base text-slate-400 leading-relaxed mb-10">
                 {section.intro}
               </p>
 
-              <div className="bg-white rounded-lg border border-slate-200">
+              <div className="rounded-lg border border-slate-800 bg-white/[0.03]">
                 {section.items.map((item, itemIndex) => (
                   <FaqAccordionItem
                     key={itemIndex}

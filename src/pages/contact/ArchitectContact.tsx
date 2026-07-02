@@ -77,22 +77,22 @@ export default function ArchitectContact() {
     }
   };
 
-  const inputClass = 'w-full px-4 py-3 border-2 border-slate-300 text-slate-900 focus:border-slate-900 focus:outline-none text-lg';
-  const labelClass = 'block text-sm font-bold text-slate-900 mb-2';
+  const inputClass = 'w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300/30';
+  const labelClass = 'block text-sm font-semibold text-slate-200 mb-2';
   const radioGroupClass = 'flex gap-6';
-  const radioLabelClass = 'flex items-center gap-2 text-slate-700 cursor-pointer';
+  const radioLabelClass = 'flex items-center gap-2 text-slate-300 cursor-pointer';
 
   return (
-    <div>
+    <div className="min-h-screen bg-slate-950 text-slate-100">
       <section className="px-6 py-20 md:py-28">
         <div className="max-w-2xl mx-auto">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600 mb-6">
+          <p className="mb-6 font-mono text-xs font-medium uppercase tracking-[0.2em] text-amber-500">
             For Architects & Engineers
           </p>
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+          <h1 className="font-heading text-4xl md:text-5xl font-bold tracking-tight text-slate-50 mb-6">
             Let's Talk Procurement
           </h1>
-          <p className="text-xl text-slate-600 leading-relaxed mb-12">
+          <p className="text-xl text-slate-300 leading-relaxed mb-12">
             Tell us about your project and how JiTpro can help streamline procurement coordination with your team.
           </p>
 
@@ -110,7 +110,7 @@ export default function ArchitectContact() {
 
             {/* Section 1: Project Information */}
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6 pb-3 border-b-2 border-slate-200">
+              <h2 className="font-heading text-2xl font-bold text-slate-50 mb-6 pb-3 border-b border-white/10">
                 Project Information
               </h2>
               <div className="space-y-6">
@@ -120,11 +120,11 @@ export default function ArchitectContact() {
                   </label>
                   <div className={radioGroupClass}>
                     <label className={radioLabelClass}>
-                      <input type="radio" name="hasProject" value="yes" checked={hasProject === 'yes'} onChange={(e) => setHasProject(e.target.value)} className="accent-slate-900" />
+                      <input type="radio" name="hasProject" value="yes" checked={hasProject === 'yes'} onChange={(e) => setHasProject(e.target.value)} className="accent-amber-500" />
                       Yes
                     </label>
                     <label className={radioLabelClass}>
-                      <input type="radio" name="hasProject" value="no" checked={hasProject === 'no'} onChange={(e) => setHasProject(e.target.value)} className="accent-slate-900" />
+                      <input type="radio" name="hasProject" value="no" checked={hasProject === 'no'} onChange={(e) => setHasProject(e.target.value)} className="accent-amber-500" />
                       No
                     </label>
                   </div>
@@ -189,7 +189,7 @@ export default function ArchitectContact() {
 
             {/* Section 2: Your Information */}
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6 pb-3 border-b-2 border-slate-200">
+              <h2 className="font-heading text-2xl font-bold text-slate-50 mb-6 pb-3 border-b border-white/10">
                 Your Information
               </h2>
               <div className="space-y-6">
@@ -220,7 +220,7 @@ export default function ArchitectContact() {
 
             {/* Section 3: Message */}
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6 pb-3 border-b-2 border-slate-200">
+              <h2 className="font-heading text-2xl font-bold text-slate-50 mb-6 pb-3 border-b border-white/10">
                 Message
               </h2>
               <div>
@@ -231,18 +231,18 @@ export default function ArchitectContact() {
 
             {/* Section 4: Next Step */}
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-6 pb-3 border-b-2 border-slate-200">
+              <h2 className="font-heading text-2xl font-bold text-slate-50 mb-6 pb-3 border-b border-white/10">
                 Next Step
               </h2>
               <div>
                 <label className={labelClass}>Would you like to schedule a call?</label>
                 <div className={radioGroupClass}>
                   <label className={radioLabelClass}>
-                    <input type="radio" name="scheduleCall" value="yes" checked={scheduleCall === 'yes'} onChange={(e) => setScheduleCall(e.target.value)} className="accent-slate-900" />
+                    <input type="radio" name="scheduleCall" value="yes" checked={scheduleCall === 'yes'} onChange={(e) => setScheduleCall(e.target.value)} className="accent-amber-500" />
                     Yes
                   </label>
                   <label className={radioLabelClass}>
-                    <input type="radio" name="scheduleCall" value="no" checked={scheduleCall === 'no'} onChange={(e) => setScheduleCall(e.target.value)} className="accent-slate-900" />
+                    <input type="radio" name="scheduleCall" value="no" checked={scheduleCall === 'no'} onChange={(e) => setScheduleCall(e.target.value)} className="accent-amber-500" />
                     No
                   </label>
                 </div>
@@ -250,10 +250,10 @@ export default function ArchitectContact() {
             </div>
 
             {/* Cloudflare Turnstile */}
-            <Turnstile onToken={handleToken} onExpire={handleExpire} />
+            <Turnstile onToken={handleToken} onExpire={handleExpire} theme="dark" />
 
             {error && (
-              <div className="p-4 bg-red-50 border-2 border-red-200 text-red-800">
+              <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-4 text-red-200">
                 {error}
               </div>
             )}
@@ -261,7 +261,7 @@ export default function ArchitectContact() {
             <button
               type="submit"
               disabled={loading || !turnstileToken}
-              className="w-full bg-slate-900 text-white px-8 py-4 text-lg font-medium hover:bg-slate-800 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-amber-500 px-8 py-4 text-lg font-semibold text-slate-950 transition-colors hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
             >
               {loading ? 'Submitting...' : 'Submit'}
             </button>
