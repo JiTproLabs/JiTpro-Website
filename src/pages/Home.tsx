@@ -69,7 +69,7 @@ export default function Home() {
         <div className="relative mx-auto max-w-7xl px-6 py-24 md:py-32 lg:py-36">
           <div className="mx-auto max-w-5xl text-center">
             <h1 className="font-heading text-5xl font-extrabold tracking-tight text-slate-50 md:text-7xl lg:text-8xl">
-              Your next margin loss event is already underway.
+              The next event that erodes your margin is already in motion.
             </h1>
             <p className="mx-auto mt-6 font-heading text-2xl font-semibold tracking-tight text-slate-300 md:text-4xl lg:text-5xl">
               It just hasn&apos;t become visible in the field, yet.
