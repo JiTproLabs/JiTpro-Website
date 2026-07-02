@@ -84,7 +84,7 @@ Every stakeholder on a construction project has a different relationship with pr
             to="/how-it-works"
             className="inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-4 text-lg font-medium hover:bg-slate-800 transition-colors"
           >
-            See how JiTpro works
+            See the JiTpro Control Process
             <ArrowRight size={20} />
           </Link>
         </div>

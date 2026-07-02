@@ -48,9 +48,13 @@ const structureItems = [
   },
 ];
 
-export default function GeneralContractors() {
+export default function GeneralContractorsConcept() {
   return (
     <div className="bg-white text-slate-900">
+      <div className="bg-amber-500 text-slate-950 px-6 py-2 text-center text-sm font-semibold">
+        Unlisted General Contractors concept for review only — existing GC page preserved.
+      </div>
+
       {/* HERO */}
       <section className="relative overflow-hidden bg-slate-950 text-white px-6 py-24 md:py-32">
         <div
@@ -75,7 +79,7 @@ export default function GeneralContractors() {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
-              to="/#next-project-review"
+              to="/homepage-concept#next-project-review"
               className="inline-flex items-center justify-center gap-2 bg-amber-500 text-slate-950 px-7 py-4 text-base md:text-lg font-bold rounded-lg hover:bg-amber-400 transition-colors"
             >
               Review my next project
@@ -230,7 +234,7 @@ export default function GeneralContractors() {
               JiTpro helps the GC reveal inherited constraints, sequence procurement steps, coordinate decisions early, and keep the project from falling back into the same reactive pattern.
             </p>
             <Link
-              to="/#next-project-review"
+              to="/homepage-concept#next-project-review"
               className="inline-flex items-center gap-2 bg-slate-900 text-white px-7 py-4 rounded-lg text-lg font-bold hover:bg-slate-800 transition-colors"
             >
               Review my next project
@@ -253,7 +257,7 @@ export default function GeneralContractors() {
             Start with one upcoming project. Identify the constraints. Sequence the procurement steps. Give the team a plan before the pressure starts.
           </p>
           <Link
-            to="/#next-project-review"
+            to="/homepage-concept#next-project-review"
             className="inline-flex items-center justify-center gap-2 bg-amber-500 text-slate-950 px-8 py-4 text-lg font-bold rounded-lg hover:bg-amber-400 transition-colors"
           >
             Start with one project

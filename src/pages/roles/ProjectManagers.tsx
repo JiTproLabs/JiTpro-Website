@@ -137,7 +137,7 @@ JiTpro gives project managers the structure to control procurement timing, the p
             to="/how-it-works"
             className="inline-flex items-center gap-2 bg-white text-slate-900 px-8 py-4 text-lg font-medium hover:bg-slate-100 transition-colors"
           >
-            See how JiTpro works
+            See the JiTpro Control Process
             <ArrowRight size={20} />
           </Link>
         </div>

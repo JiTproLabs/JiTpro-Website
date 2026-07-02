@@ -27,12 +27,12 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link to="/product" className="text-slate-600 hover:text-slate-900 transition-colors">
-                  What JiTpro enables
+                  Single Project Approach
                 </Link>
               </li>
               <li>
                 <Link to="/how-it-works" className="text-slate-600 hover:text-slate-900 transition-colors">
-                  How it works
+                  The JiTpro Control Process
                 </Link>
               </li>
             </ul>

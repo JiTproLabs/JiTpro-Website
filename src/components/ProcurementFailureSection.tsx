@@ -82,11 +82,6 @@ function timelineX(frac: number, max: number = 1): number {
 function rowY(row: number): number {
   return ROW_TOP_OFFSET_PCT + row * (ROW_HEIGHT_PCT + ROW_GAP_PCT);
 }
-function smoothstep(t: number): number {
-  const c = Math.max(0, Math.min(1, t));
-  return c * c * (3 - 2 * c);
-}
-
 // Quintic ease — zero first and second derivative at both ends. Gentler than
 // smoothstep for visual motion that should arrive and depart without any jolt.
 function smootherstep(t: number): number {
@@ -590,7 +585,9 @@ function ScheduleStage({ elapsed }: { elapsed: number }) {
 
 type Playback = 'initial' | 'playing' | 'paused' | 'ended';
 
-export default function ProcurementFailureSection() {
+// Standalone player — owns its playback state so it can be embedded anywhere
+// (e.g. the dark homepage) without the surrounding light section copy.
+export function ProcurementFailureVideo() {
   const [elapsed, setElapsed] = useState(0);
   const [playback, setPlayback] = useState<Playback>('initial');
   const rafRef = useRef<number | null>(null);
@@ -625,28 +622,6 @@ export default function ProcurementFailureSection() {
   const progress = elapsed / TOTAL_MS;
 
   return (
-    <section className="px-6 py-24 bg-white">
-      <div className="max-w-3xl mx-auto text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6 leading-snug">
-          Most Procurement Schedules Hide the Real Risks
-        </h2>
-        <div className="text-lg text-slate-600 leading-relaxed space-y-5">
-          <p>Most schedules show a clean sequence: buyout, fabrication, delivery, onsite.</p>
-          <p>
-            What they don't show is everything that quietly impacts each phase — the design
-            that wasn't ready, specifications that were not complete, buyout that took more
-            time, extra review cycles, the buffers that get consumed without anyone noticing.
-          </p>
-          <p className="text-slate-900 font-medium">
-            The result: late deliveries that didn't have to happen.
-          </p>
-        </div>
-        <p className="text-sm text-slate-500 italic mt-6">
-          Press play to watch a planned procurement schedule meet reality.
-        </p>
-      </div>
-
-      <div className="max-w-5xl mx-auto">
         <div
           className="relative bg-[#030a19] border border-slate-800 rounded-xl shadow-lg overflow-hidden flex flex-col select-none"
           style={{ aspectRatio: '2 / 1' }}
@@ -702,6 +677,34 @@ export default function ProcurementFailureSection() {
             </button>
           )}
         </div>
+  );
+}
+
+export default function ProcurementFailureSection() {
+  return (
+    <section className="px-6 py-24 bg-white">
+      <div className="max-w-3xl mx-auto text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6 leading-snug">
+          Most Procurement Schedules Hide the Real Risks
+        </h2>
+        <div className="text-lg text-slate-600 leading-relaxed space-y-5">
+          <p>Most schedules show a clean sequence: buyout, fabrication, delivery, onsite.</p>
+          <p>
+            What they don't show is everything that quietly impacts each phase — the design
+            that wasn't ready, specifications that were not complete, buyout that took more
+            time, extra review cycles, the buffers that get consumed without anyone noticing.
+          </p>
+          <p className="text-slate-900 font-medium">
+            The result: late deliveries that didn't have to happen.
+          </p>
+        </div>
+        <p className="text-sm text-slate-500 italic mt-6">
+          Press play to watch a planned procurement schedule meet reality.
+        </p>
+      </div>
+
+      <div className="max-w-5xl mx-auto">
+        <ProcurementFailureVideo />
       </div>
     </section>
   );

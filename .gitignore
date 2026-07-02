@@ -18,3 +18,6 @@ supabase/.temp/
 
 # macOS
 .DS_Store
+
+# Hermes agent planning scratch
+.hermes/

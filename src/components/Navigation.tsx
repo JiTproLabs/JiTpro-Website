@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 
 const dropdowns = {
   howItWorks: {
-    label: 'How It Works',
+    label: 'The JiTpro Control Process',
     items: [
-      { to: '/product', label: 'Product' },
-      { to: '/how-it-works', label: 'How It Works' },
+      { to: '/product', label: 'Single Project Approach' },
+      { to: '/how-it-works', label: 'The JiTpro Control Process' },
       { to: '/roles', label: 'Roles' },
     ],
   },
@@ -15,6 +15,7 @@ const dropdowns = {
     label: 'Why JiTpro',
     items: [
       { to: '/why', label: 'Why JiTpro' },
+      { to: '/company-project-health', label: 'Company & Project Health' },
       { to: '/documentation', label: 'Documentation & Risk' },
       { to: '/faq', label: 'FAQ' },
     ],
@@ -34,17 +35,9 @@ const dropdowns = {
       { to: '/contact/owner', label: 'Owners & Developers' },
     ],
   },
-  demo: {
-    label: 'Request Demo',
-    items: [
-      { to: '/contact/contractor', label: 'General Contractors' },
-      { to: '/contact/architect', label: 'Architects & Engineers' },
-      { to: '/contact/owner', label: 'Owners & Developers' },
-    ],
-  },
 };
 
-const dropdownKeys = ['howItWorks', 'why', 'about', 'contact', 'demo'] as const;
+const dropdownKeys = ['howItWorks', 'why', 'about', 'contact'] as const;
 type DropdownKey = typeof dropdownKeys[number];
 
 export default function Navigation() {
@@ -75,7 +68,6 @@ export default function Navigation() {
           <div className="hidden lg:flex items-center gap-8">
             {dropdownKeys.map((key) => {
               const dropdown = dropdowns[key];
-              const isDemo = key === 'demo';
 
               return (
                 <div
@@ -86,9 +78,7 @@ export default function Navigation() {
                 >
                   <button
                     className={`text-sm font-medium transition-colors inline-flex items-center gap-1 ${
-                      isDemo
-                        ? 'bg-amber-500 text-slate-900 px-6 py-2.5 hover:bg-amber-400'
-                        : isDropdownActive(key)
+                      isDropdownActive(key)
                           ? 'text-white'
                           : 'text-slate-300 hover:text-white'
                     }`}
@@ -136,7 +126,6 @@ export default function Navigation() {
           <div className="px-6 py-4 space-y-1">
             {dropdownKeys.map((key) => {
               const dropdown = dropdowns[key];
-              const isDemo = key === 'demo';
               const isOpen = openMobile === key;
 
               return (
@@ -144,9 +133,7 @@ export default function Navigation() {
                   <button
                     onClick={() => setOpenMobile(isOpen ? null : key)}
                     className={`flex items-center justify-between w-full py-2 text-base font-medium ${
-                      isDemo
-                        ? 'bg-amber-500 text-slate-900 px-6 py-3 text-center hover:bg-amber-400 transition-colors mt-4'
-                        : isDropdownActive(key)
+                      isDropdownActive(key)
                           ? 'text-white'
                           : 'text-slate-300'
                     }`}
