@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   UserCheck,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProcurementFailureVideo } from '../components/ProcurementFailureSection';
 
@@ -59,7 +60,19 @@ function SectionLabel({ children }: { children: string }) {
   );
 }
 
+// Per-page-load flag: the staged hero reveal plays on a fresh load, then stays
+// static when the visitor navigates back to the homepage within the same session.
+let heroIntroPlayed = false;
+
 export default function Home() {
+  const [animateHero] = useState(() => !heroIntroPlayed);
+  useEffect(() => {
+    heroIntroPlayed = true;
+  }, []);
+
+  const beat = (delayMs: number) =>
+    animateHero ? { className: 'hero-beat', style: { animationDelay: `${delayMs}ms` } } : { className: '', style: undefined };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <section className="relative overflow-hidden border-b border-white/10 bg-slate-950">
@@ -68,16 +81,28 @@ export default function Home() {
 
         <div className="relative mx-auto max-w-7xl px-6 py-24 md:py-32 lg:py-36">
           <div className="mx-auto max-w-5xl text-center">
-            <h1 className="font-heading text-5xl font-extrabold tracking-tight text-slate-50 md:text-7xl lg:text-8xl">
+            <h1
+              className={`font-heading text-5xl font-extrabold tracking-tight text-slate-50 md:text-7xl lg:text-8xl ${beat(400).className}`}
+              style={beat(400).style}
+            >
               The next event that erodes your margin is already in motion.
             </h1>
-            <p className="mx-auto mt-6 font-heading text-2xl font-semibold tracking-tight text-slate-300 md:text-4xl lg:text-5xl">
+            <p
+              className={`mx-auto mt-6 font-heading text-2xl font-semibold tracking-tight text-slate-300 md:text-4xl lg:text-5xl ${beat(3600).className}`}
+              style={beat(3600).style}
+            >
               It just hasn&apos;t become visible in the field, yet.
             </p>
-            <p className="mx-auto mt-8 max-w-3xl text-lg leading-8 text-slate-300 md:text-xl md:leading-9">
+            <p
+              className={`mx-auto mt-8 max-w-3xl text-lg leading-8 text-slate-300 md:text-xl md:leading-9 ${beat(6400).className}`}
+              style={beat(6400).style}
+            >
               Every missed owner decision, unresolved design item, hidden assumption, and delayed release quietly erodes your margin—until the field is forced into recovery.
             </p>
-            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <div
+              className={`mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row ${beat(7600).className}`}
+              style={beat(7600).style}
+            >
               <Link
                 to="/contact/contractor"
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-5 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 focus:ring-offset-slate-950"
