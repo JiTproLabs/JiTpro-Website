@@ -138,7 +138,7 @@ export default function Home() {
                 They lose it when the field is forced to recover from decisions, approvals, releases, fabrication windows, or deliveries that should have been resolved earlier.
               </p>
               <p>
-                And growth makes it worse. The visibility that ran three projects out of your head does not stretch to eight. Nothing in the field changed—you ran out of room to see everything coming.
+                And growth makes it worse. The visibility that ran one or two projects out of your head does not stretch to five. Nothing in the field changed—you ran out of room to see everything coming.
               </p>
               <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5">
                 <p className="font-heading text-2xl font-semibold leading-snug text-slate-100">You probably do not call it procurement.</p>
@@ -224,13 +224,19 @@ export default function Home() {
             <SectionLabel>You have lived this one</SectionLabel>
             <div className="space-y-4 text-lg leading-8 text-slate-300">
               <p>
-                The owner sits on the window finish selection for three weeks. Nobody chases it, because windows feel like a long way off. The package misses its fabrication slot, delivery slides six weeks, and dry-in slides with it.
+                Ongoing design changes keep impacting the structural steel package. You push hard, but the process stalls. Submittals cycle through review after review until the fabricator loses its production slot. Delivery slips eight weeks.
               </p>
               <p>
-                Now you are resequencing trades, paying for temporary protection, and buying overtime to hold the completion date.
+                Now you&apos;re resequencing trades, expediting steel, paying overtime, and burning management hours just to protect the completion date.
+              </p>
+              <p>
+                The owner insists the steel should have arrived on time. As far as they&apos;re concerned, that&apos;s your responsibility—not theirs.
+              </p>
+              <p>
+                Your original projections showed $255,000 in margin. Recovery for this one procurement package consumed $87,000 of it.
               </p>
               <p className="font-heading text-xl font-semibold leading-snug text-slate-100">
-                Buyout said that job carried $110,000 of margin. Recovery spent $40,000 of it. Nothing failed in the field—the answer was just late.
+                Nothing failed in the field. The margin was lost the day an unresolved commitment went unmanaged.
               </p>
             </div>
           </div>

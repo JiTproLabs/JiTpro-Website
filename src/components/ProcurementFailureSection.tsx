@@ -627,7 +627,7 @@ export function ProcurementFailureVideo() {
           style={{ aspectRatio: '2 / 1' }}
         >
           <div className="h-7 px-4 flex items-center bg-slate-800/90 border-b border-slate-700 text-[10px] uppercase tracking-[0.18em] font-semibold text-slate-300">
-            Traditional Procurement Schedule
+            How Procurement Typically Flows
           </div>
 
           <div className="flex-1 relative">
