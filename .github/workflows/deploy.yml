@@ -43,5 +43,28 @@ jobs:
       id-token: write
 
     steps:
+      # GitHub Pages intermittently rejects deployments with a transient
+      # "Deployment failed, try again later." Retry twice inside the job so a
+      # passing retry keeps the run green (no failure notifications).
       - name: Deploy
+        id: deploy1
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - name: Wait before retry
+        if: steps.deploy1.outcome == 'failure'
+        run: sleep 90
+
+      - name: Deploy (first retry)
+        id: deploy2
+        if: steps.deploy1.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - name: Wait before final retry
+        if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
+        run: sleep 180
+
+      - name: Deploy (final retry)
+        if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
         uses: actions/deploy-pages@v4
