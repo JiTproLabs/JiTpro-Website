@@ -1,145 +1,287 @@
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+
+const lostControl = [
+  {
+    title: 'Missing information compounds',
+    body: 'One late decision delays a submittal. The submittal delays a release. The release misses a fabrication slot. The problem grows at every handoff.',
+  },
+  {
+    title: 'Recovery becomes expensive',
+    body: 'Expediting, resequencing, overtime, redesign, management time, schedule compression. The inexpensive version of the fix expired months earlier.',
+  },
+  {
+    title: 'GC margins erode',
+    body: 'Your contractor absorbs recovery costs first. A contractor losing money on your project is not protection—it is pressure.',
+  },
+  {
+    title: 'Change orders increase',
+    body: 'Eventually those costs reach you. They arrive late, stacked together, with little room left to consider alternatives.',
+  },
+  {
+    title: 'Responsibility becomes difficult to prove',
+    body: 'Months later, no one can clearly show who owned the decision that started the slide. Disputes fill the gap where documentation should be.',
+  },
+  {
+    title: 'Relationships suffer',
+    body: 'Owner and contractor end up negotiating blame instead of building the project.',
+  },
+];
+
+const withJiTpro = [
+  {
+    title: 'Early visibility',
+    body: 'Every unresolved item is identified at the start of the project—named, dated, and visible to everyone who needs to act on it.',
+  },
+  {
+    title: 'Assigned responsibility',
+    body: 'Every open commitment has an owner and a deadline. Nothing waits in an inbox or in someone’s memory.',
+  },
+  {
+    title: 'Procurement stays on schedule',
+    body: 'Decisions, submittals, releases, and deliveries are sequenced against the dates the field actually needs.',
+  },
+  {
+    title: 'Constraints resolved early',
+    body: 'Problems surface while they are still inexpensive—while options exist and no one is paying for recovery.',
+  },
+  {
+    title: 'Margins protected',
+    body: 'Your contractor is not burning money on preventable recovery—which means they are not under pressure to recover it elsewhere.',
+  },
+  {
+    title: 'Only legitimate change orders reach you',
+    body: 'When conditions genuinely change, the record shows it clearly. When they have not, the change order never gets written.',
+  },
+  {
+    title: 'Better collaboration',
+    body: 'You, the design team, and the contractor work from the same visible facts instead of competing recollections.',
+  },
+];
+
+const ownerBenefits = [
+  'Fewer surprise change orders',
+  'Better budget protection',
+  'Greater confidence in your general contractor',
+  'Transparent accountability',
+  'Better communication',
+  'Fewer disputes',
+  'Better project outcomes',
+];
+
+const howItWorks = [
+  'Every issue is assigned',
+  'Every commitment has an owner',
+  'Every deadline is visible',
+  'Every action is documented',
+];
+
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <p className="mb-4 font-mono text-xs font-medium uppercase tracking-[0.2em] text-amber-500">
+      {children}
+    </p>
+  );
+}
 
 export default function OwnersDevelopers() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <section className="px-6 py-20 md:py-28">
-        <div className="max-w-4xl mx-auto">
-          <p className="mb-6 font-mono text-xs font-medium uppercase tracking-[0.2em] text-amber-500">
-            Roles
-          </p>
-          <h1 className="font-heading text-4xl md:text-5xl font-bold tracking-tight text-slate-50 mb-6">
-            JiTpro for Owners &amp; Developers
+      {/* Hero */}
+      <section className="relative overflow-hidden border-b border-white/10 bg-slate-950 px-6 py-20 md:py-28">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(245,158,11,0.1),transparent_38%)]" />
+        <div className="relative mx-auto max-w-4xl">
+          <SectionLabel>For owners &amp; developers</SectionLabel>
+          <h1 className="font-heading text-4xl font-bold tracking-tight text-slate-50 md:text-6xl">
+            The most expensive project problems start months before you see them.
           </h1>
-          <p className="text-xl text-slate-300 leading-relaxed">
-Your decisions drive procurement. Material selections, finish approvals, equipment choices — these are owner decisions, and each one has a deadline tied to the construction schedule. JiTpro makes those deadlines visible so you can make decisions on time instead of finding out after the fact that a delay started with you.
+          <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-300">
+            By the time a delay or a change order reaches your desk, its cause is usually months
+            old&mdash;an unresolved decision, an incomplete detail, an unanswered question that
+            quietly compounded through procurement.
+          </p>
+          <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-300">
+            JiTpro is the system that lets your general contractor control those risks
+            early&mdash;while they are still small, still visible, and still inexpensive to solve.
+            This page explains why owners are beginning to require it.
           </p>
         </div>
       </section>
 
-      <section className="border-y border-white/10 bg-slate-900 px-6 py-16">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="font-heading text-3xl font-bold text-slate-50 mb-8 pb-4 border-b border-white/10">
-            Your role in procurement
-          </h2>
-          <div className="space-y-6">
-            <p className="text-lg text-slate-300 leading-relaxed">
-              Owners and developers fund the project and make the decisions that shape it. On the procurement side, that means approving material selections, signing off on equipment specifications, and authorizing purchases — often for items that have long manufacturing or fabrication lead times.
-            </p>
-            <p className="text-lg text-slate-300 leading-relaxed">
-              The challenge is understanding which decisions are truly time-sensitive. Not every approval is equally urgent, but without visibility into procurement timing, it is difficult to know which choices need to be made now and which ones can wait.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="px-6 py-16">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="font-heading text-3xl font-bold text-slate-50 mb-8 pb-4 border-b border-white/10">
-            Where procurement breaks down
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="rounded-xl border border-slate-800 bg-white/[0.03] p-8">
-              <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Selections are requested without context</h3>
-              <p className="text-slate-400 leading-relaxed">
-                You receive a list of selections to make but no clear indication of which ones are schedule-critical. Without that context, lower-priority decisions get attention while time-sensitive ones wait.
-              </p>
+      {/* Inherits more than the contract */}
+      <section className="border-b border-white/10 bg-slate-900 px-6 py-20 md:py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+            <div>
+              <SectionLabel>Where risk begins</SectionLabel>
+              <h2 className="font-heading text-4xl font-bold tracking-tight text-slate-50 md:text-5xl">
+                Your general contractor inherits more than the contract.
+              </h2>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-white/[0.03] p-8">
-              <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Schedule impact is invisible</h3>
-              <p className="text-slate-400 leading-relaxed">
-                You may not realize that delaying an equipment decision by two weeks pushes a delivery date by three months. The connection between your decision timeline and the construction schedule is not visible.
+            <div className="space-y-6 text-lg leading-8 text-slate-300">
+              <p>
+                The day construction is awarded, your contractor inherits every unresolved piece of
+                the project: owner decisions still pending, design details still developing,
+                unanswered RFIs, missing specifications, and procurement unknowns.
               </p>
-            </div>
-            <div className="rounded-xl border border-slate-800 bg-white/[0.03] p-8">
-              <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Change orders appear without warning</h3>
-              <p className="text-slate-400 leading-relaxed">
-                When procurement delays cause schedule compression, the cost shows up as change orders for acceleration, overtime, or re-sequencing. The root cause — a late decision — is often obscured by the time the bill arrives.
+              <p>
+                That is not a criticism of anyone. No project starts complete. It is simply how
+                projects begin.
               </p>
-            </div>
-            <div className="rounded-xl border border-slate-800 bg-white/[0.03] p-8">
-              <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Disputes lack clear records</h3>
-              <p className="text-slate-400 leading-relaxed">
-                When delays occur, determining who was responsible for what and when becomes a matter of interpretation. Without a structured record, owners can end up paying for delays that were not their responsibility.
+              <p>
+                But every open item silently transfers risk to the builder&mdash;and starts a
+                clock. Procurement can only absorb so much waiting before the schedule starts
+                paying for it.
               </p>
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5">
+                <p className="font-heading text-2xl font-semibold leading-snug text-slate-100">
+                  Unresolved information does not disappear. It compounds.
+                </p>
+                <p className="mt-3 text-slate-300">
+                  And once procurement loses control, the cost of fixing a problem grows with every
+                  week it stays hidden.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="border-y border-white/10 bg-slate-900 px-6 py-16">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="font-heading text-3xl font-bold text-slate-50 mb-8 pb-4 border-b border-white/10">
-            How JiTpro helps
-          </h2>
-          <div className="space-y-8">
-            <div>
-              <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Decisions prioritized by schedule impact</h3>
-              <p className="text-lg text-slate-300 leading-relaxed">
-JiTpro shows you which of your pending decisions are tied to critical path materials and long-lead items. You see what needs to happen now versus what has more runway — so your time goes where it matters most.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Clear deadlines with consequences</h3>
-              <p className="text-lg text-slate-300 leading-relaxed">
-                Each decision has a deadline based on actual procurement lead times and required onsite dates. You see exactly how much time remains and what happens to the schedule if the decision is late.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Visibility into the full procurement chain</h3>
-              <p className="text-lg text-slate-300 leading-relaxed">
-JiTpro shows you the complete path from your decision to material delivery. You understand the downstream impact of your choices — not just the approval itself, but the fabrication, shipping, and installation that follows.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Protected approval record</h3>
-              <p className="text-lg text-slate-300 leading-relaxed">
-                Every decision you make is recorded with timestamps in a locked audit trail. If disputes arise later, you have clear documentation of what you approved, when you approved it, and that your decisions were made on time.
-              </p>
-            </div>
+      {/* When control is lost */}
+      <section className="bg-slate-950 px-6 py-20 md:py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-3xl text-center">
+            <SectionLabel>Without early control</SectionLabel>
+            <h2 className="font-heading text-4xl font-bold tracking-tight text-slate-50 md:text-5xl">
+              What happens when control is lost early
+            </h2>
           </div>
-        </div>
-      </section>
-
-      <section className="px-6 py-16">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="font-heading text-3xl font-bold text-slate-50 mb-8 pb-4 border-b border-white/10">
-            Practical benefits
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            {[
-              'Clear understanding of which decisions are schedule-critical',
-              'Fewer surprise change orders caused by late procurement',
-              'Visibility into how your timeline connects to the construction schedule',
-              'Documentation that protects you in delay disputes',
-              'Better communication with the GC and design team on timing',
-              'Confidence that your project schedule is being protected',
-            ].map((benefit) => (
-              <div key={benefit} className="flex gap-3 items-start">
-                <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 flex-shrink-0" />
-                <p className="text-lg text-slate-300 leading-relaxed">{benefit}</p>
+          <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {lostControl.map((item) => (
+              <div key={item.title} className="rounded-xl border border-slate-800 bg-slate-900/70 p-6">
+                <h3 className="font-heading text-xl font-bold text-slate-100">{item.title}</h3>
+                <p className="mt-2 leading-7 text-slate-400">{item.body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="border-t border-white/10 bg-slate-900 px-6 py-20">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-slate-50 mb-6">
-            Know which decisions matter most — and when they are due
+      {/* With JiTpro */}
+      <section className="border-y border-white/10 bg-slate-900 px-6 py-20 md:py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-3xl text-center">
+            <SectionLabel>With JiTpro</SectionLabel>
+            <h2 className="font-heading text-4xl font-bold tracking-tight text-slate-50 md:text-5xl">
+              What happens when your contractor uses JiTpro
+            </h2>
+            <p className="mt-6 text-lg leading-8 text-slate-400">
+              Early procurement control is not a concession you ask of your contractor. It protects
+              both of you.
+            </p>
+          </div>
+          <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {withJiTpro.map((item) => (
+              <div key={item.title} className="rounded-xl border border-white/10 bg-slate-950/60 p-6">
+                <CheckCircle2 className="mb-4 text-amber-400" size={22} />
+                <h3 className="font-heading text-xl font-bold text-slate-100">{item.title}</h3>
+                <p className="mt-2 leading-7 text-slate-400">{item.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How JiTpro works */}
+      <section className="bg-slate-950 px-6 py-20 md:py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+            <div>
+              <SectionLabel>How it works</SectionLabel>
+              <h2 className="font-heading text-4xl font-bold tracking-tight text-slate-50 md:text-5xl">
+                One system holding every unresolved commitment.
+              </h2>
+            </div>
+            <div className="space-y-6 text-lg leading-8 text-slate-300">
+              <p>
+                JiTpro tracks the project&apos;s unresolved commitments from the beginning&mdash;every
+                open decision, design clarification, approval, and long-lead release, sequenced
+                against the dates the schedule actually needs.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {howItWorks.map((line) => (
+                  <div
+                    key={line}
+                    className="rounded-xl border border-white/10 bg-slate-900/70 p-4 font-heading text-lg font-semibold leading-snug text-slate-100"
+                  >
+                    {line}
+                  </div>
+                ))}
+              </div>
+              <p>
+                When something outside your contractor&apos;s control affects schedule or budget,
+                the record already exists: what was needed, who owned it, when it was requested,
+                and what depended on it.
+              </p>
+              <p className="font-heading text-xl font-semibold leading-snug text-slate-100">
+                That documentation protects your contractor. It protects you just as much&mdash;because
+                decisions get made on facts instead of arguments.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Owner benefits */}
+      <section className="border-y border-white/10 bg-slate-900 px-6 py-20 md:py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+            <div>
+              <SectionLabel>What you get</SectionLabel>
+              <h2 className="font-heading text-4xl font-bold tracking-tight text-slate-50 md:text-5xl">
+                The outcomes owners actually care about.
+              </h2>
+              <p className="mt-6 text-lg leading-8 text-slate-400">
+                Not another portal to log into. A project where problems are handled while they are
+                still small&mdash;and a record you can trust when they are not.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {ownerBenefits.map((benefit) => (
+                <div
+                  key={benefit}
+                  className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-950/70 px-4 py-3"
+                >
+                  <div className="h-2 w-2 shrink-0 rounded-full bg-amber-500" />
+                  <span className="text-slate-200">{benefit}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="bg-slate-950 px-6 py-20 md:py-28">
+        <div className="mx-auto max-w-5xl text-center">
+          <SectionLabel>Before procurement begins</SectionLabel>
+          <h2 className="font-heading text-4xl font-bold tracking-tight text-slate-50 md:text-6xl">
+            Require JiTpro on Your Project
           </h2>
-          <p className="text-lg text-slate-300 leading-relaxed mb-10 max-w-3xl mx-auto">
-JiTpro gives owners the visibility to make timely procurement decisions and the documentation to prove it. Your decisions drive the schedule — make sure you know when they are needed.
+          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-300">
+            The best time to prevent unnecessary change orders is before procurement begins. Ask
+            your General Contractor to use JiTpro so unresolved project information is managed
+            while problems are still inexpensive to solve.
           </p>
-          <Link
-            to="/contact/owner"
-            className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-8 py-4 text-lg font-semibold text-slate-950 transition-colors hover:bg-amber-400"
-          >
-            Let's Talk Procurement
-            <ArrowRight size={20} />
-          </Link>
+          <div className="mt-10 flex justify-center">
+            <Link
+              to="/contact/owner"
+              className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-8 py-4 text-lg font-semibold text-slate-950 transition-colors hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 focus:ring-offset-slate-950"
+            >
+              Request JiTpro for My Project
+              <ArrowRight size={20} />
+            </Link>
+          </div>
         </div>
       </section>
     </div>
