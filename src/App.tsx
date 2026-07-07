@@ -40,7 +40,7 @@ import CompanyProjectHealth from './pages/CompanyProjectHealth';
 
 function App() {
   return (
-    <Router>
+    <Router basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       <ScrollToTop />
       <Routes>
         {/* Admin — no layout wrapper */}

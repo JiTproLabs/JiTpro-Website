@@ -19,7 +19,7 @@ JITpro marketing website — a React SPA built with Vite, TypeScript, and Tailwi
 - **Framework:** React 18 + React Router v7 (BrowserRouter) + TypeScript
 - **Styling:** Tailwind CSS 3 with PostCSS/Autoprefixer
 - **Icons:** lucide-react
-- **Build:** Vite 5 with `base: '/JiTpro-Website/'` (GitHub Pages subpath)
+- **Build:** Vite 5. Base path is env-driven: `VITE_BASE_PATH` (defaults to `/`). The GitHub Pages workflow builds with `VITE_BASE_PATH=/JiTpro-Website/` because that deployment lives at a repo subpath; root hosting and local dev use the default.
 - **Entry:** `index.html` → `src/main.tsx` → `src/App.tsx`
 
 ### Routing

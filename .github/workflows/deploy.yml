@@ -27,6 +27,12 @@ jobs:
 
       - name: Build site
         run: npm run build
+        env:
+          # GitHub Pages serves this site from the repo subpath.
+          VITE_BASE_PATH: /JiTpro-Website/
+
+      - name: Add SPA fallback for deep links
+        run: cp dist/index.html dist/404.html
 
       - name: Upload build
         uses: actions/upload-pages-artifact@v3
