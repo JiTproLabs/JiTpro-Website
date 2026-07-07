@@ -65,7 +65,7 @@ export default function GeneralContractors() {
             For growth-stage general contractors
           </p>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.02] mb-8">
-            Stop repeating the procurement mistakes that cost you profit last time.
+            Stop repeating the same mistakes that cost you profit last time.
           </h1>
           <p className="text-lg md:text-xl text-slate-300 leading-relaxed max-w-3xl mx-auto mb-8">
             Every contractor has said it after a hard job: “We are not making those same mistakes again.”
