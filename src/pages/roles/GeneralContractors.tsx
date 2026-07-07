@@ -68,7 +68,7 @@ export default function GeneralContractors() {
             Stop repeating the same mistakes that cost you profit last time.
           </h1>
           <p className="text-lg md:text-xl text-slate-300 leading-relaxed max-w-3xl mx-auto mb-8">
-            Every contractor has said it after a hard job: “We are not making those same mistakes again.”
+            Every contractor has said it after a difficult project: “We are not making those same mistakes again.”
           </p>
           <p className="text-lg md:text-xl text-slate-200 leading-relaxed max-w-3xl mx-auto mb-10">
             Then the next project starts. Decisions are still unresolved. Submittals still wait on missing information. Release dates still move. The team still fights the same procurement fires — and the margin gets hit again.
