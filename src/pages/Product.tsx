@@ -262,7 +262,7 @@ export default function Product() {
             </div>
             <div className="space-y-6 text-lg leading-8 text-slate-300">
               <p>
-                The margin is already in the job—buyout put it there. Procurement failures spend it after the fact: resequenced trades, overtime to hold dates, temporary protection, extended general conditions.
+                The estimate sets the margin. Procurement is your first opportunity to protect it. By the time you&apos;re paying for rework, overtime, resequencing, and expediting, the margin was already lost. The field is simply where the bill comes due.
               </p>
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-5">
