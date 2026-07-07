@@ -143,7 +143,7 @@ export default function Home() {
               <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5">
                 <p className="font-heading text-2xl font-semibold leading-snug text-slate-100">You probably do not call it procurement.</p>
                 <p className="mt-3 text-slate-300">
-                  You call it waiting on shop drawings. Waiting on owner selections. Waiting on utility approvals. Waiting on long-lead releases. That is procurement—the path from decision to delivery—and it is running on every one of your projects whether anyone is managing it or not.
+                  You call it waiting on design. Waiting on owner selections. Waiting on utility approvals. Waiting on long-lead releases. That is procurement—the path from decision to delivery—and it is running on every one of your projects whether anyone is managing it or not.
                 </p>
               </div>
               <p className="font-heading text-2xl font-semibold leading-snug text-slate-100">
