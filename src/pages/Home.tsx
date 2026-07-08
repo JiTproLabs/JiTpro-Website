@@ -350,13 +350,13 @@ export default function Home() {
             <div>
               <SectionLabel>Built by a builder</SectionLabel>
               <h2 className="font-heading text-4xl font-bold tracking-tight text-slate-50 md:text-5xl">
-                &ldquo;JiTpro is the system I wish I had for 38 years.&rdquo;
+                &ldquo;JiTpro is the system I wish I&apos;d had 38 years ago.&rdquo;
               </h2>
               <p className="mt-6 text-lg leading-8 text-slate-300">
-                Jeff Kaufman has spent 38 years in construction, with hundreds of millions in managed work over the past 20. Different markets, different teams, same pattern: projects awarded with incomplete drawings, selections unresolved, and procurement timelines that never had a chance of supporting the schedule.
+                Jeff Kaufman has spent 38 years delivering complex construction projects, managing hundreds of millions of dollars in work across luxury residential, hospitality, wineries, and commercial construction. Over those years, one pattern became impossible to ignore: projects were routinely awarded with incomplete information, unresolved owner decisions, and procurement commitments that no one had fully identified or taken control of.
               </p>
               <p className="mt-4 text-lg leading-8 text-slate-300">
-                JiTpro is that experience turned into a system: identify the constraints at award, give every missing answer an owner and a deadline, and sequence procurement backward from the dates the field actually needs.
+                JiTpro applies a different approach. It identifies every missing decision and commitment at project award, assigns each one to the responsible party with a deadline, and sequences procurement backward from the dates materials are actually needed in the field—giving contractors visibility while they still have time to protect their schedule and margin.
               </p>
               <Link
                 to="/founder-story"
