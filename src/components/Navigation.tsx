@@ -8,7 +8,6 @@ const dropdowns = {
     items: [
       { to: '/product', label: 'Single Project Approach' },
       { to: '/how-it-works', label: 'The JiTpro Control Process' },
-      { to: '/roles', label: 'Roles' },
     ],
   },
   why: {
@@ -25,6 +24,7 @@ const dropdowns = {
     items: [
       { to: '/about', label: 'About JiTpro' },
       { to: '/founder-story', label: 'Founder Story' },
+      { to: '/roles', label: 'Roles' },
     ],
   },
   contact: {
