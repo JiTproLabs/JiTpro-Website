@@ -85,23 +85,29 @@ export default function Home() {
               className={`font-heading text-5xl font-extrabold tracking-tight text-slate-50 md:text-7xl lg:text-8xl ${beat(400).className}`}
               style={beat(400).style}
             >
-              The next event that erodes your margin is already in motion.
+              What if the next event that erodes your margin has already started?
             </h1>
             <p
               className={`mx-auto mt-6 font-heading text-2xl font-semibold tracking-tight text-slate-300 md:text-4xl lg:text-5xl ${beat(3600).className}`}
               style={beat(3600).style}
             >
-              It just hasn&apos;t become visible in the field, yet.
+              It has.
             </p>
             <p
-              className={`mx-auto mt-8 max-w-3xl text-lg leading-8 text-slate-300 md:text-xl md:leading-9 ${beat(6400).className}`}
+              className={`mx-auto mt-6 font-heading text-2xl font-semibold tracking-tight text-slate-300 md:text-4xl lg:text-5xl ${beat(6400).className}`}
               style={beat(6400).style}
+            >
+              It just hasn&apos;t become visible in the field yet.
+            </p>
+            <p
+              className={`mx-auto mt-8 max-w-3xl text-lg leading-8 text-slate-300 md:text-xl md:leading-9 ${beat(7600).className}`}
+              style={beat(7600).style}
             >
               Every missed owner decision, unresolved design item, hidden assumption, and delayed release quietly erodes your margin—until the field is forced into recovery.
             </p>
             <div
-              className={`mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row ${beat(7600).className}`}
-              style={beat(7600).style}
+              className={`mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row ${beat(8800).className}`}
+              style={beat(8800).style}
             >
               <Link
                 to="/contact/contractor"
