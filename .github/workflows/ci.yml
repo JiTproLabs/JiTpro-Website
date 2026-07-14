@@ -1,0 +1,48 @@
+# This file tells GitHub to automatically check every Pull Request (PR)
+# before it is allowed to merge into main.
+# It installs the project, then runs 3 checks: type-checking, linting, and a build.
+# If any of these fail, the PR will show a red X and cannot be merged.
+
+name: Marketing Site CI
+
+# This tells GitHub to run the workflow on every Pull Request to the main branch
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    # Runs on a temporary Linux computer that GitHub provides for free.  
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1. Download the source code from this repository so the GitHub runner can access the files
+    - name: Checkout repository code
+      uses: actions/checkout@v4
+
+    # Step 2. Install Node.js (the software needed to run/build this project)
+    # NOTE: Update the 'node-version' below whenever you upgrade the project's Node version
+    # INDICATOR: If this workflow starts failing with strange errors, check whether
+    # Node 24 has reached "end of life" and bump this number to the current recommended LTS version.
+    - name: Setup Node.js environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: 24
+        cache: 'npm' # Caches downloaded npm packages to speed up future installs.
+
+    # Step 3. Install the project's dependencies (same as running "npm install")
+    # But strictly installs the exact versions listed in the project's "package-lock.json"
+    - name: Install dependencies
+      run: npm ci
+
+    # Step 4: Run TypeScript/JavaScript type checking
+    - name: Check for coding mistakes
+      run: npm run typecheck --if-present # Only runs if "typecheck" is defined in package.json
+
+    # Step 5: Run code linter to verify formatting standards
+    - name: Check layout and formatting
+      run: npm run lint --if-present # Skips without failing if "lint" is missing from package.json
+
+    # Step 6:  The Critical Step: Verify the project builds successfully without errors
+    - name: Build production site
+      run: npm run build
