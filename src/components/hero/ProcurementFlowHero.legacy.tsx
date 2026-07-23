@@ -362,8 +362,8 @@ export default function ProcurementFlowHeroLegacy() {
         </svg>
       </div>
 
-      <div className="absolute inset-0 bg-gradient-to-r from-[#030a19]/90 via-[#030a19]/30 to-transparent pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#030a19]/60 via-transparent to-[#030a19]/30 pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-r from-[#030a19]/90 via-[#030a19]/30 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-t from-[#030a19]/60 via-transparent to-[#030a19]/30 pointer-events-none" />
 
       <div className="relative z-10 flex items-center justify-center px-6 py-24 md:py-32 lg:py-40" style={{ minHeight: '560px' }}>
         <motion.div

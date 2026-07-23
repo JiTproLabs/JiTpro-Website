@@ -225,7 +225,7 @@ function StatusBadge({ status }: { status: string }) {
     derived: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
   };
   return (
-    <span className={`text-xs px-2 py-0.5 rounded border ${styles[status] || 'text-slate-500'}`}>
+    <span className={`text-xs px-2 py-0.5 rounded-sm border ${styles[status] || 'text-slate-500'}`}>
       {status}
     </span>
   );

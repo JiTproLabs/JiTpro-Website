@@ -26,7 +26,7 @@ export default function ThankYou() {
                 href={SCHEDULER_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-8 py-4 text-lg font-semibold text-slate-950 transition-colors hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 focus:ring-offset-slate-950"
+                className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-8 py-4 text-lg font-semibold text-slate-950 transition-colors hover:bg-amber-400 focus:outline-hidden focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 focus:ring-offset-slate-950"
               >
                 <Calendar size={20} />
                 Schedule a Call
@@ -34,9 +34,9 @@ export default function ThankYou() {
             )}
             <Link
               to="/"
-              className={`inline-flex items-center gap-2 rounded-lg px-8 py-4 text-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-950 ${
+              className={`inline-flex items-center gap-2 rounded-lg px-8 py-4 text-lg transition-colors focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-950 ${
                 wantsCall
-                  ? 'border border-white/10 bg-white/[0.03] font-medium text-slate-200 hover:border-white/20 hover:bg-white/[0.06] focus:ring-slate-400'
+                  ? 'border border-white/10 bg-white/3 font-medium text-slate-200 hover:border-white/20 hover:bg-white/6 focus:ring-slate-400'
                   : 'bg-amber-500 font-semibold text-slate-950 hover:bg-amber-400 focus:ring-amber-300'
               }`}
             >

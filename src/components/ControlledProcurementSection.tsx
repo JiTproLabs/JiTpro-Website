@@ -230,7 +230,7 @@ export default function ControlledProcurementSection() {
         {/* Gantt card */}
         <div
           ref={containerRef}
-          className="relative bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden"
+          className="relative bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden"
         >
           {/* Header strip — pinned at viewport width; doesn't scroll horizontally */}
           <div className="px-5 py-3 border-b border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-y-1 text-[11px] uppercase tracking-[0.16em] font-semibold text-slate-500">
@@ -265,14 +265,14 @@ export default function ControlledProcurementSection() {
           {/* Right-edge scroll affordance — mobile only; fades in once the build
               completes so it doesn't compete with the auto-scroll animation. */}
           <div
-            className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-white to-transparent md:hidden"
+            className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-linear-to-l from-white to-transparent md:hidden"
             style={{ opacity: complete ? 1 : 0, transition: 'opacity 400ms' }}
           />
         </div>
 
         {/* Legend below chart */}
         <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px] text-slate-500">
-          <LegendItem swatch={<span className="inline-block w-4 h-2.5 rounded-sm bg-amber-500/75 border border-amber-700" />}>
+          <LegendItem swatch={<span className="inline-block w-4 h-2.5 rounded-xs bg-amber-500/75 border border-amber-700" />}>
             Task (working days)
           </LegendItem>
           <LegendItem swatch={
@@ -305,7 +305,7 @@ function Row({ item, index, elapsed }: { item: ComputedItem; index: number; elap
     <div className={`flex items-stretch border-b border-slate-100 h-10 md:h-8 ${rowBg}`}>
       {/* Label — sticky on mobile so it stays visible while the bar area pans */}
       <div
-        className={`sticky left-0 z-10 flex-shrink-0 flex items-center justify-end pr-3 w-[150px] md:w-[240px] border-r border-slate-100 md:border-r-0 ${rowBg}`}
+        className={`sticky left-0 z-10 shrink-0 flex items-center justify-end pr-3 w-[150px] md:w-[240px] border-r border-slate-100 md:border-r-0 ${rowBg}`}
         style={{ opacity: localT }}
       >
         <span className="text-right text-[10px] md:text-xs font-medium text-slate-700 leading-tight whitespace-normal md:whitespace-nowrap">
@@ -336,7 +336,7 @@ function TaskBar({ item, progress }: { item: ComputedItem; progress: number }) {
 
   return (
     <div
-      className="absolute rounded-sm flex items-center px-1.5 overflow-hidden"
+      className="absolute rounded-xs flex items-center px-1.5 overflow-hidden"
       style={{
         left: `${left}%`,
         width: `${drawnWidth}%`,
@@ -385,7 +385,7 @@ function MilestoneMark({ item, opacity }: { item: ComputedItem; opacity: number 
 function DateAxis() {
   return (
     <div className="flex border-t border-slate-200 bg-slate-50">
-      <div className="sticky left-0 z-10 flex-shrink-0 bg-slate-50 border-r border-slate-100 md:border-r-0 w-[150px] md:w-[240px]" />
+      <div className="sticky left-0 z-10 shrink-0 bg-slate-50 border-r border-slate-100 md:border-r-0 w-[150px] md:w-[240px]" />
       <div className="flex-1 relative" style={{ height: AXIS_HEIGHT_PX }}>
         {/* Axis baseline */}
         <div className="absolute left-0 right-0 h-px bg-slate-300" style={{ top: 0 }} />

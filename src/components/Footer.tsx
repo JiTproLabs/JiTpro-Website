@@ -15,7 +15,7 @@ export default function Footer() {
               href="https://www.linkedin.com/in/jeff-kaufman"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center w-9 h-9 rounded bg-[#0A66C2] hover:bg-[#004182] transition-colors"
+              className="inline-flex items-center justify-center w-9 h-9 rounded-sm bg-[#0A66C2] hover:bg-[#004182] transition-colors"
               aria-label="LinkedIn"
             >
               <span className="text-white text-sm font-bold leading-none">in</span>

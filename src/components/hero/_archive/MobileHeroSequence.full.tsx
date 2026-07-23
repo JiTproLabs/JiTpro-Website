@@ -293,7 +293,7 @@ export default function MobileHeroSequence() {
       </div>
       {houseOpacity > 0.001 && (
         <div
-          className="absolute inset-0 bg-gradient-to-t from-[#030a19]/60 via-[#030a19]/30 to-[#030a19]/70 pointer-events-none"
+          className="absolute inset-0 bg-linear-to-t from-[#030a19]/60 via-[#030a19]/30 to-[#030a19]/70 pointer-events-none"
           style={{ opacity: houseOpacity }}
         />
       )}
@@ -308,7 +308,7 @@ export default function MobileHeroSequence() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.32 }}
-              className="relative inline-flex flex-col items-start gap-0.5 pl-3 pr-4 py-2 rounded-md border bg-slate-900/85 backdrop-blur-sm"
+              className="relative inline-flex flex-col items-start gap-0.5 pl-3 pr-4 py-2 rounded-md border bg-slate-900/85 backdrop-blur-xs"
               style={{ borderColor: 'rgba(245,158,11,0.40)' }}
             >
               <span className="absolute left-0 top-1 bottom-1 w-[3px] rounded-l" style={{ background: 'rgba(251,191,36,0.80)' }} />
@@ -475,7 +475,7 @@ export default function MobileHeroSequence() {
       {showSkip && (
         <button
           onClick={() => setSkipped(true)}
-          className="absolute top-4 right-4 z-30 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.18em] font-medium text-white/45 hover:text-white/85 border border-white/10 hover:border-white/30 rounded-full transition-colors bg-[#030a19]/40 backdrop-blur-sm"
+          className="absolute top-4 right-4 z-30 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.18em] font-medium text-white/45 hover:text-white/85 border border-white/10 hover:border-white/30 rounded-full transition-colors bg-[#030a19]/40 backdrop-blur-xs"
         >
           Skip animation
         </button>
@@ -483,7 +483,7 @@ export default function MobileHeroSequence() {
       {showReplay && (
         <button
           onClick={handleReplay}
-          className="absolute top-4 right-4 z-30 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.18em] font-medium text-white/45 hover:text-white/85 border border-white/10 hover:border-white/30 rounded-full transition-colors bg-[#030a19]/40 backdrop-blur-sm"
+          className="absolute top-4 right-4 z-30 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.18em] font-medium text-white/45 hover:text-white/85 border border-white/10 hover:border-white/30 rounded-full transition-colors bg-[#030a19]/40 backdrop-blur-xs"
         >
           Replay animation
         </button>

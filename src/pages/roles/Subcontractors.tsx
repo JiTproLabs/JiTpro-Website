@@ -40,25 +40,25 @@ You are often the first to feel the impact of late procurement decisions — and
             Where procurement breaks down
           </h2>
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="rounded-xl border border-slate-800 bg-white/[0.03] p-8">
+            <div className="rounded-xl border border-slate-800 bg-white/3 p-8">
               <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Approved submittals come back late</h3>
               <p className="text-slate-400 leading-relaxed">
                 You submit shop drawings on time, but the review takes weeks longer than expected. By the time approval comes back, your fabrication lead time pushes the delivery past the installation window.
               </p>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-white/[0.03] p-8">
+            <div className="rounded-xl border border-slate-800 bg-white/3 p-8">
               <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Owner selections are not made</h3>
               <p className="text-slate-400 leading-relaxed">
                 You cannot order finishes, fixtures, or equipment until the owner makes a selection. If that decision is delayed, your procurement timeline compresses — but you are still expected to meet the original install date.
               </p>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-white/[0.03] p-8">
+            <div className="rounded-xl border border-slate-800 bg-white/3 p-8">
               <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Coordination gaps between trades</h3>
               <p className="text-slate-400 leading-relaxed">
                 Your work depends on other trades completing theirs first. When their materials are late, your start date shifts — but no one adjusts the downstream schedule until the damage is done.
               </p>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-white/[0.03] p-8">
+            <div className="rounded-xl border border-slate-800 bg-white/3 p-8">
               <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Acceleration costs fall on you</h3>
               <p className="text-slate-400 leading-relaxed">
                 When procurement delays compress your installation window, you are asked to accelerate — overtime crews, expedited shipping, out-of-sequence work. The cost of someone else's late decision becomes your problem.
@@ -117,7 +117,7 @@ JiTpro maps dependencies between trades so you can see how upstream procurement 
               'Clearer communication with the GC on procurement status',
             ].map((benefit) => (
               <div key={benefit} className="flex gap-3 items-start">
-                <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 flex-shrink-0" />
+                <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 shrink-0" />
                 <p className="text-lg text-slate-300 leading-relaxed">{benefit}</p>
               </div>
             ))}

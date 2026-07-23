@@ -22,14 +22,14 @@ function AccordionCard({
         className="w-full flex items-center justify-between gap-4 p-6 text-left cursor-pointer"
       >
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
             {icon}
           </div>
           <h3 className="text-xl font-bold text-slate-900">{title}</h3>
         </div>
         <ChevronDown
           size={20}
-          className={`text-slate-400 transition-transform duration-200 flex-shrink-0 ${open ? 'rotate-180' : ''}`}
+          className={`text-slate-400 transition-transform duration-200 shrink-0 ${open ? 'rotate-180' : ''}`}
         />
       </button>
       <div
@@ -39,7 +39,7 @@ function AccordionCard({
           <ul className="px-6 pb-6 space-y-3">
             {bullets.map((b) => (
               <li key={b} className="flex gap-3 items-start">
-                <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2.5 flex-shrink-0" />
+                <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2.5 shrink-0" />
                 <span className="text-slate-600 leading-relaxed">{b}</span>
               </li>
             ))}
@@ -72,7 +72,7 @@ When procurement breaks down early, the damage spreads far beyond material dates
               'Protect margin, quality, and contractor credibility',
             ].map((bullet) => (
               <div key={bullet} className="flex gap-3 items-start">
-                <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 flex-shrink-0" />
+                <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 shrink-0" />
                 <p className="text-lg text-slate-700 font-medium">{bullet}</p>
               </div>
             ))}
@@ -124,7 +124,7 @@ When procurement breaks down early, the damage spreads far beyond material dates
               'Costs climb as the team shifts from planning to recovery',
             ].map((item) => (
               <div key={item} className="flex gap-3 items-start">
-                <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 flex-shrink-0" />
+                <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 shrink-0" />
                 <p className="text-lg text-slate-600 leading-relaxed">{item}</p>
               </div>
             ))}
@@ -194,7 +194,7 @@ When procurement breaks down early, the damage spreads far beyond material dates
                 'Operational strain grows faster than control systems',
               ].map((item) => (
                 <div key={item} className="flex gap-3 items-start">
-                  <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 flex-shrink-0" />
+                  <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 shrink-0" />
                   <p className="text-lg text-slate-600 leading-relaxed">{item}</p>
                 </div>
               ))}
@@ -225,7 +225,7 @@ Before field pressure begins, JiTpro creates a procurement control system that t
                 'Creates a weekly accountability rhythm before chaos takes over',
               ].map((item) => (
                 <div key={item} className="flex gap-3 items-start">
-                  <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 flex-shrink-0" />
+                  <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 shrink-0" />
                   <p className="text-lg text-slate-600 leading-relaxed">{item}</p>
                 </div>
               ))}
@@ -253,7 +253,7 @@ Before field pressure begins, JiTpro creates a procurement control system that t
               'Protected margin and stronger contractor credibility',
             ].map((item) => (
               <div key={item} className="flex gap-3 items-start">
-                <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 flex-shrink-0" />
+                <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 shrink-0" />
                 <p className="text-lg text-slate-600 leading-relaxed">{item}</p>
               </div>
             ))}

@@ -75,7 +75,7 @@ export default function OwnerContact() {
     }
   };
 
-  const inputClass = 'w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300/30';
+  const inputClass = 'w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-hidden focus:ring-2 focus:ring-amber-300/30';
   const labelClass = 'block text-sm font-semibold text-slate-200 mb-2';
   const radioGroupClass = 'flex gap-6';
   const radioLabelClass = 'flex items-center gap-2 text-slate-300 cursor-pointer';
@@ -244,7 +244,7 @@ export default function OwnerContact() {
             <button
               type="submit"
               disabled={loading || !turnstileToken}
-              className="w-full rounded-lg bg-amber-500 px-8 py-4 text-lg font-semibold text-slate-950 transition-colors hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
+              className="w-full rounded-lg bg-amber-500 px-8 py-4 text-lg font-semibold text-slate-950 transition-colors hover:bg-amber-400 focus:outline-hidden focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
             >
               {loading ? 'Submitting...' : 'Submit'}
             </button>
