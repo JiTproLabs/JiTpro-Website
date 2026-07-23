@@ -76,7 +76,7 @@ export default function CompanyProjectHealth() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {healthSignals.map((signal) => (
-              <div key={signal.title} className="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-sm">
+              <div key={signal.title} className="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xs">
                 <h3 className="text-xl font-bold text-slate-100 mb-3">{signal.title}</h3>
                 <p className="text-slate-400 leading-relaxed">{signal.body}</p>
               </div>

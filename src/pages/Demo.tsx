@@ -89,7 +89,7 @@ See how JiTpro enforces procurement timing and maintains accountability across y
                 autoComplete="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-hidden focus:ring-2 focus:ring-amber-300/30"
               />
             </div>
 
@@ -105,7 +105,7 @@ See how JiTpro enforces procurement timing and maintains accountability across y
                 autoComplete="organization"
                 value={formData.company}
                 onChange={handleChange}
-                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-hidden focus:ring-2 focus:ring-amber-300/30"
               />
             </div>
 
@@ -121,7 +121,7 @@ See how JiTpro enforces procurement timing and maintains accountability across y
                 autoComplete="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-hidden focus:ring-2 focus:ring-amber-300/30"
               />
             </div>
 
@@ -137,7 +137,7 @@ See how JiTpro enforces procurement timing and maintains accountability across y
                 autoComplete="tel"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-hidden focus:ring-2 focus:ring-amber-300/30"
               />
             </div>
 
@@ -151,7 +151,7 @@ See how JiTpro enforces procurement timing and maintains accountability across y
                 required
                 value={formData.role}
                 onChange={handleChange}
-                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300/30"
+                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-lg text-slate-100 placeholder:text-slate-500 focus:border-amber-400 focus:outline-hidden focus:ring-2 focus:ring-amber-300/30"
               >
                 <option value="">Select your role</option>
                 <option value="gc">General Contractor</option>
@@ -172,7 +172,7 @@ See how JiTpro enforces procurement timing and maintains accountability across y
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-amber-500 px-8 py-4 text-lg font-semibold text-slate-950 transition-colors hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
+              className="w-full rounded-lg bg-amber-500 px-8 py-4 text-lg font-semibold text-slate-950 transition-colors hover:bg-amber-400 focus:outline-hidden focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
             >
               {loading ? 'Submitting...' : 'Request Demo'}
             </button>

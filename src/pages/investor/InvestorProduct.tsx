@@ -137,7 +137,7 @@ export default function InvestorProduct() {
                 { phase: 'Required onsite', desc: 'Material must arrive for installation', color: 'text-amber-500', border: 'border-amber-500/40' },
               ].map((step, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center">
-                  <div className={`w-full border rounded p-4 text-center ${step.border}`}>
+                  <div className={`w-full border rounded-sm p-4 text-center ${step.border}`}>
                     <div className={`text-xs font-semibold uppercase tracking-wider mb-1 ${step.color}`}>
                       {step.phase}
                     </div>

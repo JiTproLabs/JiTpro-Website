@@ -226,7 +226,7 @@ function PackageTitleCard({
 
   return (
     <div
-      className="relative inline-flex items-center gap-3 pl-4 pr-5 py-2 rounded-md backdrop-blur-sm border"
+      className="relative inline-flex items-center gap-3 pl-4 pr-5 py-2 rounded-md backdrop-blur-xs border"
       style={{
         opacity,
         background: `rgba(15, 23, 42, ${0.85 * chromeOpacity})`,
@@ -239,7 +239,7 @@ function PackageTitleCard({
         style={{ background: `rgba(251, 191, 36, ${0.80 * chromeOpacity})` }}
       />
       <span
-        className="w-2 h-2 rounded-full flex-shrink-0"
+        className="w-2 h-2 rounded-full shrink-0"
         style={{
           background: `rgba(251, 191, 36, ${chromeOpacity})`,
           boxShadow: `0 0 10px rgba(245, 158, 11, ${0.70 * chromeOpacity})`,

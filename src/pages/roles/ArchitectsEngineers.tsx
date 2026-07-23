@@ -40,25 +40,25 @@ Your review and approval decisions directly affect whether materials get ordered
             Where procurement breaks down
           </h2>
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="rounded-xl border border-slate-800 bg-white/[0.03] p-8">
+            <div className="rounded-xl border border-slate-800 bg-white/3 p-8">
               <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Submittals arrive without priority</h3>
               <p className="text-slate-400 leading-relaxed">
                 You receive a stack of submittals with no indication of which ones are tied to long-lead materials or critical path work. Everything looks equally urgent — or equally deferrable.
               </p>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-white/[0.03] p-8">
+            <div className="rounded-xl border border-slate-800 bg-white/3 p-8">
               <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Review deadlines are vague</h3>
               <p className="text-slate-400 leading-relaxed">
                 Contracts typically require submittal review within a set number of days, but that timeline is not connected to the actual procurement schedule. A 14-day review window means nothing if the material needed to be ordered last week.
               </p>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-white/[0.03] p-8">
+            <div className="rounded-xl border border-slate-800 bg-white/3 p-8">
               <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Design decisions are still in progress</h3>
               <p className="text-slate-400 leading-relaxed">
                 Sometimes you cannot approve a submittal because the owner has not made a selection, or coordination between disciplines is not complete. But without a structured process, those gaps are invisible until they cause delays.
               </p>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-white/[0.03] p-8">
+            <div className="rounded-xl border border-slate-800 bg-white/3 p-8">
               <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Blame arrives after the fact</h3>
               <p className="text-slate-400 leading-relaxed">
                 When materials are late, the design team often gets blamed for slow reviews — even when the real cause was an upstream decision that was never made. Without clear records, it is difficult to demonstrate what actually happened.
@@ -117,7 +117,7 @@ When a submittal cannot be approved because a design decision is pending or an o
               'Better coordination with the GC on procurement sequencing',
             ].map((benefit) => (
               <div key={benefit} className="flex gap-3 items-start">
-                <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 flex-shrink-0" />
+                <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 shrink-0" />
                 <p className="text-lg text-slate-300 leading-relaxed">{benefit}</p>
               </div>
             ))}

@@ -24,7 +24,7 @@ export default function FaqAccordionItem({ itemId, question, answer, isOpen, onT
           </span>
           <ChevronDown
             size={18}
-            className={`mt-0.5 flex-shrink-0 text-slate-400 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}
+            className={`mt-0.5 shrink-0 text-slate-400 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}
           />
         </button>
       </h3>

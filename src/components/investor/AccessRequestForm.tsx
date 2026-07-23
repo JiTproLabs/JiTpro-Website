@@ -121,7 +121,7 @@ export default function AccessRequestForm() {
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-slate-100 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition-colors"
+                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-sm text-slate-100 placeholder-slate-600 focus:outline-hidden focus:border-amber-500 transition-colors"
               />
             </div>
 
@@ -134,7 +134,7 @@ export default function AccessRequestForm() {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-slate-100 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition-colors"
+                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-sm text-slate-100 placeholder-slate-600 focus:outline-hidden focus:border-amber-500 transition-colors"
               />
             </div>
 
@@ -147,7 +147,7 @@ export default function AccessRequestForm() {
                 required
                 value={formData.company}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-slate-100 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition-colors"
+                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-sm text-slate-100 placeholder-slate-600 focus:outline-hidden focus:border-amber-500 transition-colors"
               />
             </div>
 
@@ -161,12 +161,12 @@ export default function AccessRequestForm() {
                 rows={3}
                 value={formData.investment_interest}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-slate-100 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition-colors resize-none"
+                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-sm text-slate-100 placeholder-slate-600 focus:outline-hidden focus:border-amber-500 transition-colors resize-none"
               />
             </div>
 
             {/* Honeypot — hidden from real users */}
-            <div className="absolute -left-[9999px]" aria-hidden="true">
+            <div className="absolute left-[-9999px]" aria-hidden="true">
               <label htmlFor="website">Website</label>
               <input
                 id="website"
@@ -188,7 +188,7 @@ export default function AccessRequestForm() {
             <button
               type="submit"
               disabled={loading || !turnstileToken}
-              className="w-full py-3 bg-amber-500 text-slate-900 font-semibold rounded hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-amber-500 text-slate-900 font-semibold rounded-sm hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Submitting...' : 'Request Access'}
             </button>

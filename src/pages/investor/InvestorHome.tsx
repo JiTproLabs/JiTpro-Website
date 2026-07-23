@@ -62,13 +62,13 @@ export default function InvestorHome() {
           <div className="flex flex-wrap gap-4">
             <Link
               to="/investor/market"
-              className="inline-block px-6 py-3 bg-amber-500 text-slate-900 font-semibold rounded hover:bg-amber-400 transition-colors"
+              className="inline-block px-6 py-3 bg-amber-500 text-slate-900 font-semibold rounded-sm hover:bg-amber-400 transition-colors"
             >
               View Market Thesis
             </Link>
             <Link
               to="/investor/appendix"
-              className="inline-block px-6 py-3 border border-slate-600 text-slate-300 font-semibold rounded hover:border-slate-400 hover:text-slate-100 transition-colors"
+              className="inline-block px-6 py-3 border border-slate-600 text-slate-300 font-semibold rounded-sm hover:border-slate-400 hover:text-slate-100 transition-colors"
             >
               Review Investor Appendix
             </Link>
@@ -227,19 +227,19 @@ export default function InvestorHome() {
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               to="/investor/market"
-              className="px-6 py-3 bg-amber-500 text-slate-900 font-semibold rounded hover:bg-amber-400 transition-colors"
+              className="px-6 py-3 bg-amber-500 text-slate-900 font-semibold rounded-sm hover:bg-amber-400 transition-colors"
             >
               Market Opportunity
             </Link>
             <Link
               to="/investor/hidden-cost"
-              className="px-6 py-3 border border-slate-600 text-slate-300 font-semibold rounded hover:border-slate-400 hover:text-slate-100 transition-colors"
+              className="px-6 py-3 border border-slate-600 text-slate-300 font-semibold rounded-sm hover:border-slate-400 hover:text-slate-100 transition-colors"
             >
               Hidden Cost
             </Link>
             <Link
               to="/investor/economics"
-              className="px-6 py-3 border border-slate-600 text-slate-300 font-semibold rounded hover:border-slate-400 hover:text-slate-100 transition-colors"
+              className="px-6 py-3 border border-slate-600 text-slate-300 font-semibold rounded-sm hover:border-slate-400 hover:text-slate-100 transition-colors"
             >
               Economic Case
             </Link>

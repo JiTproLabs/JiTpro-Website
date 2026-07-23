@@ -195,8 +195,8 @@ export default function ProcurementFlowHero() {
         {!reducedMotion && <GanttStage phase={phase} elapsed={elapsed} />}
 
         {/* Gradient overlays for readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#030a19]/85 via-[#030a19]/20 to-transparent pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#030a19]/55 via-transparent to-[#030a19]/30 pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-r from-[#030a19]/85 via-[#030a19]/20 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-t from-[#030a19]/55 via-transparent to-[#030a19]/30 pointer-events-none" />
 
         {/* Hero copy — fades in during final_hero. Asymmetric padding on lg
             shifts the centered content to optical center (~42% from top) so it
@@ -225,7 +225,7 @@ export default function ProcurementFlowHero() {
         {showSkip && (
           <button
             onClick={() => setSkipped(true)}
-            className="absolute top-5 right-5 z-30 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.18em] font-medium text-white/45 hover:text-white/85 border border-white/10 hover:border-white/30 rounded-full transition-colors bg-[#030a19]/40 backdrop-blur-sm"
+            className="absolute top-5 right-5 z-30 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.18em] font-medium text-white/45 hover:text-white/85 border border-white/10 hover:border-white/30 rounded-full transition-colors bg-[#030a19]/40 backdrop-blur-xs"
           >
             Skip animation
           </button>
@@ -235,7 +235,7 @@ export default function ProcurementFlowHero() {
         {showReplay && (
           <button
             onClick={handleReplay}
-            className="absolute top-5 right-5 z-30 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.18em] font-medium text-white/45 hover:text-white/85 border border-white/10 hover:border-white/30 rounded-full transition-colors bg-[#030a19]/40 backdrop-blur-sm"
+            className="absolute top-5 right-5 z-30 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.18em] font-medium text-white/45 hover:text-white/85 border border-white/10 hover:border-white/30 rounded-full transition-colors bg-[#030a19]/40 backdrop-blur-xs"
           >
             Replay animation
           </button>
@@ -539,7 +539,7 @@ function PackageTitleCard({
 
   return (
     <div
-      className="relative inline-flex items-center gap-3 pl-4 pr-5 py-2 rounded-md backdrop-blur-sm border"
+      className="relative inline-flex items-center gap-3 pl-4 pr-5 py-2 rounded-md backdrop-blur-xs border"
       style={{
         opacity,
         background: `rgba(15, 23, 42, ${0.85 * chromeOpacity})`,
@@ -552,7 +552,7 @@ function PackageTitleCard({
         style={{ background: `rgba(251, 191, 36, ${0.80 * chromeOpacity})` }}
       />
       <span
-        className="w-2 h-2 rounded-full flex-shrink-0"
+        className="w-2 h-2 rounded-full shrink-0"
         style={{
           background: `rgba(251, 191, 36, ${chromeOpacity})`,
           boxShadow: `0 0 10px rgba(245, 158, 11, ${0.70 * chromeOpacity})`,

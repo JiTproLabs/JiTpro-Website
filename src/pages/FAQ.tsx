@@ -159,11 +159,11 @@ export default function FAQ() {
       </section>
 
       {/* Sticky Category Nav */}
-      <nav className="sticky top-20 z-40 border-b border-white/10 bg-slate-950/95 backdrop-blur" aria-label="FAQ categories">
+      <nav className="sticky top-20 z-40 border-b border-white/10 bg-slate-950/95 backdrop-blur-sm" aria-label="FAQ categories">
         <div className="max-w-5xl mx-auto px-6">
           <div className="relative">
             {canScrollLeft && (
-              <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent pr-4">
+              <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center bg-linear-to-r from-slate-950 via-slate-950/80 to-transparent pr-4">
                 <button
                   onClick={() => scrollNav('left')}
                   className="p-1.5 rounded-full text-slate-500 hover:text-slate-200 hover:bg-white/10 transition-colors"
@@ -197,7 +197,7 @@ export default function FAQ() {
             </div>
 
             {canScrollRight && (
-              <div className="absolute right-0 top-0 bottom-0 z-10 flex items-center bg-gradient-to-l from-slate-950 via-slate-950/80 to-transparent pl-4">
+              <div className="absolute right-0 top-0 bottom-0 z-10 flex items-center bg-linear-to-l from-slate-950 via-slate-950/80 to-transparent pl-4">
                 <button
                   onClick={() => scrollNav('right')}
                   className="p-1.5 rounded-full text-slate-500 hover:text-slate-200 hover:bg-white/10 transition-colors"
@@ -227,7 +227,7 @@ export default function FAQ() {
                 {section.intro}
               </p>
 
-              <div className="rounded-lg border border-slate-800 bg-white/[0.03]">
+              <div className="rounded-lg border border-slate-800 bg-white/3">
                 {section.items.map((item, itemIndex) => (
                   <FaqAccordionItem
                     key={itemIndex}

@@ -5,7 +5,7 @@ export default function FounderStory() {
       <section className="bg-slate-950 px-6 pt-20 pb-12 md:pt-28">
         <div className="max-w-5xl mx-auto grid md:grid-cols-5 gap-10 md:gap-12 items-start">
           <div className="md:col-span-2">
-            <div className="aspect-[4/5] w-full max-w-xs md:max-w-none mx-auto overflow-hidden rounded-xl border border-white/10">
+            <div className="aspect-4/5 w-full max-w-xs md:max-w-none mx-auto overflow-hidden rounded-xl border border-white/10">
               <img
                 src={`${import.meta.env.BASE_URL}assets/team/jeff.jpg`}
                 alt="Jeff Kaufman, Founder of JiTpro"

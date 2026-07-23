@@ -90,7 +90,7 @@ export default function MobileHeroSequence() {
       </div>
       {houseOpacity > 0.001 && (
         <div
-          className="absolute inset-0 bg-gradient-to-t from-[#030a19]/60 via-[#030a19]/30 to-[#030a19]/70 pointer-events-none"
+          className="absolute inset-0 bg-linear-to-t from-[#030a19]/60 via-[#030a19]/30 to-[#030a19]/70 pointer-events-none"
           style={{ opacity: houseOpacity }}
         />
       )}

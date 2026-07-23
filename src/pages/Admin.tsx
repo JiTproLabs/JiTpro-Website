@@ -131,13 +131,13 @@ export default function Admin() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-slate-100 placeholder-slate-600 focus:outline-none focus:border-amber-500 mb-4"
+            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-sm text-slate-100 placeholder-slate-600 focus:outline-hidden focus:border-amber-500 mb-4"
           />
           {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-amber-500 text-slate-900 font-semibold rounded hover:bg-amber-400 transition-colors disabled:opacity-50"
+            className="w-full py-3 bg-amber-500 text-slate-900 font-semibold rounded-sm hover:bg-amber-400 transition-colors disabled:opacity-50"
           >
             {loading ? 'Checking...' : 'Log In'}
           </button>
@@ -228,7 +228,7 @@ export default function Admin() {
                           <button
                             onClick={() => handleApprove(record.id)}
                             disabled={actionLoading === record.id}
-                            className="px-3 py-1 bg-amber-500 text-slate-900 text-xs font-semibold rounded hover:bg-amber-400 disabled:opacity-50"
+                            className="px-3 py-1 bg-amber-500 text-slate-900 text-xs font-semibold rounded-sm hover:bg-amber-400 disabled:opacity-50"
                           >
                             {actionLoading === record.id ? '...' : 'Approve'}
                           </button>
@@ -236,7 +236,7 @@ export default function Admin() {
                           <button
                             onClick={() => handleRevoke(record.id)}
                             disabled={actionLoading === record.id}
-                            className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-semibold rounded border border-red-500/30 hover:bg-red-500/30 disabled:opacity-50"
+                            className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-semibold rounded-sm border border-red-500/30 hover:bg-red-500/30 disabled:opacity-50"
                           >
                             {actionLoading === record.id ? '...' : 'Revoke'}
                           </button>

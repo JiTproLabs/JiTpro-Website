@@ -158,7 +158,7 @@ export default function BrokenBeforeJobStarts() {
       {/* MID-PAGE CTA */}
       <section className="px-6 py-14">
         <div className="max-w-3xl mx-auto">
-          <div className="border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-slate-900/40 rounded-2xl p-8 md:p-10">
+          <div className="border border-amber-500/30 bg-linear-to-br from-amber-500/10 to-slate-900/40 rounded-2xl p-8 md:p-10">
             <p className="text-xl md:text-2xl font-bold text-slate-100 leading-snug mb-3">
               If this feels familiar, it&rsquo;s not a field problem.
               <br />
@@ -256,7 +256,7 @@ export default function BrokenBeforeJobStarts() {
       {/* FINAL CTA */}
       <section className="px-6 py-20 md:py-24 border-t border-slate-800">
         <div className="max-w-3xl mx-auto">
-          <div className="border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-slate-900/40 rounded-2xl p-8 md:p-12 text-center">
+          <div className="border border-amber-500/30 bg-linear-to-br from-amber-500/10 to-slate-900/40 rounded-2xl p-8 md:p-12 text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-5">
               There&rsquo;s a better way to run a job.
             </h2>

@@ -245,7 +245,7 @@ function ProgressIndicator({ activeId }: { activeId: string }) {
             aria-label={s.label}
           >
             <span
-              className="text-[10px] font-medium tracking-wider uppercase group-hover:!opacity-100"
+              className="text-[10px] font-medium tracking-wider uppercase group-hover:opacity-100!"
               style={{
                 color: isActive ? 'rgb(245 158 11)' : 'rgb(100 116 139)',
                 opacity: isActive ? 1 : 0,
@@ -255,7 +255,7 @@ function ProgressIndicator({ activeId }: { activeId: string }) {
               {s.label}
             </span>
             <span
-              className="block rounded-full group-hover:!bg-slate-400"
+              className="block rounded-full group-hover:bg-slate-400!"
               style={{
                 width: isActive ? '10px' : '6px',
                 height: isActive ? '10px' : '6px',

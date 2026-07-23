@@ -119,7 +119,7 @@ export default function HiddenCost() {
             })}
           </div>
           <div className="flex justify-center mt-2">
-            <div className="w-2/5 text-center py-3 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-sm font-semibold">
+            <div className="w-2/5 text-center py-3 bg-red-500/10 border border-red-500/30 rounded-sm text-red-400 text-sm font-semibold">
               Profit eliminated
             </div>
           </div>
@@ -148,7 +148,7 @@ export default function HiddenCost() {
                   <span className="text-slate-400 text-sm w-20 shrink-0">{row.days}</span>
                   <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-amber-500 to-red-500 rounded-full"
+                      className="h-full bg-linear-to-r from-amber-500 to-red-500 rounded-full"
                       style={{ width: `${(i + 1) * 25}%` }}
                     />
                   </div>

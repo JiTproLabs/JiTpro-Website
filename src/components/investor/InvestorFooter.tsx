@@ -10,7 +10,7 @@ export default function InvestorFooter() {
           <p className="text-slate-400 mb-6 max-w-lg mx-auto">
             A dedicated portal for investors is under development. Register your interest to receive early access.
           </p>
-          <div className="inline-block px-6 py-3 bg-slate-700 text-slate-400 rounded text-sm font-medium">
+          <div className="inline-block px-6 py-3 bg-slate-700 text-slate-400 rounded-sm text-sm font-medium">
             Coming Soon
           </div>
         </div>

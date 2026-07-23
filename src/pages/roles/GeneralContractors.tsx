@@ -105,7 +105,7 @@ export default function GeneralContractors() {
               You knew the last job could have gone better. You knew decisions came late. You knew procurement was being chased instead of led. You knew your team spent too much time recovering.
             </p>
           </div>
-          <div className="rounded-3xl border border-slate-800 bg-white/[0.03] p-6 md:p-8">
+          <div className="rounded-3xl border border-slate-800 bg-white/3 p-6 md:p-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-11 h-11 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300 flex items-center justify-center">
                 <Repeat size={24} />
@@ -115,7 +115,7 @@ export default function GeneralContractors() {
             <ul className="space-y-4">
               {repeatedMistakes.map((item) => (
                 <li key={item} className="flex gap-3 items-start">
-                  <CheckCircle2 className="text-amber-400 mt-0.5 flex-shrink-0" size={20} />
+                  <CheckCircle2 className="text-amber-400 mt-0.5 shrink-0" size={20} />
                   <span className="text-slate-300 leading-relaxed">{item}</span>
                 </li>
               ))}
@@ -141,7 +141,7 @@ export default function GeneralContractors() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
             {hiddenCosts.map((item) => (
-              <div key={item.title} className="rounded-2xl border border-slate-800 bg-white/[0.03] p-6">
+              <div key={item.title} className="rounded-2xl border border-slate-800 bg-white/3 p-6">
                 <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">{item.title}</h3>
                 <p className="text-slate-400 leading-relaxed">{item.body}</p>
               </div>
@@ -199,7 +199,7 @@ export default function GeneralContractors() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
             {structureItems.map((item) => (
-              <div key={item.title} className="rounded-2xl border border-slate-800 bg-white/[0.03] p-6 hover:border-amber-500/40 transition-colors">
+              <div key={item.title} className="rounded-2xl border border-slate-800 bg-white/3 p-6 hover:border-amber-500/40 transition-colors">
                 <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">{item.title}</h3>
                 <p className="text-slate-400 leading-relaxed">{item.body}</p>
               </div>

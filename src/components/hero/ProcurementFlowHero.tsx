@@ -112,8 +112,8 @@ export default function ProcurementFlowHero() {
         </div>
 
         {/* Gradient overlays for readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#030a19]/85 via-[#030a19]/20 to-transparent pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#030a19]/55 via-transparent to-[#030a19]/30 pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-r from-[#030a19]/85 via-[#030a19]/20 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-t from-[#030a19]/55 via-transparent to-[#030a19]/30 pointer-events-none" />
 
         {/* Title and hero copy occupy the same centered slot; title fades out
             as hero copy fades in. */}

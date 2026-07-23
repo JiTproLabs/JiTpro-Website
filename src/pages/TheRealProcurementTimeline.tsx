@@ -95,7 +95,7 @@ function TaskRow({ task, color, onHover, onLeave }: RowProps) {
         <div className="relative h-6">
           <button
             type="button"
-            className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rotate-45 ${c.bg} border ${c.border} cursor-help focus:outline-none focus:ring-2 focus:ring-white/40`}
+            className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rotate-45 ${c.bg} border ${c.border} cursor-help focus:outline-hidden focus:ring-2 focus:ring-white/40`}
             style={{ left: `${left}%` }}
             onMouseEnter={(e) => onHover(task.uid, e.currentTarget)}
             onMouseLeave={onLeave}
@@ -134,7 +134,7 @@ function TaskRow({ task, color, onHover, onLeave }: RowProps) {
       <div className="relative h-7">
         <button
           type="button"
-          className={`absolute top-1/2 -translate-y-1/2 h-4 rounded-sm border transition-colors cursor-help focus:outline-none focus:ring-2 focus:ring-white/40 ${colorForBar(color)}`}
+          className={`absolute top-1/2 -translate-y-1/2 h-4 rounded-xs border transition-colors cursor-help focus:outline-hidden focus:ring-2 focus:ring-white/40 ${colorForBar(color)}`}
           style={{ left: `${left}%`, width: `${width}%`, minWidth: '4px' }}
           onMouseEnter={(e) => onHover(task.uid, e.currentTarget)}
           onMouseLeave={onLeave}
@@ -205,7 +205,7 @@ function GanttTooltip({ rect, text, color }: GanttTooltipProps) {
     <div
       ref={tipRef}
       role="tooltip"
-      className={`fixed z-[60] bg-slate-900/95 ${accent} border rounded-md px-3.5 py-2.5 text-xs md:text-sm text-slate-200 leading-relaxed shadow-xl pointer-events-none`}
+      className={`fixed z-60 bg-slate-900/95 ${accent} border rounded-md px-3.5 py-2.5 text-xs md:text-sm text-slate-200 leading-relaxed shadow-xl pointer-events-none`}
       style={{
         ...style,
         maxWidth: '28rem',
@@ -319,7 +319,7 @@ function ScheduleSection({ schedule, index }: ScheduleSectionProps) {
 
               {/* Month gridlines (visual only, behind bars) */}
               <div
-                className="absolute top-[30px] bottom-0 right-0 left-[29rem] md:left-[30rem] pointer-events-none"
+                className="absolute top-[30px] bottom-0 right-0 left-116 md:left-120 pointer-events-none"
                 aria-hidden
               >
                 {MONTHS.map((m) => (
