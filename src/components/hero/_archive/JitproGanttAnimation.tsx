@@ -234,7 +234,7 @@ export default function JitproGanttAnimation({
       </div>
 
       {/* Gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#030a19]/55 via-transparent to-[#030a19]/30 pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-t from-[#030a19]/55 via-transparent to-[#030a19]/30 pointer-events-none" />
     </section>
   );
 }
@@ -275,7 +275,7 @@ function JitproDetailedGantt() {
             >
               {step.label}
               {step.constraint && (
-                <span className="ml-1 inline-block px-1 py-px text-[8px] font-semibold uppercase tracking-wider text-amber-300/85 border border-amber-400/35 rounded">
+                <span className="ml-1 inline-block px-1 py-px text-[8px] font-semibold uppercase tracking-wider text-amber-300/85 border border-amber-400/35 rounded-sm">
                   {step.constraint}
                 </span>
               )}

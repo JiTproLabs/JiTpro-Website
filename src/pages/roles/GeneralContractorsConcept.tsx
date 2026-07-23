@@ -109,7 +109,7 @@ export default function GeneralContractorsConcept() {
               You knew the last job could have gone better. You knew decisions came late. You knew procurement was being chased instead of led. You knew your team spent too much time recovering.
             </p>
           </div>
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-sm">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 shadow-xs">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-11 h-11 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
                 <Repeat size={24} />
@@ -119,7 +119,7 @@ export default function GeneralContractorsConcept() {
             <ul className="space-y-4">
               {repeatedMistakes.map((item) => (
                 <li key={item} className="flex gap-3 items-start">
-                  <CheckCircle2 className="text-amber-600 mt-0.5 flex-shrink-0" size={20} />
+                  <CheckCircle2 className="text-amber-600 mt-0.5 shrink-0" size={20} />
                   <span className="text-slate-700 leading-relaxed">{item}</span>
                 </li>
               ))}

@@ -174,7 +174,7 @@ function CompactGantt({ schedule, activeUid, visible }: CompactGanttProps) {
 
           {/* Month gridlines aligned to bar-track column */}
           <div
-            className="absolute top-[24px] bottom-0 right-0 left-[16.75rem] pointer-events-none"
+            className="absolute top-[24px] bottom-0 right-0 left-67 pointer-events-none"
             aria-hidden
           >
             {MONTHS.map((m) => (
@@ -212,7 +212,7 @@ function CompactRow({ task, color, isActive }: CompactRowProps) {
         </div>
         <div />
         <div
-          className={`relative h-5 transition-colors duration-300 rounded-sm ${
+          className={`relative h-5 transition-colors duration-300 rounded-xs ${
             isActive ? 'bg-white/5' : ''
           }`}
         >
@@ -249,12 +249,12 @@ function CompactRow({ task, color, isActive }: CompactRowProps) {
       </div>
       <div className="text-right text-slate-500 text-[10px] tabular-nums">{task.durationDays}d</div>
       <div
-        className={`relative h-5 transition-colors duration-300 rounded-sm ${
+        className={`relative h-5 transition-colors duration-300 rounded-xs ${
           isActive ? 'bg-white/5' : ''
         }`}
       >
         <div
-          className={`absolute top-1/2 -translate-y-1/2 h-3 rounded-sm border transition-all duration-300 ${colorForBar(
+          className={`absolute top-1/2 -translate-y-1/2 h-3 rounded-xs border transition-all duration-300 ${colorForBar(
             color,
           )} ${isActive ? 'h-4 ' + accentGlowClass(color) : ''}`}
           style={{ left: `${left}%`, width: `${width}%`, minWidth: '3px' }}
@@ -466,7 +466,7 @@ export default function TimelineShow({ onClose }: TimelineShowProps) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] bg-slate-950/96 backdrop-blur-md flex flex-col"
+      className="fixed inset-0 z-100 bg-slate-950/96 backdrop-blur-md flex flex-col"
       role="dialog"
       aria-modal="true"
       aria-label="Procurement timeline animated walkthrough"
@@ -553,7 +553,7 @@ export default function TimelineShow({ onClose }: TimelineShowProps) {
         {/* Between text overlays the schedules */}
         {phase === 'between' && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="pointer-events-auto bg-slate-950/85 backdrop-blur-sm rounded-2xl border border-slate-800 p-10 max-w-2xl mx-6">
+            <div className="pointer-events-auto bg-slate-950/85 backdrop-blur-xs rounded-2xl border border-slate-800 p-10 max-w-2xl mx-6">
               <NarrationBlock visible body={between.body} closer={between.closer} accent="red" />
             </div>
           </div>
@@ -562,7 +562,7 @@ export default function TimelineShow({ onClose }: TimelineShowProps) {
         {/* Outro */}
         {phase === 'outro' && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="pointer-events-auto bg-slate-950/90 backdrop-blur-sm rounded-2xl border border-amber-500/20 p-10 max-w-2xl mx-6 text-center">
+            <div className="pointer-events-auto bg-slate-950/90 backdrop-blur-xs rounded-2xl border border-amber-500/20 p-10 max-w-2xl mx-6 text-center">
               <h3 className="text-2xl md:text-4xl font-bold text-slate-100 leading-tight mb-4">
                 {outro.headline}
               </h3>
@@ -681,7 +681,7 @@ function BubbleOverlay({ text, color, rowIndex, totalRows }: BubbleOverlayProps)
     >
       <div
         key={`${rowIndex}-${text}`}
-        className={`bg-slate-900/95 ${accentBorderClass(color)} border-2 rounded-lg px-5 py-3 text-sm md:text-base text-slate-100 leading-relaxed shadow-2xl max-w-[42rem] ${accentGlowClass(
+        className={`bg-slate-900/95 ${accentBorderClass(color)} border-2 rounded-lg px-5 py-3 text-sm md:text-base text-slate-100 leading-relaxed shadow-2xl max-w-2xl ${accentGlowClass(
           color,
         )} animate-bubble-in mx-4`}
       >

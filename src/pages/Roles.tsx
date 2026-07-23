@@ -54,7 +54,7 @@ Every stakeholder on a construction project has a different relationship with pr
             <Link
               key={role.to}
               to={role.to}
-              className="block rounded-xl border border-slate-800 bg-white/[0.03] p-8 hover:border-white/25 transition-colors group"
+              className="block rounded-xl border border-slate-800 bg-white/3 p-8 hover:border-white/25 transition-colors group"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -65,7 +65,7 @@ Every stakeholder on a construction project has a different relationship with pr
                     {role.description}
                   </p>
                 </div>
-                <ArrowRight className="text-slate-500 group-hover:text-amber-400 transition-colors flex-shrink-0 mt-1" size={24} />
+                <ArrowRight className="text-slate-500 group-hover:text-amber-400 transition-colors shrink-0 mt-1" size={24} />
               </div>
             </Link>
           ))}

@@ -110,7 +110,7 @@ export default function HomepageConcept() {
             className="w-full h-auto object-contain mix-blend-lighten"
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-[#030a19] via-[#030a19]/92 to-[#030a19]/60" />
+        <div className="absolute inset-0 bg-linear-to-r from-[#030a19] via-[#030a19]/92 to-[#030a19]/60" />
 
         <div className="relative max-w-7xl mx-auto px-6 pt-24 pb-16 md:pt-32 md:pb-20 lg:pt-36">
           <div className="max-w-5xl mx-auto text-center">
@@ -144,7 +144,7 @@ export default function HomepageConcept() {
           </div>
 
           <div className="mt-16 md:mt-20">
-            <div className="rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-sm p-5 md:p-8 shadow-2xl">
+            <div className="rounded-3xl border border-white/10 bg-white/6 backdrop-blur-xs p-5 md:p-8 shadow-2xl">
               <div className="max-w-3xl mx-auto text-center mb-8">
                 <div className="inline-flex items-center gap-2 rounded-full border border-red-300/20 bg-red-500/10 px-4 py-2 mb-5">
                   <TrendingDown className="text-red-300" size={18} />
@@ -159,7 +159,7 @@ export default function HomepageConcept() {
               </div>
 
               <div className="hidden lg:grid grid-cols-6 gap-3 relative">
-                <div className="absolute left-8 right-8 top-[2.35rem] h-px bg-gradient-to-r from-amber-300/40 via-amber-300/30 to-red-300/40" />
+                <div className="absolute left-8 right-8 top-[2.35rem] h-px bg-linear-to-r from-amber-300/40 via-amber-300/30 to-red-300/40" />
                 {chainSteps.map((step, index) => (
                   <div key={step} className="relative">
                     <div className={`relative z-10 mx-auto mb-4 w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold shadow-lg ${index < 3 ? 'bg-amber-500 text-slate-950' : 'bg-red-500 text-white'}`}>
@@ -305,17 +305,17 @@ export default function HomepageConcept() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-5">
-            <div className="rounded-2xl border border-slate-200 p-6 bg-white shadow-sm">
+            <div className="rounded-2xl border border-slate-200 p-6 bg-white shadow-xs">
               <DollarSign className="text-amber-600 mb-5" size={32} />
               <h3 className="text-xl font-bold mb-3">Margins are already thin</h3>
               <p className="text-slate-600 leading-relaxed">You do not have enough profit in the job to absorb repeated late decisions, expediting, and field recovery.</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 p-6 bg-white shadow-sm">
+            <div className="rounded-2xl border border-slate-200 p-6 bg-white shadow-xs">
               <Clock className="text-amber-600 mb-5" size={32} />
               <h3 className="text-xl font-bold mb-3">Time is expensive</h3>
               <p className="text-slate-600 leading-relaxed">Once fabrication windows close or deliveries miss the field date, recovery costs more than early control ever would have.</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 p-6 bg-white shadow-sm">
+            <div className="rounded-2xl border border-slate-200 p-6 bg-white shadow-xs">
               <ShieldCheck className="text-amber-600 mb-5" size={32} />
               <h3 className="text-xl font-bold mb-3">One miss can become the project</h3>
               <p className="text-slate-600 leading-relaxed">A window package, steel item, cabinet release, tile selection, or equipment delay can consume the margin you thought you had.</p>
@@ -399,7 +399,7 @@ export default function HomepageConcept() {
       <section className="px-6 py-20 bg-slate-50">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-[0.8fr_1.2fr] gap-12 items-center">
           <div className="max-w-sm">
-            <div className="aspect-[4/5] overflow-hidden rounded-2xl bg-slate-200 shadow-lg">
+            <div className="aspect-4/5 overflow-hidden rounded-2xl bg-slate-200 shadow-lg">
               <img
                 src={`${import.meta.env.BASE_URL}assets/team/jeff.jpg`}
                 alt="Jeff Kaufman, Founder of JiTpro"
@@ -470,25 +470,25 @@ export default function HomepageConcept() {
               >
                 <div>
                   <label htmlFor="concept-name" className="block text-sm font-bold text-slate-900 mb-2">Name *</label>
-                  <input id="concept-name" required className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg text-slate-900 focus:border-slate-900 focus:outline-none" />
+                  <input id="concept-name" required className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg text-slate-900 focus:border-slate-900 focus:outline-hidden" />
                 </div>
                 <div className="grid md:grid-cols-2 gap-5">
                   <div>
                     <label htmlFor="concept-company" className="block text-sm font-bold text-slate-900 mb-2">Company *</label>
-                    <input id="concept-company" required className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg text-slate-900 focus:border-slate-900 focus:outline-none" />
+                    <input id="concept-company" required className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg text-slate-900 focus:border-slate-900 focus:outline-hidden" />
                   </div>
                   <div>
                     <label htmlFor="concept-phone" className="block text-sm font-bold text-slate-900 mb-2">Phone</label>
-                    <input id="concept-phone" type="tel" className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg text-slate-900 focus:border-slate-900 focus:outline-none" />
+                    <input id="concept-phone" type="tel" className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg text-slate-900 focus:border-slate-900 focus:outline-hidden" />
                   </div>
                 </div>
                 <div>
                   <label htmlFor="concept-email" className="block text-sm font-bold text-slate-900 mb-2">Email *</label>
-                  <input id="concept-email" type="email" required className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg text-slate-900 focus:border-slate-900 focus:outline-none" />
+                  <input id="concept-email" type="email" required className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg text-slate-900 focus:border-slate-900 focus:outline-hidden" />
                 </div>
                 <div>
                   <label htmlFor="concept-project" className="block text-sm font-bold text-slate-900 mb-2">What are you building next? *</label>
-                  <select id="concept-project" required className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg text-slate-900 focus:border-slate-900 focus:outline-none bg-white">
+                  <select id="concept-project" required className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg text-slate-900 focus:border-slate-900 focus:outline-hidden bg-white">
                     <option value="">Select one</option>
                     <option>Luxury residential</option>
                     <option>Light commercial</option>
@@ -499,7 +499,7 @@ export default function HomepageConcept() {
                 </div>
                 <div>
                   <label htmlFor="concept-method" className="block text-sm font-bold text-slate-900 mb-2">How are you controlling decisions and materials today? *</label>
-                  <select id="concept-method" required className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg text-slate-900 focus:border-slate-900 focus:outline-none bg-white">
+                  <select id="concept-method" required className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg text-slate-900 focus:border-slate-900 focus:outline-hidden bg-white">
                     <option value="">Select one</option>
                     <option>Excel / spreadsheet</option>
                     <option>Procore or PM software</option>
@@ -510,7 +510,7 @@ export default function HomepageConcept() {
                 </div>
                 <div>
                   <label htmlFor="concept-message" className="block text-sm font-bold text-slate-900 mb-2">Optional: What went wrong on the last job?</label>
-                  <textarea id="concept-message" rows={4} className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg text-slate-900 focus:border-slate-900 focus:outline-none" />
+                  <textarea id="concept-message" rows={4} className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg text-slate-900 focus:border-slate-900 focus:outline-hidden" />
                 </div>
                 <button type="submit" className="w-full bg-slate-900 text-white px-8 py-4 rounded-lg text-lg font-bold hover:bg-slate-800 transition-colors">
                   Review my next project

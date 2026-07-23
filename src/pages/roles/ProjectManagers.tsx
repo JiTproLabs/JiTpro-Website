@@ -40,25 +40,25 @@ You manage the schedule, the budget, and the coordination between every party on
             Where procurement breaks down
           </h2>
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="rounded-xl border border-slate-800 bg-white/[0.03] p-8">
+            <div className="rounded-xl border border-slate-800 bg-white/3 p-8">
               <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Procurement tracking is scattered</h3>
               <p className="text-slate-400 leading-relaxed">
                 Submittal logs live in one system. Lead time information lives in emails. Owner selections are tracked on spreadsheets. There is no single view of where procurement stands across the entire project.
               </p>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-white/[0.03] p-8">
+            <div className="rounded-xl border border-slate-800 bg-white/3 p-8">
               <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Follow-ups rely on memory</h3>
               <p className="text-slate-400 leading-relaxed">
                 You know you need to follow up on that steel submittal and the owner's tile selection — but with dozens of items in flight, things fall through the cracks. By the time you remember, the procurement window has closed.
               </p>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-white/[0.03] p-8">
+            <div className="rounded-xl border border-slate-800 bg-white/3 p-8">
               <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Schedule updates lag behind reality</h3>
               <p className="text-slate-400 leading-relaxed">
                 The project schedule shows planned material delivery dates, but those dates are not connected to the actual status of submittals and approvals. The schedule looks clean while procurement is already behind.
               </p>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-white/[0.03] p-8">
+            <div className="rounded-xl border border-slate-800 bg-white/3 p-8">
               <h3 className="font-heading text-xl font-bold text-slate-100 mb-3">Reporting takes too much time</h3>
               <p className="text-slate-400 leading-relaxed">
                 Owners and executives want procurement status updates. Building those reports manually from scattered sources takes hours — and the information is already outdated by the time it is assembled.
@@ -117,7 +117,7 @@ JiTpro ties procurement timing to actual installation dates. You see whether mat
               'Documentation ready for owner updates, claims, and disputes',
             ].map((benefit) => (
               <div key={benefit} className="flex gap-3 items-start">
-                <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 flex-shrink-0" />
+                <div className="w-2 h-2 bg-amber-500 rounded-full mt-2.5 shrink-0" />
                 <p className="text-lg text-slate-300 leading-relaxed">{benefit}</p>
               </div>
             ))}

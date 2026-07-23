@@ -69,7 +69,7 @@ export default function MarketOpportunity() {
               { label: '~45K growth-stage (10–99 emp)', width: 'w-3/6', bg: 'bg-amber-500/20 border border-amber-500/40' },
             ].map((tier, i) => (
               <div key={i} className={`${tier.width} mx-auto`}>
-                <div className={`${tier.bg} rounded px-4 py-3 text-center text-sm text-slate-300`}>
+                <div className={`${tier.bg} rounded-sm px-4 py-3 text-center text-sm text-slate-300`}>
                   {tier.label}
                 </div>
               </div>
