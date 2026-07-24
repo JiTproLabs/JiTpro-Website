@@ -1,6 +1,7 @@
 # This file tells GitHub to automatically check every Pull Request (PR)
 # before it is allowed to merge into main.
-# It installs the project, then runs 3 checks: type-checking, linting, and a build.
+# It installs the project, then runs 5 checks: a security audit, type-checking,
+# linting, a build, and a broken-link/image check.
 # If any of these fail, the PR will show a red X and cannot be merged.
 
 name: Marketing Site CI
@@ -36,14 +37,31 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    # Step 4: Run TypeScript/JavaScript type checking
+    # Step 4: Fail the check if any dependency has a High or Critical severity vulnerability.
+    # Dependabot already opens PRs to fix these over time — this step catches the case
+    # where a change introduces a new one before Dependabot notices.
+    # [ORDER REASON: Runs instantly before any code compilation occurs]
+    - name: Check for high-severity dependency vulnerabilities
+      run: npm audit --audit-level=high
+
+    # Step 5: Run TypeScript/JavaScript type checking
     - name: Check for coding mistakes
       run: npm run typecheck --if-present # Only runs if "typecheck" is defined in package.json
 
-    # Step 5: Run code linter to verify formatting standards
+    # Step 6: Run code linter to verify formatting standards
     - name: Check layout and formatting
       run: npm run lint --if-present # Skips without failing if "lint" is missing from package.json
 
-    # Step 6:  The Critical Step: Verify the project builds successfully without errors
+    # Step 7:  The Critical Step: Verify the project builds successfully without errors
     - name: Build production site
       run: npm run build
+
+    # Step 8. Confirm all internal links, images, and files (including the video) actually
+    # exist in the built site. This only checks files within this website, not links to
+    # other websites, so it would not fail because another site is slow or offline.
+    # [ORDER REASON: Must run last because it validates the output files created by Step 7]
+    - name: Check for broken links, images, and files
+      uses: lycheeverse/lychee-action@v2
+      with:
+        args: --offline --no-progress --root-dir "${{ github.workspace }}/dist" dist
+        fail: true
