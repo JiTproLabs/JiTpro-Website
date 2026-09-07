@@ -100,6 +100,7 @@ export default function MethodologyFigure({ activeIndex }: MethodologyFigureProp
                 <DemoScreenFrame
                   screen={stage.id}
                   label={stage.demo.alt}
+                  title={stage.title}
                   file={stage.demo.file}
                   focusable={isActive}
                 />
@@ -119,18 +120,12 @@ export default function MethodologyFigure({ activeIndex }: MethodologyFigureProp
         })}
       </div>
 
-      {/* §48.10: one quiet sentence, with the figure, never a disclaimer block.
-          Sentence case — this is a sentence, and uppercase is for short labels
-          only (§7.7).
-
-          It applies to the live DOM screens exactly as it did to the rasters
-          they are replacing, and more pointedly: a real, operable-looking
-          application screen makes a stronger implicit claim about its contents
-          than a picture of one does. The sentence stays with the figure for as
-          long as the figure shows constructed project data. */}
-      <figcaption className="mt-4 max-w-[62ch] text-[0.875rem] leading-[1.6] text-jp-ink-secondary/85">
-        Representative JiTpro screens. The interface is real; the project, quantities, parties and dates are constructed to show realistic conditions and are not taken from an actual engagement.
-      </figcaption>
+      {/* NO FIGCAPTION. §48.10's provenance line was withdrawn from the
+          representative demonstrations site-wide (Decision Log 2026-09-04)
+          with no replacement, and the implementation had been carrying it
+          since. The figure now ends with the screen; the frame's own
+          `Explore screen` affordance carries the interaction, so nothing is
+          printed beneath it. §48.10 still governs every other figure. */}
     </figure>
   );
 }

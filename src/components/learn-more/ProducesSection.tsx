@@ -104,7 +104,12 @@ export default function ProducesSection() {
                    the same 4:3 frame, never re-cropped (Section 46.8.1), and
                    openable. */
                 <div className={`mt-8 overflow-hidden border lg:mt-0 ${tone.rule}`}>
-                  <DemoScreenFrame screen={stage.id} label={stage.demo.alt} file={stage.demo.file} />
+                  <DemoScreenFrame
+                    screen={stage.id}
+                    label={stage.demo.alt}
+                    title={stage.title}
+                    file={stage.demo.file}
+                  />
                 </div>
               ) : null}
             </li>

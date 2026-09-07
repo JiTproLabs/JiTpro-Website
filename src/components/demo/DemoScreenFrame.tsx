@@ -52,6 +52,18 @@ import './tokens.css';
  * the whole preview clickable and keyboard-reachable without nesting. In an
  * accumulating figure that keeps every stage mounted, `focusable={false}`
  * takes a hidden frame's control out of the tab order.
+ *
+ * THE AFFORDANCE IS THE WHOLE PREVIEW, AND IT SAYS SO. The trigger fills the
+ * frame and draws one centred `Explore screen` pill inside itself. The pill
+ * is a decorative `<span>`, never a second button - clicking it and clicking
+ * anywhere else on the preview are the same click on the same control, which
+ * is what keeps the markup free of nested interactive elements. It is drawn
+ * at rest rather than on hover, because a visitor who never hovers must still
+ * know the screen opens; hover and keyboard focus only strengthen it.
+ *
+ * NO CAPTION. Section 48.10's provenance line was withdrawn from these
+ * demonstrations site-wide (Decision Log 2026-09-04) and the affordance now
+ * carries the interaction on its own, so nothing is printed beneath a frame.
  */
 
 const CANVAS_W = 1448;
@@ -64,6 +76,12 @@ type Props = {
   screen: DemoScreenId;
   /** Accessible description. The raster's existing alt text is reused verbatim. */
   label: string;
+  /**
+   * The stage's short name, for the trigger's accessible name - "Explore
+   * Scope Validation screen" rather than the full description, which the
+   * sibling `role="img"` already carries.
+   */
+  title: string;
   /**
    * Basename of the stage's capture in public/assets/methodology, without
    * size suffix or extension. Every stage has one; a raster stage is drawn
@@ -80,6 +98,7 @@ type Props = {
 export default function DemoScreenFrame({
   screen,
   label,
+  title,
   file,
   expandable = true,
   focusable = true,
@@ -179,23 +198,16 @@ export default function DemoScreenFrame({
           ref={triggerRef}
           type="button"
           onClick={() => setOpen(true)}
-          aria-label={`Enlarge: ${label}`}
+          aria-label={`Explore ${title} screen`}
           tabIndex={focusable ? 0 : -1}
-          className="jpd-frame group absolute inset-0 block h-full w-full cursor-zoom-in appearance-none border-0 bg-transparent p-0 text-left"
+          className="jpd-frame group absolute inset-0 flex cursor-zoom-in appearance-none items-center justify-center border-0 bg-transparent p-0 text-left"
         >
-          {/* The affordance. Quiet at rest, present on hover and on keyboard
-              focus - never hover-only. */}
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute right-2 top-2 flex items-center justify-center rounded-md opacity-0 transition-opacity duration-150 ease-out group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none"
-            style={{
-              width: 28,
-              height: 28,
-              background: 'color-mix(in oklab, #0a0a0a 62%, transparent)',
-              color: '#fff',
-            }}
-          >
-            <Maximize2 size={14} strokeWidth={2.25} />
+          <span aria-hidden="true" className="jpd-frame__wash" />
+          {/* Decorative: the button around it is the control, so this must
+              never become a button of its own. */}
+          <span aria-hidden="true" className="jpd-frame__explore">
+            <Maximize2 size={15} strokeWidth={2.25} />
+            Explore screen
           </span>
         </button>
       </div>

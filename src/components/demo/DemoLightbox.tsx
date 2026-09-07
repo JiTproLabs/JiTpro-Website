@@ -12,6 +12,14 @@ import './tokens.css';
  * bitmap, enlarging it makes it sharper rather than softer - the entire point
  * of the migration.
  *
+ * THE CLOSE CONTROL BELONGS TO THE SCREEN, NOT TO THE BROWSER. It sits in a
+ * bar directly above the canvas inside a stage sized to `min(the screen's
+ * rendered size, the space available)`, so it lands on the screen's top-right
+ * corner when the screen fits and on the top-right of the visible area when
+ * the screen is larger than the viewport and must be panned. The bar is
+ * OUTSIDE the scrolling viewport, so no amount of panning can carry it out of
+ * reach - which a control pinned to the canvas itself could not promise.
+ *
  * NATIVE <dialog> WITH showModal(). Chosen over a hand-rolled portal because
  * the platform then owns the parts that are easy to get wrong: focus is
  * trapped inside the dialog, the rest of the document is inert to assistive
@@ -42,6 +50,9 @@ import './tokens.css';
  * from scrolling the page behind it.
  */
 
+/** The close bar's height, reserved above the canvas when fitting it. */
+const BAR_H = 48;
+
 export default function DemoLightbox({
   label,
   children,
@@ -58,9 +69,11 @@ export default function DemoLightbox({
   maxScale?: number;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const portalRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
+  const [avail, setAvail] = useState({ w: 0, h: 0 });
   const [pan, setPan] = useState(false);
   const [portalEl, setPortalEl] = useState<HTMLElement | null>(null);
 
@@ -77,23 +90,36 @@ export default function DemoLightbox({
     if (!el.open) el.showModal();
     setPortalEl(portalRef.current);
 
+    /**
+     * Measured from `__inner`, NOT from the viewport. The stage is sized from
+     * the scale, and the viewport is inside the stage, so measuring the
+     * viewport would make the scale depend on itself. `__inner` is always the
+     * full dialog less its padding, whatever the stage does.
+     */
     const measure = () => {
-      const vp = viewportRef.current;
-      if (!vp) return;
-      const byWidth = vp.clientWidth / CANVAS_W;
-      const byHeight = vp.clientHeight / CANVAS_H;
+      const box = innerRef.current;
+      if (!box) return;
+      const cs = getComputedStyle(box);
+      const availW =
+        box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      const availH =
+        box.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - BAR_H;
+      if (availW <= 0 || availH <= 0) return;
+      const byWidth = availW / CANVAS_W;
+      const byHeight = availH / CANVAS_H;
       // Below 768px: fit HEIGHT and let the viewer pan horizontally. Fitting
       // width would just reproduce the unreadable embedded view, larger.
       const narrow = window.innerWidth < 768;
       const fit = narrow ? byHeight : Math.min(byWidth, byHeight);
       const s = Math.min(Math.max(fit, minScale), maxScale);
       setScale(s);
-      setPan(s * CANVAS_W > vp.clientWidth + 0.5 || s * CANVAS_H > vp.clientHeight + 0.5);
+      setAvail({ w: availW, h: availH });
+      setPan(s * CANVAS_W > availW + 0.5 || s * CANVAS_H > availH + 0.5);
     };
     measure();
 
     const ro = new ResizeObserver(measure);
-    if (viewportRef.current) ro.observe(viewportRef.current);
+    if (innerRef.current) ro.observe(innerRef.current);
     window.addEventListener('resize', measure);
 
     // Escape fires `cancel`; route it through our own close so focus restores.
@@ -132,17 +158,29 @@ export default function DemoLightbox({
       }}
       className="jpd-lightbox"
     >
-      <div className="jpd-lightbox__inner">
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close enlarged view"
-          className="jpd-lightbox__close"
+      <div ref={innerRef} className="jpd-lightbox__inner">
+        {/* The stage: close bar and screen as one object, sized to the screen
+            but never past the space available. */}
+        <div
+          className="jpd-lightbox__stage"
+          style={{
+            width: scale > 0 ? Math.min(CANVAS_W * scale, avail.w) : '100%',
+            height: scale > 0 ? Math.min(CANVAS_H * scale, avail.h) + BAR_H : '100%',
+          }}
         >
-          <X size={18} strokeWidth={2.25} />
-        </button>
+          <div className="jpd-lightbox__bar">
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close enlarged view"
+              className="jpd-lightbox__close"
+            >
+              Close
+              <X size={15} strokeWidth={2.5} aria-hidden="true" />
+            </button>
+          </div>
 
-        <div ref={viewportRef} className="jpd-lightbox__viewport" data-pan={pan ? '' : undefined}>
+          <div ref={viewportRef} className="jpd-lightbox__viewport" data-pan={pan ? '' : undefined}>
           <div
             aria-hidden={interactive ? undefined : true}
             style={{
@@ -166,6 +204,7 @@ export default function DemoLightbox({
               {scale > 0 && (
                 <InspectionContext.Provider value={capabilities}>{children}</InspectionContext.Provider>
               )}
+            </div>
             </div>
           </div>
         </div>
