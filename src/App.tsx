@@ -50,6 +50,7 @@ const ScheduleLab = lazy(() => import('./demo-lab/schedule/ScheduleLab'));
 const ScreenCompareLab = lazy(() => import('./demo-lab/ScreenCompareLab'));
 const ProductRegisterScreen = lazy(() => import('./components/demo/screens/ProductRegisterScreen'));
 const CommitmentRegisterLive = lazy(() => import('./components/demo/screens/CommitmentRegisterScreen'));
+const ScopeGapAnalysisScreen = lazy(() => import('./components/demo/screens/ScopeGapAnalysisScreen'));
 
 /* TEAM REVIEW - unlisted, in the production build. The procurement schedule
    prototype behind a plain URL the team can open, rendering the same
@@ -109,6 +110,8 @@ function App() {
             <Route path="/demo-lab/product-register" element={<Suspense fallback={null}><ScreenCompareLab component={ProductRegisterScreen} reference="product-register" title="Product Register" /></Suspense>} />
             <Route path="/demo-lab/product-register-compare" element={<Suspense fallback={null}><ScreenCompareLab component={ProductRegisterScreen} reference="product-register" title="Product Register" initial="side" /></Suspense>} />
             <Route path="/demo-lab/commitment-register-live" element={<Suspense fallback={null}><ScreenCompareLab component={CommitmentRegisterLive} reference="commitment-capture" title="Commitment Register (production)" initial="live" /></Suspense>} />
+            <Route path="/demo-lab/scope-gap-analysis" element={<Suspense fallback={null}><ScreenCompareLab component={ScopeGapAnalysisScreen} reference="scope-gap-analysis" title="Scope Gap Analysis" /></Suspense>} />
+            <Route path="/demo-lab/scope-gap-analysis-compare" element={<Suspense fallback={null}><ScreenCompareLab component={ScopeGapAnalysisScreen} reference="scope-gap-analysis" title="Scope Gap Analysis" initial="side" /></Suspense>} />
           </>
         )}
 

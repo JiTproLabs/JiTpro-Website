@@ -53,7 +53,7 @@ export const METHODOLOGY_STAGES: MethodologyStage[] = [
     body: 'We identify missing, unclear, conflicting, or uncovered scope—and the decisions, information, and responsibilities that must be resolved before they become constraints against the schedule.',
     demo: {
       file: 'scope-gap-analysis',
-      alt: 'The JiTpro Scope Gap Analysis Report for the same project: 34 gaps sorted into definition, responsibility and interface types, each carrying a responsible party, a required-by date and an impact level.',
+      alt: 'The JiTpro Scope Gap Analysis Report for the same project: 34 gaps identified across the 428 scope items reviewed, sorted into definition, responsibility and interface types, with fifteen items listed — gaps alongside scope already found sufficiently defined — each carrying a responsible party, a required-by date and an impact level, and a detail panel setting out one gap’s finding, why it matters and what must be resolved.',
     },
   },
   {

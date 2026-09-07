@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import CommitmentRegisterScreen from './screens/CommitmentRegisterScreen';
 import ProcurementScheduleScreen from './screens/procurement-schedule/ProcurementScheduleScreen';
 import ProductRegisterScreen from './screens/ProductRegisterScreen';
+import ScopeGapAnalysisScreen from './screens/ScopeGapAnalysisScreen';
 
 /**
  * The canonical screen registry, keyed by the methodology stage `id` in
@@ -71,7 +72,7 @@ export const DEFAULT_MIN_SCALE = 0.8;
 
 export const DEMO_SCREENS: Record<DemoScreenId, DemoScreenEntry> = {
   'scope-validation': { kind: 'raster' },
-  'scope-gap-analysis': { kind: 'raster' },
+  'scope-gap-analysis': { kind: 'live', component: ScopeGapAnalysisScreen },
   'commitment-capture': { kind: 'live', component: CommitmentRegisterScreen },
   'product-register': { kind: 'live', component: ProductRegisterScreen },
   'backward-scheduling': { kind: 'live', component: ProcurementScheduleScreen, interactive: true },

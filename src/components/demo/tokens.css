@@ -80,6 +80,30 @@
   letter-spacing: -0.006em;
 }
 
+/* Scope Gap Analysis semantics, measured from
+   `assets-src/methodology/scope-gap-analysis.png`.
+
+   That screen states gap type and impact as COLOURED TEXT, not as the status
+   badge the Commitment and Product registers use, so the badge's fill/border/
+   foreground triples cannot express it: what is needed is one legible
+   foreground per semantic level. Three levels, each doing double duty - the
+   Gap Type column and the Impact column read from the same three - plus the
+   urgent required-by date, which the master colours on exactly the rows whose
+   impact is not Low.
+
+   Held apart from `--jpd-ok-fg`/`--jpd-warn-fg`/`--jpd-error-fg` because they
+   are measurably different inks: this master's green is a true green (hue
+   ~124deg) where the Commitment Register's is green-teal (~145deg), and its
+   warn is an orange where that one is a dark gold. Normalising them onto each
+   other would change an approved screen, which Section 49 forbids. */
+.jpd {
+  --jpd-gap-warn: #fd831e;  /* Definition + Responsibility, Impact Medium */
+  --jpd-gap-error: #dd1a1a; /* Interface, Impact High, urgent required-by */
+  --jpd-gap-ok: #287d2d;    /* Validated, Impact Low */
+  --jpd-gap-count: #ee400b; /* the Definition card's numeral, the one coloured KPI value */
+  --jpd-gap-icon-tint: #feebcb; /* the disc behind the first two KPI icons */
+}
+
 .jpd .jpd-tight { letter-spacing: -0.022em; }
 .jpd-tight-sm { letter-spacing: inherit; }
 
