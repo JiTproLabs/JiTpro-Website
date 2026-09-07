@@ -526,6 +526,24 @@ export default function ProcurementScheduleScreen() {
               Raised diamond = external commitment owed to the project
             </span>
           </span>
+
+          {/* The shading is a mark like any other and is explained beside
+              them. Same swatch geometry as a family chip; the hairline is
+              there only so a near-white swatch is visible on the legend. */}
+          <span className="flex items-center" style={{ gap: 6, marginLeft: 4 }}>
+            <span
+              style={{
+                width: 11,
+                height: 11,
+                borderRadius: 2,
+                background: 'var(--jpd-nonworking)',
+                boxShadow: 'inset 0 0 0 1px var(--jpd-grid-strong)',
+              }}
+            />
+            <span style={{ fontSize: 10.5, color: 'var(--jpd-text-muted)' }}>
+              Shaded = non-working day (weekend or U.S. federal holiday)
+            </span>
+          </span>
         </div>
 
         {/* ---------------------------------------------------- PAGINATION */}

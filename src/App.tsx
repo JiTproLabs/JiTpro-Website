@@ -37,11 +37,21 @@ import TheRealProcurementTimeline from './pages/TheRealProcurementTimeline';
 import ProcurementSchedule from './pages/ProcurementSchedule';
 
 /* PROTOTYPE LAB - dev-only. Lazy so its CSS (which pulls a Google font) lands
-   in a separate chunk instead of the production stylesheet. The route below is
-   also DEV-gated, so the chunk is never requested in a production build. */
+   in a separate chunk instead of the production stylesheet. The lab routes are
+   also DEV-gated, so the lab harness chunks are never requested in a
+   production build. The procurement schedule itself is not lab-only any more:
+   it also ships through the unlisted team review route below, by way of the
+   one ScheduleViewer both surfaces render. */
 const DemoLab = lazy(() => import('./demo-lab/DemoLab'));
 const TableFidelityTest = lazy(() => import('./demo-lab/TableFidelityTest'));
 const ScheduleLab = lazy(() => import('./demo-lab/schedule/ScheduleLab'));
+
+/* TEAM REVIEW - unlisted, in the production build. The procurement schedule
+   prototype behind a plain URL the team can open, rendering the same
+   ScheduleViewer the lab does, so there is one schedule and nothing to drift.
+   Lazy so the schedule and its stylesheet stay in their own chunk. Not linked
+   from any surface; the page marks itself noindex, nofollow. */
+const ProcurementScheduleReview = lazy(() => import('./pages/review/ProcurementScheduleReview'));
 
 import HomepageConcept from './pages/HomepageConcept';
 import CompanyProjectHealth from './pages/CompanyProjectHealth';
@@ -58,6 +68,12 @@ function App() {
         {/* Unlisted LinkedIn landing page — standalone, not in main nav */}
         <Route path="/broken-before-the-job-starts" element={<BrokenBeforeJobStarts />} />
         <Route path="/the-real-procurement-timeline" element={<TheRealProcurementTimeline />} />
+
+        {/* Unlisted team review of the procurement schedule prototype — standalone, not in nav, noindex */}
+        <Route
+          path="/review/procurement-schedule"
+          element={<Suspense fallback={null}><ProcurementScheduleReview /></Suspense>}
+        />
 
         {/* Investor sub-site — own nav/footer */}
         <Route path="/investor" element={<InvestorLayout />}>

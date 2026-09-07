@@ -532,7 +532,16 @@ const railings: StepSpec[] = [
    `committedFor` is authored as an absolute date, independent of the derived
    requirement, and is deliberately left off where the team has not yet given
    one - an uncommitted requirement is the normal early state, and showing it
-   as blank is the honest depiction. */
+   as blank is the honest depiction.
+
+   WHEN THE CALENDAR CHANGES, THESE MOVE WITH THE REQUIREMENT. Each agreed or
+   actual date below was written to express a relationship to the requirement
+   it answers - on time, two days early, ten days late. When observed federal
+   holidays entered the work calendar (2026-09-06) every derived requirement
+   moved earlier, and each authored date here was re-pinned by the same number
+   of working days, so the board tells the story it was written to tell on the
+   new calendar instead of manufacturing late commitments out of a calendar
+   change. The engine still never reads them. */
 
 const C = (
   id: string,
@@ -576,9 +585,11 @@ const steelC: CommitmentSpec[] = [
     'ss-2', 'Issue the completed structural design with member sizes fixed for detailing.'),
   C('steel-c2', 'Connection Design Criteria Issued', 'engineering', 'Structural Engineer', 'MC', 'structural',
     'ss-3', 'Issue connection design criteria and delegated design requirements to the detailer.',
-    // Required 30 Sep, issued 7 Oct. Detailing started against incomplete
-    // criteria and the first review cycle absorbed the difference.
-    { completedOn: '2026-10-07' }),
+    // Required 21 Sep, issued 28 Sep - five working days late. Detailing
+    // started against incomplete criteria and the first review cycle absorbed
+    // the difference. Re-pinned with the requirement when the work calendar
+    // gained federal holidays, so the miss is still five working days.
+    { completedOn: '2026-09-28' }),
   C('steel-c3', 'Architectural Interface Confirmed', 'design', 'Architect', 'JS', 'architect',
     'ss-3', 'Confirm exposed steel conditions, finishes and the interfaces where steel meets enclosure.'),
 ];
@@ -601,11 +612,12 @@ const heritageC: CommitmentSpec[] = [
     { leadDays: 2 }),
   C('heritage-c2', 'Final Frame Finish & Colour Selection', 'selection', 'Owner', 'EM', 'owner',
     'hw-4', 'Select the final frame finish and colour that the fabrication order is placed against.',
-    // Originally required and agreed for 3 Nov; provided on the 11th. The
-    // current forecast has since re-planned the Initial Submittal around the
-    // actual, which is why the derived requirement now reads 11 Nov - the
-    // baseline is what keeps the miss visible.
-    { baselineRequiredBy: '2026-11-03', committedFor: '2026-11-03', completedOn: '2026-11-11' }),
+    // Originally required and agreed for 23 Oct; provided 2 Nov, six working
+    // days late. The current forecast has since re-planned the Initial
+    // Submittal around the actual, which is why the derived requirement now
+    // reads 2 Nov - the baseline is what keeps the miss visible. Re-pinned
+    // with the requirement when the work calendar gained federal holidays.
+    { baselineRequiredBy: '2026-10-23', committedFor: '2026-10-23', completedOn: '2026-11-02' }),
   C('heritage-c3', 'Final Glazing Selection', 'selection', 'Architect', 'JS', 'architect',
     'hw-4', 'Confirm the glazing make-up, coating and performance for every opening type.'),
 ];
@@ -644,7 +656,7 @@ const hvacC: CommitmentSpec[] = [
 const tileC: CommitmentSpec[] = [
   C('tile-c1', 'Final Tile Selection', 'selection', 'Owner', 'EM', 'owner',
     'tl-4', 'Select the final tile for every wet area and finish location so quantities can be taken off.',
-    { committedFor: '2027-07-12' }),
+    { committedFor: '2027-07-09' }),
   C('tile-c2', 'Pattern & Layout Approval', 'approval', 'Interior Designer', 'RM', 'interiors',
     'tl-4', 'Approve the setting pattern, trim pieces and layout each area is ordered against.'),
 ];
@@ -678,7 +690,7 @@ const railingsC: CommitmentSpec[] = [
     'om-4', 'Issue guard loading and attachment criteria for the delegated connection design.'),
   C('railings-c3', 'Metal Finish Selection', 'selection', 'Owner', 'EM', 'owner',
     'om-13', 'Select the final metal finish and patina that fabrication is finished to.',
-    { committedFor: '2027-08-04' }),
+    { committedFor: '2027-08-02' }),
 ];
 
 /* 13 - Plumbing Fixtures. Rough-in follows the fixture, not the other way
@@ -686,7 +698,7 @@ const railingsC: CommitmentSpec[] = [
 const plumbingC: CommitmentSpec[] = [
   C('plumbing-c1', 'Final Fixture Selection', 'selection', 'Owner', 'EM', 'owner',
     'pl-3', 'Select every fixture and fitting so rough-in dimensions can be scheduled against them.',
-    { committedFor: '2027-07-07' }),
+    { committedFor: '2027-07-02' }),
   C('plumbing-c2', 'Fixture Finish Selection', 'selection', 'Interior Designer', 'RM', 'interiors',
     'pl-4', 'Confirm the finish for each fixture and fitting the order is placed against.'),
 ];
@@ -696,10 +708,10 @@ const plumbingC: CommitmentSpec[] = [
 const intdoorsC: CommitmentSpec[] = [
   C('intdoors-c1', 'Final Door Schedule Issued', 'design', 'Architect', 'JS', 'architect',
     'id-2', 'Issue the door schedule with sizes, cores, swings and fire ratings resolved.',
-    { committedFor: '2027-06-09' }),
+    { committedFor: '2027-06-03' }),
   C('intdoors-c2', 'Door Hardware Selection', 'selection', 'Interior Designer', 'RM', 'interiors',
     'id-3', 'Select the hardware sets so doors and frames can be prepared to receive them.',
-    { committedFor: '2027-07-08' }),
+    { committedFor: '2027-07-06' }),
   C('intdoors-c3', 'Door Finish Selection', 'selection', 'Owner', 'EM', 'owner',
     'id-11', 'Select the final door finish that fabrication applies before delivery.'),
 ];
@@ -709,10 +721,10 @@ const intdoorsC: CommitmentSpec[] = [
 const lightingC: CommitmentSpec[] = [
   C('lighting-c1', 'Lighting Design Complete', 'design', 'Lighting Designer', 'CF', 'lighting',
     'dl-3', 'Issue the completed decorative lighting design and location plan.',
-    { committedFor: '2027-07-01' }),
+    { committedFor: '2027-06-24' }),
   C('lighting-c2', 'Final Fixture Selection', 'selection', 'Owner', 'EM', 'owner',
     'dl-3', 'Select the decorative fixture for every location so the schedule can be assembled.',
-    { committedFor: '2027-07-15' }),
+    { committedFor: '2027-07-09' }),
   C('lighting-c3', 'Control & Dimming Requirements', 'engineering', 'Electrical Engineer', 'NR', 'electrical',
     'dl-4', 'Confirm control and dimming requirements so fixture compatibility can be submitted.'),
 ];
@@ -759,7 +771,7 @@ const heritageRisk: RiskSpec = {
       id: 'heritage-i1',
       kind: 'missed-commitment',
       title: 'Frame Finish Selection Received Late',
-      identifiedOn: '2026-11-11',
+      identifiedOn: '2026-11-02',
       cause:
         'The final frame finish and colour selection was provided later than the date the Owner had agreed to.',
       impact: 'Completion of the Initial Submittal was delayed.',

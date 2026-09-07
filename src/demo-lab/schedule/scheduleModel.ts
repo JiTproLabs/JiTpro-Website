@@ -9,6 +9,7 @@
  */
 
 import { PEOPLE, ORGANIZATIONS } from '../../components/demo/fixtures/project';
+import { iso, parse, prevWorkday, subWorkdays, snapBack, workdaysBetween } from './workCalendar';
 
 /* ------------------------------------------------------------ participants */
 
@@ -121,46 +122,15 @@ export const STATUS_LABEL: Record<PhaseStatus, string> = {
 
 /* ------------------------------------------------------ working-day engine */
 
-const MS = 86400000;
-
-export function iso(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
-export function parse(s: string): Date {
-  return new Date(s + 'T00:00:00Z');
-}
-function isWorkday(d: Date): boolean {
-  const g = d.getUTCDay();
-  return g !== 0 && g !== 6;
-}
-/** Previous working day strictly before `d`. */
-export function prevWorkday(d: Date): Date {
-  const r = new Date(d.getTime() - MS);
-  while (!isWorkday(r)) r.setUTCDate(r.getUTCDate() - 1);
-  return r;
-}
-/** Step back `n` working days from `d` (n=0 returns d). */
-export function subWorkdays(d: Date, n: number): Date {
-  let r = new Date(d);
-  for (let i = 0; i < n; i++) r = prevWorkday(r);
-  return r;
-}
-/** Snap onto a working day, moving backwards if necessary. */
-export function snapBack(d: Date): Date {
-  const r = new Date(d);
-  while (!isWorkday(r)) r.setUTCDate(r.getUTCDate() - 1);
-  return r;
-}
-/** Inclusive count of working days between two dates. */
-export function workdaysBetween(a: Date, b: Date): number {
-  let n = 0;
-  const r = new Date(a);
-  while (r <= b) {
-    if (isWorkday(r)) n++;
-    r.setUTCDate(r.getUTCDate() + 1);
-  }
-  return n;
-}
+/**
+ * THE CALENDAR LIVES IN workCalendar.ts. A working day is Monday to Friday and
+ * not an observed U.S. federal holiday; every duration, gap and lead time in
+ * this model is counted in those days and nothing here can count a day the
+ * calendar excludes. The helpers are re-exported so existing consumers keep
+ * one import path, and so the Gantt's shading and this engine cannot be
+ * pointed at two different definitions of "working".
+ */
+export { iso, parse, prevWorkday, subWorkdays, snapBack, workdaysBetween };
 
 /* --------------------------------------------------------------- the model */
 

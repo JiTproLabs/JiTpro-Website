@@ -2,6 +2,16 @@
    the governing instruction's Sections 66 (dates) and 67 (accountability). */
 import { SCHEDULE_ITEMS } from './scheduleFixture';
 import { DATA_DATE, SCHEDULE_ORGS, SCHEDULE_PEOPLE, parse, workdaysBetween } from './scheduleModel';
+import {
+  addWorkdays,
+  holidayLabel,
+  holidaysInYear,
+  isHoliday,
+  isWeekend,
+  isWorkingDay,
+  nonWorkingRuns,
+  subWorkdays,
+} from './workCalendar';
 
 const APPROVED: Record<string, string> = {
   'Building Permit': '2027-01-04',
@@ -24,6 +34,60 @@ const APPROVED: Record<string, string> = {
 const err: string[] = [];
 const warn: string[] = [];
 const E = (m: string) => err.push(m);
+const W = (m: string) => warn.push(m);
+const dow = (d: string) => parse(d).toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
+/** Authored dates are not moved by the engine, so a holiday landing is a
+    fixture question, not an engine failure: surfaced, never silently fixed. */
+const authored = (what: string, d: string | null | undefined) => {
+  if (d && !isWorkingDay(parse(d))) W(`${what} ${d} is a ${isHoliday(parse(d)) ? 'holiday' : dow(d)} (non-working day)`);
+};
+
+/* ------------------------------------------------------------ work calendar */
+
+/** The approved 2026 observed calendar, stated independently of the generator
+    so a rule regression cannot approve itself. */
+const APPROVED_HOLIDAYS_2026: Record<string, string> = {
+  '2026-01-01': "New Year's Day",
+  '2026-01-19': 'Martin Luther King Jr. Day',
+  '2026-02-16': "Washington's Birthday",
+  '2026-05-25': 'Memorial Day',
+  '2026-06-19': 'Juneteenth National Independence Day',
+  '2026-07-03': 'Independence Day (observed)',
+  '2026-09-07': 'Labor Day',
+  '2026-10-12': 'Columbus Day',
+  '2026-11-11': 'Veterans Day',
+  '2026-11-26': 'Thanksgiving Day',
+  '2026-12-25': 'Christmas Day',
+};
+{
+  const gen = holidaysInYear(2026);
+  const got = new Map(gen.map((h) => [h.date, holidayLabel(h)]));
+  if (gen.length !== 11) E(`2026: ${gen.length} holidays generated, expected 11`);
+  for (const [d, name] of Object.entries(APPROVED_HOLIDAYS_2026))
+    if (got.get(d) !== name) E(`2026 calendar: ${d} should be "${name}", got "${got.get(d) ?? 'nothing'}"`);
+  for (const [d, name] of got)
+    if (!(d in APPROVED_HOLIDAYS_2026)) E(`2026 calendar: unexpected holiday ${d} "${name}"`);
+
+  // Observance: the Saturday 4th is a weekend, the Friday 3rd is the holiday.
+  if (!isWeekend(parse('2026-07-04')) || isHoliday(parse('2026-07-04'))) E('2026-07-04 must be a plain Saturday');
+  if (!isHoliday(parse('2026-07-03')) || isWorkingDay(parse('2026-07-03'))) E('2026-07-03 must be the observed holiday');
+  // Cross-year observance: Saturday 1 Jan 2028 is taken on Friday 31 Dec 2027.
+  if (!isHoliday(parse('2027-12-31'))) E("2027-12-31 must carry New Year's Day 2028 (observed)");
+  if (isHoliday(parse('2028-01-01'))) E('2028-01-01 is a Saturday, not the observed holiday');
+  // A working day is Mon-Fri AND not a holiday; Thanksgiving is a Thursday.
+  if (isWorkingDay(parse('2026-11-26'))) E('Thanksgiving 2026 counted as a working day');
+  if (!isWorkingDay(parse('2026-11-27'))) E('Friday after Thanksgiving is not a federal holiday');
+  // Arithmetic never lands on, or counts, a non-working day, and round-trips.
+  for (const d of ['2026-01-16', '2026-07-02', '2026-11-25', '2026-12-24']) {
+    const back = subWorkdays(parse(d), 5);
+    if (!isWorkingDay(back)) E(`subWorkdays(${d}, 5) landed on a non-working day`);
+    if (workdaysBetween(back, parse(d)) !== 6) E(`subWorkdays(${d}, 5) spans ${workdaysBetween(back, parse(d))} working days, expected 6`);
+    if (addWorkdays(back, 5).getTime() !== parse(d).getTime()) E(`working-day arithmetic does not round-trip at ${d}`);
+  }
+  if (workdaysBetween(parse('2026-11-23'), parse('2026-11-29')) !== 4) E('Thanksgiving week must count 4 working days');
+  if (workdaysBetween(parse('2026-07-03'), parse('2026-07-05')) !== 0) E('Independence Day weekend must count 0 working days');
+}
+
 
 if (SCHEDULE_ITEMS.length !== 15) E(`expected 15 items, got ${SCHEDULE_ITEMS.length}`);
 
@@ -33,6 +97,7 @@ for (const it of SCHEDULE_ITEMS) {
   if (!approved) E(`unknown item name: ${it.name}`);
   else if (approved !== it.requiredOnSiteDate)
     E(`${it.name}: RoS ${it.requiredOnSiteDate} != approved ${approved}`);
+  authored(`${it.name}: Required On-Site`, it.requiredOnSiteDate);
 
   const last = it.steps[it.steps.length - 1];
   if (last.family !== 'required') E(`${it.name}: terminal step is "${last.name}", not Required On-Site`);
@@ -42,6 +107,11 @@ for (const it of SCHEDULE_ITEMS) {
   for (let i = 0; i < it.steps.length; i++) {
     const s = it.steps[i];
     if (s.startDate > s.endDate) E(`${s.id}: start ${s.startDate} > end ${s.endDate}`);
+    // 66. No calculated boundary on a weekend or holiday. The Required On-Site
+    //     milestone is a calculated boundary too: it snaps back off a
+    //     non-working requirement date rather than sitting on it.
+    if (!isWorkingDay(parse(s.startDate))) E(`${s.id}: starts on a non-working day ${s.startDate} (${dow(s.startDate)})`);
+    if (!isWorkingDay(parse(s.endDate))) E(`${s.id}: ends on a non-working day ${s.endDate} (${dow(s.endDate)})`);
     if (s.kind === 'milestone' && s.durationWorkdays !== 0) E(`${s.id}: milestone has duration`);
     if (s.kind === 'phase') {
       const calc = workdaysBetween(parse(s.startDate), parse(s.endDate));
@@ -116,6 +186,11 @@ for (const it of SCHEDULE_ITEMS) {
       E(`${c.id}: requiredBy ${c.requiredBy} before package start ${it.startDate}`);
     if (c.requiredBy > it.requiredOnSiteDate)
       E(`${c.id}: requiredBy after Required On-Site`);
+    // 66. A derived requirement never falls on a non-working day.
+    if (!isWorkingDay(parse(c.requiredBy)))
+      E(`${c.id}: requiredBy ${c.requiredBy} is a non-working day (${dow(c.requiredBy)})`);
+    authored(`${c.id}: committedFor`, c.committedFor);
+    authored(`${c.id}: baselineRequiredBy`, c.baselineRequiredBy);
 
     // 4. Accountability must sit outside the GC - that is the whole point.
     if (c.ownerOrganizationId === 'gc') gcOwned++;
@@ -192,6 +267,7 @@ for (const it of SCHEDULE_ITEMS) {
   // must never be negative - a forecast that beats the requirement is simply
   // met, and is recorded as no variance.
   if (it.forecastOnSiteDate) {
+    authored(`${it.name}: forecastOnSiteDate`, it.forecastOnSiteDate);
     if (it.forecastOnSiteDate < it.requiredOnSiteDate)
       E(`${it.name}: forecast earlier than requirement - express as met, not negative`);
     const v = workdaysBetween(parse(it.requiredOnSiteDate), parse(it.forecastOnSiteDate)) - 1;
@@ -211,6 +287,9 @@ for (const it of SCHEDULE_ITEMS) {
   // THE BASELINE MUST NOT HAVE TOUCHED THE FORECAST. Same terminal date (the
   // requirement is shared), different start (that is the whole point).
   if (it.baseline) {
+    for (const [sid, d] of Object.entries(it.baseline.stepDates))
+      if (!isWorkingDay(parse(d.startDate)) || !isWorkingDay(parse(d.endDate)))
+        E(`${it.name}: baseline ${sid} lands on a non-working day`);
     const terminal = it.steps[it.steps.length - 1];
     const baseTerminal = it.baseline.stepDates[terminal.id];
     if (!baseTerminal) E(`${it.name}: baseline missing the terminal step`);
@@ -226,6 +305,7 @@ for (const it of SCHEDULE_ITEMS) {
   for (const i of it.issues) {
     if (i.scheduleItemId !== it.id) E(`${i.id}: issue on the wrong package`);
     if (i.identifiedOn > DATA_DATE) E(`${i.id}: identified after the data date`);
+    authored(`${i.id}: identifiedOn`, i.identifiedOn);
     if (!i.cause || i.cause.length < 20) E(`${i.id}: cause missing/thin`);
     if (!i.impact || i.impact.length < 20) E(`${i.id}: impact missing/thin`);
     if (/value|cost|budget|price|\$/i.test(i.cause + i.impact + i.title))
@@ -248,6 +328,7 @@ for (const it of SCHEDULE_ITEMS) {
   // Completion variance must measure against what was ORIGINALLY owed.
   for (const c of it.commitments) {
     if (c.completionVarianceWorkdays === null) continue;
+    authored(`${c.id}: completedOn`, c.completedDate);
     const owed = parse(c.baselineRequiredBy ?? c.requiredBy);
     const done = parse(c.completedDate!);
     const v = done >= owed ? workdaysBetween(owed, done) - 1 : -(workdaysBetween(done, owed) - 1);
@@ -287,6 +368,25 @@ for (const it of SCHEDULE_ITEMS) {
         `  committed ${rc.committedFor ?? '-'}  completed ${rc.completedDate}  +${rc.completionVarianceWorkdays}wd`,
       );
   }
+}
+
+authored('DATA_DATE', DATA_DATE);
+
+/* ------------------------------------------------- non-working days in view */
+
+{
+  const y0 = Number(earliest.slice(0, 4));
+  const y1 = Number(latest.slice(0, 4));
+  console.log('\nWORK CALENDAR: Mon-Fri, less observed U.S. federal holidays');
+  for (let y = y0; y <= y1; y++) {
+    console.log(`  ${y}`);
+    for (const h of holidaysInYear(y))
+      console.log(`    ${h.date}  ${dow(h.date)}  ${holidayLabel(h)}${h.actualDate ? `  [for ${h.actualDate}]` : ''}`);
+  }
+  const runs = nonWorkingRuns(parse(earliest), parse(latest));
+  const days = runs.reduce((n, r) => n + r.days, 0);
+  const hol = runs.reduce((n, r) => n + r.holidays.length, 0);
+  console.log(`  in timeline ${earliest} -> ${latest}: ${runs.length} non-working runs, ${days} days, ${hol} holidays`);
 }
 
 console.log('\nWARNINGS:', warn.length); warn.slice(0, 10).forEach((w) => console.log('  ! ' + w));

@@ -39,6 +39,25 @@
   --jpd-grid: #f1f2f4;
   --jpd-grid-strong: #e6e8ea;
   --jpd-today: #94a3b8;
+
+  /* NON-WORKING DAYS. Weekends and observed U.S. federal holidays share one
+     treatment: the question the shading answers is "is work expected on this
+     day", and the answer is the same either way. Derived from the demo's own
+     ink at very low strength rather than a second grey, and translucent so it
+     reads identically over the white row and the tinted selected row while
+     staying beneath every bar, diamond and marker. */
+  --jpd-nonworking: color-mix(in srgb, var(--jpd-text-strong) 6%, transparent);
+}
+
+/* The band is presentation only. It never intercepts the pointer, so a click
+   on a shaded day still selects the row and a bar drawn over it keeps its own
+   hit area; no border, so adjacent days merge into one quiet column. */
+.jpd-nonworking {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--jpd-nonworking);
+  pointer-events: none;
 }
 
 /* Complete work is drawn at reduced weight so the eye lands on what is still

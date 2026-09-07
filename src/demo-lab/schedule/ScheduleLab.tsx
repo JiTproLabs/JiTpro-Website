@@ -1,10 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import ProcurementScheduleScreen from './ProcurementScheduleScreen';
-import { InspectionContext } from './PhaseInspector';
+import { useState } from 'react';
+import ScheduleViewer, { CANVAS_H, CANVAS_W } from './ScheduleViewer';
 import { SCHEDULE_ITEMS } from './scheduleFixture';
 import { DATA_DATE } from './scheduleModel';
-import '../../components/demo/tokens.css';
-import './scheduleTokens.css';
 
 /**
  * PROCUREMENT SCHEDULE PROTOTYPE LAB - dev-only review workspace.
@@ -17,69 +14,23 @@ import './scheduleTokens.css';
  *   inspect  - the schedule at 1:1 with full inspection enabled
  *   embedded - the schedule at the Learn More column width, preview only
  *   compare  - the original raster beside the new prototype
+ *
+ * The schedule is presented through ScheduleViewer, the same component the
+ * unlisted team review page renders. Only the dev controls around it live
+ * here; there is no lab copy of the schedule.
  */
 
-const W = 1448;
-const H = 1086;
+const W = CANVAS_W;
+const H = CANVAS_H;
 const REF = `${import.meta.env.BASE_URL}assets/methodology/procurement-schedule-1448.webp`;
 
 type Mode = 'inspect' | 'embedded' | 'compare';
 
-function ScaledCanvas({
-  scale,
-  enabled,
-  portalTarget,
-}: {
-  scale: number;
-  enabled: boolean;
-  portalTarget: HTMLElement | null;
-}) {
-  return (
-    <div style={{ width: W * scale, height: H * scale, position: 'relative', flex: 'none' }}>
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: W,
-          height: H,
-          transform: `scale(${scale})`,
-          transformOrigin: 'top left',
-        }}
-      >
-        <InspectionContext.Provider value={{ enabled, portalTarget }}>
-          <ProcurementScheduleScreen />
-        </InspectionContext.Provider>
-      </div>
-    </div>
-  );
-}
-
 export default function ScheduleLab({ initial = 'inspect' }: { initial?: Mode }) {
   const [mode, setMode] = useState<Mode>(initial);
   const [fit, setFit] = useState(true);
-  const areaRef = useRef<HTMLDivElement>(null);
-  const portalRef = useRef<HTMLDivElement>(null);
-  const [portalEl, setPortalEl] = useState<HTMLElement | null>(null);
-  const [fitScale, setFitScale] = useState(1);
+  const [inspectScale, setInspectScale] = useState(1);
 
-  useEffect(() => setPortalEl(portalRef.current), []);
-
-  useLayoutEffect(() => {
-    const el = areaRef.current;
-    if (!el) return;
-    const measure = () => setFitScale(Math.min(1, (el.clientWidth - 32) / W));
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    window.addEventListener('resize', measure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', measure);
-    };
-  }, []);
-
-  const inspectScale = fit ? fitScale : 1;
   const mono = { fontFamily: 'ui-monospace, monospace', fontSize: 12 };
 
   return (
@@ -129,14 +80,14 @@ export default function ScheduleLab({ initial = 'inspect' }: { initial?: Mode })
         </span>
       </div>
 
-      <div ref={areaRef} style={{ padding: 16 }}>
+      <div style={{ padding: 16 }}>
         {mode === 'inspect' && (
           <>
             <Note>
               Full inspection. Hover or keyboard-focus any phase or milestone. Zoom controls are
               live. Escape dismisses the popover.
             </Note>
-            <ScaledCanvas scale={inspectScale} enabled portalTarget={portalEl} />
+            <ScheduleViewer scale={fit ? undefined : 1} enabled onScale={setInspectScale} />
           </>
         )}
 
@@ -148,7 +99,7 @@ export default function ScheduleLab({ initial = 'inspect' }: { initial?: Mode })
               enlarge target in production.
             </Note>
             <div style={{ width: 433 }}>
-              <ScaledCanvas scale={433 / W} enabled={false} portalTarget={portalEl} />
+              <ScheduleViewer scale={433 / W} enabled={false} />
             </div>
           </>
         )}
@@ -167,16 +118,12 @@ export default function ScheduleLab({ initial = 'inspect' }: { initial?: Mode })
               </div>
               <div>
                 <Cap>PROTOTYPE</Cap>
-                <ScaledCanvas scale={0.5} enabled={false} portalTarget={portalEl} />
+                <ScheduleViewer scale={0.5} enabled={false} />
               </div>
             </div>
           </>
         )}
       </div>
-
-      {/* The inspection portal target. Deliberately OUTSIDE every scaled
-          canvas, so popover typography is never multiplied by the transform. */}
-      <div ref={portalRef} />
     </div>
   );
 }

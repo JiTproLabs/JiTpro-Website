@@ -7,6 +7,7 @@ import PhaseInspector, {
   type InspectTarget,
 } from './PhaseInspector';
 import { DATA_DATE, parse, type ScheduleItem } from './scheduleModel';
+import { nonWorkingRuns } from './workCalendar';
 import './scheduleTokens.css';
 
 /**
@@ -213,7 +214,7 @@ export default function DemoGantt({
 
   /** Domain: the earliest scheduled start to the latest Required On-Site,
       padded to whole months so the header bands start cleanly. */
-  const { domainStart, pxPerDay, totalWidth, ticks } = useMemo(() => {
+  const { domainStart, pxPerDay, totalWidth, ticks, bands } = useMemo(() => {
     let min = items[0].startDate;
     let max = items[0].requiredOnSiteDate;
     for (const it of items) {
@@ -227,12 +228,25 @@ export default function DemoGantt({
 
     const days = dayDiff(ds, de);
     const ppd = zoom === 'quarters' ? viewportWidth / days : PX_PER_DAY[zoom];
+    /**
+     * NON-WORKING DAYS - weekends and observed federal holidays - from the
+     * same calendar the backward pass refuses to count, positioned through
+     * the same day scale as the bars. Consecutive days are one band, so a
+     * Monday holiday joins its weekend; at Days zoom each date still sits in
+     * its own column because the band is `days * ppd` wide, never authored.
+     */
+    const bands = nonWorkingRuns(ds, de).map((r) => ({
+      key: r.start.toISOString(),
+      left: dayDiff(ds, r.start) * ppd,
+      width: r.days * ppd,
+    }));
     return {
       domainStart: ds,
       domainEnd: de,
       pxPerDay: ppd,
       totalWidth: days * ppd,
       ticks: buildTicks(ds, de, zoom),
+      bands,
     };
   }, [items, zoom, viewportWidth]);
 
@@ -517,6 +531,21 @@ export default function DemoGantt({
                     cursor: 'pointer',
                   }}
                 >
+                  {/* NON-WORKING DAYS. Drawn inside the row, beneath its
+                      marks and above its background, so the shading survives
+                      the selected row's tint instead of being covered by it.
+                      Rows are contiguous, so the bands read as one column
+                      through the whole grid. Never in the data table on the
+                      left: this is a statement about time, not about the
+                      package. */}
+                  {bands.map((b) => (
+                    <span
+                      key={b.key}
+                      className="jpd-nonworking"
+                      aria-hidden="true"
+                      style={{ left: b.left, width: b.width }}
+                    />
+                  ))}
                   {it.steps.map((s) => {
                     const isMilestone = s.kind === 'milestone';
                     const isRos = s.family === 'required';
