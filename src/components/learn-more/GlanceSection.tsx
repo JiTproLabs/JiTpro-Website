@@ -5,11 +5,15 @@ import { TONE } from './tone';
 const surface = 'elevated' as const;
 
 /**
- * 00 - JiTpro at a glance.
+ * 00 - What JiTpro is.
  *
  * The whole offer in six items, for the reader who will decide from this
  * section alone whether the rest of the page is worth their time. It is
  * scannable by construction: a short label and one sentence, nothing longer.
+ *
+ * It is the page's definitional answer (revised 2026-09-04). One of the six
+ * items says what JiTpro is NOT, because the reader arrives holding several
+ * wrong guesses and removing them is faster than arguing around them.
  *
  * NOT CARDS (Section 48.2). These are six related facts, not six discrete
  * units, so they take hairline separation and whitespace. A card wall here

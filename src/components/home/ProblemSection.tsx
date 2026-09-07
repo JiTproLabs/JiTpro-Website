@@ -17,7 +17,13 @@ import DependencyChain from './DependencyChain';
  * the shrinking option set costs, not how the condition reached the field.
  *
  * HIERARCHY (§7.7, one primary statement per surface): the six-month question
- * is the section's only h2. "The problem gets expensive before it becomes
+ * is the section's only h2. The centered figure-statement block is now THREE
+ * elements rather than the approved pair (statement, cost paragraph, terminal
+ * line — Decision Log 2026-09-04). It creates no new register: all three sit
+ * in registers this section already used, and the two balanced statements keep
+ * their 46ch `text-balance` measure while the running paragraph between them
+ * takes a wider one, because centered running copy set to a statement measure
+ * reads as a stack of fragments. "The problem gets expensive before it becomes
  * obvious." — movement B's former section heading — steps down to the existing
  * full-width-statement register (1.5/1.75/2 bold), above its secondary heading
  * and body. No new register is created.
@@ -29,8 +35,26 @@ import DependencyChain from './DependencyChain';
  *
  * COPY BUDGET (approved plan, 2026-08-26): ~175 narrative words for the whole
  * section. Chain labels, the ladder's tier titles and one-line bodies, and
- * captions are visual labels outside the budget. Nothing may be added back
- * that re-explains what the figures already show.
+ * captions are visual labels outside the budget.
+ *
+ * THE BUDGET WAS RAISED ON 2026-09-04 (Decision Log) by two supplied
+ * paragraphs, and the rule it protected is now carried explicitly instead:
+ *
+ *   Movement A gains the attention paragraph ("The challenge isn't knowing
+ *   that information is missing…"), which reframes the section from DETECTION
+ *   to PRIORITISATION. That is the movement's argument now: the team knows
+ *   things are open; what they cannot see is which one is about to matter.
+ *
+ *   The centered figure-statement block gains the cost paragraph ("When
+ *   critical information gets attention too late…").
+ *
+ * KNOWN OVERLAP, ACCEPTED DELIBERATELY: the cost paragraph names expediting,
+ * resequencing, and crews waiting, which the warming ladder below and movement
+ * B's own paragraph already carry. It was supplied as written and approved
+ * with the overlap understood. Nothing FURTHER may be added to movement A that
+ * re-narrates the ladder or the option-set economics, and movement B's
+ * paragraph is the place to cut if the repetition is ever trimmed rather than
+ * this one.
  *
  * The tracked example remains custom steel windows, never a long-lead story,
  * and no lead time may be stated anywhere in the section (§20.1).
@@ -87,13 +111,19 @@ export default function ProblemSection() {
         <div className="lg:relative lg:grid lg:grid-cols-[minmax(0,11fr)_minmax(0,9fr)] lg:gap-x-14 lg:overflow-hidden xl:gap-x-16">
           <div className="lg:relative lg:z-10">
             <h2 className="max-w-[26ch] font-heading text-[1.875rem] font-extrabold leading-[1.12] tracking-[-0.02em] text-balance text-jp-text-primary sm:text-[2.5rem] lg:text-[3rem]">
-              What&apos;s the one thing your team can&apos;t see today that could stop work in the field six months from now?
+              What&apos;s the one thing your team isn&apos;t focused on today that will stop work in the field six months from now?
             </h2>
 
             <div className="mt-6 max-w-[62ch] space-y-5 text-[1.0625rem] leading-[1.7] text-jp-text-secondary sm:text-[1.125rem] lg:mt-8 lg:text-[1.1875rem]">
               <p>The problem that stops work six months from now often already exists today.</p>
               <p>
                 A missing selection. An unresolved detail. An undefined product. A scope gap. A decision no one knows they own.
+              </p>
+              <p>
+                The challenge isn&apos;t knowing that information is missing. It&apos;s knowing{' '}
+                <strong className="font-semibold text-jp-text-primary">
+                  what needs attention now, what can wait, and when waiting becomes a problem.
+                </strong>
               </p>
             </div>
           </div>
@@ -153,7 +183,16 @@ export default function ProblemSection() {
             <h3 className="mx-auto max-w-[46ch] font-heading text-[1.3125rem] font-semibold leading-snug text-balance text-jp-text-primary sm:text-[1.4375rem]">
               Preventable schedule failures destroy margin.
             </h3>
-            <p className="mx-auto mt-4 max-w-[46ch] text-[1.0625rem] leading-[1.7] text-balance text-jp-text-secondary sm:text-[1.125rem]">
+            {/* The cost of late attention, added 2026-09-04. It sits between
+                the statement and the terminal line at the section's existing
+                secondary body register, on a wider measure than the two
+                balanced statements around it: it is running copy, and holding
+                it at 46ch with `text-balance` would set five sentences as a
+                stack of short centered lines. */}
+            <p className="mx-auto mt-5 max-w-[58ch] text-[1.0625rem] leading-[1.7] text-jp-text-secondary sm:text-[1.125rem]">
+              When critical information gets attention too late, the options disappear. Decisions get rushed. Products get expedited. Work gets resequenced. Crews wait. And problems that could have been resolved months earlier become expensive field problems.
+            </p>
+            <p className="mx-auto mt-5 max-w-[46ch] text-[1.0625rem] leading-[1.7] text-balance text-jp-text-secondary sm:text-[1.125rem]">
               The schedule cannot hold if what the field needs arrives late or wrong.
             </p>
           </div>

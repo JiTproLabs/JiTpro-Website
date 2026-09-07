@@ -9,7 +9,8 @@ const surface = 'dark' as const;
  *
  * The section whose only job is to make the next step small. Everything here
  * is subtraction: what the reader does NOT have to do in order to find out
- * whether this works.
+ * whether this works. The governing sentence, added 2026-09-04, is that you do
+ * not have to change your company to find out.
  *
  * THE PAGE'S SECOND PRIMARY ACTION (Section 50.5). It carries the same label
  * and the same destination as the opening's and the close's, because they are
@@ -54,10 +55,10 @@ export default function OneProjectSection() {
       <SectionHeader
         section={section}
         surface={surface}
-        heading="One project is the whole commitment."
+        heading="You do not have to change your company to find out."
         lede={
           <p>
-            You do not have to believe any of this on the strength of a page. Pick one upcoming project and let it be tested on work you already know, with people you already trust to tell you the truth about it.
+            One project is the whole commitment. Pick an upcoming one and let JiTpro be tested on work you already know, with people you already trust to tell you the truth about it.
           </p>
         }
       />
@@ -84,7 +85,7 @@ export default function OneProjectSection() {
           Start with one upcoming project. Judge it on that project.
         </p>
         <p className={`mt-6 max-w-[58ch] text-[1.0625rem] leading-[1.7] sm:text-[1.125rem] ${tone.body}`}>
-          JiTpro works alongside your project team. We apply the structure, your team keeps every relationship it already owns, and you evaluate the value on real work rather than on a demonstration.
+          JiTpro works alongside your project team. We build the structure, your team keeps every relationship it already owns, and you judge the value on real work rather than on a demonstration.
         </p>
 
         <div className="mt-10">

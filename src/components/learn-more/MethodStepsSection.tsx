@@ -5,7 +5,14 @@ import { TONE } from './tone';
 const surface = 'light' as const;
 
 /**
- * 04 - The JiTpro method.
+ * 03 - What JiTpro actually does.
+ *
+ * MOVED FROM 04 TO 03 ON 2026-09-04, ahead of the JIT section that used to
+ * precede it. The reader asks what we do on their project before they ask
+ * where the name came from, and the backward chain in 04 is far easier to read
+ * once these five steps have named the work. Both sections sit on the light
+ * act surface, so the swap reorders two sections and changes nothing about the
+ * page's acts (Section 50.7).
  *
  * The homepage teaches the method through an interactive stage rail
  * (Section 46.8). THIS PAGE DELIBERATELY DOES NOT REPEAT IT. A reader on a
@@ -25,17 +32,17 @@ const surface = 'light' as const;
  */
 export default function MethodStepsSection() {
   const tone = TONE[surface];
-  const section = SECTION['04'];
+  const section = SECTION['03'];
 
   return (
     <NumberedSection section={section} surface={surface}>
       <SectionHeader
         section={section}
         surface={surface}
-        heading="Five steps, run on your project, in this order."
+        heading="Understand, find, assign, plan, track."
         lede={
           <p>
-            JiTpro works alongside your construction management team. Your team keeps every project relationship it already owns. What changes is that the work those relationships depend on becomes explicit, dated, and visible.
+            Five steps, run on your actual project, in this order. JiTpro works alongside your construction management team, and your team keeps every project relationship it already owns. What changes is that the work those relationships depend on becomes explicit, dated, and visible.
           </p>
         }
       />

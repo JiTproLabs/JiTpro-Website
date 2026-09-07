@@ -1,0 +1,5 @@
+# Unlisted team review pages. Cloudflare Pages applies these on every
+# deployment of this build; other hosts ignore this file. The page also sets
+# <meta name="robots"> itself, so the directive does not depend on the host.
+/review/*
+  X-Robots-Tag: noindex, nofollow

@@ -5,10 +5,15 @@ import { TONE } from './tone';
 const surface = 'elevated' as const;
 
 /**
- * 09 - Who JiTpro is for.
+ * 09 - Where JiTpro fits.
  *
- * Qualification, and the section most easily written badly. Two rules govern
- * it (Section 50.2):
+ * Qualification, and the section most easily written badly. RE-AIMED
+ * 2026-09-04 onto the one distinction that matters commercially: JiTpro is
+ * preventive, and it is not a rescue service for a project already in
+ * recovery. A reader who brings us the wrong project is a worse outcome than a
+ * reader who brings us none, so the second column says so first and plainly.
+ *
+ * Two rules still govern it (Section 50.2):
  *
  *   IT DISQUALIFIES BY POSTURE, NEVER BY CHARACTER. Every line in the second
  *   column describes a way of operating, in the passive voice, without a
@@ -30,7 +35,7 @@ export default function WhoSection() {
   const section = SECTION['09'];
 
   const columns = [
-    { heading: 'JiTpro is for contractors where:', items: FIT_FOR },
+    { heading: 'JiTpro fits where:', items: FIT_FOR },
     { heading: 'JiTpro is probably not the right fit where:', items: FIT_NOT_FOR },
   ];
 
@@ -39,10 +44,10 @@ export default function WhoSection() {
       <SectionHeader
         section={section}
         surface={surface}
-        heading="This is not for every contractor."
+        heading="This works best before a project is in trouble."
         lede={
           <p>
-            The method asks something of the team running it: that dependencies get named early, and that people accept ownership of things they cannot fully control. That is a reasonable trade for some companies and not for others.
+            JiTpro is preventive. It is at its most useful on a project early enough that decisions, information, and commitments can still be worked, for a contractor who has paid for preventable problems before and does not want to repeat it on the next one.
           </p>
         }
       />

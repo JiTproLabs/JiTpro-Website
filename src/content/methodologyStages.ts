@@ -44,7 +44,7 @@ export const METHODOLOGY_STAGES: MethodologyStage[] = [
     body: 'We validate the contractor’s existing scope against the project documentation to determine whether the work required to complete the project has been identified and covered.',
     demo: {
       file: 'scope-validation',
-      alt: 'The JiTpro Scope Validation Report for a residential project: 428 scope items checked against drawings, contracts and subcontracts, RFIs and meeting records, each marked validated, partial, single-source or conflicting.',
+      alt: 'The JiTpro Scope Validation Report for a residential project: 428 scope items checked against 64 drawings, 31 contracts and subcontracts, 14 RFIs, 9 meeting records and 8 project communications — and no specifications at all — each item marked fully validated, partially validated, single-source or conflicting, with a detail panel tracing the exterior window assemblies to every source that describes them.',
     },
   },
   {
@@ -53,7 +53,7 @@ export const METHODOLOGY_STAGES: MethodologyStage[] = [
     body: 'We identify missing, unclear, conflicting, or uncovered scope—and the decisions, information, and responsibilities that must be resolved before they become constraints against the schedule.',
     demo: {
       file: 'scope-gap-analysis',
-      alt: 'The JiTpro Scope Gap Analysis Report for the same project: 34 gaps sorted into definition, responsibility and interface types, each carrying a responsible party, a required-by date and an impact level.',
+      alt: 'The JiTpro Scope Gap Analysis Report for the same project: 34 gaps identified across the 428 scope items reviewed, sorted into definition, responsibility and interface types, with fifteen items listed — gaps alongside scope already found sufficiently defined — each carrying a responsible party, a required-by date and an impact level, and a detail panel setting out one gap’s finding, why it matters and what must be resolved.',
     },
   },
   {
@@ -71,7 +71,7 @@ export const METHODOLOGY_STAGES: MethodologyStage[] = [
     body: 'We identify and register the products, materials, and services the project will need, connecting what must arrive on site to the decisions, approvals, and Commitments required to get it there.',
     demo: {
       file: 'product-register',
-      alt: 'The JiTpro Product Register for the same project: 246 products, materials and equipment, each with a category, trade, supplier, approval status, lead time and required-on-site date, and a detail panel linking the aluminum window system to the Commitments that get it there.',
+      alt: 'The JiTpro Product Register for the same project: 246 products, materials and equipment, each with a category, trade, supplier, status, lead time, required-on-site date and source drawing, and a detail panel tracing the heritage steel windows to their supplier, their procurement dates and the Commitments they depend on.',
     },
   },
   {

@@ -4,14 +4,19 @@ import { TONE } from './tone';
 
 const surface = 'elevated' as const;
 
-const WITHOUT_LABEL = 'Without early control';
-const WITH_LABEL = 'With early control';
+const WITHOUT_LABEL = 'Found in the field';
+const WITH_LABEL = 'Found early';
 
 /**
- * 06 - What changes when you know earlier.
+ * 06 - What changes.
  *
  * The second paired-condition comparison (Section 50.6), and the page's turn
- * into act three. Same rules as section 02: the two columns are
+ * into act three. CUT FROM EIGHT ROWS TO FOUR ON 2026-09-04, and the four are
+ * the four outcomes the section is actually arguing: problems become visible
+ * earlier, accountability becomes explicit, the team keeps more options, and
+ * margin is not forced to be the first recovery tool. The rows that went were
+ * four more illustrations of those same four ideas, and the reader was being
+ * asked to read the argument twice. Same rules as section 02: the two columns are
  * typographically identical, and colour carries none of the contrast. Neither
  * column is a state, so neither takes a semantic token; --jp-success in
  * particular has one meaning in this system (confirmed successful completion,
@@ -45,7 +50,7 @@ export default function ChangesSection() {
         heading="The same problem, found at two different times."
         lede={
           <p>
-            Nothing below changes what the problem is. What changes is the moment you learn about it, and therefore how many ways you still have to deal with it.
+            Nothing below changes what the problem is. What changes is the moment your team learns about it, and therefore how many ways they still have to deal with it.
           </p>
         }
       />
@@ -90,7 +95,7 @@ export default function ChangesSection() {
       </ul>
 
       <p className={`mt-10 max-w-[62ch] text-[1.0625rem] leading-[1.7] sm:text-[1.125rem] ${tone.body}`}>
-        This is not a promise of a perfect project. Construction does not offer one. What early control offers is more time, clearer responsibility, and far fewer preventable problems arriving where they are most expensive to fix.
+        None of this is a promise of a perfect project. Construction does not offer one, and finding a problem early does not make it go away. Your options do. What earlier visibility and explicit accountability give your team is time, and a far better chance to prevent or soften the recovery that would otherwise be paid for out of margin.
       </p>
     </NumberedSection>
   );

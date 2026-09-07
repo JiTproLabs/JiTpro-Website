@@ -3,8 +3,8 @@ import GlanceSection from '../components/learn-more/GlanceSection';
 import GuideNav from '../components/learn-more/GuideNav';
 import ChaosSection from '../components/learn-more/ChaosSection';
 import ControlSection from '../components/learn-more/ControlSection';
-import BackwardSection from '../components/learn-more/BackwardSection';
 import MethodStepsSection from '../components/learn-more/MethodStepsSection';
+import BackwardSection from '../components/learn-more/BackwardSection';
 import ProducesSection from '../components/learn-more/ProducesSection';
 import ChangesSection from '../components/learn-more/ChangesSection';
 import OneProjectSection from '../components/learn-more/OneProjectSection';
@@ -21,27 +21,38 @@ import { SECTION_SCROLL_MT } from '../components/learn-more/guideLayout';
  * approved 2026-09-03).
  *
  * WHERE THE READER COMES FROM. This is the destination of the homepage
- * secondary action "Or click here to learn more", which shipped with no
- * destination assigned. The reader arriving here has recognized the problem in
- * the homepage hero and is NOT yet ready to click "Start with one project".
- * The page's whole job is to close that gap, in order:
+ * secondary action "Or click here to learn more". The reader arriving here has
+ * recognized the problem on the homepage and is NOT yet ready to click "Start
+ * with one project".
  *
- *   this sounds like my problem              hero, 00, 01
- *   I understand why this keeps happening    02
- *   I understand what JiTpro changes         03, 04, 05, 06
- *   I can picture it on one of my projects   07, 08
- *   starting with one project is reasonable  09, 10, 11
+ * THE PAGE DOES NOT RESTART THE SALES ARGUMENT (revised 2026-09-04). The
+ * homepage has already established the pain and the point of view. This page
+ * answers the questions that come next, in the order a contractor asks them:
  *
- * A section that does not move the reader along that line does not belong on
- * this page, whatever else it might be worth saying.
+ *   what exactly is JiTpro                   hero, 00
+ *   why would I need it                      01, 02
+ *   what do you do on my project             03
+ *   what does the JIT mean                   04
+ *   what do I actually get                   05
+ *   what changes for my team                 06
+ *   how do I start, and is it for me         07, 08, 09
+ *   why should I believe you                 10
+ *   the close                                11
+ *
+ * A section that does not answer one of those questions does not belong on
+ * this page, whatever else it might be worth saying. The previous build spent
+ * sections 01 through 03 on three adjacent versions of the same argument
+ * before it reached the method; it now reaches the method at 03.
  *
  * THE THREE ACTS, carried by surface (Section 50.7), and identical in shape to
  * the homepage's so the two read as one product:
  *
  *   ACT ONE   --jp-background, with 00 on the elevated band
- *             hero, 00, the guide, 01, 02 - the condition and the reframe
+ *             hero, 00, the guide, 01, 02 - what it is, and why it is needed
  *   ACT TWO   --jp-surface-light
- *             03, 04, 05 - the philosophy, the method, what it produces
+ *             03, 04, 05 - the method, the philosophy behind it, what it
+ *             produces. 03 and 04 swapped places on 2026-09-04; both are on
+ *             this surface, so the acts are unchanged.
  *   ACT THREE --jp-surface, then --jp-background
  *             06 - 11 - what changes, the small first step, fit, trust, action
  *
@@ -104,8 +115,8 @@ export default function LearnMore() {
           <ChaosSection />
           <ControlSection />
 
-          <BackwardSection />
           <MethodStepsSection />
+          <BackwardSection />
           <ProducesSection />
 
           <ChangesSection />

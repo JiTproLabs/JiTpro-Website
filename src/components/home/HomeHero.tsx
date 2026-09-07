@@ -14,7 +14,7 @@ import { Link } from 'react-router-dom';
  *   SWOOSH    the approved hand-drawn underline, geometry unchanged
  *   COPY      the growth condition as one declarative sub-headline (the
  *             upstream work gets harder to keep ahead of the field), then the
- *             on-ramp into the action: JiTpro helps you stay ahead.
+ *             on-ramp into the action: JiTpro puts you ahead.
  *             (Decision Log 2026-09-03, the copy replacement.)
  *   CTA       unchanged, closing on the composition's own centre axis
  *
@@ -30,8 +30,11 @@ import { Link } from 'react-router-dom';
  * victim of chaos, never disorganized. The claim is that the industry
  * TOLERATES a cost it need not, and that we refuse to. "We refuse" is the
  * brand's standing position, not a promise about the reader's project, and it
- * must never be rewritten into one; "helps you stay ahead" is assistance,
- * never a guarantee.
+ * must never be rewritten into one. "Puts you ahead" (2026-09-04, superseding
+ * "helps you stay ahead") is a statement of what the engagement is for, and it
+ * is NOT a warranty: it says nothing about delivery, conformance, or a
+ * schedule that holds, and it must never be extended into one. The §20.1
+ * prohibitions are unchanged and still bind every other line on this surface.
  *
  * ALIGNMENT: eyebrow, H1, underline and CTA hold the centre axis (§48.6 hero
  * allowance). The supporting copy between them is centered in a 52ch column
@@ -94,25 +97,32 @@ export default function HomeHero() {
           field from reading as flat around the centered headline. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         {/* The house render (§48.8 bounded exception, Decision Log
-            2026-09-03). Bottom-anchored and full-bleed so it reads as the
-            hero's own environment rather than a placed image; the top-edge
-            alpha mask dissolves it into the dark field well below the section
-            top, and `lighten` — contained by the section's isolate — melts
-            the render's night sky into --jp-background so only the lit
-            architecture lifts out of the page's own dark. The crop is
-            per-breakpoint: the wide composition at desktop, and at narrow
-            widths a taller slice keyed to the render's central illuminated
-            mass, so the house stays recognizable rather than becoming an
-            accidental sliver of the desktop frame. Resting opacity is the
-            restrained ceiling that keeps the copy in charge (§48.7); the
-            reveal releases to it (only a `from` frame), so reduced motion
-            shows this exact state, static. */}
+            2026-09-03, as amended 2026-09-04). Bottom-anchored and centered.
+            THE RENDER IS NEVER CROPPED: the layer is sized by the image's own
+            aspect ratio (`w-full h-auto` on the intrinsic 1600×954), so the
+            whole house is present at every width and the architecture reads
+            as one composition rather than a slice of one. Below `lg` it runs
+            full-bleed; from `lg` up its width is capped, so on wide and
+            ultrawide monitors the house stops growing and --jp-background
+            simply extends past its left and right edges (Decision Log
+            2026-09-04). It is never stretched — the intrinsic ratio is the
+            only ratio it is ever drawn at.
+
+            `lighten` — contained by the section's isolate — melts the
+            render's night sky and dark foreground into --jp-background, so
+            only the lit architecture lifts out of the page's own dark and the
+            capped layer has no visible edge against the field. The short
+            top-edge alpha mask softens the roofline into that field without
+            eating the upper storey. Resting opacity is the restrained ceiling
+            that keeps the copy in charge (§48.7); the reveal releases to it
+            (only a `from` frame), so reduced motion shows this exact state,
+            static. */}
         <div
-          className={`absolute inset-x-0 bottom-0 h-[52%] opacity-55 mix-blend-lighten sm:h-[62%] lg:h-[86%] ${animateHero ? 'hero-house-reveal' : ''}`}
+          className={`absolute inset-x-0 bottom-0 mx-auto w-full opacity-55 mix-blend-lighten lg:max-w-[1120px] ${animateHero ? 'hero-house-reveal' : ''}`}
           style={
             {
-              maskImage: 'linear-gradient(180deg, transparent 0%, black 44%)',
-              WebkitMaskImage: 'linear-gradient(180deg, transparent 0%, black 44%)',
+              maskImage: 'linear-gradient(180deg, transparent 0%, black 18%)',
+              WebkitMaskImage: 'linear-gradient(180deg, transparent 0%, black 18%)',
               '--hero-delay': `${HERO_HOUSE_DELAY_MS}ms`,
             } as CSSProperties
           }
@@ -120,25 +130,35 @@ export default function HomeHero() {
           <img
             src={`${import.meta.env.BASE_URL}assets/hero/house-render-1600.webp`}
             srcSet={`${import.meta.env.BASE_URL}assets/hero/house-render-800.webp 800w, ${import.meta.env.BASE_URL}assets/hero/house-render-1600.webp 1600w`}
-            sizes="100vw"
+            sizes="(min-width: 1024px) 1120px, 100vw"
             width={1600}
             height={954}
             alt=""
             loading="eager"
             decoding="async"
-            className="h-full w-full object-cover object-[42%_68%] lg:object-[50%_58%]"
+            className="block h-auto w-full"
           />
         </div>
         <div className="absolute inset-0 bg-[radial-gradient(52%_48%_at_84%_2%,color-mix(in_oklab,var(--jp-brand-amber)_13%,transparent),transparent_68%)]" />
         {/* The scrim that keeps the centered copy column and the CTA on a
-            dark ground over the house — the render's strongest details stay
-            on the flanks. */}
-        <div className="absolute inset-0 bg-[radial-gradient(58%_56%_at_50%_46%,color-mix(in_oklab,var(--jp-background)_74%,transparent),transparent_100%)]" />
+            dark ground over the house. NARROWED 2026-09-04: the render is now
+            drawn whole rather than cropped, so the scrim is pulled in
+            horizontally and lengthened vertically — it tracks the copy column
+            it exists for instead of washing across the house's wings, and
+            gains density at the centre to hold contrast behind the text now
+            that the render's lit core sits directly under it. */}
+        <div className="absolute inset-0 bg-[radial-gradient(44%_60%_at_50%_44%,color-mix(in_oklab,var(--jp-background)_80%,transparent),transparent_100%)]" />
         <div
           className="absolute inset-0 opacity-[0.05]"
           style={{ backgroundImage: `url("${HERO_NOISE}")` }}
         />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,transparent_46%,color-mix(in_oklab,var(--jp-background)_70%,transparent)_80%,var(--jp-background)_100%)]" />
+        {/* The hand-off to the section below. HELD LOWER 2026-09-04: it still
+            resolves fully to --jp-background at the section's last pixel, so
+            the seam stays invisible, but it now does that work inside the
+            final quarter instead of climbing halfway up the surface — at
+            narrow widths the whole house sits in the lower band, and the old
+            ramp erased it. */}
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,transparent_62%,color-mix(in_oklab,var(--jp-background)_58%,transparent)_86%,var(--jp-background)_100%)]" />
       </div>
       <div
         aria-hidden="true"
@@ -221,7 +241,7 @@ export default function HomeHero() {
             As construction companies grow, keeping every decision, approval, product, material, and service ahead of the field gets harder.
           </p>
           <p className="font-semibold text-jp-text-primary">
-            JiTpro helps you stay ahead.
+            JiTpro puts you ahead.
           </p>
         </div>
 

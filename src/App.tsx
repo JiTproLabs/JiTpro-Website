@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import LearnMore from './pages/LearnMore';
@@ -34,6 +35,31 @@ import AdminApproved from './pages/AdminApproved';
 import BrokenBeforeJobStarts from './pages/BrokenBeforeJobStarts';
 import TheRealProcurementTimeline from './pages/TheRealProcurementTimeline';
 import ProcurementSchedule from './pages/ProcurementSchedule';
+
+/* PROTOTYPE LAB - dev-only. Lazy so its CSS (which pulls a Google font) lands
+   in a separate chunk instead of the production stylesheet. The lab routes are
+   also DEV-gated, so the lab harness chunks are never requested in a
+   production build. The procurement schedule itself is not lab-only: it lives
+   in src/components/demo/screens/procurement-schedule, is a registered
+   representative screen (homepage, Learn More), and also ships through the
+   unlisted team review route below. One implementation; the lab is only its
+   workbench. */
+const DemoLab = lazy(() => import('./demo-lab/DemoLab'));
+const TableFidelityTest = lazy(() => import('./demo-lab/TableFidelityTest'));
+const ScheduleLab = lazy(() => import('./demo-lab/schedule/ScheduleLab'));
+const ScreenCompareLab = lazy(() => import('./demo-lab/ScreenCompareLab'));
+const ProductRegisterScreen = lazy(() => import('./components/demo/screens/ProductRegisterScreen'));
+const CommitmentRegisterLive = lazy(() => import('./components/demo/screens/CommitmentRegisterScreen'));
+const ScopeGapAnalysisScreen = lazy(() => import('./components/demo/screens/ScopeGapAnalysisScreen'));
+const ScopeValidationScreen = lazy(() => import('./components/demo/screens/ScopeValidationScreen'));
+
+/* TEAM REVIEW - unlisted, in the production build. The procurement schedule
+   prototype behind a plain URL the team can open, rendering the same
+   ScheduleViewer the lab does, so there is one schedule and nothing to drift.
+   Lazy so the schedule and its stylesheet stay in their own chunk. Not linked
+   from any surface; the page marks itself noindex, nofollow. */
+const ProcurementScheduleReview = lazy(() => import('./pages/review/ProcurementScheduleReview'));
+
 import HomepageConcept from './pages/HomepageConcept';
 import CompanyProjectHealth from './pages/CompanyProjectHealth';
 
@@ -50,6 +76,12 @@ function App() {
         <Route path="/broken-before-the-job-starts" element={<BrokenBeforeJobStarts />} />
         <Route path="/the-real-procurement-timeline" element={<TheRealProcurementTimeline />} />
 
+        {/* Unlisted team review of the procurement schedule prototype — standalone, not in nav, noindex */}
+        <Route
+          path="/review/procurement-schedule"
+          element={<Suspense fallback={null}><ProcurementScheduleReview /></Suspense>}
+        />
+
         {/* Investor sub-site — own nav/footer */}
         <Route path="/investor" element={<InvestorLayout />}>
           <Route index element={<InvestorHome />} />
@@ -61,6 +93,30 @@ function App() {
           <Route path="appendix" element={<InvestorAppendix />} />
           <Route path="deck" element={<InvestorDeckPage />} />
         </Route>
+
+        {/* PROTOTYPE LAB - dev-only, never built into production.
+            Temporary visual-validation routes for the JiTpro demo UI
+            migration. `import.meta.env.DEV` is statically replaced at build
+            time, so Rollup drops both these routes and the lazily-imported
+            lab bundle from the production output entirely. Not in navigation,
+            not in the sitemap, not linked from any surface. */}
+        {import.meta.env.DEV && (
+          <>
+            <Route path="/demo-lab/commitment-register-a" element={<Suspense fallback={null}><DemoLab initial="a" /></Suspense>} />
+            <Route path="/demo-lab/commitment-register-b" element={<Suspense fallback={null}><DemoLab initial="b" /></Suspense>} />
+            <Route path="/demo-lab/commitment-register-compare" element={<Suspense fallback={null}><DemoLab initial="overlay-a" /></Suspense>} />
+            <Route path="/demo-lab/table-test" element={<Suspense fallback={null}><TableFidelityTest /></Suspense>} />
+            <Route path="/demo-lab/procurement-schedule" element={<Suspense fallback={null}><ScheduleLab initial="inspect" /></Suspense>} />
+            <Route path="/demo-lab/procurement-schedule-compare" element={<Suspense fallback={null}><ScheduleLab initial="compare" /></Suspense>} />
+            <Route path="/demo-lab/product-register" element={<Suspense fallback={null}><ScreenCompareLab component={ProductRegisterScreen} reference="product-register" title="Product Register" /></Suspense>} />
+            <Route path="/demo-lab/product-register-compare" element={<Suspense fallback={null}><ScreenCompareLab component={ProductRegisterScreen} reference="product-register" title="Product Register" initial="side" /></Suspense>} />
+            <Route path="/demo-lab/commitment-register-live" element={<Suspense fallback={null}><ScreenCompareLab component={CommitmentRegisterLive} reference="commitment-capture" title="Commitment Register (production)" initial="live" /></Suspense>} />
+            <Route path="/demo-lab/scope-gap-analysis" element={<Suspense fallback={null}><ScreenCompareLab component={ScopeGapAnalysisScreen} reference="scope-gap-analysis" title="Scope Gap Analysis" /></Suspense>} />
+            <Route path="/demo-lab/scope-gap-analysis-compare" element={<Suspense fallback={null}><ScreenCompareLab component={ScopeGapAnalysisScreen} reference="scope-gap-analysis" title="Scope Gap Analysis" initial="side" /></Suspense>} />
+            <Route path="/demo-lab/scope-validation" element={<Suspense fallback={null}><ScreenCompareLab component={ScopeValidationScreen} reference="scope-validation" title="Scope Validation" /></Suspense>} />
+            <Route path="/demo-lab/scope-validation-compare" element={<Suspense fallback={null}><ScreenCompareLab component={ScopeValidationScreen} reference="scope-validation" title="Scope Validation" initial="side" /></Suspense>} />
+          </>
+        )}
 
         {/* Main site */}
         <Route element={<MainLayout />}>

@@ -1,0 +1,307 @@
+/* --------------------------------------------------------------------------
+   JiTpro DEMO UI TOKENS - the bounded `--jpd-*` product-demo palette.
+
+   Approved as a scoped namespace (Visual Fidelity Implementation Standard,
+   Part 2 Section 16) precisely BECAUSE it is not the marketing palette: these
+   are a different product's application colours - greens, ambers, reds and
+   neutral surfaces that the `--jp-*` system was never designed to express.
+   Forcing the marketing tokens to carry application semantics, or scattering
+   raw hex through the demo components, are the two failure modes this file
+   exists to prevent (Design System Sections 45, 8.9).
+
+   Every value is measured from `assets-src/methodology/commitment-capture.png`
+   and approved as Visual Master v1. Scoped under `.jpd` so nothing here can
+   reach a marketing surface.
+
+   TYPEFACE: Inter Tight, already loaded site-wide by `src/index.css`. Weights
+   400 and 500 were added to that import for this system.
+   -------------------------------------------------------------------------- */
+
+.jpd {
+  /* Neutrals (measured from the reference render) */
+  --jpd-nav-bg-start: #071420;
+  --jpd-nav-bg-end: #02101b;
+  --jpd-nav-active-bg: #172530;
+  --jpd-nav-divider: #1f2d37;
+  --jpd-nav-text: #ffffff;
+  --jpd-nav-text-dim: #eceded;
+
+  --jpd-surface: #fefefe;
+  --jpd-surface-sunken: #fbfbfb;
+  --jpd-surface-header: #f7f7f7;
+
+  --jpd-border: #edeff1;
+  --jpd-border-subtle: #f0f0f1;
+  --jpd-divider: #f0f0f0;
+
+  --jpd-text: #0a0a0a;
+  --jpd-text-strong: #232424;
+  --jpd-text-body: #313134;
+  --jpd-text-secondary: #41454f;
+  --jpd-text-muted: #86868b;
+
+  /* Status. Semantically distinct by design. */
+  --jpd-ok-bg: #e9f6e4;
+  --jpd-ok-border: #cfe8c6;
+  --jpd-ok-fg: #217a3c;
+  --jpd-warn-bg: #fef2e1;
+  --jpd-warn-border: #fadfba;
+  --jpd-warn-fg: #b7791f;
+  --jpd-warn-dot: #f59e0b;
+  --jpd-error-bg: #fee8e8;
+  --jpd-error-border: #f8cdcd;
+  --jpd-error-fg: #d13438;
+  --jpd-neutral-bg: #f1f1f1;
+
+  /* RECOMMENDED FACE: Inter Tight. Chosen on rendered result, not forensic
+     glyph identification (which had pointed at Urbanist). It is a neutral
+     grotesque rather than a geometric display face, which is what the
+     reference actually reads as in a dense table; it is the narrowest neutral
+     candidate, so it matches the reference's set width far better than Inter
+     (6.7% mean vs 11.9%); and it is already loaded by the production site, so
+     it adds no new dependency. Override per-element with --jpd-font. */
+  font-family: 'Inter Tight', Inter, system-ui, sans-serif;
+  font-feature-settings: 'liga' 1, 'kern' 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+/* The approved Visual Master v1 accents. These are the FOUR measured oranges
+   from the reference render, preserved as measured rather than normalised onto
+   `--jp-brand-amber`. Prototype B tested consolidating the three interface
+   oranges onto #f59e0b; that refinement was not adopted for v1. */
+.jpd {
+  --jpd-accent: #f7a612;        /* sidebar active indicator + icon */
+  --jpd-action: #f98201;        /* primary buttons */
+  --jpd-action-strong: #f57f01; /* panel primary button (measured darker) */
+  --jpd-row-bar: #fe8611;       /* selected-row left bar */
+  --jpd-row-tint: #fdf6e7;
+  --jpd-page-current: #f7a612;
+
+  letter-spacing: -0.006em;
+}
+
+/* Scope Gap Analysis semantics, measured from
+   `assets-src/methodology/scope-gap-analysis.png`.
+
+   That screen states gap type and impact as COLOURED TEXT, not as the status
+   badge the Commitment and Product registers use, so the badge's fill/border/
+   foreground triples cannot express it: what is needed is one legible
+   foreground per semantic level. Three levels, each doing double duty - the
+   Gap Type column and the Impact column read from the same three - plus the
+   urgent required-by date, which the master colours on exactly the rows whose
+   impact is not Low.
+
+   Held apart from `--jpd-ok-fg`/`--jpd-warn-fg`/`--jpd-error-fg` because they
+   are measurably different inks: this master's green is a true green (hue
+   ~124deg) where the Commitment Register's is green-teal (~145deg), and its
+   warn is an orange where that one is a dark gold. Normalising them onto each
+   other would change an approved screen, which Section 49 forbids. */
+.jpd {
+  --jpd-gap-warn: #fd831e;  /* Definition + Responsibility, Impact Medium */
+  --jpd-gap-error: #dd1a1a; /* Interface, Impact High, urgent required-by */
+  --jpd-gap-ok: #287d2d;    /* Validated, Impact Low */
+  --jpd-gap-count: #ee400b; /* the Definition card's numeral, the one coloured KPI value */
+  --jpd-gap-icon-tint: #feebcb; /* the disc behind the first two KPI icons */
+}
+
+.jpd .jpd-tight { letter-spacing: -0.022em; }
+.jpd-tight-sm { letter-spacing: inherit; }
+
+/* The fixed application canvas. NEVER responsive: presentation scaling belongs
+   to DemoScreenFrame, which scales this whole canvas as one unit. */
+.jpd-canvas {
+  width: 1448px;
+  height: 1086px;
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  background: var(--jpd-surface);
+  color: var(--jpd-text);
+}
+
+/* --------------------------------------------------------------------------
+   Expanded view. The dialog is the backdrop, so a click landing on the element
+   itself (rather than on `__inner`) counts as "outside".
+   -------------------------------------------------------------------------- */
+.jpd-lightbox {
+  width: 100vw;
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+.jpd-lightbox::backdrop {
+  background: color-mix(in oklab, #020617 88%, transparent);
+}
+
+.jpd-lightbox__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(8px, 2vw, 28px);
+}
+
+/* THE STAGE is the close control and the screen as one object. It is sized in
+   JS to `min(the screen's rendered size, the space available)`, so when the
+   screen fits, the stage is exactly the screen's width and the close sits on
+   its top-right corner; when the screen is held above the fitted scale and
+   must be panned, the stage stops at the viewport and the close stays at the
+   top-right of what can actually be seen. The control is therefore always
+   attached to the screen and never scrolls out of reach - the bar is outside
+   the scrolling viewport, not inside the canvas. */
+.jpd-lightbox__stage {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.jpd-lightbox__bar {
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  height: 48px;
+  padding-bottom: 10px;
+}
+
+.jpd-lightbox__viewport {
+  /* Fills what the bar leaves, rather than the whole stage. */
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+}
+
+/* Desktop fits both axes, so centre it. Below 768px the canvas is fitted to
+   height and panned horizontally, which requires start alignment. */
+@media (min-width: 768px) {
+  .jpd-lightbox__viewport {
+    justify-content: center;
+    overflow-x: hidden;
+  }
+}
+
+/* A screen held above its fitted scale (registry `minScale`) can exceed the
+   viewport. It is then start-aligned and panned on both axes rather than
+   centred and clipped; the viewer keeps its geometry and scrolls to the rest. */
+.jpd-lightbox__viewport[data-pan] {
+  justify-content: flex-start;
+  align-items: flex-start;
+  overflow: auto;
+}
+
+/* Labelled, not a bare glyph: the word carries the action and the mark
+   confirms it. Sized for touch at 38px and kept light enough that it reads as
+   viewer chrome rather than as a second call to action. */
+.jpd-lightbox__close {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 13px 0 15px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--jp-text-primary, #f1f5f9) 26%, transparent);
+  background: color-mix(in oklab, var(--jp-background, #020617) 72%, transparent);
+  color: var(--jp-text-primary, #f1f5f9);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 150ms ease-out, border-color 150ms ease-out;
+}
+
+.jpd-lightbox__close:hover {
+  background: color-mix(in oklab, var(--jp-background, #020617) 90%, transparent);
+  border-color: color-mix(in oklab, var(--jp-text-primary, #f1f5f9) 44%, transparent);
+}
+
+.jpd-lightbox__close:focus-visible {
+  outline: 2px solid var(--jp-text-primary, #f1f5f9);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jpd-lightbox__close {
+    transition: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   THE PREVIEW'S EXPLORE AFFORDANCE. One control, centred on the preview and
+   present at rest rather than on hover, because a visitor who never hovers
+   must still know the screen opens. It is deliberately NOT in the product's
+   visual language - a full pill in the site's dark palette over an
+   application UI built from 5-6px radii and light surfaces - so it reads as
+   the website's control rather than as a button inside the demonstrated
+   product (Design System 46.8.1, 48.8).
+   -------------------------------------------------------------------------- */
+.jpd-frame__explore {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--jp-text-primary, #f1f5f9) 24%, transparent);
+  background: color-mix(in oklab, var(--jp-background, #020617) 82%, transparent);
+  color: var(--jp-text-primary, #f1f5f9);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  box-shadow: 0 6px 20px color-mix(in oklab, var(--jp-background, #020617) 34%, transparent);
+  transition: background-color 150ms ease-out, border-color 150ms ease-out;
+}
+
+.jpd-frame:hover .jpd-frame__explore,
+.jpd-frame:focus-visible .jpd-frame__explore {
+  background: color-mix(in oklab, var(--jp-background, #020617) 92%, transparent);
+  border-color: color-mix(in oklab, var(--jp-text-primary, #f1f5f9) 42%, transparent);
+}
+
+/* A wash, not a scrim: enough to lift the pill's contrast on hover, never
+   enough to hide the screen the preview exists to show. */
+.jpd-frame__wash {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: color-mix(in oklab, var(--jp-background, #020617) 10%, transparent);
+  transition: opacity 150ms ease-out;
+}
+
+.jpd-frame:hover .jpd-frame__wash,
+.jpd-frame:focus-visible .jpd-frame__wash {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jpd-frame__explore,
+  .jpd-frame__wash {
+    transition: none;
+  }
+}
+
+/* The embedded trigger's focus ring must not be clipped by the frame. */
+.jpd-frame:focus-visible {
+  outline: 2px solid var(--jp-text-primary, #f1f5f9);
+  outline-offset: 3px;
+}

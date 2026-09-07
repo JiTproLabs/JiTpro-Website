@@ -8,10 +8,13 @@ const OUTSIDE_LABEL = 'What you may not control';
 const INSIDE_LABEL = 'What you can control';
 
 /**
- * 02 - What you control and what you do not.
+ * 02 - What you can actually control.
  *
  * The page's central conceptual turn, built as the approved paired-condition
- * comparison (Design System Section 50.6).
+ * comparison (Design System Section 50.6). SHORTENED 2026-09-04 to four pairs
+ * and a tighter lede: the reader has the distinction by the second pair, and
+ * the section's job is to hand off to the method, not to prove the point seven
+ * times.
  *
  * THE TWO COLUMNS ARE TYPOGRAPHICALLY IDENTICAL. Same face, same size, same
  * weight, same ink. The argument is carried entirely by the words, because the
@@ -39,14 +42,14 @@ export default function ControlSection() {
       <SectionHeader
         section={section}
         surface={surface}
-        heading="You control more of this than it feels like."
+        heading="The dependency has always belonged to you."
         lede={
           <>
             <p>
-              You do not decide when an owner finalizes a selection, how fast a design question comes back, or what a fabricator does on their own floor. Those belong to other people, and they always will.
+              You do not decide when an owner finalizes a selection, how fast a design question comes back, or what a fabricator does on their own floor. Those belong to other people, and they always will. None of this is about pretending otherwise.
             </p>
             <p>
-              What has always belonged to you is the dependency itself: whether it is identified, who carries it, when it is required, and whether anyone finds out early that it stopped moving.
+              What has always been yours is how the dependency is managed: whether it is identified early, what specifically is required, who carries the next move, when it is required, what work it releases, whether it is moving, and when it needs to be escalated.
             </p>
           </>
         }
@@ -90,7 +93,7 @@ export default function ControlSection() {
       <p
         className={`mt-10 max-w-[46ch] border-t pt-12 font-heading text-[1.25rem] font-semibold leading-[1.35] tracking-[-0.01em] text-balance sm:text-[1.4375rem] lg:text-[1.5rem] ${tone.rule} ${tone.heading}`}
       >
-        You do not need to control everyone. You need control over the dependency.
+        JiTpro puts that structure in place before the field is the thing creating the urgency.
       </p>
     </NumberedSection>
   );

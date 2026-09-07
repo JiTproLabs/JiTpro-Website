@@ -17,10 +17,11 @@ const surface = 'dark' as const;
  * SAME LABEL, SAME DESTINATION as the two above it, by construction: the
  * action is PrimaryAction, which owns both.
  *
- * The supporting copy reaches back through the whole page in one sentence
- * each: one project, low friction, accountability early, better visibility,
- * profit protected. It states no price, no term, and no guarantee
- * (Section 20.1).
+ * IT CLOSES AND NOTHING MORE (revised 2026-09-04). No new argument, no new
+ * method, no further education: the page has made its case by here, and a
+ * close that teaches one more thing is a close that does not close. The
+ * supporting copy is two sentences, and the heading is the action itself. It
+ * states no price, no term, and no guarantee (Section 20.1).
  *
  * This section is numbered and appears in the guide like every other, and it
  * carries the page's only `h2` set at the closing register. It is still one
@@ -52,13 +53,13 @@ export default function LearnMoreFinalCTA() {
             id={`${section.id}-heading`}
             className={`mt-5 font-heading text-[2.125rem] font-extrabold leading-[1.08] tracking-[-0.022em] text-balance sm:mx-auto sm:max-w-[24ch] sm:text-[2.875rem] lg:text-[3.5rem] ${tone.heading}`}
           >
-            Protect your next project before the field has to recover it.
+            Start with one project.
           </h2>
 
           <p
             className={`mt-7 max-w-[58ch] text-[1.0625rem] leading-[1.7] sm:mx-auto sm:max-w-[54ch] sm:text-[1.125rem] lg:text-[1.1875rem] ${tone.body}`}
           >
-            One project. Your team, your documents, your schedule, starting from wherever that project stands today. We identify what it depends on, put an owner and a required date on each of those things, and make it visible when one of them stops moving. That is what gives your team time to act, and it is what keeps preventable problems from being paid for out of your margin.
+            Let us look at where JiTpro can create early accountability and help your team get ahead of preventable problems. One project, your documents, your schedule, and your team, starting from wherever that project stands today.
           </p>
 
           <div className="mt-10 sm:mt-12">

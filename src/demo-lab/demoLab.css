@@ -1,0 +1,107 @@
+/* --------------------------------------------------------------------------
+   PROTOTYPE LAB STYLES - TEMPORARY, NOT PRODUCTION.
+
+   Scoped entirely under `.jpd` so nothing here can reach the marketing site.
+   These are the measured application colours from
+   `assets-src/methodology/commitment-capture.png`, expressed as the bounded
+   `--jpd-*` namespace approved in Part 2 Section 16.
+
+   VARIANT A holds the measured values verbatim, including the four different
+   oranges the reference actually contains.
+   VARIANT B consolidates the three INTERFACE oranges onto the approved brand
+   token. It changes nothing else about colour.
+   -------------------------------------------------------------------------- */
+
+/* All candidates load together so the lab can switch between them live.
+   DEV-ONLY: this stylesheet is code-split out of the production bundle. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:wght@400;500;600;700;800&family=Figtree:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Urbanist:wght@400;500;600;700;800&display=swap');
+
+.jpd {
+  /* Neutrals - identical in both variants (measured) */
+  --jpd-nav-bg-start: #071420;
+  --jpd-nav-bg-end: #02101b;
+  --jpd-nav-active-bg: #172530;
+  --jpd-nav-divider: #1f2d37;
+  --jpd-nav-text: #ffffff;
+  --jpd-nav-text-dim: #eceded;
+
+  --jpd-surface: #fefefe;
+  --jpd-surface-sunken: #fbfbfb;
+  --jpd-surface-header: #f7f7f7;
+
+  --jpd-border: #edeff1;
+  --jpd-border-subtle: #f0f0f1;
+  --jpd-divider: #f0f0f0;
+
+  --jpd-text: #0a0a0a;
+  --jpd-text-strong: #232424;
+  --jpd-text-body: #313134;
+  --jpd-text-secondary: #41454f;
+  --jpd-text-muted: #86868b;
+
+  /* Status - semantically distinct in BOTH variants (Part 2 Section 11) */
+  --jpd-ok-bg: #e9f6e4;
+  --jpd-ok-border: #cfe8c6;
+  --jpd-ok-fg: #217a3c;
+  --jpd-warn-bg: #fef2e1;
+  --jpd-warn-border: #fadfba;
+  --jpd-warn-fg: #b7791f;
+  --jpd-warn-dot: #f59e0b;
+  --jpd-error-bg: #fee8e8;
+  --jpd-error-border: #f8cdcd;
+  --jpd-error-fg: #d13438;
+  --jpd-neutral-bg: #f1f1f1;
+
+  /* RECOMMENDED FACE: Inter Tight. Chosen on rendered result, not forensic
+     glyph identification (which had pointed at Urbanist). It is a neutral
+     grotesque rather than a geometric display face, which is what the
+     reference actually reads as in a dense table; it is the narrowest neutral
+     candidate, so it matches the reference's set width far better than Inter
+     (6.7% mean vs 11.9%); and it is already loaded by the production site, so
+     it adds no new dependency. Override per-element with --jpd-font. */
+  font-family: var(--jpd-font, 'Inter Tight'), system-ui, sans-serif;
+  font-feature-settings: 'liga' 1, 'kern' 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+/* VARIANT A - the four measured oranges, preserved exactly. */
+.jpd-a {
+  --jpd-accent: #f7a612;        /* sidebar active indicator + icon */
+  --jpd-action: #f98201;        /* primary buttons */
+  --jpd-action-strong: #f57f01; /* panel primary button (measured darker) */
+  --jpd-row-bar: #fe8611;       /* selected-row left bar */
+  --jpd-row-tint: #fdf6e7;
+  --jpd-page-current: #f7a612;
+}
+
+/* VARIANT B - the three INTERFACE oranges consolidated onto the approved
+   brand amber. The row tint is unchanged; status colours are unchanged. */
+.jpd-b {
+  --jpd-accent: #f59e0b;
+  --jpd-action: #f59e0b;
+  --jpd-action-strong: #f59e0b;
+  --jpd-row-bar: #f59e0b;
+  --jpd-row-tint: #fdf6e7;
+  --jpd-page-current: #f59e0b;
+}
+
+/* TRACKING. Set per variant, and deliberately small: the previous build used
+   -0.062em/-0.081em to force Urbanist down to the reference's set width, which
+   is what made the table read as cramped and stylized. Width is now matched by
+   choosing the right size per register instead of by crushing the tracking. */
+.jpd-a { letter-spacing: -0.006em; }
+.jpd-b { letter-spacing: -0.006em; }
+.jpd-a .jpd-tight, .jpd-b .jpd-tight { letter-spacing: -0.022em; }
+.jpd-tight-sm { letter-spacing: inherit; }
+
+/* Fixed reference canvas. Never responsive - the lab scales the whole canvas. */
+.jpd-canvas {
+  width: 1448px;
+  height: 1086px;
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  background: var(--jpd-surface);
+  color: var(--jpd-text);
+}

@@ -1,14 +1,19 @@
-import { CHAOS_CONDITIONS, SECTION } from '../../content/learnMore';
+import { DEPENDENCY_CONDITIONS, SECTION } from '../../content/learnMore';
 import { NumberedSection, SectionHeader } from './LearnMoreShell';
 import { TONE } from './tone';
 
 const surface = 'dark' as const;
 
 /**
- * 01 - The chaos you have learned to accept.
+ * 01 - Why projects become reactive.
  *
- * Recognition. The reader should finish this section thinking "that is my
- * Tuesday", and should not find a single sentence blaming anyone for it.
+ * REVISED 2026-09-04. This section used to be a second pass at the homepage's
+ * pain argument, and the reader arriving here has already accepted it. Its job
+ * now is one structural claim, made quickly: you do not control everything
+ * your project depends on, and a dependency nobody is managing only becomes
+ * visible when the field needs it. The condition list is evidence for that
+ * claim rather than an exercise in recognition, which is why it is six items
+ * and not ten.
  *
  * TONE IS LOAD-BEARING (Section 50.2). Every condition listed is written as a
  * STATE OF THE PROJECT, never as someone's failure. There is no owner who will
@@ -30,21 +35,21 @@ export default function ChaosSection() {
       <SectionHeader
         section={section}
         surface={surface}
-        heading="None of this is new to you."
+        heading="You do not control everything your project depends on."
         lede={
           <>
             <p>
-              You already know how a project actually arrives. Almost nothing is fully resolved when the work starts, and the parts that are not resolved do not announce themselves.
+              Construction runs on scope, design and engineering information, owner decisions, selections, approvals, commitments, products, materials, services, and the coordination between all of them. Many of those sit outside your direct authority, and they always will. That is not a flaw in your company. It is what building is.
             </p>
             <p>
-              A capable team absorbs it. That absorption is the cost nobody puts on a schedule.
+              Almost none of it is fully resolved when the work starts, and the parts that are not resolved do not announce themselves.
             </p>
           </>
         }
       />
 
       <ul className="mt-14 grid gap-x-10 sm:grid-cols-2 lg:mt-16 lg:gap-x-16">
-        {CHAOS_CONDITIONS.map((condition) => (
+        {DEPENDENCY_CONDITIONS.map((condition) => (
           <li
             key={condition}
             className={`border-t py-5 text-[1rem] leading-[1.65] sm:text-[1.0625rem] ${tone.rule} ${tone.body}`}
@@ -59,9 +64,9 @@ export default function ChaosSection() {
       <p
         className={`mt-14 max-w-[46ch] border-t pt-12 font-heading text-[1.25rem] font-semibold leading-[1.35] tracking-[-0.01em] text-balance sm:max-w-[60ch] sm:text-[1.4375rem] lg:mt-16 lg:text-[1.5rem] ${tone.rule} ${tone.heading}`}
       >
-        <span className="block">The problem is not that construction depends on other people.</span>
+        <span className="block">The problem is not that a project depends on other people.</span>
         <span className="mt-3 block">
-          The problem is waiting until the field needs something to find out that nobody drove it to completion.
+          The problem is a dependency nobody is managing, which stays invisible until the field needs it.
         </span>
       </p>
     </NumberedSection>

@@ -1,0 +1,451 @@
+/* --------------------------------------------------------------------------
+   PROCUREMENT SCHEDULE - phase-family tokens. PROTOTYPE.
+
+   Nine families, defined once. The legend, the bars and the milestone markers
+   all read these same tokens, which is what makes the legend structurally
+   incapable of drifting away from the schedule the way the original raster's
+   legend did (it labelled Fabrication as "Installation" and Shipping as
+   "Closeout").
+
+   FAMILY IS NOT STATUS. These hues classify the KIND of work. How the work is
+   performing is carried separately by the status badge. A Review phase is
+   review-violet whether it is complete, on track or at risk.
+
+   The palette is deliberately not the reference's matplotlib tab10 set: that
+   is a charting palette whose red and green read as failure and success, which
+   would collide with status the moment the two appear together.
+   -------------------------------------------------------------------------- */
+
+.jpd {
+  --jpd-phase-buyout: #64748b;       /* GC scoping and award            */
+  --jpd-phase-coordination: #0891b2; /* getting the requirements right  */
+  --jpd-phase-preparation: #1d4ed8;  /* producing the submittal         */
+  --jpd-phase-review: #7c3aed;       /* design/agency reviewing it      */
+  --jpd-phase-revision: #d97706;     /* vendor correcting it            */
+  --jpd-phase-approval: #059669;     /* the gate is cleared             */
+  --jpd-phase-production: #9a3412;   /* it is being made                */
+  --jpd-phase-logistics: #0d9488;    /* it is moving                    */
+  --jpd-phase-required: #0f172a;     /* the field needs it              */
+
+  /* EXTERNAL COMMITMENTS. Deliberately outside the nine family hues: a
+     commitment is not a kind of procurement work, it is what the work waits
+     on, so it must not read as a tenth family. Rose sits clear of every
+     family hue and of the green/amber the status badges use. The late tone is
+     the one place red is correct here - a commitment agreed beyond the date
+     the schedule needs IS the problem this feature exists to surface. */
+  --jpd-commitment: #be185d;
+  --jpd-commitment-late: #b91c1c;
+
+  --jpd-grid: #f1f2f4;
+  --jpd-grid-strong: #e6e8ea;
+  --jpd-today: #94a3b8;
+
+  /* NON-WORKING DAYS. Weekends and observed U.S. federal holidays share one
+     treatment: the question the shading answers is "is work expected on this
+     day", and the answer is the same either way. Derived from the demo's own
+     ink at very low strength rather than a second grey, and translucent so it
+     reads identically over the white row and the tinted selected row while
+     staying beneath every bar, diamond and marker. */
+  --jpd-nonworking: color-mix(in srgb, var(--jpd-text-strong) 6%, transparent);
+}
+
+/* The band is presentation only. It never intercepts the pointer, so a click
+   on a shaded day still selects the row and a bar drawn over it keeps its own
+   hit area; no border, so adjacent days merge into one quiet column. */
+.jpd-nonworking {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--jpd-nonworking);
+  pointer-events: none;
+}
+
+/* Complete work is drawn at reduced weight so the eye lands on what is still
+   ahead. Status still reads from the badge; this is reinforcement, not the
+   only signal. */
+.jpd-step--complete {
+  opacity: 0.42;
+}
+
+.jpd-step {
+  position: absolute;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.jpd-step--interactive {
+  cursor: pointer;
+}
+
+.jpd-step--interactive:focus-visible {
+  outline: 2px solid var(--jpd-text);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.jpd-step__bar {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 18px;
+  border-radius: 2px;
+}
+
+.jpd-step__diamond {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  border-radius: 1px;
+}
+
+.jpd-step--interactive:hover .jpd-step__bar,
+.jpd-step--interactive:focus-visible .jpd-step__bar {
+  filter: brightness(1.12);
+}
+
+/* THE SEGMENT BEING READ.
+   A double ring - white inner, ink outer - so it reads on any family colour
+   and against both the white row and the tinted selected row. Deliberately a
+   ring rather than a size or colour change: the bar must not grow, the family
+   hue must not shift, and the schedule must not reflow. Keyboard focus gets
+   the same treatment because it sets the same active state. */
+.jpd-step--active .jpd-step__bar,
+.jpd-step--active .jpd-step__diamond,
+.jpd-step--active .jpd-ros__cap {
+  box-shadow:
+    0 0 0 1.5px #ffffff,
+    0 0 0 3px var(--jpd-text);
+}
+
+.jpd-step--active .jpd-step__bar {
+  filter: brightness(1.08);
+}
+
+/* An active segment is never dimmed, even when complete, or the ring would
+   read as faint on exactly the row the visitor is reading. */
+.jpd-step--active.jpd-step--complete {
+  opacity: 1;
+}
+
+/* The terminal Required On-Site marker. Distinct from an ordinary milestone,
+   but deliberately not loud enough to dominate the row. */
+/* Sized against the 34px hit area, not the full row. */
+.jpd-ros {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 2px;
+  background: var(--jpd-phase-required);
+  border-radius: 1px;
+}
+
+.jpd-ros__cap {
+  position: absolute;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--jpd-phase-required);
+  border-radius: 1px;
+}
+
+/* ------------------------------------------------ external commitment marker
+   A RAISED, HOLLOW diamond. Three things separate it from the solid family
+   diamond that marks a phase handoff, and they are redundant on purpose:
+   it sits above the bar rather than on it, it is drawn as an outline rather
+   than a solid, and it carries the commitment hue rather than a family hue.
+   Filled only when the commitment has actually been provided - so an
+   unresolved dependency reads as an open shape, which is what it is. */
+.jpd-commit {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.jpd-commit--interactive {
+  cursor: pointer;
+}
+
+.jpd-commit--interactive:focus-visible {
+  outline: 2px solid var(--jpd-text);
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+
+.jpd-commit__mark {
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+  border-radius: 1px;
+  border: 1.5px solid var(--jpd-commitment);
+  background: var(--jpd-surface);
+}
+
+/* Provided. The shape closes when the obligation is met. */
+.jpd-commit--complete .jpd-commit__mark {
+  background: var(--jpd-commitment);
+  opacity: 0.42;
+}
+
+/* Agreed, and the agreement holds. */
+.jpd-commit--committed .jpd-commit__mark {
+  background: var(--jpd-commitment);
+}
+
+/* Agreed for a date the schedule cannot absorb. The one marker on this
+   timeline that is allowed to look like a problem, because it is one. */
+.jpd-commit--beyond-required .jpd-commit__mark {
+  border-color: var(--jpd-commitment-late);
+  background: var(--jpd-commitment-late);
+}
+
+.jpd-commit--interactive:hover .jpd-commit__mark {
+  filter: brightness(1.12);
+}
+
+.jpd-commit--active .jpd-commit__mark {
+  box-shadow:
+    0 0 0 1.5px #ffffff,
+    0 0 0 3px var(--jpd-text);
+}
+
+.jpd-commit--active.jpd-commit--complete .jpd-commit__mark {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------ issue / risk marker
+   A small filled TRIANGLE, below the bar. Deliberately a different shape,
+   a different side of the bar and a different colour family from the
+   commitment diamond above it: a diamond is something the package is waiting
+   for, a triangle is something that has gone wrong. Tone follows package
+   health, so the mark itself says whether the field date still holds. */
+.jpd-issue {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.jpd-issue--interactive {
+  cursor: pointer;
+}
+
+.jpd-issue--interactive:focus-visible {
+  outline: 2px solid var(--jpd-text);
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+
+.jpd-issue__mark {
+  width: 10px;
+  height: 9px;
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+/* Exposure recorded, field date still protected. */
+.jpd-issue--at-risk .jpd-issue__mark {
+  background: var(--jpd-warn-dot);
+}
+
+/* The forecast no longer satisfies the requirement. */
+.jpd-issue--impacted .jpd-issue__mark {
+  background: var(--jpd-error-fg);
+}
+
+.jpd-issue--interactive:hover .jpd-issue__mark {
+  filter: brightness(1.12);
+}
+
+/* A triangle cannot take a ring cleanly, so the active state is a halo behind
+   the mark rather than an outline around it. */
+.jpd-issue--active {
+  border-radius: 3px;
+  box-shadow:
+    0 0 0 1.5px #ffffff,
+    0 0 0 3px var(--jpd-text);
+}
+
+/* -------------------------------------------------- package health chip
+   Sized against the 8px REQ ON-SITE label it sits beside, so it reads as part
+   of that line rather than as a second heading competing with the item name. */
+.jpd-health {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.jpd-health--at-risk {
+  background: var(--jpd-warn-bg);
+  border-color: var(--jpd-warn-border);
+  color: var(--jpd-warn-fg);
+}
+
+.jpd-health--impacted {
+  background: var(--jpd-error-bg);
+  border-color: var(--jpd-error-border);
+  color: var(--jpd-error-fg);
+}
+
+/* --------------------------------------------------------- inspection popover
+   Rendered OUTSIDE the scaled canvas via a portal, so its typography is never
+   multiplied by the canvas transform. */
+.jpd-pop {
+  position: fixed;
+  z-index: 60;
+  width: 320px;
+  background: #ffffff;
+  border: 1px solid #e2e4e7;
+  border-radius: 8px;
+  box-shadow: 0 12px 34px -10px rgba(2, 6, 23, 0.35);
+  font-family: 'Inter Tight', Inter, system-ui, sans-serif;
+  color: #0a0a0a;
+  padding: 14px 15px 13px;
+  /* The hover card must never become a pointer obstacle: the visitor has to be
+     able to keep moving along the bar underneath it. The card is purely
+     informational, so it takes no pointer events at all. If it ever gains
+     interactive controls, that mode will need its own pinned treatment. */
+  pointer-events: none;
+}
+
+.jpd-pop__kicker {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.jpd-pop__title {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 20px;
+  margin-top: 3px;
+}
+
+.jpd-pop__badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 5px;
+  border: 1px solid;
+}
+
+.jpd-pop__ball {
+  margin-top: 11px;
+  padding: 9px 10px;
+  border-radius: 6px;
+  background: #fdf6e7;
+  border: 1px solid #f6dfae;
+}
+
+.jpd-pop__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #8a6d3b;
+}
+
+.jpd-pop__person {
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.jpd-pop__org {
+  font-size: 12px;
+  color: #4b5563;
+  margin-top: 1px;
+}
+
+.jpd-pop__section {
+  margin-top: 11px;
+}
+
+.jpd-pop__slabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.jpd-pop__text {
+  font-size: 12.5px;
+  line-height: 17px;
+  margin-top: 3px;
+  color: #1f2937;
+}
+
+.jpd-pop__dates {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 3px;
+}
+
+/* A labelled comparison line - required vs committed vs completed. Kept as one
+   rule so every such pair in every card body lines up identically. */
+.jpd-pop__cmp {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.jpd-pop__cmp > span:first-child {
+  color: var(--jpd-text-secondary);
+}
+
+.jpd-pop__cmp > span:last-child {
+  font-weight: 600;
+}
+
+.jpd-pop__cmp--bad > span:last-child {
+  color: var(--jpd-commitment-late);
+}
+
+.jpd-pop__foot {
+  margin-top: 12px;
+  padding-top: 9px;
+  border-top: 1px solid #eceef0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.jpd-pop__ros {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+/* Screen-reader route to the same records (governing instruction Section 59).
+   Focusable, so the schedule is operable without a pointer. */
+.jpd-sr-list {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

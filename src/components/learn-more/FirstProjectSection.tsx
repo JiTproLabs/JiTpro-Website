@@ -20,6 +20,13 @@ const surface = 'dark' as const;
  * The phases run in order and the order is the argument: you cannot assign
  * accountability for a dependency you have not found, and you cannot date a
  * dependency you have not assigned.
+ *
+ * REFRAMED 2026-09-04 to the reader's own steps rather than ours: bring us a
+ * project, we put JiTpro to work on it, you see it against real work. The
+ * first phase now carries the qualifying condition that matters most, which is
+ * that the project should be early enough for meaningful options to still
+ * exist. JiTpro is preventive, and a project already in recovery is not what
+ * this is for (section 09).
  */
 export default function FirstProjectSection() {
   const tone = TONE[surface];
@@ -33,7 +40,7 @@ export default function FirstProjectSection() {
         heading="What actually happens on that project."
         lede={
           <p>
-            Four phases, in order. The first two are about finding what the project depends on. The last two are about making sure somebody owns each of those things and that you find out early when one stops moving.
+            Four steps, in order. You bring us a project, we put JiTpro to work on it, and you watch it run against work you already know.
           </p>
         }
       />
@@ -42,7 +49,7 @@ export default function FirstProjectSection() {
         {FIRST_PROJECT_PHASES.map((phase, i) => (
           <li key={phase.name} className={`border-t pt-6 ${tone.rule}`}>
             <p className={`font-mono text-xs tracking-[0.2em] ${tone.ordinal}`}>
-              <span className="sr-only">Phase </span>
+              <span className="sr-only">Step </span>
               {`0${i + 1}`}
             </p>
             <h3

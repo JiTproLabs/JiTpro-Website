@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+/* Inter Tight 400 and 500 are required by the JiTpro demo UI system
+   (src/components/demo), which sets its application type in that face. The
+   marketing site itself continues to use 600/700/800 only. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 
 @import 'tailwindcss';

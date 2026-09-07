@@ -1,4 +1,6 @@
 import { METHODOLOGY_STAGES } from '../../content/methodologyStages';
+import DemoScreenFrame from '../demo/DemoScreenFrame';
+import { hasDemoScreen } from '../demo/registry';
 
 /**
  * The methodology section's persistent visual column (Design System §46.8.1).
@@ -24,10 +26,19 @@ import { METHODOLOGY_STAGES } from '../../content/methodologyStages';
  * footnote, or softened, and this content MUST NEVER be described as a customer
  * project, a case study, or an actual engagement.
  *
- * The remaining §46.8.1 constraints continue to bind:
- *   - No second interaction: no controls, no hover states, no focus targets, no
- *     lightbox or zoom. The rail is the section's only interactive element,
- *     which is why this takes `activeIndex` and owns no state.
+ * EVERY CAPTURED STAGE RENDERS THROUGH DemoScreenFrame. The frame asks the
+ * representative-screen registry whether the stage has a live React screen or
+ * still its raster capture, draws the preview accordingly, and opens the same
+ * expanded view for either. This figure does not know which is which, so
+ * finishing a raster stage as a live screen is a registry entry and nothing
+ * here changes.
+ *
+ * The remaining §46.8.1 constraints continue to bind, with ONE amendment:
+ *   - The enlarge affordance is now permitted (Decision Log 2026-09-04),
+ *     superseding the no-second-interaction rule for this figure. It is a
+ *     non-committing control: it does not change the selected stage, so the
+ *     rail remains the only thing that drives the section. Nothing else here
+ *     gains a control, a hover state, or a focus target.
  *   - Legible without motion. The state is a pure function of `activeIndex`;
  *     selecting 03 directly from 01 resolves correctly with nothing animating
  *     in between.
@@ -45,8 +56,6 @@ type MethodologyFigureProps = {
   /** Which stage is selected, 0-based. */
   activeIndex: number;
 };
-
-const ASSET_BASE = `${import.meta.env.BASE_URL}assets/methodology`;
 
 export default function MethodologyFigure({ activeIndex }: MethodologyFigureProps) {
   return (
@@ -81,30 +90,42 @@ export default function MethodologyFigure({ activeIndex }: MethodologyFigureProp
             );
           }
 
+          /* The stage's screen, live or raster as the registry says, scaled to
+             the column. Only the visible state's enlarge control is a tab
+             stop; the others stay mounted for the cross-fade but out of the
+             way of the keyboard. */
+          if (hasDemoScreen(stage.id)) {
+            return (
+              <div key={stage.id} aria-hidden={!isActive} className={shared}>
+                <DemoScreenFrame
+                  screen={stage.id}
+                  label={stage.demo.alt}
+                  title={stage.title}
+                  file={stage.demo.file}
+                  focusable={isActive}
+                />
+              </div>
+            );
+          }
+
+          /* Captured but not registered: a configuration gap, shown as the
+             reserved state rather than as a screen the system cannot open. */
           return (
-            <img
-              key={stage.id}
-              src={`${ASSET_BASE}/${stage.demo.file}-1448.webp`}
-              srcSet={`${ASSET_BASE}/${stage.demo.file}-800.webp 800w, ${ASSET_BASE}/${stage.demo.file}-1448.webp 1448w`}
-              sizes="(min-width: 1024px) 58vw, 100vw"
-              width={1448}
-              height={1086}
-              alt={isActive ? stage.demo.alt : ''}
-              aria-hidden={!isActive}
-              loading="lazy"
-              decoding="async"
-              className={`${shared} object-contain`}
-            />
+            <div key={stage.id} aria-hidden={!isActive} className={`${shared} p-6 lg:p-8`}>
+              <p className="font-mono text-[0.6875rem] uppercase tracking-[0.2em] text-jp-ink-secondary/85">
+                Reserved
+              </p>
+            </div>
           );
         })}
       </div>
 
-      {/* §48.10: one quiet sentence, with the figure, never a disclaimer block.
-          Sentence case — this is a sentence, and uppercase is for short labels
-          only (§7.7). */}
-      <figcaption className="mt-4 max-w-[62ch] text-[0.875rem] leading-[1.6] text-jp-ink-secondary/85">
-        Representative JiTpro screens. The interface is real; the project, quantities, parties and dates are constructed to show realistic conditions and are not taken from an actual engagement.
-      </figcaption>
+      {/* NO FIGCAPTION. §48.10's provenance line was withdrawn from the
+          representative demonstrations site-wide (Decision Log 2026-09-04)
+          with no replacement, and the implementation had been carrying it
+          since. The figure now ends with the screen; the frame's own
+          `Explore screen` affordance carries the interaction, so nothing is
+          printed beneath it. §48.10 still governs every other figure. */}
     </figure>
   );
 }

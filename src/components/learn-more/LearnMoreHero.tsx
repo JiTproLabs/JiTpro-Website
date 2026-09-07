@@ -31,6 +31,15 @@ import { PrimaryAction } from './LearnMoreShell';
  * dependencies. Owners, designers, engineers, vendors and subcontractors are
  * participants the project relies on. Nothing here suggests JiTpro takes over
  * a relationship that belongs to the contractor's own team.
+ *
+ * WHAT THE OPENING ANSWERS (revised 2026-09-04). The homepage has already made
+ * the argument that preventable chaos is not inevitable, and this opening used
+ * to make it a second time. It now answers the question the reader actually
+ * arrived with: what exactly is JiTpro. Within about fifteen seconds the
+ * reader should know this is an active engagement on one real project, and not
+ * software, a report, a dashboard, general consulting, or a service defined by
+ * buying things. "We start with one project" is stated here rather than held
+ * back for section 07.
  */
 export default function LearnMoreHero() {
   return (
@@ -53,18 +62,18 @@ export default function LearnMoreHero() {
         </p>
 
         <h1 className="mt-6 max-w-[20ch] font-heading text-[2.125rem] font-extrabold leading-[1.06] tracking-[-0.025em] text-balance text-jp-text-primary sm:mt-7 sm:text-[3rem] lg:max-w-[24ch] lg:text-[3.5rem] lg:leading-[1.04] xl:text-[4rem] xl:tracking-[-0.03em]">
-          Preventable chaos is not just part of construction.
+          Get ahead of what your project will depend on.
         </h1>
 
         <div className="mt-8 max-w-[58ch] space-y-6 text-[1.0625rem] leading-[1.7] text-jp-text-secondary sm:mt-10 sm:text-[1.125rem] lg:text-[1.1875rem]">
           <p>
-            Every project runs on information, decisions, commitments, products, approvals, and people. A great many of them sit outside your direct authority. That is not a flaw in your company. It is what building is.
+            JiTpro works with your team on one project. We examine the project as it actually stands, identify the scope, information, decisions, selections, approvals, commitments, products, materials, and services it is still depending on, and establish who carries each one and when it is required.
           </p>
           <p>
             <strong className="font-semibold text-jp-text-primary">
-              What is not inevitable is leaving those dependencies unmanaged until the field pays for them.
+              That work happens before those dependencies reach the field as problems.
             </strong>{' '}
-            This page explains why that keeps happening as a contractor grows, what can actually be controlled, and what JiTpro changes on a single project.
+            It is an engagement on real work, not software to run, a report to file, or another dashboard. This page explains how it works and what you would get.
           </p>
         </div>
 
