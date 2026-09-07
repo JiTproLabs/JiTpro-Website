@@ -6,7 +6,6 @@ import { NumberedSection, SectionHeader } from './LearnMoreShell';
 import { TONE } from './tone';
 
 const surface = 'light' as const;
-const ASSET_BASE = `${import.meta.env.BASE_URL}assets/methodology`;
 
 /**
  * 05 - What JiTpro produces.
@@ -37,6 +36,11 @@ const ASSET_BASE = `${import.meta.env.BASE_URL}assets/methodology`;
  * serves the group and sits with the screens it describes (Section 50.6). It
  * MUST NOT be removed, moved into a page footnote, or softened, and this
  * content MUST NEVER be described as a customer project or a case study.
+ *
+ * EVERY CAPTURED STAGE RENDERS THROUGH DemoScreenFrame, which asks the
+ * representative-screen registry whether the stage has a live React screen or
+ * still its raster capture, and opens the same expanded view for either. This
+ * section does not know which is which.
  *
  * A stage with no capture would render text only. Borrowing a neighbouring
  * stage's screen to fill the space is prohibited (Section 46.8.1).
@@ -96,28 +100,11 @@ export default function ProducesSection() {
               </div>
 
               {stage.demo && hasDemoScreen(stage.id) ? (
-                /* Migrated: the canonical React screen, scaled to the column.
-                   Sharp at any size, and openable. */
+                /* The stage's screen, live or raster as the registry says, in
+                   the same 4:3 frame, never re-cropped (Section 46.8.1), and
+                   openable. */
                 <div className={`mt-8 overflow-hidden border lg:mt-0 ${tone.rule}`}>
-                  <DemoScreenFrame screen={stage.id} label={stage.demo.alt} />
-                </div>
-              ) : stage.demo ? (
-                /* Not yet migrated: the raster, in the same 4:3 frame, never
-                   re-cropped (Section 46.8.1). */
-                <div
-                  className={`mt-8 overflow-hidden border bg-jp-ink-secondary/[0.04] lg:mt-0 ${tone.rule}`}
-                >
-                  <img
-                    src={`${ASSET_BASE}/${stage.demo.file}-1448.webp`}
-                    srcSet={`${ASSET_BASE}/${stage.demo.file}-800.webp 800w, ${ASSET_BASE}/${stage.demo.file}-1448.webp 1448w`}
-                    sizes="(min-width: 1024px) 58vw, 100vw"
-                    width={1448}
-                    height={1086}
-                    alt={stage.demo.alt}
-                    loading="lazy"
-                    decoding="async"
-                    className="aspect-[4/3] w-full object-contain"
-                  />
+                  <DemoScreenFrame screen={stage.id} label={stage.demo.alt} file={stage.demo.file} />
                 </div>
               ) : null}
             </li>

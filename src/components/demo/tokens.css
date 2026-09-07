@@ -147,6 +147,15 @@
   }
 }
 
+/* A screen held above its fitted scale (registry `minScale`) can exceed the
+   viewport. It is then start-aligned and panned on both axes rather than
+   centred and clipped; the viewer keeps its geometry and scrolls to the rest. */
+.jpd-lightbox__viewport[data-pan] {
+  justify-content: flex-start;
+  align-items: flex-start;
+  overflow: auto;
+}
+
 .jpd-lightbox__close {
   position: absolute;
   top: clamp(8px, 1.6vw, 20px);

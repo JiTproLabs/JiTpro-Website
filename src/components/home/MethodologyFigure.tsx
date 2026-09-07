@@ -26,9 +26,12 @@ import { hasDemoScreen } from '../demo/registry';
  * footnote, or softened, and this content MUST NEVER be described as a customer
  * project, a case study, or an actual engagement.
  *
- * MIGRATION IN PROGRESS. A stage with a canonical HTML/React screen renders it
- * through DemoScreenFrame; the rest keep their raster until they are built. The
- * registry is the switch, so finishing a screen is one line there.
+ * EVERY CAPTURED STAGE RENDERS THROUGH DemoScreenFrame. The frame asks the
+ * representative-screen registry whether the stage has a live React screen or
+ * still its raster capture, draws the preview accordingly, and opens the same
+ * expanded view for either. This figure does not know which is which, so
+ * finishing a raster stage as a live screen is a registry entry and nothing
+ * here changes.
  *
  * The remaining §46.8.1 constraints continue to bind, with ONE amendment:
  *   - The enlarge affordance is now permitted (Decision Log 2026-09-04),
@@ -53,8 +56,6 @@ type MethodologyFigureProps = {
   /** Which stage is selected, 0-based. */
   activeIndex: number;
 };
-
-const ASSET_BASE = `${import.meta.env.BASE_URL}assets/methodology`;
 
 export default function MethodologyFigure({ activeIndex }: MethodologyFigureProps) {
   return (
@@ -89,29 +90,31 @@ export default function MethodologyFigure({ activeIndex }: MethodologyFigureProp
             );
           }
 
-          /* Migrated stage: the canonical React screen, scaled to the column. */
+          /* The stage's screen, live or raster as the registry says, scaled to
+             the column. Only the visible state's enlarge control is a tab
+             stop; the others stay mounted for the cross-fade but out of the
+             way of the keyboard. */
           if (hasDemoScreen(stage.id)) {
             return (
               <div key={stage.id} aria-hidden={!isActive} className={shared}>
-                <DemoScreenFrame screen={stage.id} label={stage.demo.alt} />
+                <DemoScreenFrame
+                  screen={stage.id}
+                  label={stage.demo.alt}
+                  file={stage.demo.file}
+                  focusable={isActive}
+                />
               </div>
             );
           }
 
+          /* Captured but not registered: a configuration gap, shown as the
+             reserved state rather than as a screen the system cannot open. */
           return (
-            <img
-              key={stage.id}
-              src={`${ASSET_BASE}/${stage.demo.file}-1448.webp`}
-              srcSet={`${ASSET_BASE}/${stage.demo.file}-800.webp 800w, ${ASSET_BASE}/${stage.demo.file}-1448.webp 1448w`}
-              sizes="(min-width: 1024px) 58vw, 100vw"
-              width={1448}
-              height={1086}
-              alt={isActive ? stage.demo.alt : ''}
-              aria-hidden={!isActive}
-              loading="lazy"
-              decoding="async"
-              className={`${shared} object-contain`}
-            />
+            <div key={stage.id} aria-hidden={!isActive} className={`${shared} p-6 lg:p-8`}>
+              <p className="font-mono text-[0.6875rem] uppercase tracking-[0.2em] text-jp-ink-secondary/85">
+                Reserved
+              </p>
+            </div>
           );
         })}
       </div>

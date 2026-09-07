@@ -1,14 +1,14 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, Download, Filter, Plus, X } from 'lucide-react';
-import JiTproShell from '../../components/demo/shell/JiTproShell';
-import DemoStatusBadge from '../../components/demo/primitives/DemoStatusBadge';
-import DemoAvatar from '../../components/demo/primitives/DemoAvatar';
+import JiTproShell from '../../shell/JiTproShell';
+import DemoStatusBadge from '../../primitives/DemoStatusBadge';
+import DemoAvatar from '../../primitives/DemoAvatar';
 import DemoGantt, { type Zoom } from './DemoGantt';
-import { useInspection } from './PhaseInspector';
+import { useInspection } from '../../inspection';
 import { SCHEDULE_ITEMS } from './scheduleFixture';
 import { DATA_DATE, PHASE_FAMILIES, STATUS_LABEL, parse } from './scheduleModel';
 import './scheduleTokens.css';
-import '../../components/demo/tokens.css';
+import '../../tokens.css';
 
 /**
  * PROCUREMENT SCHEDULE - prototype screen.

@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import ScheduleViewer, { CANVAS_H, CANVAS_W } from './ScheduleViewer';
-import { SCHEDULE_ITEMS } from './scheduleFixture';
-import { DATA_DATE } from './scheduleModel';
+import ScheduleViewer, {
+  CANVAS_H,
+  CANVAS_W,
+} from '../../components/demo/screens/procurement-schedule/ScheduleViewer';
+import { SCHEDULE_ITEMS } from '../../components/demo/screens/procurement-schedule/scheduleFixture';
+import { DATA_DATE } from '../../components/demo/screens/procurement-schedule/scheduleModel';
 
 /**
  * PROCUREMENT SCHEDULE PROTOTYPE LAB - dev-only review workspace.
@@ -15,9 +18,11 @@ import { DATA_DATE } from './scheduleModel';
  *   embedded - the schedule at the Learn More column width, preview only
  *   compare  - the original raster beside the new prototype
  *
- * The schedule is presented through ScheduleViewer, the same component the
- * unlisted team review page renders. Only the dev controls around it live
- * here; there is no lab copy of the schedule.
+ * The schedule lives in src/components/demo/screens/procurement-schedule and
+ * is presented through its ScheduleViewer, the same component the unlisted
+ * team review page renders; the homepage and Learn More page render the same
+ * screen through the representative-screen registry. Only the dev controls
+ * around it live here; there is no lab copy of the schedule.
  */
 
 const W = CANVAS_W;

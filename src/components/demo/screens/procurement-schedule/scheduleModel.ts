@@ -8,7 +8,7 @@
  * Nothing about a phase is authored twice.
  */
 
-import { PEOPLE, ORGANIZATIONS } from '../../components/demo/fixtures/project';
+import { PEOPLE, ORGANIZATIONS } from '../../fixtures/project';
 import { iso, parse, prevWorkday, subWorkdays, snapBack, workdaysBetween } from './workCalendar';
 
 /* ------------------------------------------------------------ participants */

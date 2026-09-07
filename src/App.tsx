@@ -39,9 +39,11 @@ import ProcurementSchedule from './pages/ProcurementSchedule';
 /* PROTOTYPE LAB - dev-only. Lazy so its CSS (which pulls a Google font) lands
    in a separate chunk instead of the production stylesheet. The lab routes are
    also DEV-gated, so the lab harness chunks are never requested in a
-   production build. The procurement schedule itself is not lab-only any more:
-   it also ships through the unlisted team review route below, by way of the
-   one ScheduleViewer both surfaces render. */
+   production build. The procurement schedule itself is not lab-only: it lives
+   in src/components/demo/screens/procurement-schedule, is a registered
+   representative screen (homepage, Learn More), and also ships through the
+   unlisted team review route below. One implementation; the lab is only its
+   workbench. */
 const DemoLab = lazy(() => import('./demo-lab/DemoLab'));
 const TableFidelityTest = lazy(() => import('./demo-lab/TableFidelityTest'));
 const ScheduleLab = lazy(() => import('./demo-lab/schedule/ScheduleLab'));

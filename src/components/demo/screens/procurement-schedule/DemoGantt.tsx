@@ -2,10 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PhaseInspector, {
   useEscapeToDismiss,
   targetId,
-  useInspection,
   type Anchor,
   type InspectTarget,
 } from './PhaseInspector';
+import { useInspection } from '../../inspection';
 import { DATA_DATE, parse, type ScheduleItem } from './scheduleModel';
 import { nonWorkingRuns } from './workCalendar';
 import './scheduleTokens.css';

@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import ProcurementScheduleScreen from './ProcurementScheduleScreen';
-import { InspectionContext } from './PhaseInspector';
-import '../../components/demo/tokens.css';
+import { InspectionContext } from '../../inspection';
+import '../../tokens.css';
 import './scheduleTokens.css';
 
 /**

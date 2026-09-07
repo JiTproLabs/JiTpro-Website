@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import JiTproWordmark from '../../components/JiTproWordmark';
-import ScheduleViewer from '../../demo-lab/schedule/ScheduleViewer';
+import ScheduleViewer from '../../components/demo/screens/procurement-schedule/ScheduleViewer';
 
 /**
  * PROCUREMENT SCHEDULE - TEAM REVIEW. Unlisted.

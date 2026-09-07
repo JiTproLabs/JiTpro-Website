@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   COMMITMENT_STATUS_LABEL,
@@ -13,6 +13,7 @@ import {
   type ScheduleItem,
   type ScheduleStep,
 } from './scheduleModel';
+import { useInspection } from '../../inspection';
 
 /**
  * The phase/milestone inspection layer.
@@ -31,22 +32,6 @@ import {
  * environment therefore supplies its own container through context, and the
  * schedule never needs to know which surface it is on.
  */
-
-export type InspectionCapabilities = {
-  /** Where the popover mounts. Null falls back to document.body. */
-  portalTarget: HTMLElement | null;
-  /** Off in the embedded preview; on in expanded inspection. */
-  enabled: boolean;
-};
-
-export const InspectionContext = createContext<InspectionCapabilities>({
-  portalTarget: null,
-  enabled: false,
-});
-
-export function useInspection() {
-  return useContext(InspectionContext);
-}
 
 const FAMILY_LABEL = Object.fromEntries(PHASE_FAMILIES.map((f) => [f.key, f.label]));
 
