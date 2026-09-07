@@ -47,6 +47,9 @@ import ProcurementSchedule from './pages/ProcurementSchedule';
 const DemoLab = lazy(() => import('./demo-lab/DemoLab'));
 const TableFidelityTest = lazy(() => import('./demo-lab/TableFidelityTest'));
 const ScheduleLab = lazy(() => import('./demo-lab/schedule/ScheduleLab'));
+const ScreenCompareLab = lazy(() => import('./demo-lab/ScreenCompareLab'));
+const ProductRegisterScreen = lazy(() => import('./components/demo/screens/ProductRegisterScreen'));
+const CommitmentRegisterLive = lazy(() => import('./components/demo/screens/CommitmentRegisterScreen'));
 
 /* TEAM REVIEW - unlisted, in the production build. The procurement schedule
    prototype behind a plain URL the team can open, rendering the same
@@ -103,6 +106,9 @@ function App() {
             <Route path="/demo-lab/table-test" element={<Suspense fallback={null}><TableFidelityTest /></Suspense>} />
             <Route path="/demo-lab/procurement-schedule" element={<Suspense fallback={null}><ScheduleLab initial="inspect" /></Suspense>} />
             <Route path="/demo-lab/procurement-schedule-compare" element={<Suspense fallback={null}><ScheduleLab initial="compare" /></Suspense>} />
+            <Route path="/demo-lab/product-register" element={<Suspense fallback={null}><ScreenCompareLab component={ProductRegisterScreen} reference="product-register" title="Product Register" /></Suspense>} />
+            <Route path="/demo-lab/product-register-compare" element={<Suspense fallback={null}><ScreenCompareLab component={ProductRegisterScreen} reference="product-register" title="Product Register" initial="side" /></Suspense>} />
+            <Route path="/demo-lab/commitment-register-live" element={<Suspense fallback={null}><ScreenCompareLab component={CommitmentRegisterLive} reference="commitment-capture" title="Commitment Register (production)" initial="live" /></Suspense>} />
           </>
         )}
 

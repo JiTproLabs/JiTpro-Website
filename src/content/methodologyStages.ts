@@ -71,7 +71,7 @@ export const METHODOLOGY_STAGES: MethodologyStage[] = [
     body: 'We identify and register the products, materials, and services the project will need, connecting what must arrive on site to the decisions, approvals, and Commitments required to get it there.',
     demo: {
       file: 'product-register',
-      alt: 'The JiTpro Product Register for the same project: 246 products, materials and equipment, each with a category, trade, supplier, approval status, lead time and required-on-site date, and a detail panel linking the aluminum window system to the Commitments that get it there.',
+      alt: 'The JiTpro Product Register for the same project: 246 products, materials and equipment, each with a category, trade, supplier, status, lead time, required-on-site date and source drawing, and a detail panel tracing the heritage steel windows to their supplier, their procurement dates and the Commitments they depend on.',
     },
   },
   {
