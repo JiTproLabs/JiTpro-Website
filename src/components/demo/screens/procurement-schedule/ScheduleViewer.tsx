@@ -1,6 +1,6 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import ProcurementScheduleScreen from './ProcurementScheduleScreen';
-import { InspectionContext } from '../../inspection';
+import { InspectionContext, visibleScreenRect } from '../../inspection';
 import '../../tokens.css';
 import './scheduleTokens.css';
 
@@ -40,6 +40,7 @@ type Props = {
 
 export default function ScheduleViewer({ scale, minScale = 0, enabled = true, onScale }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const canvasBoxRef = useRef<HTMLDivElement>(null);
   const portalRef = useRef<HTMLDivElement>(null);
   const [portalEl, setPortalEl] = useState<HTMLElement | null>(null);
   const [fitScale, setFitScale] = useState(1);
@@ -68,11 +69,25 @@ export default function ScheduleViewer({ scale, minScale = 0, enabled = true, on
     onScale?.(s);
   }, [s, onScale]);
 
-  const capabilities = useMemo(() => ({ enabled, portalTarget: portalEl }), [enabled, portalEl]);
+  /**
+   * What an inspecting screen may cover here: the part of the canvas this
+   * host is showing, itself clipped to the window because this surface sits
+   * in an ordinary scrolling page rather than in a dialog. Same question, same
+   * helper, different container - which is the point of asking the host.
+   */
+  const getBounds = useCallback(
+    () => visibleScreenRect(hostRef.current, canvasBoxRef.current),
+    [],
+  );
+
+  const capabilities = useMemo(
+    () => ({ enabled, portalTarget: portalEl, getBounds }),
+    [enabled, portalEl, getBounds],
+  );
 
   return (
     <div ref={hostRef} style={{ overflowX: 'auto', overflowY: 'hidden' }}>
-      <div style={{ width: CANVAS_W * s, height: CANVAS_H * s, position: 'relative' }}>
+      <div ref={canvasBoxRef} style={{ width: CANVAS_W * s, height: CANVAS_H * s, position: 'relative' }}>
         <div
           style={{
             position: 'absolute',

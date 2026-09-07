@@ -1,7 +1,7 @@
-import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { CANVAS_H, CANVAS_W } from './DemoScreenFrame';
-import { InspectionContext } from './inspection';
+import { InspectionContext, visibleScreenRect } from './inspection';
 import './tokens.css';
 
 /**
@@ -71,6 +71,7 @@ export default function DemoLightbox({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const canvasBoxRef = useRef<HTMLDivElement>(null);
   const portalRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
   const [avail, setAvail] = useState({ w: 0, h: 0 });
@@ -142,9 +143,20 @@ export default function DemoLightbox({
     };
   }, [onClose, minScale, maxScale]);
 
+  /**
+   * What an inspecting screen may cover: the part of the canvas the panning
+   * viewport is currently showing. Read on demand rather than stored, because
+   * it changes with every pan and resize and a stale rectangle would clamp to
+   * the wrong place. Stable identity so the capabilities memo holds.
+   */
+  const getBounds = useCallback(
+    () => visibleScreenRect(viewportRef.current, canvasBoxRef.current),
+    [],
+  );
+
   const capabilities = useMemo(
-    () => ({ enabled: interactive, portalTarget: portalEl }),
-    [interactive, portalEl],
+    () => ({ enabled: interactive, portalTarget: portalEl, getBounds }),
+    [interactive, portalEl, getBounds],
   );
 
   return (
@@ -182,6 +194,7 @@ export default function DemoLightbox({
 
           <div ref={viewportRef} className="jpd-lightbox__viewport" data-pan={pan ? '' : undefined}>
           <div
+            ref={canvasBoxRef}
             aria-hidden={interactive ? undefined : true}
             style={{
               width: CANVAS_W * scale,

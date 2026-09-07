@@ -13,7 +13,7 @@ import {
   type ScheduleItem,
   type ScheduleStep,
 } from './scheduleModel';
-import { useInspection } from '../../inspection';
+import { useInspection, windowRect } from '../../inspection';
 
 /**
  * The phase/milestone inspection layer.
@@ -110,7 +110,7 @@ export type Anchor = {
  * viewport gives every segment on a row the same answer.
  *
  * There is no side placement at all. Horizontal overflow is solved by clamping
- * the card into the viewport while keeping it above or below the row.
+ * the card into the VIEWER while keeping it above or below the row.
  *
  * THE CARD IS ANCHORED BY THE EDGE FACING THE ROW, AND GROWS AWAY FROM IT.
  *
@@ -138,10 +138,27 @@ export type Anchor = {
  * and the card can only ever extend into space the row does not occupy.
  *
  * OVERFLOW IS ABSORBED BY THE BAND, NOT BY MOVING THE CARD. The card carries a
- * `max-height` equal to the space between the row and the viewport edge, and
- * scrolls internally beyond it. The viewport-half rule guarantees that band is
- * never pathological: the chosen side is always the roomier one, so the band
- * is at least about half the viewport less the row.
+ * `max-height` equal to the space between the row and the viewer's edge, and
+ * scrolls internally beyond it. The half rule guarantees that band is never
+ * pathological: the chosen side is always the roomier one, so the band is at
+ * least about half the viewer less the row.
+ *
+ * THE BOUNDARY IS THE VIEWER, NOT THE WINDOW. Every limit below is read from
+ * the rectangle the host reports through `getBounds` - the part of the canvas
+ * the visitor can currently see, already intersected with its clip container
+ * and the window. The window is only a fallback for a host with no opinion.
+ *
+ * This is the containment fix. Clamping to `window.innerWidth` let a card
+ * anchored near the screen's right edge extend up to its own width past that
+ * edge, into the dark area beside a centred dialog - most visible at the Days
+ * zoom, where bars reach the right edge of a horizontally scrolled gantt. The
+ * window is simply the wrong rectangle: it is the browser, not the schedule.
+ *
+ * COORDINATE SPACES. Anchors are client rects and the card is `position:
+ * fixed`, so `left`/`top` are window coordinates and `bottom` is an offset
+ * from the window's bottom edge. The BOUNDS are a client rect too, so limits
+ * and coordinates compare directly; only `bottom` needs converting, and it is
+ * derived from a clamped window y rather than from the window's height.
  *
  * HYSTERESIS. While inspecting one row, a centre within 60px of the midpoint
  * keeps the previous decision, so a row sitting almost exactly on the centre
@@ -165,6 +182,12 @@ const FLIP_HYSTERESIS = 60;
  * rendering fault; a card that overhangs by a few pixels does not.
  */
 const MIN_BAND = 160;
+/**
+ * Floor for the card's width, for a viewer too narrow to hold it. Narrowing
+ * the card is the lesser fault: an overhanging card is the bug being fixed,
+ * and the content reflows rather than breaking.
+ */
+const MIN_CARD_W = 220;
 
 /**
  * One of `top`/`bottom` is a number and the other is null: the number is the
@@ -176,10 +199,12 @@ type Placement = {
   top: number | null;
   bottom: number | null;
   maxH: number;
+  /** CARD_W unless the viewer is too narrow to hold it. */
+  width: number;
 };
 
 export default function PhaseInspector({ anchor }: { anchor: Anchor | null }) {
-  const { portalTarget } = useInspection();
+  const { portalTarget, getBounds } = useInspection();
   const [pos, setPos] = useState<Placement | null>(null);
   const last = useRef<{ rowId: string; left: number; below: boolean } | null>(null);
 
@@ -190,13 +215,20 @@ export default function PhaseInspector({ anchor }: { anchor: Anchor | null }) {
       return;
     }
 
-    const vw = window.innerWidth;
+    // The window is only ever the reference frame for `bottom`; every LIMIT
+    // comes from the viewer.
     const vh = window.innerHeight;
+    const reported = getBounds?.() ?? null;
+    const bounds = reported ?? windowRect();
     const { rowRect, segRect } = anchor;
 
-    // --- vertical: viewport half decides, with a neutral zone -------------
+    // A viewer too narrow for the card narrows the card, rather than letting
+    // it overhang the edge the whole exercise is about respecting.
+    const width = Math.max(MIN_CARD_W, Math.min(CARD_W, bounds.width - EDGE * 2));
+
+    // --- vertical: the VIEWER's half decides, with a neutral zone ---------
     const rowCentreY = rowRect.top + rowRect.height / 2;
-    const midY = vh / 2;
+    const midY = bounds.top + bounds.height / 2;
     const prev = last.current;
 
     // Hysteresis applies only while inspecting the SAME row - it exists to
@@ -213,22 +245,31 @@ export default function PhaseInspector({ anchor }: { anchor: Anchor | null }) {
     // the far side of it. Neither branch reads the card's height, so nothing
     // about the content can move the anchored edge, and there is no vertical
     // clamp that could slide the card back over the row.
-    const top = below ? rowRect.bottom + BAND_MARGIN : null;
-    const bottom = below ? null : vh - rowRect.top + BAND_MARGIN;
+    // The pinned edge is still a pure function of the row - content height
+    // cannot move it - but it is now also held inside the viewer, for a row
+    // scrolled so far that the band would start outside it.
+    const cardTopY = Math.max(rowRect.bottom + BAND_MARGIN, bounds.top + EDGE);
+    const cardBottomY = Math.min(rowRect.top - BAND_MARGIN, bounds.bottom - EDGE);
+    const top = below ? cardTopY : null;
+    // `bottom` is an offset from the WINDOW's bottom edge because the card is
+    // fixed-positioned; the y it is derived from is the viewer-clamped one.
+    const bottom = below ? null : vh - cardBottomY;
     const band = below
-      ? vh - rowRect.bottom - BAND_MARGIN - EDGE
-      : rowRect.top - BAND_MARGIN - EDGE;
+      ? bounds.bottom - EDGE - cardTopY
+      : cardBottomY - (bounds.top + EDGE);
     const maxH = Math.max(band, MIN_BAND);
 
-    // --- horizontal: follow the segment, clamp to the viewport ------------
-    const desired = segRect.left + segRect.width / 2 - CARD_W / 2;
+    // --- horizontal: follow the segment, clamp to the VIEWER --------------
+    const desired = segRect.left + segRect.width / 2 - width / 2;
     let left =
       sameRowAsLast && Math.abs(desired - prev.left) < DEAD_ZONE ? prev.left : desired;
-    left = Math.min(Math.max(left, EDGE), Math.max(EDGE, vw - CARD_W - EDGE));
+    const minLeft = bounds.left + EDGE;
+    const maxLeft = Math.max(minLeft, bounds.right - width - EDGE);
+    left = Math.min(Math.max(left, minLeft), maxLeft);
 
     last.current = { rowId: anchor.rowId, left, below };
-    setPos({ left, top, bottom, maxH });
-  }, [anchor]);
+    setPos({ left, top, bottom, maxH, width });
+  }, [anchor, getBounds]);
 
   if (!anchor) return null;
 
@@ -240,6 +281,9 @@ export default function PhaseInspector({ anchor }: { anchor: Anchor | null }) {
       role="tooltip"
       style={{
         left: pos ? pos.left : 0,
+        // Only narrower than the stylesheet's 320px when the viewer is too
+        // narrow to hold it; never wider.
+        width: pos ? pos.width : undefined,
         // Exactly one of these is a length; the other must be `auto` so the
         // card is anchored by one edge and sized by its content, not stretched
         // between two edges.
