@@ -72,6 +72,14 @@ import '../tokens.css';
 
 /** The master's meta rhythm is hand-set - 56px then 68px between rows - and
     is reproduced as measured rather than regularised. */
+/** The Gap Type colours, shared with ScopeGapTable so the panel cannot drift. */
+const PANEL_TYPE_COLOR =
+  DETAIL.type === 'interface'
+    ? 'var(--jpd-gap-error)'
+    : DETAIL.type === 'validated'
+      ? 'var(--jpd-gap-ok)'
+      : 'var(--jpd-gap-warn)';
+
 const KPI_ICON_SIZE = { total: 31, definition: 31, responsibility: 42, interface: 50 } as const;
 
 const META_GAPS = [29, 15, 27];
@@ -114,12 +122,13 @@ export default function ScopeGapAnalysisScreen() {
             {DETAIL.title}
           </div>
 
-          {/* The gap's own type, restated as the panel's one coloured line. */}
+          {/* The gap's own type, restated as the panel's one coloured line, in
+              the colour the table gives that type rather than a fixed amber. */}
           <div className="flex items-center" style={{ gap: 12, marginTop: 16 }}>
-            <AlertTriangle size={18} strokeWidth={2} color="var(--jpd-action)" />
+            <AlertTriangle size={18} strokeWidth={2} color={PANEL_TYPE_COLOR} />
             <span
               className="jpd-tight-sm"
-              style={{ fontSize: 14.1, fontWeight: 700, color: 'var(--jpd-action)' }}
+              style={{ fontSize: 14.1, fontWeight: 700, color: PANEL_TYPE_COLOR }}
             >
               {DETAIL.typeLabel}
             </span>

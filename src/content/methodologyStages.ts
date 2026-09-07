@@ -44,7 +44,7 @@ export const METHODOLOGY_STAGES: MethodologyStage[] = [
     body: 'We validate the contractor’s existing scope against the project documentation to determine whether the work required to complete the project has been identified and covered.',
     demo: {
       file: 'scope-validation',
-      alt: 'The JiTpro Scope Validation Report for a residential project: 428 scope items checked against drawings, contracts and subcontracts, RFIs and meeting records, each marked validated, partial, single-source or conflicting.',
+      alt: 'The JiTpro Scope Validation Report for a residential project: 428 scope items checked against 64 drawings, 31 contracts and subcontracts, 14 RFIs, 9 meeting records and 8 project communications — and no specifications at all — each item marked fully validated, partially validated, single-source or conflicting, with a detail panel tracing the exterior window assemblies to every source that describes them.',
     },
   },
   {

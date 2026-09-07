@@ -1,4 +1,4 @@
-import { AlertCircle, Check, HelpCircle } from 'lucide-react';
+import { AlertCircle, Check, CircleDot, HelpCircle } from 'lucide-react';
 
 /**
  * The status badge. The second element the approved screen genuinely reuses:
@@ -12,6 +12,11 @@ import { AlertCircle, Check, HelpCircle } from 'lucide-react';
  * exactly as they did. The Product Register adds four (approved, pending,
  * long-lead, tbd) on the same geometry: the ok, warn and neutral tones, with
  * the master's own marks - a check, a dot, a small diamond, a question mark.
+ * The Scope Validation report adds four more (validated, partial,
+ * single-source, conflict) the same way; its master measures the badge at the
+ * same 25px height and reads the same ok/warn/error fills, so nothing about
+ * the primitive changes and no existing status moves. Its conflict mark is a
+ * ringed dot rather than the overdue alert.
  */
 export type DemoStatus =
   | 'on-track'
@@ -20,7 +25,11 @@ export type DemoStatus =
   | 'approved'
   | 'pending'
   | 'long-lead'
-  | 'tbd';
+  | 'tbd'
+  | 'validated'
+  | 'partial'
+  | 'single-source'
+  | 'conflict';
 
 export const STATUS_LABEL: Record<DemoStatus, string> = {
   'on-track': 'On Track',
@@ -30,6 +39,10 @@ export const STATUS_LABEL: Record<DemoStatus, string> = {
   pending: 'Pending',
   'long-lead': 'Long Lead',
   tbd: 'TBD',
+  validated: 'Validated',
+  partial: 'Partial',
+  'single-source': 'Single Source',
+  conflict: 'Conflict',
 };
 
 const OK = { bg: 'var(--jpd-ok-bg)', bd: 'var(--jpd-ok-border)', fg: 'var(--jpd-ok-fg)' } as const;
@@ -45,13 +58,20 @@ const TONE: Record<DemoStatus, { bg: string; bd: string; fg: string }> = {
   pending: WARN,
   'long-lead': WARN,
   tbd: NEUTRAL,
+  validated: OK,
+  partial: WARN,
+  'single-source': WARN,
+  conflict: ERROR,
 };
 
 function Mark({ status }: { status: DemoStatus }) {
   switch (status) {
     case 'on-track':
     case 'approved':
+    case 'validated':
       return <Check size={11} strokeWidth={3} />;
+    case 'conflict':
+      return <CircleDot size={11} strokeWidth={2.5} />;
     case 'overdue':
       return <AlertCircle size={11} strokeWidth={2.5} />;
     case 'long-lead':
@@ -83,15 +103,29 @@ function Mark({ status }: { status: DemoStatus }) {
   }
 }
 
-export default function DemoStatusBadge({ status }: { status: DemoStatus }) {
+export default function DemoStatusBadge({
+  status,
+  minWidth,
+}: {
+  status: DemoStatus;
+  /**
+   * Floor for the badge's width. Opt-in and unset everywhere by default, so
+   * the Commitment and Product registers keep their content-sized badges
+   * exactly as approved. The Scope Validation master sizes its badges to a
+   * common minimum instead - its Partial reads the same width as its
+   * Validated - and passes 80 here to reproduce that.
+   */
+  minWidth?: number;
+}) {
   const tone = TONE[status];
 
   return (
     <span
-      className="inline-flex items-center"
+      className="inline-flex items-center justify-center"
       style={{
         gap: 4,
         height: 25,
+        minWidth,
         padding: '0 8px',
         borderRadius: 5,
         background: tone.bg,

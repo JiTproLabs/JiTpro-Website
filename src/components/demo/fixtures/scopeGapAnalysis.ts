@@ -169,7 +169,16 @@ export const COLUMNS = [
 export const ROWS: GapRow[] = [
   {
     scope: 'Exterior Windows',
-    type: 'definition',
+    /**
+     * INTERFACE, not definition, and the Scope Validation report is why. That
+     * screen marks SI-0428 Exterior Window Assemblies `validated` and SI-0427
+     * Interior Window Returns `partial`: this item's own scope is covered, and
+     * what is unresolved is the boundary between the two - which is what an
+     * interface gap is. The master labelled it a definition gap while its own
+     * title and finding both describe an interface; the two screens cannot
+     * both be right, and the evidence sits on this side.
+     */
+    type: 'interface',
     title: 'Interior and exterior finish interfaces unresolved',
     description: 'Window frame-to-wall interfaces lack complete finish coordination',
     responsibleParty: 'Architect',
@@ -311,7 +320,10 @@ export const SELECTED_ROW = 0;
 export const DETAIL = {
   eyebrow: 'Gap Detail',
   title: 'Interior and exterior finish interfaces unresolved',
-  typeLabel: 'Definition Gap',
+  /** Drives both the label and its colour, so the panel cannot disagree with
+      the row's own Gap Type cell. */
+  type: 'interface' as GapType,
+  typeLabel: 'Interface Gap',
   sections: [
     {
       icon: 'finding' as const,
