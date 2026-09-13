@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| Status | **Sprint 0: discovery complete; Rounds 1 to 4 decided; Rounds 5 and 6 in progress.** No implementation has started. |
+| Status | **Sprint 0: discovery complete; Rounds 1 to 5 decided; Round 6 (UX, copy, Design System amendments) in progress.** No implementation has started. |
 | Owner / approver | Jeff Kaufman |
 | Document created | 2026-09-12 |
-| Last updated | 2026-09-12 (Round 4 decisions: analytics and conversion measurement) |
+| Last updated | 2026-09-12 (Round 5 decisions: asset, route, abuse controls, fail-open failure matrix, observability, testing, staging) |
 | Working branch | `feature/navigation-simplification-lead-gen-guide` (decision G-1, 2026-09-12) |
 | Source of truth | This document. When a decision is made it is recorded here and not revisited without cause. |
 
@@ -235,7 +235,11 @@ Turnstile: reuse `src/components/Turnstile.tsx`, extended to accept `appearance:
 
 Server-side registry (authoritative for fulfilment): asset id → current version, versioned filename, stable public path, email subject and body. A unit test asserts the client registry and server registry agree on ids and versions.
 
-Why an edge function rather than a Cloudflare Pages Function: the secrets, database access, Resend integration, logging conventions, and the team's operational familiarity all already live in Supabase. Adding a second serverless platform for one endpoint creates a second place to manage secrets and deploys. (*pending* D5.9)
+Why an edge function rather than a Cloudflare Pages Function (DECIDED D5.9): the secrets, database access, Resend integration, logging conventions, and the team's operational familiarity all already live in Supabase. Adding a second serverless platform for one endpoint creates a second place to manage secrets and deploys. Cloudflare Pages Functions are not introduced.
+
+**Fail-open ordering inside the function (D5.6):** the guide URL is known from the registry before any I/O, so the response can always include it. The function attempts persistence, then email, and reports each outcome honestly in the response; a persistence failure produces an internal failure alert and still returns the guide URL.
+
+**Backend environments (D5.11):** the existing `jitpro-staging` Supabase project is the integration-test target, subject to the inspection in Section 15.2. Migrations and functions are exercised there first and promoted to production `jitpro_website` only after success.
 
 A second, deliberately tiny function `supabase/functions/record-lead-magnet-event/index.ts` (D4.1) accepts one funnel event, validates the event name, asset, placement, and page path against fixed allow-lists, truncates strings, inserts one row into `lead_magnet_events`, and returns 204. It stores no identifiers and reads nothing back.
 
@@ -281,12 +285,14 @@ Resend only (D3.1); no second provider. Sent synchronously from the edge functio
 
 **Test safety (D3.9):** `LEAD_MAGNET_TEST_MODE` restricts recipients to `@resend.dev` and `@jit-pro.com` on non-production deployments; Resend's documented test recipients (`delivered@`, `bounced@`, `complained@`, `suppressed@resend.dev`) are used for development and automated checks.
 
-### 4.6 PDF delivery and versioning (*pending* Decision Round 5)
+### 4.6 PDF delivery and versioning (DECIDED, Round 5, 2026-09-12)
 
-- The PDF is committed to `public/guides/` under a versioned filename (about 100 to 120 KB; git is fine for this).
-- A stable path, proposed `/guides/procurement`, is a **302 redirect** in `public/_redirects` to the current versioned file. Updating the guide is: add the new file, change one line, bump the registry version, open a PR.
-- `public/_headers` adds `X-Robots-Tag: noindex` to the PDF path and the redirect path so the PDF is not indexed independently of the capture experience (Section 33 of the brief; *pending* D5.10).
-- The registry records which version was current; each request row stores it, so JiTpro can always tell which version a lead received.
+- **Asset (D5.1):** the approved **31-page** PDF, *What Will Stop Work Six Months From Now? The JiTpro Field Guide to Construction Procurement Control*, committed to `public/guides/` under a versioned filename, for example `jitpro-construction-procurement-field-guide-2026-09.pdf`, and served by Cloudflare Pages. Obtaining and placing that exact file is an **implementation prerequisite** (L-8); none of the older PDFs is substituted.
+- **Stable route (D5.2):** **`/guides/procurement-field-guide`**, establishing the reusable convention `/guides/<asset-slug>` where the slug equals the asset id. It is a **302** rule in `public/_redirects` to the current versioned file, placed **above** the SPA catch-all because Cloudflare evaluates rules top to bottom and follows redirects regardless of asset matches. Replacing the guide later is: add the new file, change one line, bump the registry version. Previously distributed links keep working.
+- **Headers (D5.1, D5.10):** a `public/_headers` rule targeting the actual PDF path sets `Content-Disposition: inline; filename="JiTpro-Construction-Procurement-Field-Guide.pdf"` (opens in the browser, saves under a clean name), `X-Robots-Tag: noindex`, and a long `Cache-Control` because the filename is versioned. Headers cannot target the redirect path (Cloudflare applies redirects before headers), which is why the PDF file carries them.
+- **Consistency check (D5.2):** a Vitest test reads `_redirects`, the client registry, and the server registry and asserts that the stable route points at the file the registry names, that the file exists, and that versions agree. Drift fails CI.
+- The registry records which version is current; each request row stores it, so JiTpro can always tell which version a lead received.
+- `/field-guide` (the capture and landing page) remains indexable and sets its own title and meta description. No `robots.txt` or sitemap work in this project (F-5).
 
 ### 4.7 Analytics (DECIDED, Round 4, 2026-09-12)
 
@@ -313,8 +319,8 @@ Frontend changes ship through PR → preview → squash merge → Cloudflare. Da
 4. **Entry.** The visitor types an email. Client validation runs on submit only (not on every keystroke): required, syntactically plausible. Turnstile runs invisibly; if Cloudflare needs an interactive challenge it appears inside the dialog.
 5. **Submit.** The button enters the submitting state (label changes, control disabled, layout stable). The request carries email, asset id, placement, current page, landing page, referrer, UTMs, Turnstile token, honeypot value.
 6. **Server.** Validates, rate-limits, records the contact and request, sends the email, returns the result.
-7. **Success.** The dialog swaps to the success state: "Your guide is ready." with the primary **Download** action opening the stable guide URL in a new tab, and a line confirming the email was sent. If the email failed but the lead was stored, the line instead says the email could not be sent and the download still works (*pending* D5.6).
-8. **Errors.** Invalid email: inline message beneath the field, field marked invalid, focus moved to it. Server or network error: message in the dialog with a retry action, form values preserved. Rate-limited: a calm message saying the guide was already sent to that address recently, with the download still offered (*pending* D5.3).
+7. **Success.** The dialog swaps to the success state: "Your guide is ready." with the primary **Download** action opening the stable guide URL in a new tab, and a line confirming the email was sent. If the email failed or the address is suppressed, the line instead says the emailed copy could not be sent and the download still works (D5.6).
+8. **Errors.** Invalid email: inline message beneath the field, field marked invalid, focus moved to it; nothing is sent. Every other failure **fails open for guide access** (D5.6): the visitor is given the download and told honestly what did not happen (request not saved, email not sent, verification not completed, or limit reached) with `info@jit-pro.com` as the fallback for an emailed copy. Exact wording is approved in Round 6.
 9. **Email.** Arrives from JiTpro with the stable link. Clicking it opens the current PDF.
 10. **Later.** If the same person submits the contact form, the join on email connects the guide lead to the conversation.
 
@@ -510,9 +516,8 @@ Do not act on small samples. The first weeks establish a baseline (Section 23).
 ## 9. Security and abuse
 
 - Server-side validation of everything the client sends: JSON shape, email syntax and length, allowed `asset_id`, allowed `placement`, string length caps on attribution fields, UTM values truncated.
-- Honeypot field checked on the server (silently succeeds without storing), matching the investor function.
-- Turnstile verified server-side on every request (existing pattern).
-- Rate limiting in the function: at most M requests per salted IP hash per 10 minutes (exact M *pending* D5.5). Turnstile and this rate limit are the primary abuse controls; legitimate repeat requesters are never made to wait.
+- **Bot protection (DECIDED D5.4):** Turnstile rendered with `appearance: "interaction-only"` (invisible unless Cloudflare decides interaction is necessary), verified server-side on every request; a server-checked honeypot that silently succeeds without storing (matching the investor function); server-side validation of every field. The normal visitor sees no challenge. An expired token (300-second lifetime) is handled by resetting the widget and asking the visitor to submit again. Preview-hostname allow-listing for the widget is an external testing requirement (G-4, L-5).
+- **Rate limiting (DECIDED D5.5):** guide requests are limited to **10 attempts per salted IP hash per 10 minutes**, chosen because contractor offices and project teams often share one outbound IP. The events endpoint allows **100 events per hash per 10 minutes**. Both counts use the 24-hour `lead_magnet_ip_activity` table (D2.7). Exceeding the request limit returns a **calm 429**. Both limits are single named constants in the shared module so they can be tuned from production behaviour. Turnstile, the honeypot, validation, and the one-hour per-email cooldown provide the rest of the protection.
 - Repeat handling (DECIDED D2.2): for every valid request the function normalises the email, upserts the single `contacts` row, inserts a new `lead_magnet_requests` row, marks `is_repeat` when that contact already requested the asset, and always grants immediate access. The fulfilment email is re-sent only if the last **successful** fulfilment email to that address is more than **one hour** old; inside the hour the request is recorded with `email_status = skipped_cooldown` and no email is sent. The request is never rejected and no duplicate contact is created.
 
 ### 9.1 Salted IP hash: purpose and retention (recommendation, D2.7)
@@ -521,7 +526,20 @@ Do not act on small samples. The first weeks establish a baseline (Section 23).
 - **Where:** a separate `lead_magnet_ip_activity` table (Section 6.3), not on request or contact rows.
 - **Salt:** `LEAD_MAGNET_IP_SALT` (secret) combined with the current UTC date, so the same address produces a different hash each day and cannot be correlated across days even inside the table.
 - **Retention:** **24 hours.** The rate-limit window is 10 minutes; 24 hours leaves room to look at a burst after the fact. The function deletes rows older than 24 hours on each invocation, so no scheduler is needed and the table cannot grow.
-- **Logging:** the raw IP is never written to function logs by this code. (Supabase's own platform request logs are outside this project's control and are covered by Supabase's retention.)
+- **Logging:** the raw IP is never written to function logs by this code, and the hash itself is not logged unnecessarily. (Supabase's own platform request logs are outside this project's control and are covered by Supabase's retention.)
+
+### 9.2 Logging and observability (DECIDED D5.7)
+
+Proportionate to a lead magnet, using only infrastructure that already exists:
+
+| Signal | Mechanism |
+|---|---|
+| Per-request diagnostics | Function logs correlated by a `requestId`, following the existing edge-function convention. **Email addresses are masked** in logs (for example `jo***@abccontracting.com`); the durable row already holds the full address. Raw IPs and IP hashes are not logged unnecessarily. |
+| "It is working" | The internal notification per successful request (D3.8). |
+| Persistence failure | A failure alert From `JiTpro Notifications <noreply@mail.jit-pro.com>` To `info@jit-pro.com` sent by the function when the request could not be saved, so the lead can be followed up manually. |
+| Broken guide link | A Pulsetic HTTP monitor on `https://jit-pro.com/guides/procurement-field-guide` following the redirect (external configuration, L-11). |
+| Unusual volume | Saved query 1 (requests per day) plus the internal notifications; the rate limiter's 429 count appears in `lead_magnet_events` as `rate_limited` errors. |
+| Log retention | Depends on the Supabase plan (Free 1 day, Pro 7 days, Team 28 days). The actual plan is confirmed and recorded as launch item **L-10**; it is not guessed. |
 - Secrets stay in Supabase secrets. The browser sees only the anon key and the Turnstile site key, as today.
 - Error responses to the browser are generic; detail goes to function logs with a request id.
 - No raw IP addresses or user agents in logs beyond what Supabase records by default.
@@ -568,30 +586,46 @@ Designed desktop-first per §35.1, then reviewed at tablet landscape, tablet por
 
 ---
 
-## 13. Failure modes and the recommended failure matrix (*pending* D5.6)
+## 13. Failure modes and the failure matrix (DECIDED D5.6, 2026-09-12)
 
-Operations, in order: (1) validate, (2) record request, (3) send fulfilment email, (4) present access, (5) record analytics.
+### 13.1 Governing principle: fail open for guide access
 
-| Failure | Technically | Visitor sees | Guide access | Retry | Logged | JiTpro notified |
+**A failure in JiTpro infrastructure must not prevent a legitimate visitor from receiving the free guide.** The guide is a free distribution asset; withholding it when the backend is unavailable does not recover the lead and creates a worse prospect experience. The system never pretends a request was saved when it was not, and never claims an email was sent when it was not.
+
+The four required cases:
+
+| Case | What happened | Visitor sees | Guide access | Recorded | Alert |
+|---|---|---|---|---|---|
+| 1 | Request stored; fulfilment email sent | Success | **Yes** | Yes | Internal notification |
+| 2 | Request stored; fulfilment email failed | Success; the guide is available now but the emailed copy could not be delivered | **Yes** | Yes, `email_status = failed` | Internal notification shows the failure |
+| 3 | Address suppressed or otherwise cannot receive email | Success; calm note that the emailed copy could not be sent | **Yes** | Yes, `email_status = suppressed` | Internal notification shows the status |
+| 4 | Request persistence failed | The guide is available now, but JiTpro could not save or send the request; `info@jit-pro.com` offered as the fallback for an emailed copy | **Yes** | Logged (no row) | **Failure alert** to `info@` |
+
+Operations, in order: (1) validate, (2) determine the guide URL (always possible), (3) record request, (4) send fulfilment email, (5) respond with honest outcomes, (6) record analytics.
+
+### 13.2 Full matrix
+
+| Failure | Technically | Visitor sees (wording approved in Round 6) | Guide access | Retry | Logged | JiTpro notified |
 |---|---|---|---|---|---|---|
-| Empty or malformed email | Client validation fails; no request sent | Inline field error, focus on field | No | Immediate | No | No |
+| Empty or malformed email | Client validation fails; nothing sent | Inline field error, focus on the field | No (not a request yet) | Immediate | No | No |
 | Server rejects email format | 400 | Same inline error | No | Immediate | Yes (request id) | No |
-| Turnstile fails or expires | 403 | "Verification did not complete. Please try again." with widget reset | No | Immediate | Yes | No |
-| Repeat within the one-hour email cooldown | 200 with `email_status: skipped_cooldown` | Success state; "We emailed this guide to that address within the last hour, so we did not send it again." | **Yes** | n/a | Yes | No |
-| Rate-limited (IP) | 429 | "Too many requests. Please try again in a few minutes." | No | After window | Yes | Only if sustained (manual log review) |
-| Network error or timeout | fetch rejects | "We could not reach the server. Check your connection and try again." Values preserved | No | Button-driven | Client console only | No |
-| Lead storage fails | 500 | "Something went wrong on our side. Please try again in a moment." plus a fallback line offering `info@jit-pro.com` | **No** (recommended: do not hand out the guide when nothing was recorded; the visitor can retry and the failure is rare) | Yes | Yes, error level | Yes, via log alerting if available; otherwise internal email on next success is not enough, so add a failure notification email from the function |
-| Email send fails, lead stored | 200 with `email_sent: false` | Success state; "Your guide is ready. We could not send the email copy, so please download it now." | **Yes** | Automatic retry once inside the function, same idempotency key | Yes, with provider error | Internal notification includes `email_status: failed` |
-| Resend reports the address as suppressed (prior bounce or complaint) | 200 with `email_status: suppressed` | Success state; calm note that the guide is available now and the email could not be delivered to that address | **Yes** | No | Yes | Internal notification includes `email_status: suppressed` |
+| Honeypot filled | 200, nothing stored, nothing sent | Ordinary success state | Yes (bots do not matter) | n/a | Yes | No |
+| Turnstile fails, expires, or the script never loaded | 403 | The guide is available now; the browser could not be verified, so the request was not saved and no email is on its way; reload to try again | **Yes** | Widget reset; button-driven | Yes | No |
+| Repeat within the one-hour email cooldown | 200, `email_status = skipped_cooldown` | Success; the guide was emailed to that address within the last hour, so it was not sent again | **Yes** | n/a | Yes | No |
+| Rate-limited (IP) | **calm 429** | The guide is available now; too many requests came from this network just now, so the request was not saved and no email is on its way; try again in a few minutes or email `info@` | **Yes** | After the window | Yes | Only if sustained (saved query) |
+| Network error or timeout | fetch rejects or 30-second hard timeout | The guide is available now; the request could not be confirmed as saved and no email may be on its way; try again or email `info@` | **Yes** | Button-driven | Client console only | No |
+| **Lead storage fails** | 200 with `stored: false` (function fails open) or 500 | The guide is available now; JiTpro could not save the request; email `info@` for an emailed copy | **Yes** | Yes | Yes, error level, masked email | **Failure alert email** to `info@` |
+| Email send fails, lead stored | 200 with `email_status = failed` | Success; the emailed copy could not be delivered, so download now | **Yes** | One automatic retry inside the function, same idempotency key | Yes, provider error summary | Internal notification includes the status |
+| Resend reports the address as suppressed | 200 with `email_status = suppressed` | Success; the emailed copy could not be sent to that address | **Yes** | No | Yes | Internal notification includes the status |
 | Contact already `email_suppressed_at` | 200, no send attempted | Same as above | **Yes** | No | Yes | Same |
-| Internal notification fails | Swallowed | Nothing | Yes | No | Yes | No |
-| PDF route unavailable (bad redirect, missing file) | 404 on click | Browser 404 | No | n/a | CI lychee check prevents merge; production smoke test verifies | Yes, by monitoring the URL |
-| Duplicate submission (double click) | Second request in flight | Button disabled while submitting; second request is treated as a repeat server-side | Yes | n/a | Yes | No |
-| Visitor closes the dialog mid-submit | Request continues | Nothing; reopening shows the idle form (or success if the response arrived) | Via email | n/a | Yes | No |
-| Slow network | Long submitting state | Submitting label persists; after 15 seconds a "still working" line appears; hard timeout at 30 seconds becomes the network error | Depends | Yes | Yes | No |
-| JavaScript disabled or errored | Dialog cannot open | The CTA is a real link to `/field-guide`, which renders a normal HTML form (decided D1.1) | Depends | n/a | n/a | No |
+| Internal notification or failure alert itself fails | Swallowed after logging | Nothing | Yes | No | Yes | No |
+| PDF route unavailable (bad redirect, missing file) | 404 on click | Browser 404 | No | n/a | CI consistency test and lychee prevent merge; production smoke test verifies | Pulsetic monitor (L-11) |
+| Duplicate submission (double click) | Second request in flight | Button disabled while submitting; a second request is treated as a repeat server-side | Yes | n/a | Yes | No |
+| Visitor closes the dialog mid-submit | Request continues | Nothing; reopening shows the idle form (or the result if the response arrived) | Via email | n/a | Yes | No |
+| Slow network | Long submitting state | Submitting label persists; after 15 seconds a "still working" line appears; hard timeout at 30 seconds becomes the network case above | **Yes** after timeout | Yes | Yes | No |
+| JavaScript disabled or errored | Dialog cannot open | The CTA is a real link to `/field-guide`, which renders the form as a normal page (D1.1) | Depends | n/a | n/a | No |
 
-The visitor should never be left wondering. Every terminal state says what happened and what to do next.
+The visitor is never left wondering. Every terminal state says what happened, whether the request was saved, whether an email is coming, and what to do next.
 
 ---
 
@@ -599,22 +633,25 @@ The visitor should never be left wondering. Every terminal state says what happe
 
 Testing is built into every sprint, not deferred.
 
-### 14.1 Automated (Vitest, to be added; *pending* D5.8)
+### 14.1 Automated (DECIDED D5.8: Vitest 5 on the repository's Vite 8)
 
-- Email validation and normalisation (accepts plausible addresses, rejects malformed, trims, lowercases).
-- Attribution parsing from a URL and referrer; truncation; missing values.
-- Lead-magnet registry: every client asset id exists server-side; versions agree; public paths and `_redirects` entries agree; the versioned file exists in `public/guides/`.
-- Email template rendering: subject, link equals the stable URL, HTML escaping of any interpolated value, plain-text part present.
-- Request payload building (client) and request validation (server shared module).
-- Rate-limit and repeat-request decision logic (pure functions with injected "recent requests" data).
-- Analytics event construction (names and properties).
-- `LeadCaptureForm` state machine, if Testing Library is added; otherwise the reducer is extracted and tested as a pure function.
+`vitest` is added as a dev dependency, `npm test` runs `vitest run`, and CI runs it **before the build step**. Tests target pure logic without browser simulation; **jsdom is not added** unless a component test genuinely requires it, and no abstraction is introduced solely to make tests possible. Reusable logic is extracted into plain modules (shared by the client and the edge functions where sensible) for:
 
-`npm test` is added to `package.json` and to CI before the build step.
+- email validation and normalisation
+- attribution parsing (UTMs, referrer, landing path; truncation; missing values)
+- consent decisions (checkbox state → `consent_status`, never overwriting `unsubscribed`)
+- re-send cooldown decision (one hour, last successful send)
+- rate-limit decision (10 per 10 minutes; 100 events per 10 minutes; single constants)
+- template rendering (subject, stable link, footer, escaping, plain-text part)
+- lead-magnet registry (client and server agree on ids and versions)
+- redirect and asset consistency (`_redirects` target = registry file; file exists)
+- failure-state decisions (which visitor state each server outcome maps to, including fail-open)
+- analytics event construction (the seven names, allowed placements)
+- the capture form's state reducer, as a pure function
 
-### 14.2 Edge function
+### 14.2 Edge function and integration testing (DECIDED D5.11)
 
-Deno is not installed locally. Options: install Deno for `deno test` on the function's pure modules, or keep pure logic in `_shared` and test it with Vitest (recommended), with the function itself exercised against the deployed preview using `curl` and the Supabase logs. Decision D5.8.
+Deno is not installed locally and is not added. Pure logic is tested with Vitest as above. The functions themselves are exercised **against the `jitpro-staging` Supabase project** after the inspection in Section 15.2: migrations applied there first, functions deployed there first, `curl` cases for every matrix row, Resend test recipients for the email paths, and a website preview pointed at staging for the full browser flow. Production is touched only after staging passes.
 
 ### 14.3 Browser (Chrome via the Claude in Chrome tools or the gstack browse skill; Playwright headless shells for screenshots)
 
@@ -642,13 +679,14 @@ Listed in Section 15.
 
 ## 15. Deployment plan
 
-1. Merge order matters. Database migrations and the edge function must be live **before** the frontend PR that calls them is merged.
-2. **Preview:** open the PR; Cloudflare builds a preview. Verify the CTA, dialog, stable route redirect, headers, and (if the Turnstile hostname allowlist is extended) a real submission. If Turnstile cannot run on preview, verify everything except the final submit there and verify submit in production immediately after merge with a test address.
-3. **Backend release:** `supabase db push` (migrations), `supabase functions deploy submit-lead-magnet-request`, set any new secrets, confirm with a `curl` against production using a test email.
-4. **Merge:** squash merge once `build-and-test` passes and review threads are resolved. Ask Jeff before the final merge.
-5. **Production verification (smoke test):** production CTA renders; dialog opens; test submission succeeds; `contacts` and `lead_magnet_requests` rows exist with attribution; email arrives; email link opens the correct PDF version; inline Download works; analytics events appear; contact form, navigation, homepage, and Learn More still work.
-6. **Rollback:** revert the PR on GitHub. The edge function and tables can stay deployed harmlessly; the CTA simply disappears. If the function itself misbehaves, redeploy the previous version or disable the CTA.
-7. Record the result in Section 22.
+1. Merge order matters. Database migrations and the edge functions must be live in **production** before the frontend PR that calls them is merged, and live in **staging** before that (D5.11).
+2. **Staging first:** apply migrations and deploy `submit-lead-magnet-request` and `record-lead-magnet-event` to `jitpro-staging` with staging secrets; run the `curl` matrix and Resend test-recipient cases; point a website preview at staging (Cloudflare Pages preview-environment variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`) for the full browser flow. Note: preview-environment variables apply to every preview deployment, so while they point at staging the contact form on previews would post to a project where `submit-contact` may not exist; the contact form already cannot complete on previews because of Turnstile, so this is a documented, temporary condition, not a regression.
+3. **Preview:** open the PR; Cloudflare builds a preview. Verify the CTA, dialog, stable route redirect, headers, and (with G-4 done) a real submission against staging.
+4. **Production backend release:** only after staging passes: `supabase db push` (migrations), `supabase functions deploy` for both functions, set production secrets (`LEAD_MAGNET_IP_SALT`; never `LEAD_MAGNET_TEST_MODE`), confirm with a `curl` against production using a JiTpro-owned test address.
+5. **Merge:** squash merge once `build-and-test` passes and review threads are resolved. Ask Jeff before the final merge.
+6. **Production verification (smoke test):** production CTA renders; dialog opens; test submission succeeds; `contacts` and `lead_magnet_requests` rows exist with attribution; email arrives; email link opens the correct 31-page PDF; inline Download works; analytics events appear; contact form, navigation, homepage, and Learn More still work.
+7. **Rollback:** revert the PR on GitHub. The edge functions and tables can stay deployed harmlessly; the CTA simply disappears. If a function itself misbehaves, redeploy the previous version or disable the CTA.
+8. Record the result in Section 22.
 
 ### 15.1 Launch checklist: items that must be verified outside the repository
 
@@ -660,11 +698,30 @@ These cannot be confirmed from code and are not assumed. Each is checked off, wi
 | L-2 | JiTpro business mailing address supplied for the email footer (not invented) | Jeff | Open |
 | L-3 | Legal review completed: consent checkbox wording, privacy notice, fulfilment-email classification and wording | Jeff / counsel | Open |
 | L-4 | Resend dashboard confirms `jit-pro.com` and `mail.jit-pro.com` verified (DNS evidence already positive) | Jeff / assistant with dashboard access | Open |
-| L-5 | Turnstile widget hostnames include preview URLs if preview-side submit testing is wanted (G-4) | Jeff / admin | Open |
-| L-6 | New Supabase secrets set: `LEAD_MAGNET_IP_SALT`, `LEAD_MAGNET_TEST_MODE` (non-production only), optional `LEAD_MAGNET_NOTIFY_TO` | Assistant via CLI or Jeff | Open |
-| L-7 | Migrations applied and function deployed to production before the frontend PR merges | Assistant via CLI or Jeff | Open |
-| L-8 | The approved 31-page PDF is the file committed (page count and title checked) | Assistant, confirmed by Jeff | Open |
-| L-9 | Analytics enablement per Round 4 (for example the Cloudflare Web Analytics toggle) | Jeff / admin | Open |
+| L-5 | Turnstile widget hostnames include the Cloudflare preview URLs so submit can be tested on previews (G-4) | Jeff / admin | Open |
+| L-6 | Production Supabase secrets set: `LEAD_MAGNET_IP_SALT`, optional `LEAD_MAGNET_NOTIFY_TO`; `LEAD_MAGNET_TEST_MODE` **absent** in production | Assistant via CLI with Jeff's approval | Open |
+| L-7 | Migrations applied and both functions deployed to production, after staging passed, before the frontend PR merges | Assistant via CLI with Jeff's approval | Open |
+| L-8 | The approved 31-page PDF is obtained from Jeff and is the file committed (page count and title verified) | Jeff supplies; assistant verifies | Open |
+| L-9 | Cloudflare Web Analytics enabled on the Pages project (Metrics → Enable) | Jeff / admin | Open |
+| L-10 | Supabase production plan confirmed and the actual function-log retention period recorded here (not guessed) | Jeff / assistant with dashboard access | Open |
+| L-11 | Pulsetic HTTP monitor added for `https://jit-pro.com/guides/procurement-field-guide`, following the redirect | Jeff | Open |
+| L-12 | `jitpro-staging` inspected per Section 15.2 and confirmed safe as the integration-test target | Assistant inspects; Jeff confirms | Open |
+| L-13 | Staging secrets set: `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY`, `LEAD_MAGNET_IP_SALT`, `LEAD_MAGNET_TEST_MODE`, `SITE_URL`, and any other required existing secret | Assistant via CLI with Jeff's approval | Open |
+| L-14 | Cloudflare Pages preview-environment variables pointed at staging for end-to-end browser testing, then reviewed after launch | Jeff / admin | Open |
+
+None of the dashboard or account changes above is performed silently. Each is requested from Jeff, or performed with his explicit approval, when the sprint reaches it.
+
+### 15.2 Staging inspection protocol (D5.11, before any change to `jitpro-staging`)
+
+Before modifying `jitpro-staging`, the assistant inspects it read-only and reports:
+
+1. what schemas, tables, functions, and secrets currently exist;
+2. whether any other active development appears to depend on it (recent activity, deployed functions, table contents);
+3. whether applying this project's migrations is safe (no name collisions with `contacts`, `lead_magnet_*`);
+4. what secrets and configuration are already present (names only);
+5. whether it can safely serve as this project's integration-test environment.
+
+The staging project is **never reset, wiped, or destructively modified** merely because it is named staging. If the inspection raises doubt, the fallback is D5.11 option (a): production with `LEAD_MAGNET_TEST_MODE` and Resend test recipients, decided with Jeff.
 
 ---
 
@@ -689,9 +746,9 @@ No secrets in source. New secrets are set with `supabase secrets set` and listed
 
 ## 17. PDF versioning
 
-- Asset id: `procurement-field-guide` (stable forever).
+- Asset id: `procurement-field-guide` (stable forever); stable route `/guides/procurement-field-guide` (D5.2).
 - Version label: date-based, for example `2026-09`, stored in the registry and on every request row.
-- Filename: `public/guides/jitpro-field-guide-six-months-<version>.pdf` (proposed; *pending* D5.1). Previous versions may remain in the folder so old email links that somehow captured a versioned path still work; the stable path always points at the current one.
+- Filename (D5.1): `public/guides/jitpro-construction-procurement-field-guide-<version>.pdf`. Visitors who save the file receive `JiTpro-Construction-Procurement-Field-Guide.pdf` through the `Content-Disposition` header. Previous versions may remain in the folder so any link that captured a versioned path still works; the stable path always points at the current one.
 - Publication date and page count recorded in the registry for reference.
 - The public experience never shows the version: "Construction Procurement Field Guide" only.
 - **Approved asset (G-3, decided 2026-09-12):** the new **31-page** PDF, *What Will Stop Work Six Months From Now? The JiTpro Field Guide to Construction Procurement Control*. It has not yet been placed in the repository or in the Downloads folder. The 12-, 18-, and 29-page files found locally are earlier drafts and **must not be used**. Adding the approved file to the repository is a Sprint 1 task and depends on Jeff supplying it.
@@ -794,16 +851,18 @@ Status values: **OPEN** (needs Jeff), **RECOMMENDED** (recommendation made, awai
 
 | ID | Question | Options | Recommendation | Decision | Date | Notes |
 |---|---|---|---|---|---|---|
-| D5.1 | PDF hosting | `public/guides/` on Cloudflare Pages vs Supabase Storage | `public/guides/`, versioned filename | RECOMMENDED | 2026-09-12 | |
-| D5.2 | Stable route | `/guides/procurement` via `_redirects` 302 vs a React page | `_redirects` 302 (no JS, works in email clients) | RECOMMENDED | 2026-09-12 | Verify redirect precedence over the SPA catch-all on a preview. |
-| D5.3 | Repeat requests | | Always show the download; re-send email only if the last send is older than 24 hours | RECOMMENDED | 2026-09-12 | |
-| D5.4 | Bot protection | Turnstile visible / Turnstile interaction-only / honeypot only | Honeypot (server-checked) plus Turnstile `interaction-only` plus server validation | RECOMMENDED | 2026-09-12 | |
-| D5.5 | Rate limiting | | 5 requests per IP hash per 10 minutes; email throttle per D5.3 | RECOMMENDED | 2026-09-12 | |
-| D5.6 | Failure behaviour | Section 13 matrix | Approve the matrix; key call: email fails → still grant access and say so; storage fails → do not grant, offer retry | RECOMMENDED | 2026-09-12 | |
-| D5.7 | Logging and monitoring | | Request-id logs in the function; a failure-notification email from the function on storage errors; Pulsetic monitor on the stable guide URL | RECOMMENDED | 2026-09-12 | |
-| D5.8 | Test framework | Vitest / none / Deno test | **Add Vitest** (Vite-native, tiny) with `npm test` in CI; pure server logic tested via `_shared` modules | RECOMMENDED | 2026-09-12 | The brief allows a new framework when the project lacks the capability. |
-| D5.9 | Server platform | Supabase Edge Function vs Cloudflare Pages Function | Supabase Edge Function | RECOMMENDED | 2026-09-12 | |
-| D5.10 | SEO and indexing | Index the PDF / noindex the PDF / noindex everything | `noindex` the PDF and its redirect; index the landing route (it is the capture experience) | RECOMMENDED | 2026-09-12 | |
+| D5.1 | PDF hosting | (a) `public/guides/` on Cloudflare Pages; (b) Supabase Storage | (a) | **DECIDED: (a).** The approved 31-page PDF committed under `public/guides/` with a versioned filename and served by Cloudflare Pages; clean visitor-facing filename via `Content-Disposition: inline; filename=...` in `_headers`. No older PDF is substituted; obtaining the exact approved file is an implementation prerequisite (L-8). | 2026-09-12 | Jeff Kaufman |
+| D5.2 | Stable route | (a) `/guides/procurement`; (b) `/guides/procurement-field-guide`; (c) `/field-guide/download` | (b) | **DECIDED: (b) `/guides/procurement-field-guide`**, establishing `/guides/<asset-slug>`. A `_redirects` 302 to the current versioned file, placed above the SPA catch-all. Asset replaceable without changing distributed links. Automated consistency check between `_redirects` and the registry. | 2026-09-12 | Jeff Kaufman |
+| D5.3 | Repeat requests | | Round 2 behaviour | **CONFIRMED.** Always grant immediate access; one-hour email cooldown; never reject legitimate repeats. | 2026-09-12 | Jeff Kaufman |
+| D5.4 | Bot protection | (a) visible Turnstile; (b) Turnstile interaction-only plus server honeypot plus server validation; (c) honeypot and rate limit only | (b) | **DECIDED: (b).** Interaction-only Turnstile, server-side verification, server-checked honeypot, server validation. No challenge unless Cloudflare requires it. Expired tokens handled gracefully. Preview-hostname configuration recorded as an external testing requirement (G-4, L-5). | 2026-09-12 | Jeff Kaufman |
+| D5.5 | Rate limiting | 5 vs 10 requests per hash per 10 minutes; events ceiling | 5 / 100 | **DECIDED with modification: 10 request attempts per salted IP hash per 10 minutes** (shared office IPs must not be blocked), **100 events per hash per 10 minutes**, both in the 24-hour abuse table, both single configurable constants. Calm 429 when exceeded. | 2026-09-12 | Jeff Kaufman |
+| D5.6 | Failure behaviour | Fail closed vs fail open on persistence failure | Fail closed on persistence failure | **DECIDED with modification: FAIL OPEN FOR GUIDE ACCESS.** JiTpro infrastructure failure never withholds the guide. Cases 1 to 4 in Section 13.1; persistence failure still grants access, tells the visitor honestly that the request could not be saved or sent, offers `info@jit-pro.com`, logs, and triggers the internal failure alert. | 2026-09-12 | Jeff Kaufman |
+| D5.7 | Logging and observability | | As proposed plus masking and plan check | **DECIDED.** Request-id logs; internal notification per successful request; failure alert from `noreply@mail.jit-pro.com` to `info@` on persistence failure; Pulsetic monitor on the stable URL following the redirect (L-11); saved volume query. **Email addresses masked in logs**; no raw IPs or unnecessary IP hashes in logs. Supabase plan and log retention confirmed as L-10, not guessed. | 2026-09-12 | Jeff Kaufman |
+| D5.8 | Test framework | (a) Vitest; (b) none; (c) Deno test | (a) | **DECIDED: (a) Vitest 5** on Vite 8; `npm test` in CI before build; pure-logic tests for the list in Section 14.1; no jsdom unless genuinely required; no abstraction solely for testability. | 2026-09-12 | Jeff Kaufman |
+| D5.9 | Server platform | Supabase Edge Functions vs Cloudflare Pages Functions | Supabase | **CONFIRMED: Supabase Edge Functions.** No Cloudflare Pages Functions for this workflow. | 2026-09-12 | Jeff Kaufman |
+| D5.10 | SEO and indexing | | noindex the PDF; index `/field-guide` | **DECIDED.** `X-Robots-Tag: noindex` on the actual PDF via `_headers`; `/field-guide` indexable with its own title and meta description; no `robots.txt` or sitemap work unless later approved. | 2026-09-12 | Jeff Kaufman |
+| D5.11 | Backend test environment | (a) production with test mode; (b) `jitpro-staging` first | (b) if available | **DECIDED: (b), subject to verification.** `jitpro-staging` is inspected per Section 15.2 before any change (schemas, tables, functions, dependants, migration safety, existing secrets). Never reset or destructively modified. If safe: staging secrets (L-13), preview environment pointed at staging (L-14), production promoted only after staging passes. | 2026-09-12 | Jeff Kaufman |
+| D5.12 | External configuration governance | | | **DECIDED.** No account or dashboard change requiring Jeff's approval or credentials is performed silently. The assistant states what is needed and guides Jeff through it when the step is reached (L-5, L-9 to L-14). | 2026-09-12 | Jeff Kaufman |
 
 ### Round 6: Final UX, content, and Design System amendments
 
@@ -825,7 +884,7 @@ Status values: **OPEN** (needs Jeff), **RECOMMENDED** (recommendation made, awai
 
 1. Delivery of the approved 31-page PDF file (G-3 is decided; the file itself is still needed before Sprint 1's asset commit).
 2. JiTpro's business mailing address for the email footer (L-2), before final email implementation.
-3. Round 5 decisions (PDF hosting, stable route, bot protection, rate limiting, failure behaviour, logging, test framework) and Round 6 (copy and Design System amendments).
+3. Round 6 decisions (visitor-facing copy, UX states, Design System amendments).
 4. Whether a paid or scheduled LinkedIn campaign is planned for launch (affects how much the landing route and UTM discipline matter).
 5. Whether Jeff or another admin will perform the Cloudflare dashboard actions (Turnstile hostnames, Web Analytics toggle) and the Supabase deploy steps, or whether the assistant should run the Supabase CLI commands.
 6. Launch checklist items L-1 to L-9 (Section 15.1), each verified outside the repository before production launch.
@@ -880,23 +939,23 @@ Organised by working capability. Order differs from the brief's draft in one res
 ### Sprint 1: Lead-magnet foundation
 
 - **Objective:** the site can represent and serve the Field Guide reliably.
-- **Scope:** commit the approved PDF under a versioned name; `_redirects` stable route; `_headers` noindex; client registry `leadMagnets.ts`; server registry in `_shared`; Vitest installed with `npm test` in CI; registry consistency tests; Design System amendments (§28, §24, §32/§33, touch target, §50.5, homepage composition) recorded.
+- **Scope:** commit the approved 31-page PDF under its versioned name; `_redirects` stable route `/guides/procurement-field-guide` above the catch-all; `_headers` for the PDF (inline `Content-Disposition` with clean filename, `X-Robots-Tag: noindex`, `Cache-Control`); client registry `leadMagnets.ts`; server registry in `_shared`; versioned `consentTexts`; Vitest 5 installed with `npm test` in CI before build; registry and redirect consistency tests; Design System amendments approved in Round 6 written into the document and its Decision Log.
 - **Out of scope:** UI, API, email.
-- **Dependencies:** the approved 31-page PDF file supplied by Jeff (G-3), D5.1, D5.2, D5.8, D5.10, Round 6 DS approvals.
-- **Acceptance:** `/guides/procurement` on a preview 302s to the PDF; lychee passes; `npm test` runs in CI; DS Decision Log updated.
-- **Tests:** registry and redirect consistency; file existence.
-- **Risks:** Cloudflare redirect precedence vs the SPA catch-all (verify on preview).
-- **Git:** 2 to 3 commits: tooling, asset and route, docs.
+- **Dependencies:** the approved 31-page PDF file supplied by Jeff (L-8), D5.1, D5.2, D5.8, D5.10, Round 6 DS approvals.
+- **Acceptance:** `/guides/procurement-field-guide` on a preview 302s to the PDF; the PDF opens inline and saves under the clean filename; lychee passes; `npm test` runs in CI; DS Decision Log updated.
+- **Tests:** registry and redirect consistency; file existence; consent-text version immutability.
+- **Risks:** the PDF not yet supplied; Cloudflare redirect ordering (verified on preview).
+- **Git:** 3 commits: tooling, asset and route, Design System docs.
 
 ### Sprint 2: Lead persistence and attribution (API)
 
 - **Objective:** a valid request is safely recorded with approved attribution; abuse controls work.
-- **Scope:** migrations for `contacts`, `lead_magnet_requests`, and `lead_magnet_ip_activity`; edge function with validation, honeypot, Turnstile, IP rate limit, contact upsert, repeat detection, one-hour email cooldown decision, logging; shared pure modules; `curl`-level verification against a deployed function. The existing `leads` table and `submit-contact` function are not touched.
-- **Out of scope:** email sending, UI, any change to the contact-form pipeline.
-- **Dependencies:** Round 2 (decided), D2.7, D5.3 to D5.7, D5.9.
-- **Acceptance:** documented `curl` cases (valid, malformed, honeypot, repeat, rate-limited, bad Turnstile) behave per the matrix; rows appear with attribution.
-- **Tests:** Vitest on validation, normalisation, attribution parsing, repeat and rate-limit logic; manual function tests.
-- **Risks:** Deno not installed locally (tests target `_shared`; function verified deployed); `db push` needs the DB password.
+- **Scope:** staging inspection (Section 15.2) and staging secrets (L-13); migrations for `contacts`, `lead_magnet_requests`, and `lead_magnet_ip_activity`; edge function with validation, honeypot, Turnstile, 10-per-10-minute IP rate limit, contact upsert, repeat detection, one-hour cooldown decision, **fail-open response shape**, failure alert, masked logging; shared pure modules; `curl`-level verification against **staging**. The existing `leads` table and `submit-contact` function are not touched.
+- **Out of scope:** email sending (Sprint 3), UI, any change to the contact-form pipeline, production deployment (Sprint 6).
+- **Dependencies:** Round 2 (decided), D2.7, D5.3 to D5.7, D5.9, D5.11, L-12, L-13.
+- **Acceptance:** documented `curl` cases (valid, malformed, honeypot, repeat, rate-limited, bad Turnstile, simulated persistence failure) behave per the matrix against staging; rows appear with attribution; the failure alert arrives.
+- **Tests:** Vitest on validation, normalisation, attribution parsing, consent, cooldown, rate-limit, and failure-state decisions; manual function tests on staging.
+- **Risks:** staging unsuitable (fallback per Section 15.2); `db push` needs the database password.
 - **Git:** migrations commit; function commit; tests commit.
 
 ### Sprint 3: Email fulfilment
@@ -935,8 +994,8 @@ Organised by working capability. Order differs from the brief's draft in one res
 ### Sprint 6: Analytics, QA, and production readiness
 
 - **Objective:** the complete funnel is measurable and production-ready.
-- **Scope:** `lead_magnet_events` migration and `record-lead-magnet-event` function; the client `funnel.ts` helper wired to the seven events (stubs from Sprint 4 become live); Cloudflare Web Analytics enablement (L-9); the eight saved queries under `supabase/queries/`; privacy-notice paragraph describing analytics; full regression; accessibility audit; email re-verification; production smoke-test plan; documentation update; PR.
-- **Dependencies:** Round 4 (decided); all prior sprints.
+- **Scope:** `lead_magnet_events` migration and `record-lead-magnet-event` function (staging first); the client `funnel.ts` helper wired to the seven events (stubs from Sprint 4 become live); Cloudflare Web Analytics enablement (L-9); the eight saved queries under `supabase/queries/`; privacy-notice paragraph describing analytics; full regression; accessibility audit; email re-verification; **promotion of migrations and both functions to production** (L-6, L-7) after staging passes; Pulsetic monitor (L-11); production smoke-test plan; documentation update; PR.
+- **Dependencies:** Round 4 (decided); all prior sprints; launch checklist items L-1 to L-14.
 - **Acceptance:** Section 38 of the brief (functional, visual, accessibility, email, analytics, data, security, regression, CI) all pass.
 - **Tests:** everything in Section 14.
 - **Risks:** event duplication under React StrictMode in development; verify in the production build.
@@ -965,3 +1024,4 @@ Organised by working capability. Order differs from the brief's draft in one res
 | 2026-09-12 | Round 2 decided by Jeff: D2.1 two new tables (`contacts`, `lead_magnet_requests`), `leads` untouched; D2.2 one-hour email cooldown; D2.3 attribution set with no user agent and no raw IP; D2.4 no CRM; D2.5 lead vs subscriber; D2.6 no contact-form integration (F-6 added); D2.7 IP-hash retention recommendation documented (§9.1, §6.3). G-5 git identity (repository-local, metadata only). Visitor-facing sender fixed as `JiTpro <info@jit-pro.com>`; `jeff@jit-pro.com` never exposed. Sections 4.4, 4.5, 6, 9, 13 updated. |
 | 2026-09-12 | Round 3 decided by Jeff: D3.1 Resend only; D3.2 explicit Reply-To `info@`; D3.3 footer line and mailing address, transactional, legal review; D3.4 explicit unchecked checkbox, non-US prospects assumed; D3.5 no nurture, permissions by state; D3.6 no unsubscribe endpoint in V1, Resend suppression relied on, webhook deferred (F-7); D3.7 `/privacy` in scope; D3.8 internal notification From `noreply@mail.jit-pro.com`; D3.9 test safety; D3.10 consent evidence; D3.11 legal principle; D2.7 approved. Added §7.3 to §7.5, §10 rewrite, §15.1 launch checklist, §21.2 nurture prerequisites, D6.7 to D6.9, failure-matrix suppression rows, Sprint 3 to 5 scope updates. |
 | 2026-09-12 | Round 4 decided by Jeff: D4.1 to D4.10 accepted as recommended. Cloudflare Web Analytics plus Supabase `lead_magnet_events`; seven fixed event names (§8.1); fixed placements; `sessionStorage` UTMs; no ids, no personal data, no cookies, no GA4, no Plausible; eight saved queries (§8.3); email-join downstream conversion; no-cookie assumptions flagged for legal review (§8.4). Added §6.4 events table and the `record-lead-magnet-event` function to §4.3; Sprint 6 scope updated. |
+| 2026-09-12 | Round 5 decided by Jeff: D5.1 `public/guides/` with versioned file and clean `Content-Disposition` filename; D5.2 `/guides/procurement-field-guide` establishing `/guides/<asset-slug>`, consistency check; D5.3 confirmed; D5.4 interaction-only Turnstile plus server honeypot and validation; D5.5 **10** requests and 100 events per hash per 10 minutes, calm 429; D5.6 **fail open for guide access** (§13 rewritten with the four cases); D5.7 observability with masked emails and L-10 plan check; D5.8 Vitest 5, pure-logic tests, no jsdom; D5.9 Supabase functions confirmed; D5.10 noindex PDF, indexable `/field-guide`; D5.11 `jitpro-staging` as test target subject to the §15.2 inspection protocol; D5.12 no silent account changes. Launch checklist extended to L-14; §4.6, §9, §9.2, §14, §15, §17 and Sprints 1, 2, 6 updated. |
