@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| Status | **Sprint 0: discovery complete; Round 1 decided; Rounds 2 to 6 in progress.** No implementation has started. |
+| Status | **Sprint 0: discovery complete; Rounds 1 and 2 decided; Rounds 3 to 6 in progress.** No implementation has started. |
 | Owner / approver | Jeff Kaufman |
 | Document created | 2026-09-12 |
-| Last updated | 2026-09-12 (Round 1 decisions recorded; follow-up items added) |
+| Last updated | 2026-09-12 (Round 2 decisions recorded; email identity rule; IP-hash retention recommendation) |
 | Working branch | `feature/navigation-simplification-lead-gen-guide` (decision G-1, 2026-09-12) |
 | Source of truth | This document. When a decision is made it is recorded here and not revisited without cause. |
 
@@ -237,20 +237,40 @@ Server-side registry (authoritative for fulfilment): asset id → current versio
 
 Why an edge function rather than a Cloudflare Pages Function: the secrets, database access, Resend integration, logging conventions, and the team's operational familiarity all already live in Supabase. Adding a second serverless platform for one endpoint creates a second place to manage secrets and deploys. (*pending* D5.9)
 
-### 4.4 Storage (*pending* Decision Round 2)
+### 4.4 Storage (DECIDED, Round 2, 2026-09-12)
 
-Recommended: two new tables with migrations in the repo.
+Two new tables, created by migrations in this repository. The conceptual model is fixed and must stay clear throughout implementation:
 
-- `contacts`: one row per normalised email. Identity, first/last seen, first-touch attribution, consent record, suppression fields. Reused by every future lead magnet and by any future nurture.
-- `lead_magnet_requests`: one row per request event. References `contacts`, records asset id and version, placement, page, referrer, UTM fields, Turnstile outcome, fulfilment status, email send status and provider message id, and an `is_repeat` flag.
+| Table | Answers | Rule |
+|---|---|---|
+| `contacts` | **Who is this person?** | One row per normalised unique email. Identity, first/last seen, first-touch attribution, consent and subscriber state. Designed to carry identity and consent state as the system grows. |
+| `lead_magnet_requests` | **What did this person request or do?** | One row per valid request. Asset id and version, request time, placement, approved attribution, fulfilment and email outcome, repeat-request state, and the foreign key to `contacts`. |
+| `leads` (existing) | The current contact and conversation-form pipeline | **Separate and unchanged in V1.** Guide requests never touch it. Its database webhook and email behaviour must not be disturbed. |
+
+Identity and events are never collapsed into one table. Example of one contact over time:
+
+```
+john@abccontracting.com  (contacts, one row)
+    ├─ requested the Field Guide from the homepage           (lead_magnet_requests)
+    ├─ requested it again later from a LinkedIn link          (lead_magnet_requests, is_repeat)
+    └─ later submitted a JiTpro conversation request          (leads; correlated by normalised email in V1)
+```
+
+Downstream conversion in V1 is a **join on normalised email** between `contacts` and `leads`. The contact form is not modified to write into `contacts` (D2.6); unifying that identity later is recorded as a future architectural improvement (F-6).
 
 Optionally `lead_magnet_events` for first-party funnel events (*pending* Decision Round 4).
 
-The existing `leads` table is left untouched. A future "guide lead later started a conversation" join is `contacts.email = leads.email`.
+Abuse data is kept apart from prospect data: the salted IP hash used for rate limiting lives in a short-lived `lead_magnet_ip_activity` table and never on a `contacts` or `lead_magnet_requests` row (D2.7, recommendation documented in Section 9.1).
 
-### 4.5 Email (*pending* Decision Round 3)
+### 4.5 Email (sender DECIDED in Round 2; copy, reply-to, consent *pending* Round 3)
 
-Resend, sent synchronously from the edge function so the response can truthfully tell the visitor whether the email went out. Sender `JiTpro <info@jit-pro.com>` (the existing visitor-facing sender). HTML plus a plain-text part. The link in the email is the stable guide URL, never the versioned filename. Copy in Section 7 is a draft for approval.
+Resend, sent synchronously from the edge function so the response can truthfully tell the visitor whether the email went out. HTML plus a plain-text part. The link in the email is the stable guide URL, never the versioned filename. Copy in Section 7 is a draft for approval.
+
+**Visitor-facing email identity (Jeff, 2026-09-12):**
+
+- From: **`JiTpro <info@jit-pro.com>`**. This is the sender already used for the contact-form visitor confirmation, and DNS shows `jit-pro.com` is verified in Resend (DKIM at `resend._domainkey.jit-pro.com`, bounce subdomain `send.jit-pro.com`, root SPF including `amazonses.com`, DMARC `p=quarantine`).
+- Visitor replies stay associated with `info@jit-pro.com`. Reply-To behaviour is recommended in Round 3.
+- **`jeff@jit-pro.com` must never be exposed through the lead-generation workflow** as a sender, reply-to, or visible address. It is the repository's git identity only (G-5).
 
 ### 4.6 PDF delivery and versioning (*pending* Decision Round 5)
 
@@ -286,20 +306,21 @@ Frontend changes ship through PR → preview → squash merge → Cloudflare. Da
 
 ## 6. Data model (proposed)
 
-### 6.1 `contacts`
+### 6.1 `contacts` (who is this person?)
 
 | Column | Type | Why |
 |---|---|---|
 | `id` | uuid pk | Stable identity |
-| `email` | text, unique on `lower(email)` | The one identifier the visitor gives |
+| `email` | text, unique index on `lower(trim(email))` | The one identifier the visitor gives; normalised on write |
 | `first_seen_at`, `last_seen_at` | timestamptz | History without duplicate rows |
 | `first_source`, `first_medium`, `first_campaign`, `first_landing_path`, `first_referrer` | text | First-touch attribution, written once |
-| `consent_status` | text (`transactional_only` / `marketing_opt_in` / `unsubscribed`) | Future nurture depends on this existing from day one |
-| `consent_text_version` | text | Which consent sentence the person saw |
-| `unsubscribed_at` | timestamptz | Suppression |
+| `consent_status` | text (`transactional_only` / `marketing_opt_in` / `unsubscribed`) | Lead vs subscriber state (D2.5). Exact values and transitions finalised in Round 3. |
+| `consent_text_version`, `consent_recorded_at`, `consent_method`, `consent_placement` | text / timestamptz / text / text | Consent evidence: which sentence, when, how (notice or checkbox), where (Round 3) |
+| `marketing_opt_in_at`, `unsubscribed_at`, `unsubscribe_source` | timestamptz / timestamptz / text | Subscriber lifecycle and suppression (Round 3) |
+| `email_suppressed_at`, `email_suppression_reason` | timestamptz / text (`bounce` / `complaint` / `manual`) | Deliverability suppression, distinct from consent (Round 3) |
 | `created_at`, `updated_at` | timestamptz | |
 
-### 6.2 `lead_magnet_requests`
+### 6.2 `lead_magnet_requests` (what did this person request or do?)
 
 | Column | Type | Why |
 |---|---|---|
@@ -308,24 +329,31 @@ Frontend changes ship through PR → preview → squash merge → Cloudflare. Da
 | `email` | text | Denormalised for simple reporting |
 | `asset_id` | text | `procurement-field-guide` |
 | `asset_version` | text | Which PDF version was current |
-| `placement` | text | `home-band`, `learn-more-band`, `footer-link`, `landing-page`, … (CTA conversion) |
+| `placement` | text | `home-band`, `learn-more-band`, `footer-link`, `landing-page` (CTA conversion) |
 | `page_path` | text | Where the form was submitted (page conversion) |
 | `landing_path` | text | First page of the session |
 | `referrer` | text | |
 | `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term` | text | Source conversion |
 | `is_repeat` | boolean | Same email already requested this asset |
 | `turnstile_passed` | boolean | Audit |
-| `ip_hash` | text | Salted hash for rate limiting only; never the raw IP |
-| `user_agent` | text | Coarse debugging aid (*pending*, may be dropped) |
 | `fulfilment_status` | text (`delivered_inline`) | Whether the visitor was shown the download |
-| `email_status` | text (`sent` / `failed` / `skipped_repeat`) | |
+| `email_status` | text (`sent` / `failed` / `skipped_cooldown` / `suppressed`) | Outcome of the fulfilment send |
 | `email_provider_id` | text | Resend message id for tracing |
 | `email_error` | text | Provider error summary, no secrets |
-| `created_at` | timestamptz | Timestamp |
+| `created_at` | timestamptz | Request time |
 
-Deliberately **not** captured: name, company, phone, title, project details, raw IP, precise geolocation, third-party enrichment.
+### 6.3 `lead_magnet_ip_activity` (abuse control only; recommended, D2.7)
 
-RLS is enabled on both tables; only the service role writes; nothing reads from the browser.
+| Column | Type | Why |
+|---|---|---|
+| `ip_hash` | text | Salted hash; salt is a secret combined with the UTC date so hashes cannot be linked across days |
+| `created_at` | timestamptz | Window for rate limiting |
+
+Rows older than 24 hours are deleted opportunistically by the edge function on each request. No foreign key to `contacts` or `lead_magnet_requests`, so IP-derived data never becomes prospect or profile information.
+
+**Deliberately not captured (Round 2):** user agent, raw IP address, name, company, phone number, job title, geolocation, enrichment data. The principle is to collect what is needed for funnel performance, attribution, fulfilment, and abuse prevention, and nothing because it is technically possible.
+
+RLS is enabled on all tables; only the service role writes; nothing reads from the browser.
 
 ---
 
@@ -399,8 +427,16 @@ Do not act on small samples. The first weeks establish a baseline.
 - Server-side validation of everything the client sends: JSON shape, email syntax and length, allowed `asset_id`, allowed `placement`, string length caps on attribution fields, UTM values truncated.
 - Honeypot field checked on the server (silently succeeds without storing), matching the investor function.
 - Turnstile verified server-side on every request (existing pattern).
-- Rate limiting in the function: at most N requests per normalised email per 24 hours generate an email send (repeat requests still get the download inline); at most M requests per salted IP hash per 10 minutes (exact values *pending* D5.5).
-- Duplicate handling: a repeat request for the same email and asset updates `last_seen_at`, inserts a request row with `is_repeat = true`, and re-sends the email only if the last send is older than the throttle window (*pending* D5.3).
+- Rate limiting in the function: at most M requests per salted IP hash per 10 minutes (exact M *pending* D5.5). Turnstile and this rate limit are the primary abuse controls; legitimate repeat requesters are never made to wait.
+- Repeat handling (DECIDED D2.2): for every valid request the function normalises the email, upserts the single `contacts` row, inserts a new `lead_magnet_requests` row, marks `is_repeat` when that contact already requested the asset, and always grants immediate access. The fulfilment email is re-sent only if the last **successful** fulfilment email to that address is more than **one hour** old; inside the hour the request is recorded with `email_status = skipped_cooldown` and no email is sent. The request is never rejected and no duplicate contact is created.
+
+### 9.1 Salted IP hash: purpose and retention (recommendation, D2.7)
+
+- **Purpose:** rate limiting and abuse investigation only. It is never used for attribution, profiling, or reporting.
+- **Where:** a separate `lead_magnet_ip_activity` table (Section 6.3), not on request or contact rows.
+- **Salt:** `LEAD_MAGNET_IP_SALT` (secret) combined with the current UTC date, so the same address produces a different hash each day and cannot be correlated across days even inside the table.
+- **Retention:** **24 hours.** The rate-limit window is 10 minutes; 24 hours leaves room to look at a burst after the fact. The function deletes rows older than 24 hours on each invocation, so no scheduler is needed and the table cannot grow.
+- **Logging:** the raw IP is never written to function logs by this code. (Supabase's own platform request logs are outside this project's control and are covered by Supabase's retention.)
 - Secrets stay in Supabase secrets. The browser sees only the anon key and the Turnstile site key, as today.
 - Error responses to the browser are generic; detail goes to function logs with a request id.
 - No raw IP addresses or user agents in logs beyond what Supabase records by default.
@@ -455,7 +491,7 @@ Operations, in order: (1) validate, (2) record request, (3) send fulfilment emai
 | Empty or malformed email | Client validation fails; no request sent | Inline field error, focus on field | No | Immediate | No | No |
 | Server rejects email format | 400 | Same inline error | No | Immediate | Yes (request id) | No |
 | Turnstile fails or expires | 403 | "Verification did not complete. Please try again." with widget reset | No | Immediate | Yes | No |
-| Rate-limited (email) | 200 with `throttled: true` | Success state; "We sent this guide to that address recently, so we did not send it again." | **Yes** | n/a | Yes | No |
+| Repeat within the one-hour email cooldown | 200 with `email_status: skipped_cooldown` | Success state; "We emailed this guide to that address within the last hour, so we did not send it again." | **Yes** | n/a | Yes | No |
 | Rate-limited (IP) | 429 | "Too many requests. Please try again in a few minutes." | No | After window | Yes | Only if sustained (manual log review) |
 | Network error or timeout | fetch rejects | "We could not reach the server. Check your connection and try again." Values preserved | No | Button-driven | Client console only | No |
 | Lead storage fails | 500 | "Something went wrong on our side. Please try again in a moment." plus a fallback line offering `info@jit-pro.com` | **No** (recommended: do not hand out the guide when nothing was recorded; the visitor can retry and the failure is rare) | Yes | Yes, error level | Yes, via log alerting if available; otherwise internal email on next success is not enough, so add a failure notification email from the function |
@@ -589,6 +625,7 @@ Status values: **OPEN** (needs Jeff), **RECOMMENDED** (recommendation made, awai
 | G-2 | Where does this plan live? | `docs/superpowers/plans/` (existing plans folder) vs a new `docs/projects/` tree | `docs/superpowers/plans/2026-09-12-procurement-guide-lead-gen-plan.md`, matching the dated-plan convention already in the repo | **DECIDED** as recommended (accepted with the Round 1 batch). | 2026-09-12 | |
 | G-3 | Which PDF is the approved final asset? | The 29-, 18-, or 12-page files found locally, or a file not yet supplied | Jeff to confirm; the brief says 31 pages and no local file matched | **DECIDED: the new 31-page PDF**, *What Will Stop Work Six Months From Now? The JiTpro Field Guide to Construction Procurement Control*. Not yet in the repository or Downloads. The older 12-, 18-, and 29-page files must not be used. Adding the approved file is part of this project (Sprint 1). | 2026-09-12 | Jeff Kaufman. Sprint 1's asset commit waits on the file. |
 | G-4 | Extend the Turnstile widget's allowed hostnames to Cloudflare preview URLs? | Yes / No | **Yes**: enables end-to-end testing on PR previews, which CONTRIBUTING notes is impossible today. Cloudflare dashboard change; no code. | RECOMMENDED | 2026-09-12 | Jeff or an admin performs it. |
+| G-5 | Git identity for commits in this repository | Configured global identity (`JiTpro-Dev <jeffk@kaufmanbuilding.com>`) vs `Jeff Kaufman <jeff@jit-pro.com>` | Use whichever Jeff designates | **DECIDED: `Jeff Kaufman <jeff@jit-pro.com>`, set repository-locally** (`git config --local`), not globally. Commit `aabcf7e` is left as-is and is not rewritten for author identity. **This identity is repository metadata only.** It is not a visitor-facing address and must never be used as the sender or reply-to of the Field Guide workflow. | 2026-09-12 | Jeff Kaufman. Applied 2026-09-12. |
 
 ### Round 1: Visitor experience
 
@@ -606,18 +643,20 @@ Status values: **OPEN** (needs Jeff), **RECOMMENDED** (recommendation made, awai
 
 | ID | Question | Options | Recommendation | Decision | Date | Notes |
 |---|---|---|---|---|---|---|
-| D2.1 | Where do leads live? | (a) Reuse `leads` with `intent='guide'`. (b) One `lead_magnet_requests` event table. (c) `contacts` identity table plus `lead_magnet_requests` events. | **(c)** (Section 6). Identity without duplicates, full request history, consent and suppression ready for nurture, no pollution of the contact-form table. | RECOMMENDED | 2026-09-12 | |
-| D2.2 | Duplicate requests from the same email | Reject / always new contact / one contact, many request rows | One contact, many request rows, `is_repeat` flagged, email re-send throttled | RECOMMENDED | 2026-09-12 | |
-| D2.3 | Attribution fields | Section 6.2 list | Capture placement, page, landing path, referrer, five UTMs, asset version, statuses. Drop `user_agent` unless Jeff wants it. | RECOMMENDED | 2026-09-12 | |
-| D2.4 | CRM or contact-system integration | None exists | None in V1; export is a SQL query or CSV from the Supabase dashboard | RECOMMENDED | 2026-09-12 | |
-| D2.5 | What is a lead vs a marketing subscriber? | | A guide requester is a **lead** (transactional relationship). They become a **subscriber** only when `consent_status = marketing_opt_in`. | RECOMMENDED | 2026-09-12 | Depends on Round 3. |
+| D2.1 | Where do leads live? | (a) Reuse `leads` with `intent='guide'`. (b) One `lead_magnet_requests` event table. (c) `contacts` identity table plus `lead_magnet_requests` events. | **(c)** (Section 6). Identity without duplicates, full request history, consent and suppression ready for nurture, no pollution of the contact-form table. | **DECIDED: (c).** Two new Supabase tables: `contacts` (durable identity, one row per normalised email, "who is this person?") and `lead_magnet_requests` (one row per valid request, "what did this person request or do?"). The separation is preserved; the two are never collapsed. **The existing `leads` table stays separate and unchanged in V1**; guide requests are never routed through it and the contact-form pipeline is not modified or put at risk. | 2026-09-12 | Jeff Kaufman |
+| D2.2 | Duplicate requests from the same email | Reject / always new contact / one contact, many request rows | One contact, many request rows, `is_repeat` flagged, email re-send throttled (24 h proposed) | **DECIDED with one change: a one-hour fulfilment-email cooldown, not 24 hours.** Every valid request: normalise email, upsert the single contact, insert a request event, record repeat state, grant immediate access, re-send the email only if the last successful fulfilment email is more than one hour old. Within the hour: no rejection, no duplicate contact, event recorded, access granted, no second email. Turnstile and rate limiting are the primary abuse controls. | 2026-09-12 | Jeff Kaufman |
+| D2.3 | Attribution fields | Section 6.2 list | Capture placement, page, landing path, referrer, five UTMs, asset version, statuses. Drop `user_agent` unless Jeff wants it. | **DECIDED as proposed.** Captured: CTA placement, page path at submission, first landing path, referrer, UTM source/medium/campaign/content/term, asset id, asset version, Turnstile outcome, email-send status, Resend message id, salted IP hash strictly for abuse control. **Not stored: user agent, raw IP.** Still excluded: name, company, phone, job title, geolocation, enrichment. The IP hash must not become profile data; a short retention period is recommended in D2.7 and documented before implementation. | 2026-09-12 | Jeff Kaufman |
+| D2.4 | CRM or contact-system integration | None exists | None in V1; export is a SQL query or CSV from the Supabase dashboard | **DECIDED: no CRM in V1.** Supabase is the source of truth. Reporting and export via Supabase queries or CSV. The `contacts` design must leave a clean path to a CRM later; no CRM dependency is introduced. | 2026-09-12 | Jeff Kaufman |
+| D2.5 | What is a lead vs a marketing subscriber? | | A guide requester is a **lead** (transactional relationship). They become a **subscriber** only when `consent_status = marketing_opt_in`. | **DECIDED.** A guide requester is a lead/contact with a transactional relationship (JiTpro owes them the requested asset). That does not make them a marketing subscriber. Subscriber status arises only when the approved consent mechanism records `consent_status = marketing_opt_in`. Requesting the guide does not authorise future marketing by itself. Round 3 decides the consent language, whether opt-in is explicit, the state recorded for guide-only requests, unsubscribe and suppression behaviour, privacy-policy requirements, consent evidence to retain, and what future email may be sent under which state. | 2026-09-12 | Jeff Kaufman |
+| D2.6 | Should the existing contact form also write to `contacts` in V1? | Yes (foreign-key correlation) / No (email join) | No: avoid regression risk in a separately working pipeline | **DECIDED: no.** The contact form is not modified. A later conversation-form submission is correlated with an earlier guide requester by normalised email. Unifying the identities is recorded as a potential future architectural improvement (F-6), not part of this implementation. | 2026-09-12 | Jeff Kaufman |
+| D2.7 | Retention and handling of the salted IP hash | Column on request rows with scheduled clearing / separate short-lived table / no IP data at all | **Separate `lead_magnet_ip_activity` table, 24-hour retention, daily-rotating salt, deleted opportunistically by the function** (Section 9.1). Meets "abuse control only, never profile data" without a scheduler. | RECOMMENDED (documented per Jeff's instruction; approve with Round 3 or Round 5) | 2026-09-12 | |
 
 ### Round 3: Email and consent
 
 | ID | Question | Options | Recommendation | Decision | Date | Notes |
 |---|---|---|---|---|---|---|
 | D3.1 | Provider | Resend (existing) | Resend | RECOMMENDED | 2026-09-12 | Confirm domain verification in the Resend dashboard. |
-| D3.2 | From name/address and reply-to | `info@` vs `jeff@` vs `noreply@mail.` | From `JiTpro <info@jit-pro.com>`, reply-to `jeff@jit-pro.com` | RECOMMENDED | 2026-09-12 | |
+| D3.2 | From name/address and reply-to | `info@` vs `jeff@` vs `noreply@mail.` | From `JiTpro <info@jit-pro.com>`; reply-to recommendation in Round 3 | **From DECIDED (Round 2): `JiTpro <info@jit-pro.com>`.** Visitor-facing replies stay associated with `info@jit-pro.com`. **`jeff@jit-pro.com` is never exposed** by this workflow. Reply-To behaviour: OPEN, recommendation presented in Round 3 after verifying the existing Resend and DNS configuration. | 2026-09-12 | Jeff Kaufman. Do not change email or domain configuration until Round 3 is decided. |
 | D3.3 | Fulfilment copy | Section 7.1 draft | Approve or edit in Round 3/6 | OPEN | | |
 | D3.4 | Consent sentence at capture | (a) "We'll email you the guide. Nothing else." (b) "We'll email you the guide and occasional notes on keeping projects ahead of the field. Unsubscribe any time." (c) Separate unchecked marketing checkbox | **(b)** for a US audience under CAN-SPAM, with an unsubscribe mechanism required before any second email is sent; store the sentence version. Legal review recommended. | RECOMMENDED | 2026-09-12 | Not legal advice. |
 | D3.5 | Nurture enrollment in V1 | Yes / No | **No.** Fulfilment only. Architecture supports it later. | RECOMMENDED | 2026-09-12 | |
@@ -666,11 +705,11 @@ Status values: **OPEN** (needs Jeff), **RECOMMENDED** (recommendation made, awai
 ## 21. Open questions (require Jeff)
 
 1. Delivery of the approved 31-page PDF file (G-3 is decided; the file itself is still needed before Sprint 1's asset commit).
-2. Round 2 decisions D2.1 to D2.5 (storage and attribution).
-3. Whether the privacy notice (D3.7) is in scope.
-4. Whether GA4 is wanted despite the first-party recommendation (D4.1).
-5. Whether a paid or scheduled LinkedIn campaign is planned for launch (affects how much the landing route and UTM discipline matter).
-6. Whether Jeff or another admin will perform the Cloudflare dashboard actions (Turnstile hostnames, Web Analytics toggle) and the Supabase deploy steps, or whether the assistant should run the Supabase CLI commands.
+2. Round 3 decisions (email, consent, unsubscribe, suppression, privacy), including Reply-To, the D2.7 IP-hash retention recommendation, and whether the privacy notice (D3.7) is in scope.
+3. Whether GA4 is wanted despite the first-party recommendation (D4.1).
+4. Whether a paid or scheduled LinkedIn campaign is planned for launch (affects how much the landing route and UTM discipline matter).
+5. Whether Jeff or another admin will perform the Cloudflare dashboard actions (Turnstile hostnames, Web Analytics toggle) and the Supabase deploy steps, or whether the assistant should run the Supabase CLI commands.
+6. Whether `info@jit-pro.com` is an actively monitored mailbox (it is a Microsoft 365 address per the domain's MX records), since visitor replies will land there.
 
 ### 21.1 Follow-up items outside this project's scope (recorded 2026-09-12)
 
@@ -683,6 +722,7 @@ These were found during discovery. They are tracked here so they are not lost. *
 | F-3 | **Outdated Field Guide drafts exist in Downloads.** `JiTpro_What_Will_Stop_Work_Six_Months_From_Now_FINAL.pdf` (12 pp), `Construction_Procurement_Field_Guide.pdf` (18 pp), and `JiTpro_Construction_Procurement_Field_Guide.pdf` (29 pp) are all superseded by the approved 31-page asset. | File metadata, 2026-09-12 | Archive or delete the drafts so the wrong file is never committed. Only the approved 31-page file enters the repository. |
 | F-4 | `submit-contact` performs no server-side field validation or honeypot check and no rate limiting; the client is trusted after Turnstile. | `supabase/functions/submit-contact/index.ts` | Consider hardening in a separate contact-form pass; the lead-magnet function's shared validation modules could be reused. |
 | F-5 | No `robots.txt`, `sitemap.xml`, meta description, or Open Graph tags exist (the last three were already recorded in `docs/handoff/2026-08-25-contact-conversion-and-metadata-defects.md`). | `public/`, `index.html` | Separate metadata pass. Relevant to `/field-guide` sharing on LinkedIn, so the landing route should at least set its own title and description when built. |
+| F-6 | **Contact-form identity is not unified with `contacts`.** In V1 a conversation request is correlated with a guide requester by normalised email only. | Decision D2.6 | Potential future architectural improvement: have the contact pipeline upsert `contacts` as well, turning the correlation into a foreign key. Requires its own plan and regression testing of the contact form and its webhook. |
 
 ---
 
@@ -718,9 +758,9 @@ Organised by working capability. Order differs from the brief's draft in one res
 ### Sprint 2: Lead persistence and attribution (API)
 
 - **Objective:** a valid request is safely recorded with approved attribution; abuse controls work.
-- **Scope:** migrations for `contacts` and `lead_magnet_requests`; edge function with validation, honeypot, Turnstile, rate limit, repeat handling, logging; shared pure modules; `curl`-level verification against a deployed function.
-- **Out of scope:** email, UI.
-- **Dependencies:** Round 2, D5.3 to D5.7, D5.9.
+- **Scope:** migrations for `contacts`, `lead_magnet_requests`, and `lead_magnet_ip_activity`; edge function with validation, honeypot, Turnstile, IP rate limit, contact upsert, repeat detection, one-hour email cooldown decision, logging; shared pure modules; `curl`-level verification against a deployed function. The existing `leads` table and `submit-contact` function are not touched.
+- **Out of scope:** email sending, UI, any change to the contact-form pipeline.
+- **Dependencies:** Round 2 (decided), D2.7, D5.3 to D5.7, D5.9.
 - **Acceptance:** documented `curl` cases (valid, malformed, honeypot, repeat, rate-limited, bad Turnstile) behave per the matrix; rows appear with attribution.
 - **Tests:** Vitest on validation, normalisation, attribution parsing, repeat and rate-limit logic; manual function tests.
 - **Risks:** Deno not installed locally (tests target `_shared`; function verified deployed); `db push` needs the DB password.
@@ -789,3 +829,4 @@ Organised by working capability. Order differs from the brief's draft in one res
 |---|---|
 | 2026-09-12 | Created after repository discovery. Current state, proposed architecture, data model, failure matrix, testing and deployment plans, Decision Log opened with recommendations, draft sprint plan. |
 | 2026-09-12 | Round 1 decided by Jeff: G-1 (stay on the existing branch), G-2, G-3 (approved asset is the new 31-page PDF, not yet supplied), D1.1 to D1.7 accepted as recommended. Follow-up items F-1 to F-5 recorded in §21.1 as out of scope. |
+| 2026-09-12 | Round 2 decided by Jeff: D2.1 two new tables (`contacts`, `lead_magnet_requests`), `leads` untouched; D2.2 one-hour email cooldown; D2.3 attribution set with no user agent and no raw IP; D2.4 no CRM; D2.5 lead vs subscriber; D2.6 no contact-form integration (F-6 added); D2.7 IP-hash retention recommendation documented (§9.1, §6.3). G-5 git identity (repository-local, metadata only). Visitor-facing sender fixed as `JiTpro <info@jit-pro.com>`; `jeff@jit-pro.com` never exposed. Sections 4.4, 4.5, 6, 9, 13 updated. |
