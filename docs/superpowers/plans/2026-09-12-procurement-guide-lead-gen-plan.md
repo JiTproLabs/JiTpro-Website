@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| Status | **Sprint 0: discovery complete; Rounds 1 to 5 decided; Round 6 (UX, copy, Design System amendments) in progress.** No implementation has started. |
+| Status | **Sprint 0 complete: all six decision rounds decided; sprint plan final. Awaiting Jeff's explicit authorisation to begin Sprint 1.** No implementation has started. |
 | Owner / approver | Jeff Kaufman |
 | Document created | 2026-09-12 |
-| Last updated | 2026-09-12 (Round 5 decisions: asset, route, abuse controls, fail-open failure matrix, observability, testing, staging) |
+| Last updated | 2026-09-12 (Round 6: approved copy, simplified visitor-facing failure language, Design System amendment texts, privacy notice draft, final sprint plan, external prerequisites) |
 | Working branch | `feature/navigation-simplification-lead-gen-guide` (decision G-1, 2026-09-12) |
 | Source of truth | This document. When a decision is made it is recorded here and not revisited without cause. |
 
@@ -182,7 +182,7 @@ There is no contacts or people table, no unique constraint on email anywhere, an
 
 ---
 
-## 4. Proposed architecture (recommended; items marked *pending* await a decision)
+## 4. Architecture (DECIDED across Rounds 1 to 6; no item in this section remains pending)
 
 ### 4.1 Overview
 
@@ -225,7 +225,9 @@ Proposed files, following existing folder conventions (`src/components/<feature>
 | `src/components/lead-magnet/useAttribution.ts` | Captures UTM parameters, referrer, and first landing path on first load into `sessionStorage`; exposes the attribution object plus current page and placement at submit time. |
 | `src/components/lead-magnet/submitLeadMagnetRequest.ts` | API client (mirrors `submitContact.ts`). |
 | `src/components/lead-magnet/funnel.ts` | Thin analytics helper (D4.1, D4.2): sends one of the seven funnel events to `record-lead-magnet-event` with `navigator.sendBeacon` (fetch keepalive fallback); deduplicates `cta_view` per placement per session with a `sessionStorage` flag that never leaves the browser; never sends identifiers or personal data. |
-| `src/pages/FieldGuide.tsx` (route `/field-guide`, decided D1.1) | Campaign landing route rendering the same form inline. Also the no-JavaScript fallback destination for CTAs. |
+| `src/pages/FieldGuide.tsx` (route `/field-guide`, decided D1.1) | Campaign landing route rendering the same form inline. Also the no-JavaScript fallback destination for CTAs. Sets its own title and meta description (Section 25.4). |
+| `src/pages/Privacy.tsx` (route `/privacy`, decided D3.7) | The privacy notice (Section 27), linked from the form's fine print and the footer. |
+| `src/content/consentTexts.ts` | Versioned consent sentences (D3.10). A used version is never edited; a wording change adds a new version id. Mirrored by the server registry. |
 
 Turnstile: reuse `src/components/Turnstile.tsx`, extended to accept `appearance: 'interaction-only'` so the widget is invisible unless Cloudflare needs a challenge. This keeps the dialog to one visible field.
 
@@ -314,13 +316,13 @@ Frontend changes ship through PR → preview → squash merge → Cloudflare. Da
 ## 5. User journey (detailed)
 
 1. **Arrival.** The visitor lands on any page, possibly with UTM parameters from LinkedIn or email. `useAttribution` stores `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`, `document.referrer`, and the first landing path in `sessionStorage` if not already present. Nothing is sent anywhere yet.
-2. **CTA impression.** The visitor scrolls to a placement carrying the offer. An impression event may be recorded once per placement per session (*pending* Round 4).
+2. **CTA impression.** The visitor scrolls to a placement carrying the offer. A `lead_magnet_cta_view` event is recorded once per placement per session, with no identifier (D4.2).
 3. **CTA click.** The dialog chunk loads (if not already), the dialog opens with `showModal()`, focus moves to the email field, the page behind is inert, body scroll is locked. Escape or the Close control closes it and returns focus to the CTA.
 4. **Entry.** The visitor types an email. Client validation runs on submit only (not on every keystroke): required, syntactically plausible. Turnstile runs invisibly; if Cloudflare needs an interactive challenge it appears inside the dialog.
 5. **Submit.** The button enters the submitting state (label changes, control disabled, layout stable). The request carries email, asset id, placement, current page, landing page, referrer, UTMs, Turnstile token, honeypot value.
 6. **Server.** Validates, rate-limits, records the contact and request, sends the email, returns the result.
 7. **Success.** The dialog swaps to the success state: "Your guide is ready." with the primary **Download** action opening the stable guide URL in a new tab, and a line confirming the email was sent. If the email failed or the address is suppressed, the line instead says the emailed copy could not be sent and the download still works (D5.6).
-8. **Errors.** Invalid email: inline message beneath the field, field marked invalid, focus moved to it; nothing is sent. Every other failure **fails open for guide access** (D5.6): the visitor is given the download and told honestly what did not happen (request not saved, email not sent, verification not completed, or limit reached) with `info@jit-pro.com` as the fallback for an emailed copy. Exact wording is approved in Round 6.
+8. **Errors.** Invalid email: inline message beneath the field, field marked invalid, focus moved to it; nothing is sent. Every other failure **fails open for guide access** (D5.6): the visitor is given the guide and told, in one calm sentence, that the emailed copy could not be sent and how to get one (D6.10). The cause stays in logs, request outcomes, analytics, and internal notifications; the visitor is never told about databases, rate limits, verification, or networks. Approved wording is in Section 25.6.
 9. **Email.** Arrives from JiTpro with the stable link. Clicking it opens the current PDF.
 10. **Later.** If the same person submits the contact form, the join on email connects the guide lead to the conversation.
 
@@ -397,39 +399,31 @@ RLS is enabled on all tables; only the service role writes; nothing reads from t
 
 ## 7. Email behaviour
 
-### 7.1 Fulfilment email (copy DRAFT pending Round 6; identity and structure DECIDED)
+### 7.1 Fulfilment email (APPROVED, Round 6; wording in Section 25.7)
 
 - From: `JiTpro <info@jit-pro.com>` (D3.2)
 - Reply-To: `info@jit-pro.com`, set explicitly (D3.2)
 - Subject: **Your JiTpro Construction Procurement Field Guide**
-- Preheader: *What Will Stop Work Six Months From Now? Your download link is inside.*
-- Body:
-
-> Thanks for requesting **What Will Stop Work Six Months From Now?**
->
-> The JiTpro Field Guide to Construction Procurement Control explains how general contractors can connect field demand to the decisions, information, approvals, products, materials, services, and commitments required to keep work moving.
->
-> **Download the Field Guide →** (stable link)
->
-> Construction problems discovered six months from now often already exist today. JiTpro helps you find them while there is still time to act.
->
-> JiTpro
-> Construction Procurement Control
-
-- Footer (D3.3): *You received this email because you requested the JiTpro Field Guide at jit-pro.com.* followed by JiTpro's business mailing address (supplied by Jeff before final email implementation; not invented; included because CAN-SPAM requires a postal address in commercial email and the closing lines promote JiTpro). No marketing unsubscribe link: the message is transactional (D3.6).
+- Preheader: *What Will Stop Work Six Months From Now? Your link is inside.*
+- Body, button (*Open the Field Guide* → `https://jit-pro.com/guides/procurement-field-guide`), closing, and footer exactly as approved in Section 25.7. The existing 600px template and logo header are reused.
+- Footer (D3.3): the reason-for-receipt line, the business mailing address (**placeholder until Jeff supplies it, L-2; never invented**), and *Questions: info@jit-pro.com*. No marketing unsubscribe link: the message is transactional (D3.6).
 - The message stays primarily transactional. Its job is to deliver the guide; it must not grow into a sales email.
-- Plain-text alternative generated from the same content.
-- **Legal review before launch:** the transactional-vs-commercial classification of this message and its final wording.
+- A matching plain-text part is approved and generated from the same content.
+- **Legal review before launch:** the transactional-vs-commercial classification of this message and its final footer wording.
 
-### 7.2 Internal notification (DECIDED, D3.8)
+### 7.2 Internal notification (APPROVED, Round 6; format in Section 25.8)
 
-One per valid request. To `info@jit-pro.com`. From `JiTpro Notifications <noreply@mail.jit-pro.com>` (existing internal sender domain), never From `info@` to itself and never From `jeff@`. Subject *New Field Guide request*. Body, concise: requester email, CTA placement, page, source/UTM summary where present, repeat-request flag, fulfilment email status. **No IP hash, no technical noise.**
+One per valid request. From `JiTpro Notifications <noreply@mail.jit-pro.com>` To `info@jit-pro.com`. Subject pattern *New Field Guide request · [placement]*. Body: requester email, placement, page, landing page, source, repeat request yes/no, **marketing opt-in yes/no (kept, useful internally)**, fulfilment email status, request id, timestamp. **No IP address, no IP hash.**
+
+### 7.2.1 Persistence-failure recovery alert (APPROVED, Round 6; format in Section 25.9)
+
+Sent only when a request could not be saved. Same sender and recipient. Subject *Field Guide request could not be saved*. Body: timestamp, request id, placement, page, concise error summary, and the **full requester email address, deliberately**, so JiTpro can recover a lead that was not persisted. This recovery alert is not an application log: ordinary function logs continue to mask email addresses (D5.7).
 
 ### 7.3 Consent model and what each state permits (DECIDED, D3.4, D3.5)
 
-The capture form is one typed field (email) plus **one quiet optional checkbox, unchecked by default**. Working wording, not final until Round 6 and legal review:
+The capture form is one typed field (email) plus **one quiet optional checkbox, unchecked by default**. Approved wording (Round 6; consent text version `v1`; subject to legal review before launch):
 
-> Also send me occasional JiTpro insights on construction procurement and keeping projects ahead of the field. I can unsubscribe at any time.
+> Also send me occasional JiTpro insights on keeping projects ahead of the field. I can unsubscribe at any time.
 
 | Checkbox | `consent_status` | May receive in V1 | May receive later |
 |---|---|---|---|
@@ -551,7 +545,7 @@ Proportionate to a lead magnet, using only infrastructure that already exists:
 
 **Operating principle (Jeff, 2026-09-12):** wherever this project touches privacy, consent, CAN-SPAM, CASL, GDPR, or similar requirements, design the technical system conservatively, document the actual behaviour, flag final language and legal classification for appropriate legal review, and never present implementation decisions as legal advice.
 
-1. **Privacy notice: IN SCOPE (D3.7).** A `/privacy` page is added in this project, linked from the lead-capture form's fine print and from the site footer. Plain English, written from the actual implemented behaviour rather than boilerplate. It must cover at minimum: what is collected (email address; lead-magnet request and activity; the approved attribution fields; limited technical information used for abuse prevention); why (guide fulfilment; attribution and funnel measurement; security and abuse prevention; marketing only when separately opted into); the processors involved (Cloudflare including Turnstile, Supabase, Resend) and that processing is US-hosted where relevant; the retention approach including the 24-hour IP-hash retention; how to withdraw marketing consent; how to request deletion or raise a privacy question; that JiTpro does not sell personal information (to be confirmed factually at final review); contact via `info@jit-pro.com`. **Legal review before production launch.** No Terms page in V1.
+1. **Privacy notice: IN SCOPE (D3.7); complete draft in Section 27 (Round 6).** A `/privacy` page is added in this project, linked from the lead-capture form's fine print and from the site footer. Plain English, written from the actual implemented behaviour rather than boilerplate, covering the full list Jeff specified. **Subject to legal review before production launch.** No Terms page in V1.
 2. **Consent model: DECIDED (D3.4).** Explicit unchecked checkbox. Prospects outside the United States are assumed plausible, so the design does not depend on a US-only notice-based assumption. **Legal review of the final wording before launch.**
 3. **Unsubscribe and suppression: DECIDED (D3.6).** Not required for the transactional fulfilment email; required before any marketing email; schema ready from day one; manual withdrawal via `info@` until the mechanism exists.
 4. **Turnstile.** Cloudflare positions the site operator as the data controller for Turnstile signals; the notice names Turnstile and links Cloudflare's Turnstile privacy notice.
@@ -603,29 +597,41 @@ The four required cases:
 
 Operations, in order: (1) validate, (2) determine the guide URL (always possible), (3) record request, (4) send fulfilment email, (5) respond with honest outcomes, (6) record analytics.
 
-### 13.2 Full matrix
+### 13.2 Visitor-facing failure language (APPROVED, Round 6, D6.10)
 
-| Failure | Technically | Visitor sees (wording approved in Round 6) | Guide access | Retry | Logged | JiTpro notified |
+The visitor needs to know three things: the guide is available, whether an email is coming, and what to do if they want help. Nothing more. The internal matrix below keeps every cause distinct for logs, request outcomes, analytics, and notifications, but the visitor sees one of only **three** access-granting states:
+
+| Visitor state | Heading | Body | Used for |
+|---|---|---|---|
+| Success | Your guide is ready. | We've also emailed a link to **name@company.com** so you can return to it later. | Case 1 |
+| Repeat within the hour | Your guide is ready. | We emailed a link to **name@company.com** within the last hour, so we haven't sent another. You can open the guide below. | Cooldown |
+| Email not sent | Your guide is ready. | We couldn't email your copy just now, but you can open the guide below. If you'd like an emailed copy, write to info@jit-pro.com. | Email failure, suppressed address, persistence failure, network failure or timeout, rate limiting, browser-verification failure, and any other server error |
+
+A quiet *Try again* link appears beneath the third state **only** for the network-failure and timeout conditions, where retrying is genuinely useful. No visitor-facing text mentions databases, rate limits, verification, networks, or any other backend detail.
+
+### 13.3 Full internal matrix
+
+| Failure | Technically | Visitor state (Section 13.2) | Guide access | Retry offered | Logged | JiTpro notified |
 |---|---|---|---|---|---|---|
 | Empty or malformed email | Client validation fails; nothing sent | Inline field error, focus on the field | No (not a request yet) | Immediate | No | No |
 | Server rejects email format | 400 | Same inline error | No | Immediate | Yes (request id) | No |
-| Honeypot filled | 200, nothing stored, nothing sent | Ordinary success state | Yes (bots do not matter) | n/a | Yes | No |
-| Turnstile fails, expires, or the script never loaded | 403 | The guide is available now; the browser could not be verified, so the request was not saved and no email is on its way; reload to try again | **Yes** | Widget reset; button-driven | Yes | No |
-| Repeat within the one-hour email cooldown | 200, `email_status = skipped_cooldown` | Success; the guide was emailed to that address within the last hour, so it was not sent again | **Yes** | n/a | Yes | No |
-| Rate-limited (IP) | **calm 429** | The guide is available now; too many requests came from this network just now, so the request was not saved and no email is on its way; try again in a few minutes or email `info@` | **Yes** | After the window | Yes | Only if sustained (saved query) |
-| Network error or timeout | fetch rejects or 30-second hard timeout | The guide is available now; the request could not be confirmed as saved and no email may be on its way; try again or email `info@` | **Yes** | Button-driven | Client console only | No |
-| **Lead storage fails** | 200 with `stored: false` (function fails open) or 500 | The guide is available now; JiTpro could not save the request; email `info@` for an emailed copy | **Yes** | Yes | Yes, error level, masked email | **Failure alert email** to `info@` |
-| Email send fails, lead stored | 200 with `email_status = failed` | Success; the emailed copy could not be delivered, so download now | **Yes** | One automatic retry inside the function, same idempotency key | Yes, provider error summary | Internal notification includes the status |
-| Resend reports the address as suppressed | 200 with `email_status = suppressed` | Success; the emailed copy could not be sent to that address | **Yes** | No | Yes | Internal notification includes the status |
-| Contact already `email_suppressed_at` | 200, no send attempted | Same as above | **Yes** | No | Yes | Same |
-| Internal notification or failure alert itself fails | Swallowed after logging | Nothing | Yes | No | Yes | No |
+| Honeypot filled | 200, nothing stored, nothing sent | Success | Yes (bots do not matter) | n/a | Yes | No |
+| Turnstile fails, expires, or the script never loaded | 403 | Email not sent | **Yes** | No (widget reset silently for a later attempt) | Yes | No |
+| Repeat within the one-hour email cooldown | 200, `email_status = skipped_cooldown` | Repeat within the hour | **Yes** | n/a | Yes | No |
+| Rate-limited (IP) | **calm 429** | Email not sent | **Yes** | No | Yes; `rate_limited` event | Only if sustained (saved query) |
+| Network error or timeout | fetch rejects or 30-second hard timeout | Email not sent, **with** the quiet *Try again* link | **Yes** | Yes | Client console; `network` event | No |
+| **Lead storage fails** | 200 with `stored: false` (function fails open) or 500 | Email not sent | **Yes** | No | Yes, error level, masked email | **Recovery alert** to `info@` with the full email (Section 7.2.1) |
+| Email send fails, lead stored | 200 with `email_status = failed` | Email not sent | **Yes** | No (one automatic retry inside the function, same idempotency key) | Yes, provider error summary | Internal notification shows the status |
+| Resend reports the address as suppressed | 200 with `email_status = suppressed` | Email not sent | **Yes** | No | Yes | Internal notification shows the status |
+| Contact already `email_suppressed_at` | 200, no send attempted | Email not sent | **Yes** | No | Yes | Same |
+| Internal notification or recovery alert itself fails | Swallowed after logging | Unaffected | Yes | No | Yes | No |
 | PDF route unavailable (bad redirect, missing file) | 404 on click | Browser 404 | No | n/a | CI consistency test and lychee prevent merge; production smoke test verifies | Pulsetic monitor (L-11) |
 | Duplicate submission (double click) | Second request in flight | Button disabled while submitting; a second request is treated as a repeat server-side | Yes | n/a | Yes | No |
 | Visitor closes the dialog mid-submit | Request continues | Nothing; reopening shows the idle form (or the result if the response arrived) | Via email | n/a | Yes | No |
-| Slow network | Long submitting state | Submitting label persists; after 15 seconds a "still working" line appears; hard timeout at 30 seconds becomes the network case above | **Yes** after timeout | Yes | Yes | No |
+| Slow network | Long submitting state | *Getting your guide…* persists; after 15 seconds *Still working…*; hard timeout at 30 seconds becomes the network case above | **Yes** after timeout | Yes | Yes | No |
 | JavaScript disabled or errored | Dialog cannot open | The CTA is a real link to `/field-guide`, which renders the form as a normal page (D1.1) | Depends | n/a | n/a | No |
 
-The visitor is never left wondering. Every terminal state says what happened, whether the request was saved, whether an email is coming, and what to do next.
+The visitor is never left wondering, and is never burdened with a cause they cannot act on.
 
 ---
 
@@ -789,7 +795,7 @@ Status values: **OPEN** (needs Jeff), **RECOMMENDED** (recommendation made, awai
 | G-1 | Which branch carries this work? | (a) Continue on `feature/navigation-simplification-lead-gen-guide`. (b) New `feature/procurement-guide-lead-gen` from `main`. | (b) was recommended for scope isolation. | **DECIDED: (a).** The branch was created deliberately for the current website-simplification and lead-generation guide work, and Jeff does not want overlapping homepage and CTA work split across parallel branches. All work, including this plan, is committed here. | 2026-09-12 | Jeff Kaufman. Commits stay logically scoped within the branch; the eventual PR squashes to one commit on `main`. |
 | G-2 | Where does this plan live? | `docs/superpowers/plans/` (existing plans folder) vs a new `docs/projects/` tree | `docs/superpowers/plans/2026-09-12-procurement-guide-lead-gen-plan.md`, matching the dated-plan convention already in the repo | **DECIDED** as recommended (accepted with the Round 1 batch). | 2026-09-12 | |
 | G-3 | Which PDF is the approved final asset? | The 29-, 18-, or 12-page files found locally, or a file not yet supplied | Jeff to confirm; the brief says 31 pages and no local file matched | **DECIDED: the new 31-page PDF**, *What Will Stop Work Six Months From Now? The JiTpro Field Guide to Construction Procurement Control*. Not yet in the repository or Downloads. The older 12-, 18-, and 29-page files must not be used. Adding the approved file is part of this project (Sprint 1). | 2026-09-12 | Jeff Kaufman. Sprint 1's asset commit waits on the file. |
-| G-4 | Extend the Turnstile widget's allowed hostnames to Cloudflare preview URLs? | Yes / No | **Yes**: enables end-to-end testing on PR previews, which CONTRIBUTING notes is impossible today. Cloudflare dashboard change; no code. | RECOMMENDED | 2026-09-12 | Jeff or an admin performs it. |
+| G-4 | Extend the Turnstile widget's allowed hostnames to Cloudflare preview URLs? | Yes / No | **Yes**: enables end-to-end testing on PR previews, which CONTRIBUTING notes is impossible today. Cloudflare dashboard change; no code. | **DECIDED (with D5.4): recorded as an external testing requirement**, launch item L-5. Performed by Jeff or an admin when Sprint 4 needs it; fallback is the production smoke test. | 2026-09-12 | Jeff Kaufman |
 | G-5 | Git identity for commits in this repository | Configured global identity (`JiTpro-Dev <jeffk@kaufmanbuilding.com>`) vs `Jeff Kaufman <jeff@jit-pro.com>` | Use whichever Jeff designates | **DECIDED: `Jeff Kaufman <jeff@jit-pro.com>`, set repository-locally** (`git config --local`), not globally. Commit `aabcf7e` is left as-is and is not rewritten for author identity. **This identity is repository metadata only.** It is not a visitor-facing address and must never be used as the sender or reply-to of the Field Guide workflow. | 2026-09-12 | Jeff Kaufman. Applied 2026-09-12. |
 
 ### Round 1: Visitor experience
@@ -868,26 +874,34 @@ Status values: **OPEN** (needs Jeff), **RECOMMENDED** (recommendation made, awai
 
 | ID | Question | Recommendation | Decision | Date | Notes |
 |---|---|---|---|---|---|
-| D6.1 | All visitor-facing copy (CTA, dialog, states, email) | Presented together before implementation | OPEN | | |
-| D6.2 | §28 Modals: define the marketing capture dialog (anatomy, size, scrim, close, focus) | Propose: §27.1 card as the panel; scrim `--jp-background` at about 88% as in the lightbox; Close as a labelled quiet control; native `<dialog>` required | OPEN | | Must be approved before coding (§41, §49). |
-| D6.3 | §24 Forms: field anatomy for marketing capture | Propose: the contact-form field recipe, label above, error beneath with icon, validation on submit | OPEN | | |
-| D6.4 | §33 Error / §32 Loading states for marketing forms | Propose: neutral-token error box with icon and text; submitting = label change and disabled control, no spinner | OPEN | | |
-| D6.5 | §34/§36 minimum touch target | Propose 44 by 44 CSS px | OPEN | | Also resolves the 2026-09-03 open TODO. |
-| D6.6 | Homepage composition: add the guide band after the final CTA | Needs explicit approval and a Decision Log entry | OPEN | | |
-| D6.7 | Final consent checkbox wording and the fine-print sentence beneath the email field | Working wording in Section 7.3; present final strings with the rest of the copy | OPEN | | Legal review after Jeff's approval (L-3). |
-| D6.8 | Final fulfilment and internal email copy, including footer line and mailing address | Section 7.1 draft plus D3.3 additions | OPEN | | Depends on L-2. |
-| D6.9 | Privacy notice draft | Written from implemented behaviour per Section 10 item 1 | OPEN | | Legal review (L-3). |
+| D6.1 | All visitor-facing copy (bands, footer, landing page, dialog, states, email, notifications) | One recommended version per string | **DECIDED.** Approved with Jeff's edits: the band's supporting sentence and the landing-page intro reworded; the band's reassurance line removed and not replaced; the success button is *Open the field guide*. Full specification in Section 25. | 2026-09-12 | Jeff Kaufman |
+| D6.2 | §28 Modals: marketing lead-capture dialog | Amendment A1 | **APPROVED (A1).** Text in Section 26. | 2026-09-12 | Jeff Kaufman |
+| D6.3 | §24 Forms: marketing capture field, checkbox, fine print | Amendment A2 | **APPROVED (A2).** | 2026-09-12 | Jeff Kaufman |
+| D6.4 | §33 / §32: marketing form error, status, and submit-in-progress | Amendments A3, A4 | **APPROVED (A3, A4).** No new semantic error colour is introduced. | 2026-09-12 | Jeff Kaufman |
+| D6.5 | §34 / §36 minimum touch target | Amendment A5 | **APPROVED (A5): 44 by 44 CSS px.** Resolves the 2026-09-03 open TODO. | 2026-09-12 | Jeff Kaufman |
+| D6.6 | Homepage composition: lead-magnet offer band after the final CTA | Amendment A7 | **APPROVED (A7).** After the final commercial CTA, before the footer, never in the hero, at most one per page. | 2026-09-12 | Jeff Kaufman |
+| D6.7 | Consent checkbox wording and fine print | Section 25.5 | **DECIDED.** Checkbox: *Also send me occasional JiTpro insights on keeping projects ahead of the field. I can unsubscribe at any time.* Unchecked by default. Fine print: *We'll email you a link to the guide. Read our privacy notice.* Both subject to legal review (L-3). | 2026-09-12 | Jeff Kaufman |
+| D6.8 | Fulfilment email, internal notification, and recovery alert copy | Sections 25.7 to 25.9 | **DECIDED.** Mailing address remains a placeholder until L-2. Plain-text part approved. Classification and footer wording to legal review (L-3). | 2026-09-12 | Jeff Kaufman |
+| D6.9 | Privacy notice | Draft timing | **DECIDED: complete draft written now (Section 27), before Sprint 1**, from the actual architecture, no boilerplate. Marked SUBJECT TO LEGAL REVIEW BEFORE PRODUCTION LAUNCH. Mailing address placeholder until L-2. | 2026-09-12 | Jeff Kaufman |
+| D6.10 | Visitor-facing failure language | Per-cause messages vs one calm shared state | One calm shared state | **DECIDED: simplify.** Three access-granting visitor states only (Section 13.2). Causes stay internal. No mention of databases, rate limits, verification, or networks to visitors. Quiet *Try again* only where genuinely useful (network, timeout). | 2026-09-12 | Jeff Kaufman |
+| D6.11 | Secondary sales CTA in the success state | Yes / No | No | **DECIDED: NO.** No *Start with one project*, contact, scheduling, or other commercial CTA in the guide-success state. The guide itself carries JiTpro's commercial path. | 2026-09-12 | Jeff Kaufman |
+| D6.12 | Marketing opt-in line in the internal notification | Include / omit | Include | **DECIDED: keep it.** | 2026-09-12 | Jeff Kaufman |
+| D6.13 | Full requester email in the persistence-failure recovery alert | Include / mask | Include | **DECIDED: include the full address, deliberately**, for lead recovery. Ordinary logs stay masked. | 2026-09-12 | Jeff Kaufman |
+| D6.14 | §26 / §48.1 hairline secondary button; §20.2 offer band; §50 amendment; §20.1 and §7.7 non-amendments | Amendments A6 to A10 | **APPROVED (A6 to A10).** Text in Section 26. | 2026-09-12 | Jeff Kaufman |
+| D6.15 | Footer changes | Add items vs redesign | Add two items only | **DECIDED.** *Free field guide* in the Company column (established footer-link appearance, opens the dialog); *Privacy* in the bottom legal area. No other footer redesign. | 2026-09-12 | Jeff Kaufman |
 
 ---
 
 ## 21. Open questions (require Jeff)
 
-1. Delivery of the approved 31-page PDF file (G-3 is decided; the file itself is still needed before Sprint 1's asset commit).
-2. JiTpro's business mailing address for the email footer (L-2), before final email implementation.
-3. Round 6 decisions (visitor-facing copy, UX states, Design System amendments).
-4. Whether a paid or scheduled LinkedIn campaign is planned for launch (affects how much the landing route and UTM discipline matter).
-5. Whether Jeff or another admin will perform the Cloudflare dashboard actions (Turnstile hostnames, Web Analytics toggle) and the Supabase deploy steps, or whether the assistant should run the Supabase CLI commands.
-6. Launch checklist items L-1 to L-9 (Section 15.1), each verified outside the repository before production launch.
+**No product, data, compliance, email, analytics, security, or infrastructure decision remains open.** All six decision rounds are recorded in Section 20. What remains is external to the repository and is consolidated in Section 28:
+
+1. Explicit authorisation to begin Sprint 1.
+2. The approved 31-page PDF file (L-8).
+3. JiTpro's business mailing address (L-2).
+4. Legal review of the consent wording, fine print, privacy notice, and email classification (L-3); it can run in parallel with implementation and must complete before production launch.
+5. Dashboard and account configuration (L-1, L-4, L-5, L-9 to L-14), each requested when its sprint reaches it.
+6. Optional context: whether a paid or scheduled LinkedIn campaign is planned for launch. It changes nothing in scope; it only raises the priority of testing `/field-guide` with UTM links.
 
 ### 21.1 Follow-up items outside this project's scope (recorded 2026-09-12)
 
@@ -918,88 +932,116 @@ None of these is built in this project. All must exist before the first marketin
 
 ---
 
-## 22. Sprint plan (DRAFT: to be finalised after decision rounds)
+## 22. Sprint plan (FINAL, 2026-09-12; execution awaits Jeff's explicit go-ahead)
 
-Organised by working capability. Order differs from the brief's draft in one respect: the persistence API is built **before** the visitor UI so that the UI sprint can be verified end to end against the real contract rather than a mock.
+Organised by working capability. The persistence API is built **before** the visitor UI so that the UI sprint is verified end to end against the real contract rather than a mock. Each sprint follows the execution protocol in the brief: state the objective, review dependencies, confirm repository state, explain what will change, implement in focused commits, test, browser-QA where applicable, update this document, summarise, and stop if a material new decision appears.
 
-### Sprint 0: Discovery and architecture
+**Implementation order:** 1a → 1b (when the PDF arrives; may run alongside 2) → 2 → 3 → 4 → 5 → 6. Sprint 1b is the only step gated on an external deliverable; nothing else waits on it until Sprint 4's browser QA needs the real PDF behind the route.
+
+**Git expectations for every sprint** (from the brief, Section 18): work stays on `feature/navigation-simplification-lead-gen-guide`; before each commit review `git status` and the diff, confirm only intended files changed, run `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build`, fix failures rather than committing broken work unless Jeff approves a WIP checkpoint, write a descriptive message, and report the hash. Push only to this branch with Jeff's knowledge. One PR to `main` at the end; merge only on Jeff's explicit word after `build-and-test` passes.
+
+### Sprint 0: Discovery and architecture (COMPLETE 2026-09-12)
 
 - **Objective:** existing infrastructure understood; architecture and decisions approved.
-- **Scope:** repository discovery, this plan, decision rounds, Design System amendments drafted, backlog.
-- **Out of scope:** any production change.
-- **Dependencies:** none.
-- **Tasks:** discovery (done), plan (done), Rounds 1 to 6, DS amendment proposals, sprint finalisation.
-- **Acceptance:** no architectural or product question blocks Sprint 1.
-- **Tests:** none.
-- **Risks:** decisions drift if not recorded; mitigated by this document.
-- **Decision dependencies:** all rounds.
-- **Definition of done:** Decision Log has no OPEN items in Rounds 1 to 5; Round 6 copy approved or scheduled.
-- **Git:** branch decided (G-1: `feature/navigation-simplification-lead-gen-guide`); plan committed there as a docs-only commit; further decision rounds each land as their own docs commit.
+- **Delivered:** repository discovery (Section 3), this plan, six decision rounds (Section 20), Design System amendment texts (Section 26), privacy notice draft (Section 27), approved copy (Section 25), sprint plan, external prerequisites (Section 28).
+- **Exit criteria met:** no architectural or product question blocks implementation. Remaining items are external (Section 28).
+- **Commits:** `aabcf7e` (plan), `6f4834a` (Round 2), `dde8c67` (Round 3), `953575b` (Round 4), `ea14571` (Round 5), plus the Round 6 commit recorded in Section 29.
 
-### Sprint 1: Lead-magnet foundation
+### Sprint 1a: Foundation without the asset
 
-- **Objective:** the site can represent and serve the Field Guide reliably.
-- **Scope:** commit the approved 31-page PDF under its versioned name; `_redirects` stable route `/guides/procurement-field-guide` above the catch-all; `_headers` for the PDF (inline `Content-Disposition` with clean filename, `X-Robots-Tag: noindex`, `Cache-Control`); client registry `leadMagnets.ts`; server registry in `_shared`; versioned `consentTexts`; Vitest 5 installed with `npm test` in CI before build; registry and redirect consistency tests; Design System amendments approved in Round 6 written into the document and its Decision Log.
-- **Out of scope:** UI, API, email.
-- **Dependencies:** the approved 31-page PDF file supplied by Jeff (L-8), D5.1, D5.2, D5.8, D5.10, Round 6 DS approvals.
-- **Acceptance:** `/guides/procurement-field-guide` on a preview 302s to the PDF; the PDF opens inline and saves under the clean filename; lychee passes; `npm test` runs in CI; DS Decision Log updated.
-- **Tests:** registry and redirect consistency; file existence; consent-text version immutability.
-- **Risks:** the PDF not yet supplied; Cloudflare redirect ordering (verified on preview).
-- **Git:** 3 commits: tooling, asset and route, Design System docs.
+- **Objective:** the tooling, registries, and Design System standards exist so every later sprint builds on approved conventions.
+- **Scope:** Vitest 5 installed; `npm test` added and wired into CI before the build step; client registry `src/content/leadMagnets.ts` (id, version, titles, approved copy, stable route, placements); server registry in `supabase/functions/_shared/lead-magnet/`; `src/content/consentTexts.ts` with version `v1`; Design System amendments A1 to A10 written into `docs/design/JiTpro_Design_System_v1.0.md` with Decision Log entries; registry consistency tests (client and server agree; consent versions immutable).
+- **Out of scope:** the PDF, the route, UI, API, email.
+- **Dependencies:** Jeff's go-ahead. No external prerequisite.
+- **Tasks:** add Vitest and config; add `test` script; CI step; registries; consent texts; DS edits; tests.
+- **Acceptance criteria:** `npm test` passes locally and in CI; typecheck, lint, build unchanged; the Design System contains A1 to A10 with dated Decision Log rows; registries typed and tested.
+- **Tests:** registry agreement; consent-text immutability; a trivial smoke test proving the runner works in CI.
+- **Risks:** CI time increases slightly; Vitest config must exclude `supabase/functions` Deno entry points from type checking (only `_shared` pure modules are imported).
+- **Decision dependencies:** none outstanding.
+- **Definition of done:** CI green with the new step; DS amendments merged into the document; plan updated with commits.
+- **Commit boundaries:** (1) test tooling and CI; (2) registries and consent texts with tests; (3) Design System amendments.
 
-### Sprint 2: Lead persistence and attribution (API)
+### Sprint 1b: The asset and the stable route (gated on L-8)
 
-- **Objective:** a valid request is safely recorded with approved attribution; abuse controls work.
-- **Scope:** staging inspection (Section 15.2) and staging secrets (L-13); migrations for `contacts`, `lead_magnet_requests`, and `lead_magnet_ip_activity`; edge function with validation, honeypot, Turnstile, 10-per-10-minute IP rate limit, contact upsert, repeat detection, one-hour cooldown decision, **fail-open response shape**, failure alert, masked logging; shared pure modules; `curl`-level verification against **staging**. The existing `leads` table and `submit-contact` function are not touched.
-- **Out of scope:** email sending (Sprint 3), UI, any change to the contact-form pipeline, production deployment (Sprint 6).
-- **Dependencies:** Round 2 (decided), D2.7, D5.3 to D5.7, D5.9, D5.11, L-12, L-13.
-- **Acceptance:** documented `curl` cases (valid, malformed, honeypot, repeat, rate-limited, bad Turnstile, simulated persistence failure) behave per the matrix against staging; rows appear with attribution; the failure alert arrives.
-- **Tests:** Vitest on validation, normalisation, attribution parsing, consent, cooldown, rate-limit, and failure-state decisions; manual function tests on staging.
-- **Risks:** staging unsuitable (fallback per Section 15.2); `db push` needs the database password.
-- **Git:** migrations commit; function commit; tests commit.
+- **Objective:** the site serves the approved Field Guide at a stable URL.
+- **Scope:** commit the approved 31-page PDF as `public/guides/jitpro-construction-procurement-field-guide-2026-09.pdf` (version label adjusted to the file's actual date if Jeff prefers); `_redirects` rule `/guides/procurement-field-guide` → the versioned file, 302, above the SPA catch-all; `_headers` rule for the PDF path: `Content-Disposition: inline; filename="JiTpro-Construction-Procurement-Field-Guide.pdf"`, `X-Robots-Tag: noindex`, long `Cache-Control`; redirect-and-asset consistency test.
+- **Out of scope:** everything else.
+- **Dependencies:** the approved 31-page PDF supplied by Jeff (L-8); Sprint 1a registries.
+- **Acceptance criteria:** page count and title of the committed file verified as the approved asset; on a Cloudflare preview the stable route returns 302 to the file; the file opens inline and saves under the clean filename; `X-Robots-Tag` present; lychee passes; consistency test passes.
+- **Tests:** consistency test; manual preview verification with `curl -I`.
+- **Risks:** file not yet supplied; redirect ordering (verified on preview).
+- **Definition of done:** preview verified; plan updated.
+- **Commit boundaries:** (1) asset, redirect, headers, test in one commit (they are one working capability).
 
-### Sprint 3: Email fulfilment
+### Sprint 2: Lead persistence and attribution (API, on staging)
 
-- **Objective:** a successful request reliably produces the approved guide email.
-- **Scope:** template (HTML and text) with footer line and mailing address; stable link; From `JiTpro <info@jit-pro.com>` with explicit Reply-To; tags and idempotency key; synchronous send with one retry; one-hour cooldown; suppressed and failed statuses recorded on the row; internal notification From `JiTpro Notifications <noreply@mail.jit-pro.com>`; `LEAD_MAGNET_TEST_MODE`; failure logging.
-- **Out of scope:** nurture, unsubscribe endpoint, Resend webhook receiver.
-- **Dependencies:** Round 3 (decided), D6.8 final email copy, L-2 mailing address.
-- **Acceptance:** sends verified per Section 14.4 against Resend test recipients and a JiTpro-owned mailbox; cooldown verified; suppressed path verified with `suppressed@resend.dev`; failure path verified with an invalid API key on a test deploy; test mode refuses an outside recipient.
-- **Tests:** template rendering tests (subject, link, footer, escaping, text part); cooldown decision tests; manual delivery checks.
-- **Risks:** spam placement (DNS already correct; verify in a real mailbox); mailing address not yet supplied.
-- **Git:** template commit; send logic commit; notification commit.
+- **Objective:** a valid request is safely recorded with approved attribution; abuse controls work; the function fails open.
+- **Scope:** read-only staging inspection (Section 15.2) and report; staging secrets (L-13) with Jeff's approval; migrations for `contacts`, `lead_magnet_requests`, `lead_magnet_ip_activity`; `submit-lead-magnet-request` with validation, server honeypot, Turnstile verification, 10-per-10-minute IP rate limit (single constant), contact upsert, repeat detection, one-hour cooldown decision, consent recording, **fail-open response shape** (`stored`, `email_status`, `guide_url`, `request_id`), persistence-failure recovery alert (Section 7.2.1), masked logging; shared pure modules; `curl`-level verification against **staging**. The existing `leads` table and `submit-contact` function are not touched.
+- **Out of scope:** email sending (Sprint 3, though the function's send step is stubbed to return `skipped` so the response shape is complete), UI, any change to the contact-form pipeline, production deployment (Sprint 6).
+- **Dependencies:** Sprint 1a; D5.11 inspection outcome (L-12); L-13.
+- **Tasks:** inspect staging and report; migrations; shared modules; function; `curl` script documented in the repo; tests.
+- **Acceptance criteria:** documented `curl` cases (valid, malformed, honeypot, repeat inside and outside the hour, rate-limited, bad or missing Turnstile, simulated persistence failure) behave per Section 13.3 against staging; rows appear with attribution and consent fields; `lead_magnet_ip_activity` rows expire; the recovery alert arrives at a JiTpro mailbox with the full email.
+- **Tests:** Vitest on validation, normalisation, attribution parsing, consent decisions, cooldown, rate limit, failure-state mapping, payload validation; manual function tests on staging.
+- **Risks:** staging unsuitable (fallback decided with Jeff per Section 15.2); `db push` needs the database password; Deno-only APIs must stay out of `_shared`.
+- **Decision dependencies:** none outstanding.
+- **Definition of done:** all `curl` cases pass on staging; tests green; plan updated with the staging inspection report.
+- **Commit boundaries:** (1) migrations; (2) shared modules with tests; (3) edge function and `curl` script.
+
+### Sprint 3: Email fulfilment (on staging)
+
+- **Objective:** a successful request reliably produces the approved guide email and the internal notification.
+- **Scope:** HTML and plain-text templates per Section 25.7 with the footer line and the mailing-address placeholder; stable link; From `JiTpro <info@jit-pro.com>` with explicit Reply-To; tags `asset` and `environment`; `Idempotency-Key` from the request id; synchronous send with one retry; one-hour cooldown enforcement; `sent`, `skipped_cooldown`, `failed`, `suppressed` recorded on the row; internal notification per Section 25.8 From `JiTpro Notifications <noreply@mail.jit-pro.com>`; `LEAD_MAGNET_TEST_MODE` recipient restriction; failure logging.
+- **Out of scope:** nurture, unsubscribe endpoint, Resend webhook receiver (F-7).
+- **Dependencies:** Sprint 2; the mailing address (L-2) for the final footer, otherwise a clearly marked placeholder that a test asserts is replaced before production.
+- **Tasks:** templates; send module; notification module; test mode; tests; delivery verification.
+- **Acceptance criteria:** Section 14.4 checks pass against Resend test recipients and a JiTpro-owned mailbox (sender, Reply-To, subject, preheader, body, button link, footer, plain-text part, mobile and desktop rendering); cooldown verified; `suppressed@resend.dev` path recorded as suppressed; failure path verified with an invalid key on staging; test mode refuses an outside recipient; internal notification arrives with the approved fields and no IP data.
+- **Tests:** template rendering (subject, link, footer, escaping, text part, placeholder guard); cooldown decision; notification formatting.
+- **Risks:** spam placement in a real mailbox (DNS already correct); mailing address still open.
+- **Decision dependencies:** none outstanding.
+- **Definition of done:** real test messages verified in a mailbox; plan updated.
+- **Commit boundaries:** (1) templates with tests; (2) send and cooldown logic; (3) internal notification and test mode.
 
 ### Sprint 4: Visitor capture experience
 
-- **Objective:** a visitor can encounter a CTA, enter an email, submit, and get the correct success or error experience.
-- **Scope:** `LeadMagnetCTA`, `LeadMagnetDialog` (lazy), `LeadCaptureForm` with all states including the unchecked marketing checkbox and the fine print linking `/privacy`, `useAttribution`, API client, Turnstile interaction-only, accessibility, responsive behaviour, reduced motion, the `/field-guide` landing route.
-- **Out of scope:** final placements beyond a single development placement; analytics events (stubbed).
-- **Dependencies:** Sprints 1 to 3; Round 1; Round 6 copy and DS approvals.
-- **Acceptance:** browser checklist in Section 14.3 passes on desktop, tablet, mobile; failure paths behave per the matrix.
-- **Tests:** form reducer tests; browser QA with screenshots; keyboard and screen-reader pass.
-- **Risks:** software keyboard covering the field on iOS; dialog styling conventions must exist in the DS first.
-- **Git:** components commit; attribution commit; landing route commit; QA fixes.
+- **Objective:** a visitor can encounter a CTA, enter an email, submit, and receive the correct outcome state, on desktop, tablet, and mobile, accessibly.
+- **Scope:** `LeadMagnetCTA` (band and footer-link variants), `LeadMagnetDialog` (lazy-loaded native `<dialog>` per A1), `LeadCaptureForm` with every state in Sections 13.2 and 25.6 including the unchecked checkbox, Turnstile interaction-only with expired-token handling, fine print linking `/privacy`, honeypot; `useAttribution` (`sessionStorage`); API client; the `/field-guide` landing page per Section 25.4 with its title and meta description; funnel event calls present but pointed at a no-op until Sprint 6; a single development placement for QA.
+- **Out of scope:** the production placements (Sprint 5), live analytics (Sprint 6).
+- **Dependencies:** Sprints 1a, 2, 3 (staging backend); Sprint 1b for the real PDF behind the route during QA; Cloudflare preview-environment variables pointed at staging (L-14) and Turnstile preview hostnames (L-5) for a full preview test.
+- **Tasks:** components; states; attribution; landing page; accessibility pass; responsive pass; reduced-motion verification; failure-path QA.
+- **Acceptance criteria:** Section 14.3 desktop, mobile (360, 390, 430), tablet (768, 1024), and accessibility checklists pass with screenshots recorded; every row of Section 13.3 produces the correct visitor state; keyboard-only completion; screen-reader announcement of errors and outcome headings; no horizontal overflow; Turnstile invisible in the normal path.
+- **Tests:** form reducer and failure-state mapping tests; browser QA with the Chrome tools and headless screenshots; reduced-motion verification per the recorded tooling note.
+- **Risks:** iOS software keyboard covering the field; preview cannot submit until L-5 and L-14 are done (fallback: production smoke test after merge).
+- **Decision dependencies:** none outstanding.
+- **Definition of done:** QA evidence recorded in the plan; plan updated.
+- **Commit boundaries:** (1) dialog and form components with states; (2) attribution and API client; (3) landing page; (4) QA fixes.
 
 ### Sprint 5: Website integration
 
-- **Objective:** approved CTAs are live on the correct pages.
-- **Scope:** homepage band, Learn More band, footer link, the `/privacy` page (D3.7) and its footer link.
-- **Out of scope:** nav, other pages, a Terms page.
-- **Dependencies:** D1.2, D1.7, D6.6, D6.9 privacy draft.
-- **Acceptance:** each placement renders and opens the dialog; placement ids recorded correctly; §48.1/§48.7 amber budgets respected; no regression on homepage or Learn More.
-- **Tests:** browser QA per placement; regression pass on contact form and navigation.
-- **Risks:** homepage composition approval; §50.5 amendment.
-- **Git:** one commit per placement.
+- **Objective:** the approved offer is live on the homepage, Learn More, and the footer, with the privacy notice published.
+- **Scope:** homepage band after `HomeFinalCTA` (A7, D6.6); Learn More band after section 11 outside the guide area (A8); footer *Free field guide* item and *Privacy* link (D6.15) using token classes; the `/privacy` page from Section 27 (with the mailing-address placeholder until L-2); route registration; regression pass.
+- **Out of scope:** navigation, other pages, a Terms page, any other footer change.
+- **Dependencies:** Sprint 4; Section 27 approved by Jeff (done in Round 6; legal review may still be pending and does not block a preview, but does block production launch).
+- **Tasks:** one commit per placement; privacy page; regression.
+- **Acceptance criteria:** each placement renders and opens the dialog with the correct `placement`; §48.1 and §48.7 respected (band eyebrow is the only amber; no two primary actions in one viewport); homepage and Learn More visually unchanged above the bands; contact form, navigation, and footer regression-free; `/privacy` reachable from the form and the footer.
+- **Tests:** browser QA per placement at all breakpoints; regression on contact form and navigation; lychee passes.
+- **Risks:** homepage visual review by Jeff before merge (plan-then-approve rule); the Learn More guide area's grid and the band's full-bleed placement.
+- **Decision dependencies:** none outstanding.
+- **Definition of done:** Jeff has seen the preview of both bands and approved them; plan updated.
+- **Commit boundaries:** (1) homepage band; (2) Learn More band; (3) footer; (4) privacy page.
 
 ### Sprint 6: Analytics, QA, and production readiness
 
-- **Objective:** the complete funnel is measurable and production-ready.
-- **Scope:** `lead_magnet_events` migration and `record-lead-magnet-event` function (staging first); the client `funnel.ts` helper wired to the seven events (stubs from Sprint 4 become live); Cloudflare Web Analytics enablement (L-9); the eight saved queries under `supabase/queries/`; privacy-notice paragraph describing analytics; full regression; accessibility audit; email re-verification; **promotion of migrations and both functions to production** (L-6, L-7) after staging passes; Pulsetic monitor (L-11); production smoke-test plan; documentation update; PR.
-- **Dependencies:** Round 4 (decided); all prior sprints; launch checklist items L-1 to L-14.
-- **Acceptance:** Section 38 of the brief (functional, visual, accessibility, email, analytics, data, security, regression, CI) all pass.
-- **Tests:** everything in Section 14.
-- **Risks:** event duplication under React StrictMode in development; verify in the production build.
-- **Git:** events commit; QA fixes; docs; PR opened with the Section 15 summary; merge only on Jeff's word.
+- **Objective:** the complete funnel is measurable, verified, and promoted to production.
+- **Scope:** `lead_magnet_events` migration and `record-lead-magnet-event` function on staging, then production; `funnel.ts` wired to the seven events with impression deduplication; the eight saved queries under `supabase/queries/`; full regression; accessibility audit; email re-verification; **promotion of migrations and both functions to production** (L-6, L-7) after staging passes; production `curl` check with a JiTpro-owned address; Cloudflare Web Analytics enablement (L-9); Pulsetic monitor (L-11); PR opened with the Section 15 summary; production smoke test after merge; results recorded.
+- **Out of scope:** any nurture prerequisite (Section 21.2), Resend webhook, report page.
+- **Dependencies:** Sprints 1 to 5; launch checklist L-1 to L-14 complete, including legal review (L-3) before merge to production.
+- **Tasks:** events; queries; audits; promotion; PR; smoke test; documentation.
+- **Acceptance criteria:** the brief's Section 38 review passes in full (functional, visual, accessibility, email, analytics, data, security, regression, CI); events appear once per action with no StrictMode duplication in the production build; queries return sensible results; all launch items checked; Jeff authorises the merge.
+- **Tests:** everything in Section 14; production smoke test per Section 15 step 6.
+- **Risks:** an external prerequisite still open at merge time (the PR waits); event duplication in development only.
+- **Decision dependencies:** Jeff's authorisation to merge.
+- **Definition of done:** merged, production smoke test recorded, post-launch measurement plan started (Section 23).
+- **Commit boundaries:** (1) events table, function, client wiring; (2) saved queries; (3) QA and audit fixes; (4) documentation and launch record.
 
 ### Sprint completion records
 
@@ -1015,7 +1057,213 @@ Organised by working capability. Order differs from the brief's draft in one res
 
 ---
 
-## 24. Document change history
+## 25. Approved visitor-facing copy (Round 6, 2026-09-12)
+
+Every string below is approved and is the source for `src/content/leadMagnets.ts`, `src/content/consentTexts.ts`, the email templates, and the pages. Implementation must not paraphrase. Items marked **legal review** are approved for build and remain subject to L-3 before production launch. No em dashes anywhere (§7.7). Site headings are sentence case (A10).
+
+### 25.1 Homepage guide band (after the final commercial CTA, before the footer)
+
+| Element | Copy |
+|---|---|
+| Eyebrow (mono, uppercase via CSS, `--jp-brand-amber`) | Free field guide |
+| Heading (h2) | What will stop work six months from now? |
+| Supporting sentence | A JiTpro field guide for general contractors on finding the decisions, information, products, materials, services, approvals, and commitments the field will depend on while there is still time to act. |
+| Button (hairline secondary, A6; opens the dialog; `placement = home-band`) | Get the free field guide |
+
+No reassurance line beneath the button. The offer is confident and simple.
+
+### 25.2 Learn More guide band
+
+Same component and copy as 25.1, placed after section 11, outside the numbered sequence and the guide rail (A8). `placement = learn-more-band`.
+
+### 25.3 Footer
+
+- Company column, new item (button with the established footer-link appearance, opens the dialog, `placement = footer-link`, records the page it was clicked from): **Free field guide**
+- Bottom legal area, new link beside *For Investors*: **Privacy** → `/privacy`
+
+### 25.4 `/field-guide` landing page (indexable)
+
+| Element | Copy |
+|---|---|
+| Browser title | What Will Stop Work Six Months From Now? \| JiTpro Field Guide |
+| Meta description | A free JiTpro field guide for general contractors on construction procurement control: Required on Site Dates, backward planning, named commitments, and a self-assessment. |
+| Eyebrow | Free field guide |
+| H1 | What will stop work six months from now? |
+| Subtitle (heading-behaving line beneath the H1) | The JiTpro Field Guide to Construction Procurement Control |
+| Intro | A 31-page guide for general contractors on identifying the decisions, information, products, materials, services, approvals, and commitments the field will depend on months from now, and establishing accountability while useful options still exist. |
+| H2 | What the guide covers |
+| List (rendered as a readable list, one item per line) | 1. Why the construction schedule is a statement of future demand. 2. Why missing information, not late purchasing, is usually what makes procurement late. 3. Required on Site Dates, and how to plan backward from them through the procurement chain. 4. Named commitments: who owns the next move, and by when. 5. Plan, commitment, actual, and forecast, and why preserving change and causality matters. 6. Managing by exception: item health, project health, and company health. 7. A procurement-control self-assessment you can run on your own project. |
+| Form heading (h2, in a §27.1 card beside the content from `lg`, below it otherwise) | Get the guide |
+| Form | The exact same capture component, validation, consent model, and states as the dialog (25.5, 25.6). `placement = landing-page`. Its submit button is the page's one amber action. |
+
+### 25.5 Dialog
+
+| Element | Copy or behaviour |
+|---|---|
+| Close control (top-right, labelled, X icon, 44px target) | Close |
+| Heading (h2; `aria-labelledby` target) | Get the free field guide |
+| Sub line | What will stop work six months from now? We'll open the guide right away and email you a link. |
+| Field label | Email address |
+| Input | `type="email"`, `autocomplete="email"`, `inputmode="email"`, no placeholder, no asterisk |
+| Checkbox (unchecked by default; consent text version `v1`) **legal review** | Also send me occasional JiTpro insights on keeping projects ahead of the field. I can unsubscribe at any time. |
+| Turnstile | Invisible (`appearance: "interaction-only"`). If Cloudflare requires interaction, the compact dark widget appears above the submit button beneath this line: **One quick check before we open your guide.** |
+| Submit (amber primary) | Get the free field guide |
+| Fine print **legal review** | We'll email you a link to the guide. Read our privacy notice. (*privacy notice* links to `/privacy`, opens in a new tab, with a screen-reader note that it opens in a new tab.) |
+| Honeypot | Hidden field named `company_website`, as on the contact form |
+
+### 25.6 Form and outcome states
+
+| State | Copy and behaviour |
+|---|---|
+| Submitting | Button reads **Getting your guide…**, disabled, width held; form `aria-busy`; after 15 seconds a muted line **Still working…** |
+| Empty email | **Enter your email address to get the guide.** (icon plus text beneath the field; `aria-invalid`; `aria-describedby`; focus to the field) |
+| Invalid email | **Enter a valid email address, like name@company.com.** (same treatment) |
+| Shared outcome heading (focus moves here) | **Your guide is ready.** |
+| Primary button in every outcome (amber; opens `/guides/procurement-field-guide` in a new tab; screen-reader note "opens in a new tab") | **Open the field guide** |
+| Success | We've also emailed a link to **name@company.com** so you can return to it later. |
+| Repeat within the hour | We emailed a link to **name@company.com** within the last hour, so we haven't sent another. You can open the guide below. |
+| Email not sent (email failure, suppressed address, persistence failure, network failure or timeout, rate limiting, browser-verification failure, any other server error) | We couldn't email your copy just now, but you can open the guide below. If you'd like an emailed copy, write to info@jit-pro.com. |
+| Quiet *Try again* link | Beneath the "Email not sent" body **only** for network failure and timeout |
+
+No secondary sales CTA in any outcome state (D6.11).
+
+### 25.7 Fulfilment email **legal review (classification and footer)**
+
+| Element | Copy |
+|---|---|
+| From | JiTpro <info@jit-pro.com> |
+| Reply-To | info@jit-pro.com |
+| Subject | Your JiTpro Construction Procurement Field Guide |
+| Preheader | What Will Stop Work Six Months From Now? Your link is inside. |
+| Body, paragraph 1 | Thanks for requesting **What Will Stop Work Six Months From Now?** |
+| Body, paragraph 2 | The JiTpro Field Guide to Construction Procurement Control explains how general contractors can connect field demand to the decisions, information, approvals, products, materials, services, and commitments required to keep work moving. |
+| Button | Open the Field Guide → `https://jit-pro.com/guides/procurement-field-guide` |
+| Closing | Construction problems discovered six months from now often already exist today. JiTpro helps you find them while there is still time to act. |
+| Signature | JiTpro ¶ Construction Procurement Control |
+| Footer | You received this email because you requested the JiTpro Field Guide at jit-pro.com. ¶ JiTpro ¶ [approved business mailing address: placeholder until L-2; never invented] ¶ Questions: info@jit-pro.com |
+| Plain-text part | The same content in the same order, with the stable URL written out |
+
+### 25.8 Internal notification
+
+| Element | Content |
+|---|---|
+| From | JiTpro Notifications <noreply@mail.jit-pro.com> |
+| To | info@jit-pro.com |
+| Subject | New Field Guide request · [placement] |
+| Body (table) | Requester email · Placement · Page · Landing page · Source (UTM source / medium / campaign, or referrer host, or "direct") · Repeat request: yes/no · Marketing opt-in: yes/no · Fulfilment email status · Request id · Timestamp |
+| Excluded | IP address, IP hash, user agent |
+
+### 25.9 Persistence-failure recovery alert
+
+| Element | Content |
+|---|---|
+| From | JiTpro Notifications <noreply@mail.jit-pro.com> |
+| To | info@jit-pro.com |
+| Subject | Field Guide request could not be saved |
+| Body | Timestamp · Request id · Placement · Page · Concise error summary · **Requester email address (full, deliberately, for lead recovery)** |
+
+---
+
+## 26. Design System amendments (APPROVED A1 to A10, Round 6; written into the Design System in Sprint 1a before any component is coded)
+
+Each item below is transcribed into `docs/design/JiTpro_Design_System_v1.0.md` as an APPROVED subsection with a dated Decision Log row naming Jeff Kaufman as approver and this plan as the source.
+
+- **A1. §28.1 APPROVED: Marketing lead-capture dialog.** Native `<dialog>` opened with `showModal()`. On open, focus moves to the first field; Escape closes through the `cancel` event and backdrop click closes; body scroll is locked; on close, focus returns to the control that opened it; the dialog carries `aria-labelledby` pointing at its heading. Panel: the §27.1 default card (`--jp-surface`, 1px `--jp-border` at 15%, `rounded-2xl`, padding 24px, 32px from `sm`, 40px at `xl`); max width 32rem; full width minus 16px gutters below `sm`; max height `calc(100dvh - 2rem)` with internal scrolling. Scrim: `--jp-background` at 88% via `color-mix`, no blur. Close: a labelled quiet pill ("Close" plus the X icon) top-right inside the panel with a 44px hit area, taking the existing lightbox close treatment expressed in tokens. Entrance: 160ms opacity only; none under `prefers-reduced-motion`; no scale, no slide. One amber action per dialog state (§48.1). One size. Drawers and confirmation dialogs are not defined by this section.
+- **A2. §24.1 APPROVED: Marketing capture field, checkbox, and fine print.** Label above the field in the contact form's label style (`text-sm font-semibold text-jp-text-secondary`). Input takes the contact form's recipe (`rounded-lg border border-jp-border/30 bg-jp-surface px-4 py-3 text-lg`, focus `border-jp-brand-amber` with `ring-2 ring-jp-brand-amber-active/30`). No placeholder used as a label. A single required field carries no asterisk. Validation runs on submit, then live only for a field already marked invalid. Checkbox: native `<input type="checkbox">` at 20px with `accent-color: var(--jp-brand-amber)`, wrapped by its `<label>` with vertical padding so the row is at least 44px tall; label text `text-[0.9375rem] text-jp-text-secondary`. Fine print: `text-sm text-jp-text-muted`, links underlined with `underline-offset-4`, hover to `--jp-brand-amber-active`. Disabled controls take the contact form's disabled recipe.
+- **A3. §33.1 APPROVED: Marketing form errors and status.** No semantic error colour exists and none is created. A field error is the lucide `AlertCircle` at 16px plus text in `--jp-text-primary` beneath the field, `role="alert"`, with `aria-invalid` and `aria-describedby` on the field; the invalid field's border rises to `--jp-text-primary` at 60%. Access-granting outcome states (§13.2) reuse the success layout: heading, one sentence, the primary action; where the sentence reports that the email was not sent it is preceded by the same icon. Meaning is carried by icon, text, and placement, never by colour.
+- **A4. §32.1 APPROVED: Submit in progress on marketing forms.** The control's label changes to a progress phrase ending in an ellipsis; the control is disabled; its width is held at the idle width so the layout does not shift; no spinner; the form is `aria-busy`; after 15 seconds a muted "Still working…" line appears beneath the control.
+- **A5. §34 and §36 APPROVED: Minimum touch target.** Interactive controls on marketing surfaces have a minimum hit area of 44 by 44 CSS pixels. Quiet text links reach it with padding. This resolves the open TODO recorded on 2026-09-03.
+- **A6. §26 and §48.1 APPROVED: Hairline secondary button.** `rounded-xl`, 1px `--jp-border` at 30%, transparent background, the primary button's padding and type (`px-7 py-4 text-[0.9375rem] font-semibold`), label in `--jp-text-primary`. Hover is one gesture: border and label change together to `--jp-brand-amber-active`. Focus: `--jp-text-primary` outline at 3px offset. No fill, no shadow, no movement. Use: an action that is alone on a quiet surface but must remain subordinate to the page's commercial primary action.
+- **A7. §20.2 APPROVED: Lead-magnet offer band.** Placed after the final commercial CTA and before the footer; never above the final CTA; never in the hero. Elevated band tone (`bg-jp-surface` with `border-y border-jp-border/12`). Left-aligned; two columns from `lg` with the action right-aligned and bottom-aligned; stacked below. The eyebrow is the band's only amber. The action is the A6 hairline secondary. Copy is governed by §20.1 and uses the main publication title. At most one such band per page. Recorded as a post-CTA band outside the five-section homepage doctrine.
+- **A8. §50.1 and §50.5 amendment APPROVED.** One lead-magnet offer band (§20.2) MAY follow the closing section of a long-form explainer page, outside the numbered sequence and the guide rail, with its action in the A6 treatment. It is neither a fourth primary action nor a second secondary action within the numbered argument, and it remains visually subordinate to the page's primary commercial offer.
+- **A9. §20.1 note APPROVED.** No terminology exception is required. All homepage, Learn More, and dialog strings use the main publication title and avoid the retired word by construction.
+- **A10. §7.7 note APPROVED.** No amendment. Publication titles set as site headings take sentence case; the email and the PDF retain the publication's title-case presentation.
+
+---
+
+## 27. Privacy notice: complete draft (Round 6)
+
+> **SUBJECT TO LEGAL REVIEW BEFORE PRODUCTION LAUNCH.** This draft describes the system as designed in this plan. It is not legal advice and has not been reviewed by counsel. The business mailing address is an explicit placeholder until L-2. Two technical statements marked [verify] are confirmed during Sprint 5 before the page is published.
+
+**JiTpro Privacy Notice**
+
+Last updated: [launch date]
+
+**Who we are.** JiTpro provides construction procurement control services to general contractors. This notice explains what information we collect through jit-pro.com, why we collect it, who helps us process it, how long we keep it, and the choices you have. If you have a question about anything here, email us at info@jit-pro.com.
+
+**What this notice covers.** The jit-pro.com website, including the Field Guide request form, the contact form, and the investor access request form.
+
+**Information you give us.**
+- *Field Guide request:* your email address, and whether you ticked the box asking for occasional JiTpro insights.
+- *Contact form:* your first name, last name, email address, your role, and the note you write.
+- *Investor access request:* your name, email address, company, and investment interest.
+
+**Information collected automatically when you request the Field Guide.** So we can understand which parts of the website and which campaigns are useful, we record with your request: which offer you used and where it appeared, the page you were on, the first page of your visit, the site that referred you (if any), any campaign tags in the link you followed (for example utm_source), which version of the guide you received, the time of the request, whether you had requested the guide before, and whether the email copy could be sent. During your visit, your browser holds the first-visit details (campaign tags, referring site, first page) in session storage, which is cleared when you close the tab or browser. We do not use cookies for this.
+
+**Information used only to prevent abuse.** To stop automated submissions and protect our email reputation:
+- The request form uses Cloudflare Turnstile, a service that distinguishes people from automated programs. Cloudflare processes technical signals from your browser to do this; its Turnstile privacy notice describes that processing.
+- We keep a one-way, salted hash of your IP address for up to 24 hours so we can limit how many requests come from one network in a short period. The hash cannot be turned back into your address, the salt changes every day, it is never linked to your email address or your request record, and it is deleted automatically. We do not store your IP address itself in our database.
+
+**Website analytics.** We use Cloudflare Web Analytics to understand page views, visits, referring sites, countries, device types, browsers, and page performance. Cloudflare describes this service as privacy-first and states that it does not track individuals across websites; its documentation describes how it works. Separately, we count how many people see, click, open, and submit the Field Guide offer. Those counts contain no identifier, no email address, and no IP address; they are numbers about pages and buttons, not about you. We do not use Google Analytics or advertising trackers.
+
+**Cookies.** We do not set cookies for analytics or advertising. Cloudflare, which serves our website, may set strictly necessary technical cookies for security and performance [verify at Sprint 5]. Session storage, described above, is not a cookie and is cleared at the end of your visit.
+
+**Why we use your information.**
+- To send you the Field Guide you requested, by opening it in your browser and by emailing you a link.
+- To notify the JiTpro team that a request or message has arrived, and to reply to you.
+- To understand which pages, offers, and campaigns lead people to request the guide or contact us.
+- To prevent abuse of our forms and to keep our email deliverable.
+- To send you occasional JiTpro insights **only if you ticked the box asking for them**.
+
+**Marketing email and your choices.** Requesting the Field Guide does not sign you up for marketing. Unless you tick the optional box, we treat your address as transactional only: you receive the guide, a repeat of it if you ask again, and any message needed to deliver what you asked for, and nothing else. If you tick the box, we record when and how you did so, and we may send occasional insights on keeping projects ahead of the field. You can withdraw that consent at any time by emailing info@jit-pro.com, and, once we begin sending such messages, by using the unsubscribe link in any of them. We will not send marketing email to anyone who has withdrawn consent.
+
+**Email delivery records.** Our email service tells us whether a message was delivered, bounced, or was reported as unwanted. If an address bounces or is reported as unwanted, we stop sending to it. We keep that status so we do not try again.
+
+**Who processes your information for us.** We use a small number of service providers, each acting on our instructions:
+- *Cloudflare* hosts and serves the website, provides Turnstile, and provides Web Analytics.
+- *Supabase* stores our request and contact records and runs the code that processes your request, in a data centre in the United States.
+- *Resend* delivers our email, from infrastructure in the United States.
+- *Microsoft 365* provides the JiTpro mailbox (info@jit-pro.com) that receives notifications and your replies.
+We do not sell your personal information, and we do not share it with advertisers or data brokers [verify at final review].
+
+**Where your information is processed.** In the United States. If you are outside the United States, your information is transferred to and processed there.
+
+**How long we keep it.** Field Guide requests and contact records are kept for as long as we need them to understand our relationship with you and how people find JiTpro, unless you ask us to delete them. The IP-address hash is deleted within 24 hours. Session storage is cleared when your visit ends. Cloudflare and Resend keep their own operational records for the periods described in their documentation.
+
+**Your rights and requests.** You can ask us to tell you what information we hold about you, to correct it, to delete it, or to stop sending you marketing email. Email info@jit-pro.com from the address in question, or tell us which address you mean, so we can confirm the request is yours. We aim to respond within 30 days. Depending on where you live, you may have additional rights under applicable law; we will honour them.
+
+**Children.** Our website and services are for businesses and are not directed to children.
+
+**Changes to this notice.** If we change how we handle information, we will update this page and the date at the top.
+
+**Contact.** JiTpro, [approved business mailing address: placeholder until L-2]. Email: info@jit-pro.com.
+
+---
+
+## 28. External launch prerequisites (everything that is not code)
+
+Consolidated from the launch checklist (Section 15.1) so nothing is hidden inside implementation sections. None of these blocks Sprint 1a. Each is requested from Jeff when its sprint reaches it, and nothing requiring his approval or credentials is done silently (D5.12).
+
+| # | Prerequisite | Owner | Needed by | Blocks |
+|---|---|---|---|---|
+| L-8 | The approved 31-page PDF, *What Will Stop Work Six Months From Now? The JiTpro Field Guide to Construction Procurement Control*, placed where the assistant can read it | Jeff | Sprint 1b | The asset commit and the route; Sprint 4 browser QA of the real download |
+| L-2 | JiTpro's approved business mailing address | Jeff | Sprint 3 (final template) and Sprint 5 (privacy page) | Production launch only; both carry a placeholder until then |
+| L-3 | Legal review: consent checkbox wording, fine print, privacy notice (Section 27), fulfilment-email classification and footer, the no-cookie analytics assumptions | Jeff / counsel | Before the production merge (Sprint 6) | Production launch |
+| L-1 | `info@jit-pro.com` mailbox confirmed monitored and receiving external mail | Jeff | Sprint 3 verification | Production launch |
+| L-4 | Resend dashboard confirms `jit-pro.com` and `mail.jit-pro.com` verified (DNS already positive) | Jeff, or assistant with dashboard access | Sprint 3 | Production launch |
+| L-12 | `jitpro-staging` read-only inspection and Jeff's confirmation it may be used | Assistant inspects; Jeff confirms | Start of Sprint 2 | Sprint 2 |
+| L-13 | Staging secrets set (`RESEND_API_KEY`, `TURNSTILE_SECRET_KEY`, `LEAD_MAGNET_IP_SALT`, `LEAD_MAGNET_TEST_MODE`, `SITE_URL`, any other required existing secret) | Assistant via CLI with Jeff's approval | Sprint 2 | Sprint 2 function tests |
+| L-5 | Turnstile widget allowed hostnames extended to the Cloudflare preview URLs | Jeff / admin (Cloudflare dashboard) | Sprint 4 preview QA | Full submit test on previews (fallback: production smoke test) |
+| L-14 | Cloudflare Pages preview-environment variables pointed at staging (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) | Jeff / admin | Sprint 4 preview QA | Same |
+| L-10 | Supabase production plan confirmed; actual function-log retention recorded here | Jeff / assistant with dashboard access | Sprint 6 | Observability record only |
+| L-6 | Production secrets set (`LEAD_MAGNET_IP_SALT`, optional `LEAD_MAGNET_NOTIFY_TO`; no test mode) | Assistant via CLI with Jeff's approval | Sprint 6 promotion | Production backend |
+| L-7 | Migrations applied and both functions deployed to production after staging passes | Assistant via CLI with Jeff's approval | Sprint 6, before the frontend merge | Production launch |
+| L-9 | Cloudflare Web Analytics enabled on the Pages project (Metrics → Enable) | Jeff / admin | Sprint 6 | Page-view reporting only |
+| L-11 | Pulsetic HTTP monitor for `https://jit-pro.com/guides/procurement-field-guide` following the redirect | Jeff | After the production merge | Monitoring only |
+
+---
+
+## 29. Document change history
 
 | Date | Change |
 |---|---|
@@ -1025,3 +1273,4 @@ Organised by working capability. Order differs from the brief's draft in one res
 | 2026-09-12 | Round 3 decided by Jeff: D3.1 Resend only; D3.2 explicit Reply-To `info@`; D3.3 footer line and mailing address, transactional, legal review; D3.4 explicit unchecked checkbox, non-US prospects assumed; D3.5 no nurture, permissions by state; D3.6 no unsubscribe endpoint in V1, Resend suppression relied on, webhook deferred (F-7); D3.7 `/privacy` in scope; D3.8 internal notification From `noreply@mail.jit-pro.com`; D3.9 test safety; D3.10 consent evidence; D3.11 legal principle; D2.7 approved. Added §7.3 to §7.5, §10 rewrite, §15.1 launch checklist, §21.2 nurture prerequisites, D6.7 to D6.9, failure-matrix suppression rows, Sprint 3 to 5 scope updates. |
 | 2026-09-12 | Round 4 decided by Jeff: D4.1 to D4.10 accepted as recommended. Cloudflare Web Analytics plus Supabase `lead_magnet_events`; seven fixed event names (§8.1); fixed placements; `sessionStorage` UTMs; no ids, no personal data, no cookies, no GA4, no Plausible; eight saved queries (§8.3); email-join downstream conversion; no-cookie assumptions flagged for legal review (§8.4). Added §6.4 events table and the `record-lead-magnet-event` function to §4.3; Sprint 6 scope updated. |
 | 2026-09-12 | Round 5 decided by Jeff: D5.1 `public/guides/` with versioned file and clean `Content-Disposition` filename; D5.2 `/guides/procurement-field-guide` establishing `/guides/<asset-slug>`, consistency check; D5.3 confirmed; D5.4 interaction-only Turnstile plus server honeypot and validation; D5.5 **10** requests and 100 events per hash per 10 minutes, calm 429; D5.6 **fail open for guide access** (§13 rewritten with the four cases); D5.7 observability with masked emails and L-10 plan check; D5.8 Vitest 5, pure-logic tests, no jsdom; D5.9 Supabase functions confirmed; D5.10 noindex PDF, indexable `/field-guide`; D5.11 `jitpro-staging` as test target subject to the §15.2 inspection protocol; D5.12 no silent account changes. Launch checklist extended to L-14; §4.6, §9, §9.2, §14, §15, §17 and Sprints 1, 2, 6 updated. |
+| 2026-09-12 | Round 6 decided by Jeff: approved copy for every surface with his edits (§25); visitor-facing failure language simplified to three access-granting states (§13.2, D6.10); no secondary sales CTA in success (D6.11); opt-in line kept in the internal notification (D6.12); full email in the recovery alert (D6.13); footer additions only (D6.15); Design System amendments A1 to A10 approved with implementation text (§26); complete privacy notice drafted (§27, subject to legal review); sprint plan finalised with Sprint 1 split into 1a and 1b, implementation order, acceptance criteria, and commit boundaries (§22); external prerequisites consolidated (§28); §21 reduced to external items and the Sprint 1 go-ahead; G-4 closed into L-5. **Sprint 0 complete. Implementation awaits Jeff's explicit authorisation.** |
