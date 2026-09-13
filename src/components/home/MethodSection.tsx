@@ -323,9 +323,6 @@ export default function MethodSection() {
             decoding="async"
             className="aspect-[2/1] w-full object-cover object-[50%_55%] sm:aspect-[21/9] lg:aspect-video"
           />
-          <figcaption className="mt-4 font-mono text-[0.6875rem] uppercase tracking-[0.2em] text-jp-ink-secondary/85">
-            Structural steel erection on an active jobsite: the field everything upstream is planned backward from.
-          </figcaption>
         </figure>
       </div>
     </section>

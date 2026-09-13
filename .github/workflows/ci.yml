@@ -1,7 +1,7 @@
 # This file tells GitHub to automatically check every Pull Request (PR)
 # before it is allowed to merge into main.
-# It installs the project, then runs 5 checks: a security audit, type-checking,
-# linting, a build, and a broken-link/image check.
+# It installs the project, then runs 6 checks: a security audit, type-checking,
+# linting, unit tests, a build, and a broken-link/image check.
 # If any of these fail, the PR will show a red X and cannot be merged.
 
 name: Marketing Site CI
@@ -52,6 +52,13 @@ jobs:
     # Step 6: Run code linter to verify formatting standards
     - name: Check layout and formatting
       run: npm run lint --if-present # Skips without failing if "lint" is missing from package.json
+
+    # Step 6b: Run the unit tests (Vitest). These cover pure logic such as the
+    # lead-magnet registries, validation, and decision functions. They run before
+    # the build so a logic failure is reported in seconds rather than after a
+    # full compile.
+    - name: Run unit tests
+      run: npm test
 
     # Step 7:  The Critical Step: Verify the project builds successfully without errors
     - name: Build production site

@@ -50,6 +50,13 @@ TODO:
 
 | Date | Decision | Scope | Owner | Source/Rationale |
 | --- | --- | --- | --- | --- |
+| 2026-09-12 | **Marketing lead-capture dialog approved (new Section 28.1).** The one approved dialog for marketing capture: a native `<dialog>` opened with `showModal()`, focus to the first field on open, Escape (via `cancel`) and backdrop click to close, body scroll locked, focus returned to the opener, `aria-labelledby` on the heading; the Section 27.1 card as the panel at 32rem maximum width, full width less 16px gutters below `sm`, height capped at `100dvh` less 2rem with internal scrolling; scrim `--jp-background` at 88%; a labelled quiet Close pill with a 44px hit area; 160ms opacity-only entrance, none under reduced motion; one amber action per dialog state. Drawers and confirmation dialogs remain undefined. | Marketing website | Jeff Kaufman | Lead-gen plan §26 A1; Round 6 approval 2026-09-12. First use: the Field Guide lead-capture dialog. Section 28 was entirely TODO and Section 41 prohibits inferring a convention from `DemoLightbox`, so the standard is recorded before the component exists (Section 49.1). |
+| 2026-09-12 | **Marketing capture field, checkbox, and fine print approved (new Section 24.1).** Label above the field in the contact form's label style; the contact form's input recipe; no placeholder as a label; a single required field carries no asterisk; validation on submit and then live only for a field already marked invalid; a native 20px checkbox with `accent-color: var(--jp-brand-amber)` wrapped by its label at a 44px row height; fine print in `--jp-text-muted` with underlined links hovering to `--jp-brand-amber-active`. | Marketing website | Jeff Kaufman | Lead-gen plan §26 A2; Round 6 approval 2026-09-12. Resolves the Section 24 TODOs for field anatomy, label placement, required notation, and validation timing on marketing capture forms; other Section 24 TODOs remain open. |
+| 2026-09-12 | **Marketing form errors and status (new Section 33.1) and submit-in-progress (new Section 32.1) approved.** No semantic error colour exists and none is created: a field error is the `AlertCircle` icon plus text in `--jp-text-primary` beneath the field with `role="alert"`, `aria-invalid`, and `aria-describedby`, the invalid field's border rising to `--jp-text-primary` at 60%; outcome states that still grant access reuse the success layout with one honest sentence. Submit in progress: the control's label becomes a progress phrase, the control is disabled with its idle width held, no spinner, the form is `aria-busy`, and a muted "Still working…" line appears after 15 seconds. | Marketing website | Jeff Kaufman | Lead-gen plan §26 A3, A4; Round 6 approval 2026-09-12. Section 8.3's semantic model beyond amber and success remains TODO; meaning is carried by icon, text, and placement (Section 8.7). |
+| 2026-09-12 | **Minimum touch target approved: 44 by 44 CSS pixels for interactive controls on marketing surfaces (new Section 34.1, referenced from Section 36).** Quiet text links reach it with padding. | Marketing website | Jeff Kaufman | Lead-gen plan §26 A5; Round 6 approval 2026-09-12. Resolves the open TODO recorded in the 2026-09-03 quiet-secondary-action entry. |
+| 2026-09-12 | **Hairline secondary button approved (new Section 26.1).** `rounded-xl`, 1px `--jp-border` at 30%, transparent, the primary's padding and type, label in `--jp-text-primary`; hover is one gesture, border and label together to `--jp-brand-amber-active`; focus `--jp-text-primary` outline at 3px offset; no fill, shadow, or movement. For an action alone on a quiet surface that must stay subordinate to the page's commercial primary. | Marketing website | Jeff Kaufman | Lead-gen plan §26 A6; Round 6 approval 2026-09-12. Section 48.1 already permitted "hairline-bordered" secondaries but never specified one; recorded here rather than inside the component (Section 49). |
+| 2026-09-12 | **Lead-magnet offer band approved (new Section 20.2), and one such band permitted after the close of a long-form explainer page (Section 50.5 amended).** After the final commercial CTA and before the footer; never above the final CTA; never in the hero; elevated band tone; left-aligned, two columns from `lg`; the eyebrow is the band's only amber; the action is the Section 26.1 hairline secondary; copy under Section 20.1 using the main publication title; at most one per page. On `/learn-more` it sits outside the numbered sequence and the guide rail and is neither a fourth primary nor a second secondary action within the argument. | Marketing website | Jeff Kaufman | Lead-gen plan §26 A7, A8; Round 6 approval 2026-09-12 (Decisions D1.2, D1.7, D6.6). Recorded as a post-CTA band outside the five-section homepage doctrine of 2026-08-26. |
+| 2026-09-12 | **No Section 20.1 terminology exception and no Section 7.7 amendment are required for the Field Guide offer.** Homepage, Learn More, and dialog strings use the publication's main title and avoid the retired word by construction; publication titles set as site headings take sentence case, while the email and the PDF retain the publication's title case. Recorded as notes in Sections 20.1 and 7.7. | Marketing website | Jeff Kaufman | Lead-gen plan §26 A9, A10; Round 6 approval 2026-09-12 (Decision D1.4). |
 | 2026-09-04 | **The JiTpro representative product screens become HTML/React components, and four rules are amended to permit it.** The five raster interface captures are being replaced by canonical React implementations rendered at a fixed 1448×1086 application canvas and scaled to their container, so they stay sharp at any size and can be enlarged without a second asset. First migrated screen: the Commitment Register (approved as **Visual Master v1**); the other four keep their rasters until each is built. **(a) §46.8.1's no-second-interaction rule is amended for the homepage methodology figure.** The visual MAY now carry a single non-committing enlarge affordance: a focusable control that opens the expanded view. It does NOT change the selected stage, so the stage rail remains the only thing driving the section, and the prohibition on any other control, hover state, or focus target inside the figure stands. **(b) §48.10's provenance line is withdrawn for these demonstrations.** The caption beneath the representative screens is removed site-wide with no replacement. §48.10 continues to govern every other figure carrying numbers, names, or dates unchanged. **(c) §48.8's prohibition on fabricated product screenshots is scoped.** What is prohibited is an image presented as a capture of something it is not. An **approved representative interactive product demonstration**, implemented as HTML/React from constructed fixture data, is a distinct and permitted category. Fabricated screenshots remain prohibited. **(d) A bounded `--jpd-*` product-demo token namespace is approved** (`src/components/demo/tokens.css`), scoped under `.jpd`. The demo UI is a different product's palette — application greens, reds, ambers and neutral surfaces — which `--jp-*` was never designed to express; forcing the marketing tokens to carry application semantics, or scattering hex through components, are the failure modes this prevents. §45 and §8.9 are unchanged for every marketing surface. **Product-model decisions recorded with it:** *Responsible Organization* is the organization or project entity that owes a commitment (never the supplier or product source merely because it is named in a description); *Commitment Owner* is the specific named person accountable for resolving it; and **JiTpro does not manage budgets, costs, pricing, or contract values**, so the reference's Value column is deliberately absent and no financial field exists in the fixture model. | Marketing website | Jeff Kaufman | Sections 45, 46.8.1, 48.8, 48.9, 48.10, 49.1, 8.9. Direction supplied by Jeff Kaufman across the three-part Visual Fidelity Implementation Standard and the prototype validation gate, 2026-09-04. The migration exists because the rasters are 1448×1086 with no higher-resolution source anywhere in the repository, so an enlarged view could only ever be an upscale; HTML is resolution-independent by construction. Visual fidelity was verified by forensic measurement of `assets-src/methodology/commitment-capture.png` and confirmed at a maximum landmark deviation of 3px. Typeface for the demo UI is Inter Tight, already loaded site-wide; weights 400 and 500 were added to the existing import. |
 | 2026-09-04 | **The homepage Problem section gains two supplied paragraphs, and the §7.7 centered figure-statement block becomes a three-element block, amending the 2026-08-27 pair.** (a) Movement A gains *The challenge isn't knowing that information is missing. It's knowing __what needs attention now, what can wait, and when waiting becomes a problem.__* after the condition list, set in the section's existing secondary body register with the emphasis in the established `font-semibold` primary-ink idiom. **This reframes the movement from DETECTION to PRIORITISATION:** the argument is no longer that the team cannot see the open items, it is that they cannot see which one is about to matter. Read with the same-day h2 revision (*isn't focused on today that will stop work*), movement A now argues attention rather than visibility. (b) The centered block below the copy gains *When critical information gets attention too late, the options disappear. Decisions get rushed. Products get expedited. Work gets resequenced. Crews wait. And problems that could have been resolved months earlier become expensive field problems.* between the statement and the terminal line. The 2026-08-27 entry approved that block as a PAIR; it is now a three-element block. **No new register is created:** all three elements sit in registers this section already used, and the two balanced statements keep their 46ch `text-balance` measure while the running paragraph between them takes a wider 58ch measure, because centered running copy held to a statement measure sets as a stack of fragments rather than a paragraph. No divider, no eyebrow, and no accent are added; the section's amber stays on the warming rail and the ordinals (§48.7). **The 2026-08-26 copy budget (~175 narrative words) is raised accordingly**, and the rule it existed to protect is carried explicitly in the component instead: nothing further may be added to movement A that re-narrates the ladder or the option-set economics. **Known overlap, accepted:** the cost paragraph names expediting, resequencing, and crews waiting, which the warming ladder and movement B's paragraph already carry. It was supplied as written with the overlap understood; movement B's paragraph is the place to cut if the repetition is trimmed later. Claim strength is unchanged: both paragraphs describe a failure condition and neither states an outcome, a guarantee, or a lead time (§20.1). | Marketing website | Jeff Kaufman | Sections 7.7, 20.1, 47.4, 48.6, 48.7, 49.1. Both paragraphs and the section rewrite supplied verbatim by Jeff Kaufman 2026-09-04. |
 | 2026-09-04 | **The homepage hero's on-ramp line becomes _JiTpro puts you ahead._, superseding _JiTpro helps you stay ahead._ from the 2026-09-03 hero copy replacement.** One sentence, copy only. Its position, body size, `font-semibold` primary ink, measure, and place in the second entrance beat are unchanged, as are the eyebrow, H1, underline, sub-headline, both CTAs, the §48.7 three-element amber count, and the house-render treatment. **Claim strength, recorded rather than assumed:** the retired line was approved on the reasoning that *helps* reads as assistance rather than a guarantee, and the replacement is a stronger statement of what the engagement is for. It remains outside every §20.1 prohibition, which are about delivery, conformance, replacing the project or design team's responsibility, controlling supplier execution, and absolute *not late, not wrong* pairs. It warrants no schedule, no delivery, and no outcome on the reader's project, and it MUST NOT be extended, qualified, or restated anywhere on the site in a way that does. | Marketing website | Jeff Kaufman | Sections 20.1, 7.7, 48.6, 48.7, 49.1. Copy supplied verbatim by Jeff Kaufman 2026-09-04. A terminal full stop was added to match the paragraph it closes and the composition's other sentences; the wording is otherwise as supplied. |
@@ -754,6 +761,10 @@ This exception is narrow:
 
 - Whitespace is a primary tool, not leftover space. Generous vertical rhythm between sections is required; crowding is treated as a defect.
 - Type MUST NOT be tightened to fit more content into a viewport. Reduce the content instead.
+
+### Publication titles set as headings (note, 2026-09-12)
+
+A JiTpro publication's title (for example *What Will Stop Work Six Months From Now?*) is set as a site heading in **sentence case**, like every other heading under this section. The publication's own title-case presentation is reserved for the email that delivers it and for the document itself. No amendment to this section was required (Decision Log 2026-09-12).
 
 ---
 
@@ -1972,6 +1983,7 @@ APPROVED resolution:
 - Founder/story section rules are defined in **Section 17.2**, which is binding. That TODO is superseded.
 - Proof and data-figure rules are defined in **Section 48.10**, which is binding. That TODO is superseded.
 - Homepage messaging standards are defined in **Section 20.1** below. The remaining TODOs stay open.
+- The lead-magnet offer band, one CTA placement and style, is defined in **Section 20.2** (2026-09-12). CTA placement and style rules for other surfaces remain TODO.
 
 ## 20.1 APPROVED - Homepage messaging standards
 
@@ -2050,6 +2062,24 @@ The homepage MUST NOT publish a revenue band, employee count, project-value band
 The audience is a **growth-stage general contractor: a successful contractor whose project complexity has begun to outgrow the systems used to manage it.** That sentence is the definition, not the copy — the homepage MUST let the reader recognize themselves through symptoms they would describe in their own words (more dependencies, more people, information in more places, more chasing, late discovery, manual systems getting harder to hold, growing dependence on intervention) rather than through a management-consulting diagnosis.
 
 The target contractor MUST NOT be portrayed as dysfunctional, disorganized, or failing. They are successful and reaching the limits of the operating methods that brought them here. Copy implying otherwise is a defect against Section 2 and Section 47.1.
+
+### Named publications (note, 2026-09-12)
+
+When the homepage, `/learn-more`, or a dialog opened from either offers a JiTpro publication whose subtitle contains a retired word, the offer uses the publication's **main title** and describes it as *the JiTpro field guide*. No exception to the retired-language rule was granted or required; the full subtitle appears only on surfaces this section does not govern (the delivery email, the `/field-guide` landing page, the document itself). Decision Log 2026-09-12.
+
+## 20.2 APPROVED - Lead-magnet offer band
+
+Status: APPROVED (2026-09-12). Direction supplied by Jeff Kaufman. Scope: the marketing homepage and, under the Section 50.5 amendment, long-form explainer pages. First approved use: the Field Guide offer.
+
+Purpose: offer a free JiTpro publication to a reader who has read the page's argument and did not take the commercial action, without competing with that action.
+
+- **Placement.** After the page's final commercial CTA and before the footer. It MUST NOT appear above the final CTA and MUST NOT appear in the hero. At most one such band per page.
+- **Surface.** The elevated band tone: `--jp-surface` with `border-y` hairlines in `--jp-border` at 12% (Section 48.6). It is a band, not a change of act.
+- **Composition.** Left-aligned on the page's shared left edge. From `lg`, two columns: the copy (eyebrow, one heading, one supporting sentence) at left and the action at right, bottom-aligned; below `lg` the block stacks with the action beneath the copy. Section widths, gutters, and vertical rhythm are the page's own.
+- **Registers.** Eyebrow in the data face, small, uppercase via CSS with increased tracking (Section 7.7). Heading at a section register below the hero's. Supporting copy at the secondary body register within the Section 7.7 measure.
+- **Amber budget.** The eyebrow is the band's only amber (Section 48.7). The action takes the Section 26.1 hairline secondary treatment, never Brand Amber, so no two primary actions can share a viewport (Section 48.1).
+- **Copy.** Governed by Section 20.1 in full. The publication is named by its main title in sentence case (Section 7.7 note). No reassurance line beneath the action unless the composition genuinely requires one; the offer is confident and simple.
+- **Behaviour.** The action opens the Section 28.1 lead-capture dialog and records its placement. Nothing else in the band is interactive.
 
 ---
 
@@ -2243,6 +2273,18 @@ TODO:
 - TODO: Define multi-step form pattern.
 - TODO: Define protected/contact form visual standard.
 
+## 24.1 APPROVED - Marketing capture field, checkbox, and fine print
+
+Status: APPROVED (2026-09-12). Direction supplied by Jeff Kaufman. Scope: marketing capture forms (the lead-capture dialog and its inline landing-page form). Application forms and the existing contact form are not changed by this section; the contact form's field recipe is adopted here so the two remain one family.
+
+- **Field anatomy.** A visible `<label>` above the field: `text-sm font-semibold text-jp-text-secondary`. The input takes the contact form's recipe: `rounded-lg border border-jp-border/30 bg-jp-surface px-4 py-3 text-lg text-jp-text-primary`, focus `border-jp-brand-amber` with `ring-2 ring-jp-brand-amber-active/30`. A placeholder MUST NOT stand in for a label.
+- **Required notation.** A form with a single required field carries no asterisk. Where a form has optional fields alongside required ones, required fields are marked and optional ones are not (unchanged from current practice).
+- **Validation timing.** Validate on submit. After a field has been marked invalid, validate that field live so the error clears as the visitor corrects it. Do not validate while the visitor is first typing.
+- **Checkbox.** A native `<input type="checkbox">` at 20px with `accent-color: var(--jp-brand-amber)`; the checked state is an active state and may carry amber (Section 8.1.1). The `<label>` wraps the control and its text with vertical padding so the row reaches the Section 34.1 minimum. Label text `text-[0.9375rem] text-jp-text-secondary`. Consent checkboxes MUST be unchecked by default.
+- **Fine print.** `text-sm text-jp-text-muted`. Links are underlined with `underline-offset-4`; the single hover gesture is the colour change to `--jp-brand-amber-active`; focus takes the standard `--jp-text-primary` outline.
+- **Disabled and busy.** Disabled controls take the contact form's disabled recipe (`bg-jp-surface text-jp-text-muted cursor-not-allowed`). Submit in progress follows Section 32.1.
+- **Help and error text** sit beneath the field at `0.9375rem`; error treatment follows Section 33.1.
+
 ---
 
 # 25. Navigation
@@ -2366,6 +2408,20 @@ Future button specification:
 - Exact button sizes, spacing, typography, icon placement, loading behavior, and variant tokens remain future implementation decisions.
 - Once approved, button variants and states should be tokenized and reused consistently across marketing, application, dashboard, documentation, and report surfaces.
 
+## 26.1 APPROVED - Hairline secondary button
+
+Status: APPROVED (2026-09-12). Direction supplied by Jeff Kaufman. Scope: marketing surfaces. First approved use: the Section 20.2 lead-magnet offer band.
+
+Section 48.1 permits a secondary action to be "text or hairline-bordered". The text form is specified in the Decision Log entry of 2026-09-03. This is the hairline form.
+
+- **Use.** An action that is the only action on a quiet surface but MUST remain visually subordinate to the page's commercial primary action. It is not a second primary and MUST NOT be used where a Brand Amber primary is present on the same surface.
+- **Shape and type.** `rounded-xl`; the primary button's padding and type (`px-7 py-4 text-[0.9375rem] font-semibold`, `w-full max-w-md` below `sm`); an optional trailing `ArrowRight` at 18px, `aria-hidden`.
+- **Rest.** 1px border in `--jp-border` at 30% (the control-border level of Section 8.5); transparent background; label in `--jp-text-primary`. No fill, no shadow.
+- **Hover.** One gesture: the border and the label change together to `--jp-brand-amber-active` (Section 8.1.1, Section 48.1). No lift, no fill, no icon motion. `motion-reduce:transition-none`.
+- **Focus.** `--jp-text-primary` outline at 2px with a 3px offset, clearing the control edge (Section 48.1).
+- **Pressed and disabled.** Pressed holds the hover colours. Disabled takes the contact form's disabled recipe.
+- **Hit area.** At least the Section 34.1 minimum.
+
 ---
 
 # 27. Cards
@@ -2437,6 +2493,22 @@ TODO:
 - TODO: Define overlay treatment.
 - TODO: Define confirmation dialog rules.
 - TODO: Define focus management requirements.
+
+## 28.1 APPROVED - Marketing lead-capture dialog
+
+Status: APPROVED (2026-09-12). Direction supplied by Jeff Kaufman. Scope: the marketing website's lead-capture dialog and any future marketing dialog of the same kind. First approved use: the Field Guide offer. Drawers, confirmation dialogs, and application dialogs remain TODO and are not defined by this section.
+
+- **Element.** A native `<dialog>` opened with `showModal()`. The platform then owns focus trapping, background inertness, Escape, and top-layer stacking; none of these is reimplemented.
+- **Open.** Focus moves to the first form field. The page behind is inert and its scroll is locked for the dialog's lifetime.
+- **Close.** Escape closes through the `cancel` event so focus restoration runs; a click on the backdrop closes; a labelled Close control closes. On close, focus returns to the control that opened the dialog (WCAG 2.4.3).
+- **Naming.** The dialog carries `aria-labelledby` pointing at its own heading. The heading is an `h2` at a section register, never the hero's.
+- **Panel.** The Section 27.1 default card: `--jp-surface` on the scrim, 1px `--jp-border` at 15%, `rounded-2xl`, padding 24px, 32px from `sm`, 40px at `xl`. Maximum width 32rem. Below `sm` the panel is the viewport width less 16px gutters. Maximum height `calc(100dvh - 2rem)`; content scrolls inside the panel, never the page. One size.
+- **Scrim.** `--jp-background` at 88% via `color-mix`. No blur, no gradient, no image.
+- **Close control.** A labelled quiet pill ("Close" plus the `X` icon) at the panel's top-right, taking the established lightbox close treatment expressed in tokens: hairline border in `--jp-text-primary` at 26%, ground `--jp-background` at 72%, label `--jp-text-primary`; hover raises the ground and border; focus takes the standard outline. Hit area at least the Section 34.1 minimum. It is viewer chrome and MUST NOT read as a second call to action.
+- **Entrance.** 160ms opacity only. No scale, no slide, no bounce. Under `prefers-reduced-motion: reduce` there is no animation (Section 46.5).
+- **Actions.** One Brand Amber action per dialog state (Section 48.1). Secondary actions inside the dialog are quiet text links.
+- **States.** The dialog's form follows Sections 24.1, 32.1, and 33.1. When the state changes to an outcome, focus moves to the outcome heading so the change is announced.
+- **Mobile.** The panel MUST remain usable with the software keyboard open: the field, its error, and the submit control stay reachable by scrolling inside the panel; the outcome's primary action is visible without scrolling on a 667px-tall viewport.
 
 ---
 
@@ -2545,6 +2617,16 @@ TODO:
 - TODO: Define form submit loading behavior.
 - TODO: Define dashboard loading behavior.
 
+## 32.1 APPROVED - Submit in progress on marketing forms
+
+Status: APPROVED (2026-09-12). Direction supplied by Jeff Kaufman. Scope: marketing capture forms. Resolves the "form submit loading behavior" TODO above for that scope; the other TODOs remain open.
+
+- The submit control's label changes to a short progress phrase ending in an ellipsis character (for example *Getting your guide…*). The label change is the loading indicator; there is no spinner.
+- The control is disabled for the duration and its width is held at its idle width, so the layout does not shift.
+- The form is marked `aria-busy="true"` while the request is in flight; its fields are disabled.
+- After 15 seconds a muted line (*Still working…*) appears beneath the control. A hard timeout is handled by the form's failure rules, not by the loading state.
+- No motion is introduced for loading; the rule of Section 46.4 applies.
+
 ---
 
 # 33. Error States
@@ -2572,6 +2654,17 @@ TODO:
 - TODO: Define permission error pattern.
 - TODO: Define network error pattern.
 - TODO: Define error-copy guidelines.
+
+## 33.1 APPROVED - Marketing form errors and status
+
+Status: APPROVED (2026-09-12). Direction supplied by Jeff Kaufman. Scope: marketing capture forms. Resolves the inline-validation and network-error patterns for that scope; page-level and permission errors remain TODO.
+
+**No semantic error colour exists (Section 8.3) and none is created for this purpose.** Meaning is carried by icon, text, and placement (Section 8.7).
+
+- **Inline field error.** Beneath the field: the lucide `AlertCircle` at 16px, `aria-hidden`, followed by the message in `--jp-text-primary` at `0.9375rem`. The container is `role="alert"`. The field carries `aria-invalid="true"` and `aria-describedby` pointing at the message. The invalid field's border rises from `--jp-border` at 30% to `--jp-text-primary` at 60%. Focus moves to the first invalid field on a failed submit.
+- **Outcome states that still grant what was asked for** (the lead-gen system fails open) reuse the success layout, heading, and primary action; the one sentence beneath the heading states plainly what did not happen and what to do next. Where it reports that an email could not be sent, the sentence is preceded by the same `AlertCircle`. No red, no amber wash, no warning band.
+- **Error copy.** Plain English; what happened and what to do next; never the internal cause (no databases, rate limits, verification, or networks). Sentence case; no em dashes (Section 7.7).
+- **Recovery.** A quiet *Try again* text action appears only where retrying is genuinely useful.
 
 ---
 
@@ -2601,6 +2694,15 @@ TODO:
 - TODO: Define mobile chart behavior.
 - TODO: Define mobile form behavior.
 - TODO: Define mobile motion constraints.
+
+## 34.1 APPROVED - Minimum touch target
+
+Status: APPROVED (2026-09-12). Direction supplied by Jeff Kaufman. Scope: interactive controls on marketing surfaces. Resolves the minimum-touch-target TODO above and the open item recorded in the Decision Log entry of 2026-09-03.
+
+- Every interactive control on a marketing surface MUST have a hit area of at least **44 by 44 CSS pixels**.
+- Quiet text links and small controls reach the minimum with padding, not by enlarging their type.
+- A checkbox reaches it through the label that wraps it (Section 24.1).
+- Adjacent controls MUST NOT overlap hit areas.
 
 ---
 
@@ -2723,6 +2825,10 @@ TODO:
 - TODO: Define chart accessibility standards.
 - TODO: Define table accessibility standards.
 - TODO: Define form accessibility standards.
+
+APPROVED resolution (2026-09-12):
+- The minimum touch target for marketing surfaces is defined in **Section 34.1** (44 by 44 CSS pixels).
+- Dialog focus behaviour for marketing capture is defined in **Section 28.1**; form error announcement for marketing capture is defined in **Section 33.1**. The remaining TODOs stay open.
 
 ---
 
@@ -3666,6 +3772,8 @@ Section 48.1 requires one primary action per surface. **A long-form explainer pa
 - Every primary action on the page MUST carry **the same label and the same destination**. Two different primary offers on one page is a positioning decision, not a layout one, and is not approved here.
 - Three is the working ceiling: the opening, the section that lowers the perceived commitment, and the close. A CTA between every section is prohibited (Section 47.4).
 - Secondary actions remain quiet under Section 48.1 and MUST NOT accumulate. The page carries at most one secondary action.
+
+**Amendment (2026-09-12): one lead-magnet offer band after the close.** A Section 20.2 lead-magnet offer band MAY follow the page's closing section. It sits **outside** the numbered sequence and outside the guide (it is not a numbered section, carries no ordinal, and is not listed in the guide or the rail), and it takes the Section 26.1 hairline secondary action rather than a Brand Amber primary. Within the meaning of this section it is therefore neither a fourth primary action nor a second secondary action: the numbered argument still carries at most three identical primary actions and one secondary action. It remains visually subordinate to the page's commercial offer. At most one such band per page (Section 20.2). Decision Log 2026-09-12.
 
 ## 50.6 Approved figures for this page type
 
