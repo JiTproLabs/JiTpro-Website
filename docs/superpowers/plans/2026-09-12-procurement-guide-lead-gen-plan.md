@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| Status | **Sprint 0 complete: all six decision rounds decided; sprint plan final. Awaiting Jeff's explicit authorisation to begin Sprint 1.** No implementation has started. |
+| Status | **Sprint 1a complete (2026-09-12). Sprint 1b waits on the approved 31-page PDF (L-8). Sprint 2 can start on Jeff's word once the staging inspection (L-12) is approved.** |
 | Owner / approver | Jeff Kaufman |
 | Document created | 2026-09-12 |
-| Last updated | 2026-09-12 (Round 6: approved copy, simplified visitor-facing failure language, Design System amendment texts, privacy notice draft, final sprint plan, external prerequisites) |
+| Last updated | 2026-09-12 (Sprint 1a completion record; §3.12 and §4.3 updated for the shipped tooling and shared registry) |
 | Working branch | `feature/navigation-simplification-lead-gen-guide` (decision G-1, 2026-09-12) |
 | Source of truth | This document. When a decision is made it is recorded here and not revisited without cause. |
 
@@ -152,8 +152,8 @@ There is no contacts or people table, no unique constraint on email anywhere, an
 
 ### 3.12 Testing and CI
 
-- **No test framework is installed.** No Vitest, Jest, Playwright, or Testing Library. No `test` script.
-- CI (`.github/workflows/ci.yml`, job `build-and-test`, PR-only): `npm ci` → `audit-ci` (high/critical) → `npm run typecheck` → `npm run lint` → `npm run build` → lychee offline link and asset check over `dist/`.
+- **At discovery, no test framework was installed.** No Vitest, Jest, Playwright, or Testing Library, and no `test` script. *(Superseded in Sprint 1a, 2026-09-12: Vitest 5 is installed, `npm test` runs `vitest run`, and CI runs it between lint and build. See Section 22, Sprint 1a.)*
+- CI (`.github/workflows/ci.yml`, job `build-and-test`, PR-only): `npm ci` → `audit-ci` (high/critical) → `npm run typecheck` → `npm run lint` → (`npm test`, added in Sprint 1a) → `npm run build` → lychee offline link and asset check over `dist/`. Because the workflow is PR-only, CI does not run on pushes to the feature branch; it first runs when a pull request is opened.
 - Baseline on this branch: typecheck clean; lint 0 errors and 4 pre-existing `react-refresh/only-export-components` warnings.
 - Local tooling: Node 24.19 (`.nvmrc` = 24), Google Chrome, Playwright Chromium headless shells cached (used for reduced-motion verification), the gstack `browse` skill. **Deno is not installed**, so edge functions cannot be executed locally without adding it. **Wrangler is not installed.** The Supabase CLI (v2.116) is installed as a dev dependency and is authenticated to the linked project.
 
@@ -235,7 +235,7 @@ Turnstile: reuse `src/components/Turnstile.tsx`, extended to accept `appearance:
 
 `supabase/functions/submit-lead-magnet-request/index.ts` (Deno), plus `supabase/functions/_shared/lead-magnet/` for pure, testable logic (validation, normalisation, attribution parsing, email template rendering, asset registry). The shared modules use no Deno-specific APIs so Vitest can test them from the Node toolchain.
 
-Server-side registry (authoritative for fulfilment): asset id → current version, versioned filename, stable public path, email subject and body. A unit test asserts the client registry and server registry agree on ids and versions.
+Registry (as built in Sprint 1a, superseding the two-registry design): `supabase/functions/_shared/lead-magnet/registry.ts` is the **single** source of truth for asset id, version, versioned filename, stable public path, clean download filename, landing path, page count, titles, email subject and preheader, and the placement list. The site imports that module directly from `src/content/leadMagnets.ts` (Vite and `tsc` follow the import; the module uses no Deno-specific or browser-specific APIs), so client and server agree by construction rather than by a test. The site module adds the visitor-facing copy. Versioned consent texts live beside it in `consentTexts.ts` with a site-side re-export. Tests cover the registry's invariants, the approved copy, the §20.1 and §7.7 governance rules, and frozen copies of every released consent text.
 
 Why an edge function rather than a Cloudflare Pages Function (DECIDED D5.9): the secrets, database access, Resend integration, logging conventions, and the team's operational familiarity all already live in Supabase. Adding a second serverless platform for one endpoint creates a second place to manage secrets and deploys. Cloudflare Pages Functions are not introduced.
 
@@ -945,7 +945,7 @@ Organised by working capability. The persistence API is built **before** the vis
 - **Objective:** existing infrastructure understood; architecture and decisions approved.
 - **Delivered:** repository discovery (Section 3), this plan, six decision rounds (Section 20), Design System amendment texts (Section 26), privacy notice draft (Section 27), approved copy (Section 25), sprint plan, external prerequisites (Section 28).
 - **Exit criteria met:** no architectural or product question blocks implementation. Remaining items are external (Section 28).
-- **Commits:** `aabcf7e` (plan), `6f4834a` (Round 2), `dde8c67` (Round 3), `953575b` (Round 4), `ea14571` (Round 5), plus the Round 6 commit recorded in Section 29.
+- **Commits:** `aabcf7e` (plan), `6f4834a` (Round 2), `dde8c67` (Round 3), `953575b` (Round 4), `ea14571` (Round 5), `2227b19` (Round 6 and final sprint plan), `684288f` (privacy-draft revisions; Sprint 1a authorised). Branch pushed to origin at `684288f`.
 
 ### Sprint 1a: Foundation without the asset
 
@@ -960,6 +960,16 @@ Organised by working capability. The persistence API is built **before** the vis
 - **Decision dependencies:** none outstanding.
 - **Definition of done:** CI green with the new step; DS amendments merged into the document; plan updated with commits.
 - **Commit boundaries:** (1) test tooling and CI; (2) registries and consent texts with tests; (3) Design System amendments.
+
+**Completion record (2026-09-12).**
+
+| Item | Result |
+|---|---|
+| Commits | `94dfaf5` test tooling and CI · `fbd6c0d` chore: js-yaml 4.3.2 (see deviations) · `3581038` shared registry, consent texts, approved copy, tests · `1e71a17` Design System amendments A1 to A10 · plus the docs commit recording this table |
+| Tests run before each commit | `npm run typecheck` (clean), `npm run lint` (0 errors, the 4 pre-existing warnings), `npm test` (3 files, 16 tests, all passing), `npm run build` (ok), `npx audit-ci` (passing after the js-yaml patch) |
+| Acceptance criteria | Met locally: `npm test` passes; typecheck, lint, and build unchanged; the Design System contains 20.2, 24.1, 26.1, 28.1, 32.1, 33.1, 34.1, the §50.5 amendment, and the §20.1 and §7.7 notes with seven dated Decision Log rows covering A1 to A10; registries typed and tested. **Not yet verified: CI itself**, because the workflow runs only on pull requests and none is open. It is verified the moment a PR (draft or otherwise) exists. |
+| Deviations from plan | (a) One shared registry imported by the site instead of two registries plus an agreement test; stronger guarantee, recorded in §4.3. (b) A pre-existing high-severity advisory (GHSA-2883-xcg3-v3hh, js-yaml 4.3.1 via eslint) surfaced in `audit-ci` during the sprint; it predates the Vitest install and would fail the required check on any PR, so it was patched to 4.3.2 as its own lockfile-only chore commit on this branch. Dependabot had not opened a PR at the time. (c) The runner smoke test lives at `src/testing/runner.test.ts` so it is type-checked with the rest of `src`. (d) The Decision Log records A3 with A4, A7 with A8, and A9 with A10 as combined rows. |
+| Unresolved | None for this sprint. Sprint 1b waits on L-8. |
 
 ### Sprint 1b: The asset and the stable route (gated on L-8)
 
@@ -1273,5 +1283,6 @@ Consolidated from the launch checklist (Section 15.1) so nothing is hidden insid
 | 2026-09-12 | Round 3 decided by Jeff: D3.1 Resend only; D3.2 explicit Reply-To `info@`; D3.3 footer line and mailing address, transactional, legal review; D3.4 explicit unchecked checkbox, non-US prospects assumed; D3.5 no nurture, permissions by state; D3.6 no unsubscribe endpoint in V1, Resend suppression relied on, webhook deferred (F-7); D3.7 `/privacy` in scope; D3.8 internal notification From `noreply@mail.jit-pro.com`; D3.9 test safety; D3.10 consent evidence; D3.11 legal principle; D2.7 approved. Added §7.3 to §7.5, §10 rewrite, §15.1 launch checklist, §21.2 nurture prerequisites, D6.7 to D6.9, failure-matrix suppression rows, Sprint 3 to 5 scope updates. |
 | 2026-09-12 | Round 4 decided by Jeff: D4.1 to D4.10 accepted as recommended. Cloudflare Web Analytics plus Supabase `lead_magnet_events`; seven fixed event names (§8.1); fixed placements; `sessionStorage` UTMs; no ids, no personal data, no cookies, no GA4, no Plausible; eight saved queries (§8.3); email-join downstream conversion; no-cookie assumptions flagged for legal review (§8.4). Added §6.4 events table and the `record-lead-magnet-event` function to §4.3; Sprint 6 scope updated. |
 | 2026-09-12 | Round 5 decided by Jeff: D5.1 `public/guides/` with versioned file and clean `Content-Disposition` filename; D5.2 `/guides/procurement-field-guide` establishing `/guides/<asset-slug>`, consistency check; D5.3 confirmed; D5.4 interaction-only Turnstile plus server honeypot and validation; D5.5 **10** requests and 100 events per hash per 10 minutes, calm 429; D5.6 **fail open for guide access** (§13 rewritten with the four cases); D5.7 observability with masked emails and L-10 plan check; D5.8 Vitest 5, pure-logic tests, no jsdom; D5.9 Supabase functions confirmed; D5.10 noindex PDF, indexable `/field-guide`; D5.11 `jitpro-staging` as test target subject to the §15.2 inspection protocol; D5.12 no silent account changes. Launch checklist extended to L-14; §4.6, §9, §9.2, §14, §15, §17 and Sprints 1, 2, 6 updated. |
+| 2026-09-12 | **Sprint 1a completed.** Vitest 5 and `npm test` in CI (`94dfaf5`); js-yaml advisory patched (`fbd6c0d`); shared lead-magnet registry, versioned consent texts, approved copy module, and 16 tests (`3581038`); Design System amendments A1 to A10 written with Decision Log rows (`1e71a17`). §3.12, §4.3, and the Sprint 1a completion record updated. CI verification pending a pull request. |
 | 2026-09-12 | Privacy draft (§27) revised per Jeff: response-time sentence replaced with "as required by applicable law"; IP-hash wording changed from an absolute claim to "designed so that JiTpro does not need to retain the underlying IP address"; email bounce and suppression paragraph explicitly marked for verification against the launch implementation and Resend behaviour before publication. Still subject to legal review; not final legal approval. Sprint 1a authorised. |
 | 2026-09-12 | Round 6 decided by Jeff: approved copy for every surface with his edits (§25); visitor-facing failure language simplified to three access-granting states (§13.2, D6.10); no secondary sales CTA in success (D6.11); opt-in line kept in the internal notification (D6.12); full email in the recovery alert (D6.13); footer additions only (D6.15); Design System amendments A1 to A10 approved with implementation text (§26); complete privacy notice drafted (§27, subject to legal review); sprint plan finalised with Sprint 1 split into 1a and 1b, implementation order, acceptance criteria, and commit boundaries (§22); external prerequisites consolidated (§28); §21 reduced to external items and the Sprint 1 go-ahead; G-4 closed into L-5. **Sprint 0 complete. Implementation awaits Jeff's explicit authorisation.** |

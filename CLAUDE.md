@@ -41,6 +41,7 @@ JITpro marketing website — a React SPA built with Vite, TypeScript, and Tailwi
 - `npm run preview` — preview production build locally
 - `npm run lint` — run ESLint (flat config, `eslint.config.js`)
 - `npm run typecheck` — run TypeScript type checking (`tsc --noEmit -p tsconfig.app.json`)
+- `npm test` — run the Vitest unit tests (`vitest.config.ts`; pure-logic tests under `src/**/*.test.ts` and `supabase/functions/_shared/**/*.test.ts`)
 
 ## Architecture
 
