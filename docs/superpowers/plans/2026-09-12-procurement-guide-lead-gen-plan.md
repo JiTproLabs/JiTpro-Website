@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| Status | **Sprint 0: discovery complete; Rounds 1 and 2 decided; Rounds 3 to 6 in progress.** No implementation has started. |
+| Status | **Sprint 0: discovery complete; Rounds 1 to 3 decided; Rounds 4 to 6 in progress.** No implementation has started. |
 | Owner / approver | Jeff Kaufman |
 | Document created | 2026-09-12 |
-| Last updated | 2026-09-12 (Round 2 decisions recorded; email identity rule; IP-hash retention recommendation) |
+| Last updated | 2026-09-12 (Round 3 decisions: email, consent, unsubscribe, suppression, privacy, test safety) |
 | Working branch | `feature/navigation-simplification-lead-gen-guide` (decision G-1, 2026-09-12) |
 | Source of truth | This document. When a decision is made it is recorded here and not revisited without cause. |
 
@@ -262,15 +262,22 @@ Optionally `lead_magnet_events` for first-party funnel events (*pending* Decisio
 
 Abuse data is kept apart from prospect data: the salted IP hash used for rate limiting lives in a short-lived `lead_magnet_ip_activity` table and never on a `contacts` or `lead_magnet_requests` row (D2.7, recommendation documented in Section 9.1).
 
-### 4.5 Email (sender DECIDED in Round 2; copy, reply-to, consent *pending* Round 3)
+### 4.5 Email (DECIDED, Rounds 2 and 3; final copy in Round 6)
 
-Resend, sent synchronously from the edge function so the response can truthfully tell the visitor whether the email went out. HTML plus a plain-text part. The link in the email is the stable guide URL, never the versioned filename. Copy in Section 7 is a draft for approval.
+Resend only (D3.1); no second provider. Sent synchronously from the edge function so the response can truthfully tell the visitor whether the email went out. HTML plus a plain-text part. The link in the email is the stable guide URL, never the versioned filename. Copy in Section 7 is a draft for approval.
 
-**Visitor-facing email identity (Jeff, 2026-09-12):**
+**Visitor-facing fulfilment email (D3.2, D3.3):**
 
-- From: **`JiTpro <info@jit-pro.com>`**. This is the sender already used for the contact-form visitor confirmation, and DNS shows `jit-pro.com` is verified in Resend (DKIM at `resend._domainkey.jit-pro.com`, bounce subdomain `send.jit-pro.com`, root SPF including `amazonses.com`, DMARC `p=quarantine`).
-- Visitor replies stay associated with `info@jit-pro.com`. Reply-To behaviour is recommended in Round 3.
+- From: **`JiTpro <info@jit-pro.com>`**. Already the visitor-facing sender for the contact confirmation; DNS shows `jit-pro.com` verified in Resend (DKIM at `resend._domainkey.jit-pro.com`, bounce subdomain `send.jit-pro.com`, root SPF including `amazonses.com`, DMARC `p=quarantine`). No email or domain configuration change is required.
+- Reply-To: **`info@jit-pro.com`, set explicitly** even though it matches today's default behaviour.
+- `info@jit-pro.com` is the monitored visitor-facing address. Whether Microsoft 365 routing for that mailbox is correctly configured cannot be verified from the repository and is a **launch checklist item** (Section 15.1), not an assumption.
 - **`jeff@jit-pro.com` must never be exposed through the lead-generation workflow** as a sender, reply-to, or visible address. It is the repository's git identity only (G-5).
+- Primarily transactional: its purpose is to deliver the requested guide. It is not a sales email. Footer states why the recipient received it and carries JiTpro's business mailing address once Jeff supplies it (never invented).
+- Every send carries Resend `tags` (`asset`, `environment`) and an `Idempotency-Key` derived from the request id so a retry cannot double-send (D3.9).
+
+**Internal notification (D3.8):** one per valid request, To `info@jit-pro.com`, From **`JiTpro Notifications <noreply@mail.jit-pro.com>`** (the existing internal sender domain, verified in Resend; DNS shows DKIM at `resend._domainkey.mail.jit-pro.com` and `send.mail.jit-pro.com`). Never From `info@` back to itself, never From `jeff@`.
+
+**Test safety (D3.9):** `LEAD_MAGNET_TEST_MODE` restricts recipients to `@resend.dev` and `@jit-pro.com` on non-production deployments; Resend's documented test recipients (`delivered@`, `bounced@`, `complained@`, `suppressed@resend.dev`) are used for development and automated checks.
 
 ### 4.6 PDF delivery and versioning (*pending* Decision Round 5)
 
@@ -314,10 +321,10 @@ Frontend changes ship through PR → preview → squash merge → Cloudflare. Da
 | `email` | text, unique index on `lower(trim(email))` | The one identifier the visitor gives; normalised on write |
 | `first_seen_at`, `last_seen_at` | timestamptz | History without duplicate rows |
 | `first_source`, `first_medium`, `first_campaign`, `first_landing_path`, `first_referrer` | text | First-touch attribution, written once |
-| `consent_status` | text (`transactional_only` / `marketing_opt_in` / `unsubscribed`) | Lead vs subscriber state (D2.5). Exact values and transitions finalised in Round 3. |
-| `consent_text_version`, `consent_recorded_at`, `consent_method`, `consent_placement` | text / timestamptz / text / text | Consent evidence: which sentence, when, how (notice or checkbox), where (Round 3) |
-| `marketing_opt_in_at`, `unsubscribed_at`, `unsubscribe_source` | timestamptz / timestamptz / text | Subscriber lifecycle and suppression (Round 3) |
-| `email_suppressed_at`, `email_suppression_reason` | timestamptz / text (`bounce` / `complaint` / `manual`) | Deliverability suppression, distinct from consent (Round 3) |
+| `consent_status` | text (`transactional_only` / `marketing_opt_in` / `unsubscribed`) | Current lead vs subscriber state (D2.5, D3.4). A guide request alone never produces `marketing_opt_in`; only the checked opt-in checkbox does. `unsubscribed` is never overwritten by a later unchecked request. |
+| `consent_text_version`, `consent_recorded_at`, `consent_method`, `consent_placement`, `consent_page_path`, `consent_asset_id` | text / timestamptz / text (`checkbox`) / text / text / text | Consent evidence for the most recent consent-bearing event (D3.10). The full per-event record is on the request row. |
+| `marketing_opt_in_at`, `unsubscribed_at`, `unsubscribe_source` | timestamptz / timestamptz / text | Subscriber lifecycle. Unsubscribe mechanism is a prerequisite for any future nurture (D3.6), not built in V1. |
+| `email_suppressed_at`, `email_suppression_reason` | timestamptz / text (`bounce` / `complaint` / `manual` / `provider`) | Deliverability suppression, distinct from consent. Set in V1 only when the Resend send API itself reports suppression; webhook mirroring is deferred (F-7). |
 | `created_at`, `updated_at` | timestamptz | |
 
 ### 6.2 `lead_magnet_requests` (what did this person request or do?)
@@ -335,6 +342,8 @@ Frontend changes ship through PR → preview → squash merge → Cloudflare. Da
 | `referrer` | text | |
 | `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term` | text | Source conversion |
 | `is_repeat` | boolean | Same email already requested this asset |
+| `marketing_opt_in_checked` | boolean | The checkbox state at this request (D3.4) |
+| `consent_text_version`, `consent_method` | text / text | Per-event consent evidence (D3.10): which sentence version was shown and how consent was expressed |
 | `turnstile_passed` | boolean | Audit |
 | `fulfilment_status` | text (`delivered_inline`) | Whether the visitor was shown the download |
 | `email_status` | text (`sent` / `failed` / `skipped_cooldown` / `suppressed`) | Outcome of the fulfilment send |
@@ -359,10 +368,10 @@ RLS is enabled on all tables; only the service role writes; nothing reads from t
 
 ## 7. Email behaviour
 
-### 7.1 Fulfilment email (DRAFT, not approved)
+### 7.1 Fulfilment email (copy DRAFT pending Round 6; identity and structure DECIDED)
 
-- From: `JiTpro <info@jit-pro.com>` (*pending* D3.2)
-- Reply-to: `jeff@jit-pro.com` (*pending* D3.2)
+- From: `JiTpro <info@jit-pro.com>` (D3.2)
+- Reply-To: `info@jit-pro.com`, set explicitly (D3.2)
 - Subject: **Your JiTpro Construction Procurement Field Guide**
 - Preheader: *What Will Stop Work Six Months From Now? Your download link is inside.*
 - Body:
@@ -378,16 +387,41 @@ RLS is enabled on all tables; only the service role writes; nothing reads from t
 > JiTpro
 > Construction Procurement Control
 
-- Footer: postal or contact line and the consent-appropriate sentence (*pending* Round 3). No unsubscribe link is needed for a purely transactional send, but including a "you received this because you requested the guide at jit-pro.com" line is recommended regardless.
+- Footer (D3.3): *You received this email because you requested the JiTpro Field Guide at jit-pro.com.* followed by JiTpro's business mailing address (supplied by Jeff before final email implementation; not invented; included because CAN-SPAM requires a postal address in commercial email and the closing lines promote JiTpro). No marketing unsubscribe link: the message is transactional (D3.6).
+- The message stays primarily transactional. Its job is to deliver the guide; it must not grow into a sales email.
 - Plain-text alternative generated from the same content.
+- **Legal review before launch:** the transactional-vs-commercial classification of this message and its final wording.
 
-### 7.2 Internal notification (*pending* D3.8)
+### 7.2 Internal notification (DECIDED, D3.8)
 
-One short email per request to `info@jit-pro.com` (email, placement, source, page, repeat flag), consistent with the contact form. Can be switched off or moved to a daily digest later.
+One per valid request. To `info@jit-pro.com`. From `JiTpro Notifications <noreply@mail.jit-pro.com>` (existing internal sender domain), never From `info@` to itself and never From `jeff@`. Subject *New Field Guide request*. Body, concise: requester email, CTA placement, page, source/UTM summary where present, repeat-request flag, fulfilment email status. **No IP hash, no technical noise.**
 
-### 7.3 Marketing and nurture
+### 7.3 Consent model and what each state permits (DECIDED, D3.4, D3.5)
 
-Version 1 sends **only** the fulfilment email. No nurture sequence is built. The `contacts.consent_status` column and the consent sentence shown at capture are what make a future sequence possible without re-permissioning everyone. Round 3 decides the sentence.
+The capture form is one typed field (email) plus **one quiet optional checkbox, unchecked by default**. Working wording, not final until Round 6 and legal review:
+
+> Also send me occasional JiTpro insights on construction procurement and keeping projects ahead of the field. I can unsubscribe at any time.
+
+| Checkbox | `consent_status` | May receive in V1 | May receive later |
+|---|---|---|---|
+| Unchecked | `transactional_only` | The requested guide fulfilment email, cooldown-gated re-sends, and necessary service communication directly related to the requested asset (for example a corrected link) | Nothing else without a new, explicit opt-in |
+| Checked | `marketing_opt_in` | Everything above | An approved JiTpro marketing or nurture sequence, **only** once that separate functionality, its content, and an unsubscribe mechanism are approved and built |
+| (later action) | `unsubscribed` | No marketing. A person who explicitly requests the guide again may still receive the transactional fulfilment email unless suppression rules prohibit delivery | Nothing marketing unless they opt in again |
+| (deliverability) | suppressed (`email_suppressed_at` set) | **No delivery attempt at all** for bounce, complaint, or similar reasons | Same |
+
+Requesting the guide alone never silently creates `marketing_opt_in`. Prospects outside the United States are assumed plausible, so the architecture is explicit opt-in and does not rely on a US-only notice-based model. **No marketing sequence is implemented in this project unless separately approved.**
+
+### 7.4 Unsubscribe and suppression in V1 (DECIDED, D3.6)
+
+- No tokenised unsubscribe endpoint is built in V1. **Before any marketing or nurture email is ever sent, a proper unsubscribe mechanism must exist** (recorded as nurture prerequisite N-1 in Section 22).
+- The `contacts` schema already carries unsubscribe and suppression state.
+- The privacy notice explains how to contact JiTpro about consent and data choices; `info@jit-pro.com` is the visitor-facing contact address. Until N-1 exists, withdrawal is handled manually by setting `consent_status = unsubscribed`.
+- Resend's automatic suppression list (hard bounces and complaints, account-wide) is relied upon. When the send API reports suppression or failure, the request row records `email_status = suppressed` or `failed`, the visitor still receives immediate on-screen access, and the dialog shows a calm message that the guide is available now even though the email could not be sent.
+- A Resend webhook receiver for `email.bounced`, `email.complained`, and `email.suppressed` is **deferred** to the future nurture and email-hardening project (F-7).
+
+### 7.5 Consent evidence (DECIDED, D3.10)
+
+Retained per consent-bearing event and mirrored as current state on the contact: consent text version id, timestamp, method, placement, page path, asset requested, resulting status. The actual sentence for every historical version lives in version-controlled code (`src/content/consentTexts.ts` or the equivalent shared module the server also reads). **A used version is never edited in place**; a wording change creates a new version id so old records stay interpretable.
 
 ---
 
@@ -444,16 +478,17 @@ Do not act on small samples. The first weeks establish a baseline.
 
 ---
 
-## 10. Privacy and compliance (flags, not legal advice)
+## 10. Privacy and compliance (DECIDED where marked; flags, not legal advice)
 
-The following need a decision and, where noted, professional legal review. Nothing here is legal advice.
+**Operating principle (Jeff, 2026-09-12):** wherever this project touches privacy, consent, CAN-SPAM, CASL, GDPR, or similar requirements, design the technical system conservatively, document the actual behaviour, flag final language and legal classification for appropriate legal review, and never present implementation decisions as legal advice.
 
-1. **No privacy policy exists.** Collecting email addresses for marketing purposes without a privacy notice is a gap regardless of jurisdiction. Recommendation: add a short, plain-English privacy notice page in this project and link it from the capture form and the footer (scope addition, D3.7). Content should be reviewed by counsel.
-2. **Consent model.** US CAN-SPAM permits opt-out marketing with clear identification and unsubscribe; Canada's CASL and the EU/UK GDPR generally expect opt-in for marketing email. JiTpro's audience is US general contractors. Round 3 decides between transactional-only, notice-based follow-up, and a separate checkbox.
-3. **Unsubscribe and suppression.** Not needed for the fulfilment email alone. Required the moment a second, non-requested email is sent. The `contacts` consent and suppression columns exist from day one so that later work is additive.
-4. **Turnstile.** Cloudflare Turnstile processes visitor data; Cloudflare's terms expect the site's privacy notice to disclose its use. Include it in the notice.
-5. **Data retention.** Decide whether request rows are kept indefinitely (recommended for attribution history) and document it in the notice.
-6. **Cookies and storage.** `sessionStorage` for attribution is first-party and session-scoped; no consent banner is implied. Adding GA4 would change that analysis.
+1. **Privacy notice: IN SCOPE (D3.7).** A `/privacy` page is added in this project, linked from the lead-capture form's fine print and from the site footer. Plain English, written from the actual implemented behaviour rather than boilerplate. It must cover at minimum: what is collected (email address; lead-magnet request and activity; the approved attribution fields; limited technical information used for abuse prevention); why (guide fulfilment; attribution and funnel measurement; security and abuse prevention; marketing only when separately opted into); the processors involved (Cloudflare including Turnstile, Supabase, Resend) and that processing is US-hosted where relevant; the retention approach including the 24-hour IP-hash retention; how to withdraw marketing consent; how to request deletion or raise a privacy question; that JiTpro does not sell personal information (to be confirmed factually at final review); contact via `info@jit-pro.com`. **Legal review before production launch.** No Terms page in V1.
+2. **Consent model: DECIDED (D3.4).** Explicit unchecked checkbox. Prospects outside the United States are assumed plausible, so the design does not depend on a US-only notice-based assumption. **Legal review of the final wording before launch.**
+3. **Unsubscribe and suppression: DECIDED (D3.6).** Not required for the transactional fulfilment email; required before any marketing email; schema ready from day one; manual withdrawal via `info@` until the mechanism exists.
+4. **Turnstile.** Cloudflare positions the site operator as the data controller for Turnstile signals; the notice names Turnstile and links Cloudflare's Turnstile privacy notice.
+5. **Data retention.** Request and contact rows are kept for attribution history; IP hashes 24 hours (D2.7). Stated in the notice.
+6. **Cookies and storage.** `sessionStorage` for attribution is first-party and session-scoped; no consent banner is implied. Any third-party analytics decision in Round 4 must be re-checked against this.
+7. **Fulfilment email classification.** Primarily transactional; carries the reason-for-receipt line and the business mailing address. **Legal review before launch.**
 
 ---
 
@@ -495,7 +530,9 @@ Operations, in order: (1) validate, (2) record request, (3) send fulfilment emai
 | Rate-limited (IP) | 429 | "Too many requests. Please try again in a few minutes." | No | After window | Yes | Only if sustained (manual log review) |
 | Network error or timeout | fetch rejects | "We could not reach the server. Check your connection and try again." Values preserved | No | Button-driven | Client console only | No |
 | Lead storage fails | 500 | "Something went wrong on our side. Please try again in a moment." plus a fallback line offering `info@jit-pro.com` | **No** (recommended: do not hand out the guide when nothing was recorded; the visitor can retry and the failure is rare) | Yes | Yes, error level | Yes, via log alerting if available; otherwise internal email on next success is not enough, so add a failure notification email from the function |
-| Email send fails, lead stored | 200 with `email_sent: false` | Success state; "Your guide is ready. We could not send the email copy, so please download it now." | **Yes** | Automatic retry once inside the function | Yes, with provider error | Internal notification includes `email_status: failed` |
+| Email send fails, lead stored | 200 with `email_sent: false` | Success state; "Your guide is ready. We could not send the email copy, so please download it now." | **Yes** | Automatic retry once inside the function, same idempotency key | Yes, with provider error | Internal notification includes `email_status: failed` |
+| Resend reports the address as suppressed (prior bounce or complaint) | 200 with `email_status: suppressed` | Success state; calm note that the guide is available now and the email could not be delivered to that address | **Yes** | No | Yes | Internal notification includes `email_status: suppressed` |
+| Contact already `email_suppressed_at` | 200, no send attempted | Same as above | **Yes** | No | Yes | Same |
 | Internal notification fails | Swallowed | Nothing | Yes | No | Yes | No |
 | PDF route unavailable (bad redirect, missing file) | 404 on click | Browser 404 | No | n/a | CI lychee check prevents merge; production smoke test verifies | Yes, by monitoring the URL |
 | Duplicate submission (double click) | Second request in flight | Button disabled while submitting; second request is treated as a repeat server-side | Yes | n/a | Yes | No |
@@ -538,9 +575,13 @@ Accessibility: labels, keyboard, visible focus, focus trap, Escape, error announ
 
 Failure paths: empty email; malformed email; server 500 (point the client at a failing function or intercept the request); Turnstile failure; repeat submission; slow network throttling; missing PDF; unexpected response body.
 
-### 14.4 Email
+### 14.4 Email (DECIDED, D3.9)
 
-Send real test messages to test addresses only. Verify sender name and address, reply-to, subject, preheader, body copy, link target, logo, mobile and desktop rendering (Gmail web, iOS Mail at minimum), plain-text part, duplicate-send throttle, failure logging. Never send development emails to real leads: development uses a `+test` address owned by JiTpro, and the function refuses to send when `LEAD_MAGNET_TEST_MODE` restricts recipients (*pending* D3.x).
+- Development and automated checks use Resend's documented test recipients: `delivered@resend.dev`, `bounced@resend.dev`, `complained@resend.dev`, `suppressed@resend.dev` (the first three accept `+label` suffixes). These consume sending quota, so they are used deliberately.
+- Non-production deployments run with `LEAD_MAGNET_TEST_MODE` set, which makes the function refuse any recipient outside `@resend.dev` and `@jit-pro.com`. Development emails never reach real leads.
+- Every send carries tags `asset` and `environment` so test traffic is filterable in the Resend dashboard, and an `Idempotency-Key` derived from the request id so retries cannot double-send.
+- Real-mailbox verification uses a JiTpro-owned address: sender name and address, explicit Reply-To, subject, preheader, body copy, footer line and mailing address, link target, logo, plain-text part, mobile and desktop rendering (Gmail web and iOS Mail at minimum), one-hour cooldown behaviour, suppressed and failed paths, failure logging.
+- No secrets or environment-specific credentials are hard-coded; configuration follows the existing `VITE_*` (browser) and Supabase-secrets (server) conventions.
 
 ### 14.5 Production smoke test
 
@@ -558,6 +599,22 @@ Listed in Section 15.
 6. **Rollback:** revert the PR on GitHub. The edge function and tables can stay deployed harmlessly; the CTA simply disappears. If the function itself misbehaves, redeploy the previous version or disable the CTA.
 7. Record the result in Section 22.
 
+### 15.1 Launch checklist: items that must be verified outside the repository
+
+These cannot be confirmed from code and are not assumed. Each is checked off, with who verified it and when, before production launch.
+
+| # | Item | Owner | Status |
+|---|---|---|---|
+| L-1 | `info@jit-pro.com` Microsoft 365 mailbox exists, is monitored, and receives external mail (visitor replies and internal notifications land there) | Jeff / admin | Open |
+| L-2 | JiTpro business mailing address supplied for the email footer (not invented) | Jeff | Open |
+| L-3 | Legal review completed: consent checkbox wording, privacy notice, fulfilment-email classification and wording | Jeff / counsel | Open |
+| L-4 | Resend dashboard confirms `jit-pro.com` and `mail.jit-pro.com` verified (DNS evidence already positive) | Jeff / assistant with dashboard access | Open |
+| L-5 | Turnstile widget hostnames include preview URLs if preview-side submit testing is wanted (G-4) | Jeff / admin | Open |
+| L-6 | New Supabase secrets set: `LEAD_MAGNET_IP_SALT`, `LEAD_MAGNET_TEST_MODE` (non-production only), optional `LEAD_MAGNET_NOTIFY_TO` | Assistant via CLI or Jeff | Open |
+| L-7 | Migrations applied and function deployed to production before the frontend PR merges | Assistant via CLI or Jeff | Open |
+| L-8 | The approved 31-page PDF is the file committed (page count and title checked) | Assistant, confirmed by Jeff | Open |
+| L-9 | Analytics enablement per Round 4 (for example the Cloudflare Web Analytics toggle) | Jeff / admin | Open |
+
 ---
 
 ## 16. Environment variables and secrets (required by this project)
@@ -571,9 +628,9 @@ Listed in Section 15.
 | `TURNSTILE_SECRET_KEY` | Verification | Edge function | Yes | Supabase |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Database writes | Edge function | Yes (platform) | Supabase |
 | `SITE_URL` | Building the absolute guide URL for the email | Edge function | Yes (`https://jit-pro.com`) | Supabase |
-| `LEAD_MAGNET_IP_SALT` | Salt for IP hashing | Edge function | **New** | Supabase |
+| `LEAD_MAGNET_IP_SALT` | Secret half of the daily-rotating salt for IP hashing (D2.7) | Edge function | **New** | Supabase |
 | `LEAD_MAGNET_NOTIFY_TO` | Internal notification recipient | Edge function | **New**, optional (default `info@jit-pro.com`) | Supabase |
-| `LEAD_MAGNET_TEST_MODE` | Restrict outbound email to JiTpro-owned addresses during testing | Edge function | **New**, optional | Supabase, set only while testing |
+| `LEAD_MAGNET_TEST_MODE` | When set, the function refuses recipients outside `@resend.dev` and `@jit-pro.com` (D3.9) | Edge function | **New** | Supabase, non-production or test deployments only; never set in production |
 
 No secrets in source. New secrets are set with `supabase secrets set` and listed here when added. Production readiness is not claimed until this table is verified against the dashboards.
 
@@ -649,20 +706,23 @@ Status values: **OPEN** (needs Jeff), **RECOMMENDED** (recommendation made, awai
 | D2.4 | CRM or contact-system integration | None exists | None in V1; export is a SQL query or CSV from the Supabase dashboard | **DECIDED: no CRM in V1.** Supabase is the source of truth. Reporting and export via Supabase queries or CSV. The `contacts` design must leave a clean path to a CRM later; no CRM dependency is introduced. | 2026-09-12 | Jeff Kaufman |
 | D2.5 | What is a lead vs a marketing subscriber? | | A guide requester is a **lead** (transactional relationship). They become a **subscriber** only when `consent_status = marketing_opt_in`. | **DECIDED.** A guide requester is a lead/contact with a transactional relationship (JiTpro owes them the requested asset). That does not make them a marketing subscriber. Subscriber status arises only when the approved consent mechanism records `consent_status = marketing_opt_in`. Requesting the guide does not authorise future marketing by itself. Round 3 decides the consent language, whether opt-in is explicit, the state recorded for guide-only requests, unsubscribe and suppression behaviour, privacy-policy requirements, consent evidence to retain, and what future email may be sent under which state. | 2026-09-12 | Jeff Kaufman |
 | D2.6 | Should the existing contact form also write to `contacts` in V1? | Yes (foreign-key correlation) / No (email join) | No: avoid regression risk in a separately working pipeline | **DECIDED: no.** The contact form is not modified. A later conversation-form submission is correlated with an earlier guide requester by normalised email. Unifying the identities is recorded as a potential future architectural improvement (F-6), not part of this implementation. | 2026-09-12 | Jeff Kaufman |
-| D2.7 | Retention and handling of the salted IP hash | Column on request rows with scheduled clearing / separate short-lived table / no IP data at all | **Separate `lead_magnet_ip_activity` table, 24-hour retention, daily-rotating salt, deleted opportunistically by the function** (Section 9.1). Meets "abuse control only, never profile data" without a scheduler. | RECOMMENDED (documented per Jeff's instruction; approve with Round 3 or Round 5) | 2026-09-12 | |
+| D2.7 | Retention and handling of the salted IP hash | Column on request rows with scheduled clearing / separate short-lived table / no IP data at all | **Separate `lead_magnet_ip_activity` table, 24-hour retention, daily-rotating salt, deleted opportunistically by the function** (Section 9.1). Meets "abuse control only, never profile data" without a scheduler. | **DECIDED (with Round 3): approved as documented in Section 9.1.** Separate short-lived abuse storage; 24-hour retention; daily-rotating salt; no raw IP; never part of the durable prospect or contact profile; automatic expiry after the retention period. | 2026-09-12 | Jeff Kaufman |
 
 ### Round 3: Email and consent
 
 | ID | Question | Options | Recommendation | Decision | Date | Notes |
 |---|---|---|---|---|---|---|
-| D3.1 | Provider | Resend (existing) | Resend | RECOMMENDED | 2026-09-12 | Confirm domain verification in the Resend dashboard. |
-| D3.2 | From name/address and reply-to | `info@` vs `jeff@` vs `noreply@mail.` | From `JiTpro <info@jit-pro.com>`; reply-to recommendation in Round 3 | **From DECIDED (Round 2): `JiTpro <info@jit-pro.com>`.** Visitor-facing replies stay associated with `info@jit-pro.com`. **`jeff@jit-pro.com` is never exposed** by this workflow. Reply-To behaviour: OPEN, recommendation presented in Round 3 after verifying the existing Resend and DNS configuration. | 2026-09-12 | Jeff Kaufman. Do not change email or domain configuration until Round 3 is decided. |
-| D3.3 | Fulfilment copy | Section 7.1 draft | Approve or edit in Round 3/6 | OPEN | | |
-| D3.4 | Consent sentence at capture | (a) "We'll email you the guide. Nothing else." (b) "We'll email you the guide and occasional notes on keeping projects ahead of the field. Unsubscribe any time." (c) Separate unchecked marketing checkbox | **(b)** for a US audience under CAN-SPAM, with an unsubscribe mechanism required before any second email is sent; store the sentence version. Legal review recommended. | RECOMMENDED | 2026-09-12 | Not legal advice. |
-| D3.5 | Nurture enrollment in V1 | Yes / No | **No.** Fulfilment only. Architecture supports it later. | RECOMMENDED | 2026-09-12 | |
-| D3.6 | Unsubscribe and suppression | | Not needed for V1's single transactional email; columns exist; a Resend unsubscribe link or Broadcasts audience is the likely V2 mechanism | RECOMMENDED | 2026-09-12 | |
-| D3.7 | Add a privacy notice page to scope? | Yes / No | **Yes.** A short `/privacy` page linked from the form and footer. Counsel review recommended. | RECOMMENDED | 2026-09-12 | Scope addition; needs Jeff's approval. |
-| D3.8 | Internal notification per request | Per request / daily digest / none | Per request to `info@jit-pro.com` in V1 | RECOMMENDED | 2026-09-12 | |
+| D3.1 | Provider | Resend (existing) | Resend | **DECIDED: Resend.** No other email provider is introduced. | 2026-09-12 | Jeff Kaufman. DNS confirms both sending domains; dashboard confirmation is launch item L-4. |
+| D3.2 | From name/address and reply-to | (a) omit reply-to; (b) explicit `reply_to: info@jit-pro.com`; (c) another address | (b) | **DECIDED: (b).** From `JiTpro <info@jit-pro.com>`; Reply-To `info@jit-pro.com` set explicitly. `jeff@jit-pro.com` is never exposed anywhere in the visitor-facing workflow. `info@` is the intended monitored address; Microsoft 365 routing is verified as launch item L-1, not assumed. | 2026-09-12 | Jeff Kaufman |
+| D3.3 | Fulfilment copy | Section 7.1 draft plus footer additions | Draft plus reason-for-receipt line and business mailing address | **DECIDED.** Footer line: *You received this email because you requested the JiTpro Field Guide at jit-pro.com.* Business mailing address included if required or recommended for the final approved email; **never invented**; Jeff supplies it before final email implementation (L-2). Message stays primarily transactional and short. Final classification and wording get legal review before launch (L-3). Final copy approved in Round 6. | 2026-09-12 | Jeff Kaufman |
+| D3.4 | Consent mechanism at capture | (A) transactional only; (B) notice-based opt-out; (C) explicit unchecked checkbox; (D) success-state opt-in | (C) | **DECIDED: (C).** Email field plus one quiet optional checkbox, unchecked by default. Working wording: *Also send me occasional JiTpro insights on construction procurement and keeping projects ahead of the field. I can unsubscribe at any time.* (not final; presented in Round 6). Unchecked → `transactional_only`; checked → `marketing_opt_in`. Recorded: status, method, text version, timestamp, placement, page path, asset. A guide request alone never silently creates `marketing_opt_in`. Prospects outside the US are assumed plausible, so no US-only notice model. Final wording to legal review (L-3). | 2026-09-12 | Jeff Kaufman |
+| D3.5 | Nurture in V1 and permissions by state | | No nurture; permissions per state | **DECIDED.** No nurture sequence in V1. Permissions recorded in Section 7.3: `transactional_only` (fulfilment, cooldown-gated re-send, asset-related service messages); `marketing_opt_in` (the above, plus a future approved sequence once separately approved and built); `unsubscribed` (no marketing; transactional fulfilment still allowed on an explicit new request unless suppressed); suppressed (no delivery attempt). No marketing sequence is implemented in this project unless separately approved. | 2026-09-12 | Jeff Kaufman |
+| D3.6 | Unsubscribe and suppression | (a) tokenised unsubscribe endpoint now; (b) defer until before the first marketing send | (b) | **DECIDED: (b).** No unsubscribe endpoint in V1 unless a later scope decision requires it; a proper mechanism is mandatory before any marketing email (nurture prerequisite N-1). Fulfilment email carries no marketing unsubscribe link. Schema supports unsubscribe and suppression now. Privacy notice explains how to contact JiTpro about consent and data choices via `info@`. Resend's automatic suppression is relied upon; API-reported suppression or failure is recorded as the email status; the visitor still gets immediate on-screen access with a calm message. Resend webhook receiver deferred to the nurture and email-hardening project (F-7). | 2026-09-12 | Jeff Kaufman |
+| D3.7 | Add a privacy notice page to scope? | Yes / No | Yes | **DECIDED: yes.** `/privacy` added to this project, linked from the capture form's fine print and the footer. Plain English, scoped to actual behaviour, minimum contents listed in Section 10 item 1. No Terms page in V1. Legal review before production launch (L-3). | 2026-09-12 | Jeff Kaufman |
+| D3.8 | Internal notification per request | Per request / daily digest / none; sender choice | Per request; From `info@` | **DECIDED with modification.** One notification per valid request To `info@jit-pro.com`, but **not From `info@` to itself**: From `JiTpro Notifications <noreply@mail.jit-pro.com>` (existing internal sender domain). `jeff@` stays out of the workflow. Concise content: requester email, CTA placement, page, source/UTM summary, repeat flag, fulfilment email status. No IP hashes or unnecessary technical data. | 2026-09-12 | Jeff Kaufman |
+| D3.9 | Development and test safety | | Resend test recipients, tags, idempotency key, test mode | **DECIDED as recommended.** Test recipients `delivered@`, `bounced@`, `complained@`, `suppressed@resend.dev`; tags `asset` and `environment`; `Idempotency-Key` from the request or event id; `LEAD_MAGNET_TEST_MODE` restricting non-production recipients to `@resend.dev` and `@jit-pro.com`; existing env-var conventions; no hard-coded secrets. | 2026-09-12 | Jeff Kaufman |
+| D3.10 | Consent evidence retained | | Version id, timestamp, method, placement, page, asset, resulting status; versioned sentences in code | **DECIDED as recommended.** Historical sentence text kept in version-controlled code (`consentTexts.ts` or equivalent); a used version is never edited in place; wording changes create a new version. | 2026-09-12 | Jeff Kaufman |
+| D3.11 | Legal and compliance operating principle | | | **DECIDED.** Design conservatively, document actual behaviour, flag final language and legal classification for appropriate legal review, never present implementation decisions as legal advice. | 2026-09-12 | Jeff Kaufman |
 
 ### Round 4: Analytics
 
@@ -699,17 +759,20 @@ Status values: **OPEN** (needs Jeff), **RECOMMENDED** (recommendation made, awai
 | D6.4 | §33 Error / §32 Loading states for marketing forms | Propose: neutral-token error box with icon and text; submitting = label change and disabled control, no spinner | OPEN | | |
 | D6.5 | §34/§36 minimum touch target | Propose 44 by 44 CSS px | OPEN | | Also resolves the 2026-09-03 open TODO. |
 | D6.6 | Homepage composition: add the guide band after the final CTA | Needs explicit approval and a Decision Log entry | OPEN | | |
+| D6.7 | Final consent checkbox wording and the fine-print sentence beneath the email field | Working wording in Section 7.3; present final strings with the rest of the copy | OPEN | | Legal review after Jeff's approval (L-3). |
+| D6.8 | Final fulfilment and internal email copy, including footer line and mailing address | Section 7.1 draft plus D3.3 additions | OPEN | | Depends on L-2. |
+| D6.9 | Privacy notice draft | Written from implemented behaviour per Section 10 item 1 | OPEN | | Legal review (L-3). |
 
 ---
 
 ## 21. Open questions (require Jeff)
 
 1. Delivery of the approved 31-page PDF file (G-3 is decided; the file itself is still needed before Sprint 1's asset commit).
-2. Round 3 decisions (email, consent, unsubscribe, suppression, privacy), including Reply-To, the D2.7 IP-hash retention recommendation, and whether the privacy notice (D3.7) is in scope.
-3. Whether GA4 is wanted despite the first-party recommendation (D4.1).
+2. JiTpro's business mailing address for the email footer (L-2), before final email implementation.
+3. Round 4 decisions (analytics and conversion measurement).
 4. Whether a paid or scheduled LinkedIn campaign is planned for launch (affects how much the landing route and UTM discipline matter).
 5. Whether Jeff or another admin will perform the Cloudflare dashboard actions (Turnstile hostnames, Web Analytics toggle) and the Supabase deploy steps, or whether the assistant should run the Supabase CLI commands.
-6. Whether `info@jit-pro.com` is an actively monitored mailbox (it is a Microsoft 365 address per the domain's MX records), since visitor replies will land there.
+6. Launch checklist items L-1 to L-9 (Section 15.1), each verified outside the repository before production launch.
 
 ### 21.1 Follow-up items outside this project's scope (recorded 2026-09-12)
 
@@ -723,6 +786,20 @@ These were found during discovery. They are tracked here so they are not lost. *
 | F-4 | `submit-contact` performs no server-side field validation or honeypot check and no rate limiting; the client is trusted after Turnstile. | `supabase/functions/submit-contact/index.ts` | Consider hardening in a separate contact-form pass; the lead-magnet function's shared validation modules could be reused. |
 | F-5 | No `robots.txt`, `sitemap.xml`, meta description, or Open Graph tags exist (the last three were already recorded in `docs/handoff/2026-08-25-contact-conversion-and-metadata-defects.md`). | `public/`, `index.html` | Separate metadata pass. Relevant to `/field-guide` sharing on LinkedIn, so the landing route should at least set its own title and description when built. |
 | F-6 | **Contact-form identity is not unified with `contacts`.** In V1 a conversation request is correlated with a guide requester by normalised email only. | Decision D2.6 | Potential future architectural improvement: have the contact pipeline upsert `contacts` as well, turning the correlation into a foreign key. Requires its own plan and regression testing of the contact form and its webhook. |
+| F-7 | **No Resend webhook receiver.** Bounces, complaints, and suppressions after the API accepts a send are visible only in the Resend dashboard and are not mirrored into `contacts`. | Decision D3.6 | Future nurture and email-hardening project: an edge function receiving `email.bounced`, `email.complained`, `email.suppressed` (signature-verified) that sets `email_suppressed_at` and `email_suppression_reason`. |
+
+### 21.2 Prerequisites for any future marketing or nurture email (recorded 2026-09-12)
+
+None of these is built in this project. All must exist before the first marketing send.
+
+| # | Prerequisite | Source |
+|---|---|---|
+| N-1 | A working unsubscribe mechanism (tokenised link or Resend Audiences/Broadcasts equivalent) that sets `consent_status = unsubscribed` and is honoured by every send path | D3.6 |
+| N-2 | Suppression mirroring from Resend (F-7) so suppressed addresses are never attempted | D3.6 |
+| N-3 | Approved sequence content and cadence, with claim strength governed by Design System §20.1 and the brief's content-governance rules | Brief §8, §28 |
+| N-4 | Sends restricted to `consent_status = marketing_opt_in` contacts whose consent evidence (D3.10) is present | D3.4, D3.5 |
+| N-5 | CAN-SPAM-required elements on every marketing message (identification, physical address, functioning opt-out) and CASL/GDPR-appropriate handling for non-US recipients; legal review | D3.11 |
+| N-6 | Privacy notice updated to describe the marketing programme | D3.7 |
 
 ---
 
@@ -769,18 +846,18 @@ Organised by working capability. Order differs from the brief's draft in one res
 ### Sprint 3: Email fulfilment
 
 - **Objective:** a successful request reliably produces the approved guide email.
-- **Scope:** template (HTML and text), stable link, sender config, synchronous send with one retry, status recorded on the row, internal notification, test-mode recipient restriction, failure logging.
-- **Out of scope:** nurture, unsubscribe.
-- **Dependencies:** Round 3, D6.1 email copy.
-- **Acceptance:** real test sends verified per Section 14.4; throttle verified; failure path verified by using an invalid API key on a test deploy.
-- **Tests:** template rendering tests; manual delivery checks.
-- **Risks:** domain verification; spam placement (SPF/DKIM already set up for existing sends, verify).
-- **Git:** template commit; send logic commit.
+- **Scope:** template (HTML and text) with footer line and mailing address; stable link; From `JiTpro <info@jit-pro.com>` with explicit Reply-To; tags and idempotency key; synchronous send with one retry; one-hour cooldown; suppressed and failed statuses recorded on the row; internal notification From `JiTpro Notifications <noreply@mail.jit-pro.com>`; `LEAD_MAGNET_TEST_MODE`; failure logging.
+- **Out of scope:** nurture, unsubscribe endpoint, Resend webhook receiver.
+- **Dependencies:** Round 3 (decided), D6.8 final email copy, L-2 mailing address.
+- **Acceptance:** sends verified per Section 14.4 against Resend test recipients and a JiTpro-owned mailbox; cooldown verified; suppressed path verified with `suppressed@resend.dev`; failure path verified with an invalid API key on a test deploy; test mode refuses an outside recipient.
+- **Tests:** template rendering tests (subject, link, footer, escaping, text part); cooldown decision tests; manual delivery checks.
+- **Risks:** spam placement (DNS already correct; verify in a real mailbox); mailing address not yet supplied.
+- **Git:** template commit; send logic commit; notification commit.
 
 ### Sprint 4: Visitor capture experience
 
 - **Objective:** a visitor can encounter a CTA, enter an email, submit, and get the correct success or error experience.
-- **Scope:** `LeadMagnetCTA`, `LeadMagnetDialog` (lazy), `LeadCaptureForm` with all states, `useAttribution`, API client, Turnstile interaction-only, accessibility, responsive behaviour, reduced motion, landing route (if D1.1c).
+- **Scope:** `LeadMagnetCTA`, `LeadMagnetDialog` (lazy), `LeadCaptureForm` with all states including the unchecked marketing checkbox and the fine print linking `/privacy`, `useAttribution`, API client, Turnstile interaction-only, accessibility, responsive behaviour, reduced motion, the `/field-guide` landing route.
 - **Out of scope:** final placements beyond a single development placement; analytics events (stubbed).
 - **Dependencies:** Sprints 1 to 3; Round 1; Round 6 copy and DS approvals.
 - **Acceptance:** browser checklist in Section 14.3 passes on desktop, tablet, mobile; failure paths behave per the matrix.
@@ -791,9 +868,9 @@ Organised by working capability. Order differs from the brief's draft in one res
 ### Sprint 5: Website integration
 
 - **Objective:** approved CTAs are live on the correct pages.
-- **Scope:** homepage band, Learn More band, footer link, privacy notice page (if D3.7), footer legal link.
-- **Out of scope:** nav, other pages.
-- **Dependencies:** D1.2, D1.7, D6.6, D3.7.
+- **Scope:** homepage band, Learn More band, footer link, the `/privacy` page (D3.7) and its footer link.
+- **Out of scope:** nav, other pages, a Terms page.
+- **Dependencies:** D1.2, D1.7, D6.6, D6.9 privacy draft.
 - **Acceptance:** each placement renders and opens the dialog; placement ids recorded correctly; §48.1/§48.7 amber budgets respected; no regression on homepage or Learn More.
 - **Tests:** browser QA per placement; regression pass on contact form and navigation.
 - **Risks:** homepage composition approval; §50.5 amendment.
@@ -830,3 +907,4 @@ Organised by working capability. Order differs from the brief's draft in one res
 | 2026-09-12 | Created after repository discovery. Current state, proposed architecture, data model, failure matrix, testing and deployment plans, Decision Log opened with recommendations, draft sprint plan. |
 | 2026-09-12 | Round 1 decided by Jeff: G-1 (stay on the existing branch), G-2, G-3 (approved asset is the new 31-page PDF, not yet supplied), D1.1 to D1.7 accepted as recommended. Follow-up items F-1 to F-5 recorded in §21.1 as out of scope. |
 | 2026-09-12 | Round 2 decided by Jeff: D2.1 two new tables (`contacts`, `lead_magnet_requests`), `leads` untouched; D2.2 one-hour email cooldown; D2.3 attribution set with no user agent and no raw IP; D2.4 no CRM; D2.5 lead vs subscriber; D2.6 no contact-form integration (F-6 added); D2.7 IP-hash retention recommendation documented (§9.1, §6.3). G-5 git identity (repository-local, metadata only). Visitor-facing sender fixed as `JiTpro <info@jit-pro.com>`; `jeff@jit-pro.com` never exposed. Sections 4.4, 4.5, 6, 9, 13 updated. |
+| 2026-09-12 | Round 3 decided by Jeff: D3.1 Resend only; D3.2 explicit Reply-To `info@`; D3.3 footer line and mailing address, transactional, legal review; D3.4 explicit unchecked checkbox, non-US prospects assumed; D3.5 no nurture, permissions by state; D3.6 no unsubscribe endpoint in V1, Resend suppression relied on, webhook deferred (F-7); D3.7 `/privacy` in scope; D3.8 internal notification From `noreply@mail.jit-pro.com`; D3.9 test safety; D3.10 consent evidence; D3.11 legal principle; D2.7 approved. Added §7.3 to §7.5, §10 rewrite, §15.1 launch checklist, §21.2 nurture prerequisites, D6.7 to D6.9, failure-matrix suppression rows, Sprint 3 to 5 scope updates. |
