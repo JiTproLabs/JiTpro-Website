@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| Status | **Sprint 0: discovery complete; Rounds 1 to 3 decided; Rounds 4 to 6 in progress.** No implementation has started. |
+| Status | **Sprint 0: discovery complete; Rounds 1 to 4 decided; Rounds 5 and 6 in progress.** No implementation has started. |
 | Owner / approver | Jeff Kaufman |
 | Document created | 2026-09-12 |
-| Last updated | 2026-09-12 (Round 3 decisions: email, consent, unsubscribe, suppression, privacy, test safety) |
+| Last updated | 2026-09-12 (Round 4 decisions: analytics and conversion measurement) |
 | Working branch | `feature/navigation-simplification-lead-gen-guide` (decision G-1, 2026-09-12) |
 | Source of truth | This document. When a decision is made it is recorded here and not revisited without cause. |
 
@@ -224,7 +224,7 @@ Proposed files, following existing folder conventions (`src/components/<feature>
 | `src/components/lead-magnet/LeadCaptureForm.tsx` | Email field, honeypot, Turnstile, submit; owns the state machine `idle → submitting → success | error`; inline success and error states. Reusable inside the dialog or on a landing page. |
 | `src/components/lead-magnet/useAttribution.ts` | Captures UTM parameters, referrer, and first landing path on first load into `sessionStorage`; exposes the attribution object plus current page and placement at submit time. |
 | `src/components/lead-magnet/submitLeadMagnetRequest.ts` | API client (mirrors `submitContact.ts`). |
-| `src/components/lead-magnet/funnel.ts` | Thin analytics helper (*pending* Decision Round 4). |
+| `src/components/lead-magnet/funnel.ts` | Thin analytics helper (D4.1, D4.2): sends one of the seven funnel events to `record-lead-magnet-event` with `navigator.sendBeacon` (fetch keepalive fallback); deduplicates `cta_view` per placement per session with a `sessionStorage` flag that never leaves the browser; never sends identifiers or personal data. |
 | `src/pages/FieldGuide.tsx` (route `/field-guide`, decided D1.1) | Campaign landing route rendering the same form inline. Also the no-JavaScript fallback destination for CTAs. |
 
 Turnstile: reuse `src/components/Turnstile.tsx`, extended to accept `appearance: 'interaction-only'` so the widget is invisible unless Cloudflare needs a challenge. This keeps the dialog to one visible field.
@@ -236,6 +236,8 @@ Turnstile: reuse `src/components/Turnstile.tsx`, extended to accept `appearance:
 Server-side registry (authoritative for fulfilment): asset id → current version, versioned filename, stable public path, email subject and body. A unit test asserts the client registry and server registry agree on ids and versions.
 
 Why an edge function rather than a Cloudflare Pages Function: the secrets, database access, Resend integration, logging conventions, and the team's operational familiarity all already live in Supabase. Adding a second serverless platform for one endpoint creates a second place to manage secrets and deploys. (*pending* D5.9)
+
+A second, deliberately tiny function `supabase/functions/record-lead-magnet-event/index.ts` (D4.1) accepts one funnel event, validates the event name, asset, placement, and page path against fixed allow-lists, truncates strings, inserts one row into `lead_magnet_events`, and returns 204. It stores no identifiers and reads nothing back.
 
 ### 4.4 Storage (DECIDED, Round 2, 2026-09-12)
 
@@ -258,7 +260,7 @@ john@abccontracting.com  (contacts, one row)
 
 Downstream conversion in V1 is a **join on normalised email** between `contacts` and `leads`. The contact form is not modified to write into `contacts` (D2.6); unifying that identity later is recorded as a future architectural improvement (F-6).
 
-Optionally `lead_magnet_events` for first-party funnel events (*pending* Decision Round 4).
+`lead_magnet_events` (DECIDED, Round 4) holds the seven first-party funnel events as anonymous counts (Section 6.4).
 
 Abuse data is kept apart from prospect data: the salted IP hash used for rate limiting lives in a short-lived `lead_magnet_ip_activity` table and never on a `contacts` or `lead_magnet_requests` row (D2.7, recommendation documented in Section 9.1).
 
@@ -286,9 +288,16 @@ Resend only (D3.1); no second provider. Sent synchronously from the edge functio
 - `public/_headers` adds `X-Robots-Tag: noindex` to the PDF path and the redirect path so the PDF is not indexed independently of the capture experience (Section 33 of the brief; *pending* D5.10).
 - The registry records which version was current; each request row stores it, so JiTpro can always tell which version a lead received.
 
-### 4.7 Analytics (*pending* Decision Round 4)
+### 4.7 Analytics (DECIDED, Round 4, 2026-09-12)
 
-Recommended minimum: first-party funnel events recorded through the same edge-function pipeline (no third-party script, no cookie banner implication) for CTA view, CTA click, form view, submit, success, download click; plus Cloudflare Web Analytics enabled at the dashboard for page-view denominators. GA4 is the main alternative if standard marketing tooling is preferred. Metric definitions are in Section 8.
+- **Cloudflare Web Analytics** for site and page-level traffic and performance (page views, visits, referrers, paths, countries, devices, Core Web Vitals). Included on the Pages plan; enabled with one click in the project's Metrics tab; the beacon is injected automatically on the next deployment; tracks single-page-app route changes; supports no custom events. Enablement is launch item L-9.
+- **Supabase `lead_magnet_events`** for the seven fixed funnel events (Section 8.1), stored as anonymous counts with asset, placement, and page path only.
+- **Supabase remains the system of record** for contacts, requests, consent, fulfilment outcomes, attribution, and downstream conversion.
+- **`sessionStorage`** carries first-touch UTMs, referrer, and landing path for the current browsing session only.
+- **Not used:** visitor or session ids in the event table, email or any personal information in events, analytics cookies, GA4, Plausible (V1).
+- **Reporting:** the saved Supabase queries in Section 8.3 plus the Cloudflare dashboard.
+- **Downstream conversion:** normalised-email correlation between `contacts` and the existing `leads` table.
+- The no-cookie and no-consent-banner assumptions are recorded as requiring final legal and privacy review (Section 10), not as legal conclusions.
 
 ### 4.8 Deployment
 
@@ -360,6 +369,20 @@ Frontend changes ship through PR → preview → squash merge → Cloudflare. Da
 
 Rows older than 24 hours are deleted opportunistically by the edge function on each request. No foreign key to `contacts` or `lead_magnet_requests`, so IP-derived data never becomes prospect or profile information.
 
+### 6.4 `lead_magnet_events` (anonymous funnel counts; DECIDED, Round 4)
+
+| Column | Type | Why |
+|---|---|---|
+| `id` | bigint identity pk | |
+| `event_name` | text, constrained to the seven names in Section 8.1 | The funnel step |
+| `asset_id` | text | Which lead magnet |
+| `placement` | text, constrained to the fixed placement values | CTA placement performance |
+| `page_path` | text | Page conversion |
+| `error_kind` | text, nullable | Only for `lead_magnet_request_error` (`network`, `validation`, `verification`, `rate_limited`, `server`) |
+| `created_at` | timestamptz | |
+
+**No** session id, visitor id, email, IP, IP hash, user agent, or any other identifier. Rows are counts with context. Write-only from the `record-lead-magnet-event` function; nothing reads from the browser.
+
 **Deliberately not captured (Round 2):** user agent, raw IP address, name, company, phone number, job title, geolocation, enrichment data. The principle is to collect what is needed for funnel performance, attribution, fulfilment, and abuse prevention, and nothing because it is technically possible.
 
 RLS is enabled on all tables; only the service role writes; nothing reads from the browser.
@@ -425,34 +448,62 @@ Retained per consent-bearing event and mirrored as current state on the contact:
 
 ---
 
-## 8. Analytics and conversion measurement (proposed)
+## 8. Analytics and conversion measurement (DECIDED, Round 4, 2026-09-12)
 
-### 8.1 Event model (names follow the `noun_verb` shape; no convention exists to inherit)
+### 8.1 The event vocabulary (fixed; implementation and reporting must use these names exactly)
 
-| Event | When | Properties |
+Seven events. Each carries only `asset_id`, `placement`, `page_path`, and (for errors) `error_kind`. No identifiers, no personal data.
+
+| Event name | Definition | Fired |
 |---|---|---|
-| `lead_magnet_cta_view` | Placement scrolls into view, once per placement per session | asset, placement, page |
-| `lead_magnet_cta_click` | CTA activated | asset, placement, page |
-| `lead_magnet_form_view` | Dialog or landing form rendered | asset, placement, page |
-| `lead_magnet_form_submit` | Submit pressed with a plausible email | asset, placement, page |
-| `lead_magnet_request_success` | Server returned ok | asset, placement, page, email_sent |
-| `lead_magnet_download_click` | Download action pressed | asset, placement, page |
-| `lead_magnet_request_error` | Server or network failure | asset, placement, error_kind |
+| `lead_magnet_cta_view` | A CTA placement became visible in the viewport | Once per placement per browsing session (deduplicated in the browser with a `sessionStorage` flag) |
+| `lead_magnet_cta_click` | A CTA was activated by click, tap, or keyboard | Every activation |
+| `lead_magnet_form_view` | The capture form rendered (dialog opened, or landing page form mounted) | Every render |
+| `lead_magnet_form_submit` | Submit was pressed with an email that passed client validation | Every submit attempt that reaches the network |
+| `lead_magnet_request_success` | The server returned success (lead recorded; access granted) | Once per successful response |
+| `lead_magnet_request_error` | The request failed: `network`, `validation`, `verification`, `rate_limited`, or `server` | Once per failed response |
+| `lead_magnet_download_click` | The Download or open-guide action was pressed in the success state or on the landing page | Every activation |
 
-`request_success` is redundant with the database row and exists only so the funnel can be read from one place.
+`lead_magnet_request_success` duplicates information in `lead_magnet_requests` and exists so the funnel can be read from one table.
+
+**Fixed placement values:** `home-band`, `learn-more-band`, `footer-link`, `landing-page`. A new placement requires adding it to the allow-list in both the client registry and the server function.
 
 ### 8.2 Metric definitions
 
-| Metric | Formula |
-|---|---|
-| CTA conversion | `request_success` ÷ `cta_click`, per placement |
-| Form completion | `request_success` ÷ `form_view` |
-| Page conversion | `request_success` on page P ÷ page views of P (page views from Cloudflare Web Analytics or GA4) |
-| Source conversion | `lead_magnet_requests` grouped by `utm_source`, `utm_medium`, `utm_campaign` |
-| Access rate | `download_click` ÷ `request_success` |
-| Downstream conversion | contacts with a request row who later appear in `leads` (contact-form submissions), by email |
+| Metric | Formula | Source |
+|---|---|---|
+| CTA click-through | `cta_click` ÷ `cta_view`, per placement | events |
+| CTA conversion | `request_success` ÷ `cta_click`, per placement | events |
+| Form completion | `request_success` ÷ `form_view`, per placement | events |
+| Page conversion | requests with `page_path` = P ÷ Cloudflare page views of P | requests + Cloudflare |
+| Source conversion | requests grouped by `utm_source`, `utm_medium`, `utm_campaign` (and `utm_content`, `utm_term` where present) | requests |
+| Access rate | `download_click` ÷ `request_success` | events |
+| Repeat rate | requests with `is_repeat` ÷ all requests | requests |
+| Opt-in rate | requests with `marketing_opt_in_checked` ÷ all requests | requests |
+| Email outcome | requests grouped by `email_status` | requests |
+| Downstream conversion | contacts with at least one request whose normalised email later appears in `leads`, by original placement and first source, with days between | contacts + requests + leads |
 
-Do not act on small samples. The first weeks establish a baseline.
+### 8.3 Saved reporting queries (created in Sprint 6, kept in the repository under `supabase/queries/` so they are versioned)
+
+1. Requests per day and per week.
+2. Requests by placement.
+3. Requests by UTM source, medium, and campaign.
+4. Placement funnel: views → clicks → form views → submits → successes → downloads, with the ratios above.
+5. Repeat-request rate.
+6. Email outcome distribution (`sent`, `skipped_cooldown`, `failed`, `suppressed`).
+7. Consent opt-in rate.
+8. Downstream conversions: guide requesters who later submitted the contact form.
+
+Page views, visits, referrers, countries, devices, and Core Web Vitals are read from the Cloudflare Web Analytics dashboard. Cloudflare retains unsampled data for 7 days and aggregated data for six months, so the monthly review records the page-view denominators in the review notes.
+
+### 8.4 Privacy posture of the analytics design (assumptions flagged for review)
+
+- No cookies are set by any part of this design. `sessionStorage` is first-party, session-scoped, and holds only UTMs, referrer, landing path, and impression-deduplication flags.
+- The event endpoint sees each request's IP transiently, as any web request does, and stores nothing from it.
+- Cloudflare states that Web Analytics collects the minimum timing information and does not track individuals across sites. Its visit-counting mechanism is described in the privacy notice by reference to Cloudflare's documentation, not by JiTpro's own claim.
+- **The assumption that no consent banner is required under this design is a legal and privacy review item (L-3), not a conclusion of this plan.**
+
+Do not act on small samples. The first weeks establish a baseline (Section 23).
 
 ---
 
@@ -728,11 +779,16 @@ Status values: **OPEN** (needs Jeff), **RECOMMENDED** (recommendation made, awai
 
 | ID | Question | Options | Recommendation | Decision | Date | Notes |
 |---|---|---|---|---|---|---|
-| D4.1 | Tooling | (a) First-party events in Supabase plus Cloudflare Web Analytics for page views. (b) GA4. (c) Plausible or similar paid tool. | **(a)**. No third-party script, no consent-banner question, data in the same database as the leads, sufficient for the six questions in Section 8. GA4 if Jeff wants standard marketing dashboards. | RECOMMENDED | 2026-09-12 | |
-| D4.2 | Event set | Section 8.1 | As listed | RECOMMENDED | 2026-09-12 | |
-| D4.3 | Conversion definitions | Section 8.2 | As listed | RECOMMENDED | 2026-09-12 | |
-| D4.4 | Attribution persistence | Per page vs session vs 30-day cookie | `sessionStorage` (session-scoped, first-touch within the visit) | RECOMMENDED | 2026-09-12 | |
-| D4.5 | Reporting | SQL in Supabase vs an admin page | Saved SQL queries in Supabase for V1; a small internal page later if needed | RECOMMENDED | 2026-09-12 | |
+| D4.1 | Analytics system | (A) first-party events in Supabase plus Cloudflare Web Analytics; (B) Plausible; (C) GA4; (A-minus) no event table | (A) | **DECIDED: (A).** Cloudflare Web Analytics for site and page-level traffic and performance; Supabase `lead_magnet_events` for the seven funnel events; Supabase the system of record for contacts, requests, consent, fulfilment, attribution, downstream conversion. No GA4; no Plausible in V1; no analytics cookies. Enablement is launch item L-9. | 2026-09-12 | Jeff Kaufman |
+| D4.2 | Funnel events | Section 8.1 | Seven named events, counts only | **DECIDED.** The seven event names and definitions in Section 8.1 are the fixed vocabulary for implementation and future reporting. No visitor or session ids; no email or personal information in events. | 2026-09-12 | Jeff Kaufman |
+| D4.3 | CTA placement measurement | | Fixed `placement` on events and requests | **DECIDED.** Fixed placement values `home-band`, `learn-more-band`, `footer-link`, `landing-page` stamped on every event and request row; per-placement funnel query. | 2026-09-12 | Jeff Kaufman |
+| D4.4 | UTM persistence | `sessionStorage` vs 30-day first-party cookie | `sessionStorage` | **DECIDED: `sessionStorage`** for first-touch UTMs, referrer, and landing path during the current browsing session. No cookie. | 2026-09-12 | Jeff Kaufman |
+| D4.5 | Distinguishing homepage, Learn More, footer, and `/field-guide` conversions | | `placement` plus `page_path` | **DECIDED** as proposed (Section 8.2 page conversion; footer link records the page it was clicked from). | 2026-09-12 | Jeff Kaufman |
+| D4.6 | What lives in analytics vs Supabase | | Split as proposed | **DECIDED.** Supabase: contacts, requests, consent, fulfilment outcomes, attribution, funnel counts, downstream conversion. Cloudflare: page views, visits, referrers, countries, devices, performance. Nothing personal to any third party. | 2026-09-12 | Jeff Kaufman |
+| D4.7 | Connecting a guide request to a later conversation | Email join vs contact-form integration | Email join | **DECIDED.** Normalised-email correlation between `contacts` and the existing `leads` table (saved query 8). F-6 remains the future improvement. | 2026-09-12 | Jeff Kaufman |
+| D4.8 | Privacy and cookie implications | | No cookies, no identifiers | **DECIDED as designed, with the no-cookie and no-consent-banner assumptions recorded as requiring final legal and privacy review (L-3)**, not treated as legal conclusions. | 2026-09-12 | Jeff Kaufman |
+| D4.9 | Reporting | SQL in Supabase vs an admin page | Saved SQL queries for V1 | **DECIDED.** The eight saved queries in Section 8.3, versioned in the repository, plus the Cloudflare dashboard. An internal report page is a possible later scope decision, not V1. | 2026-09-12 | Jeff Kaufman |
+| D4.10 | Smallest useful V1 | | As in Section 4.7 | **DECIDED.** One table, one small function, seven events, fixed placements, `sessionStorage` UTMs, Cloudflare Web Analytics on, eight saved queries. | 2026-09-12 | Jeff Kaufman |
 
 ### Round 5: Technical and security behaviour
 
@@ -769,7 +825,7 @@ Status values: **OPEN** (needs Jeff), **RECOMMENDED** (recommendation made, awai
 
 1. Delivery of the approved 31-page PDF file (G-3 is decided; the file itself is still needed before Sprint 1's asset commit).
 2. JiTpro's business mailing address for the email footer (L-2), before final email implementation.
-3. Round 4 decisions (analytics and conversion measurement).
+3. Round 5 decisions (PDF hosting, stable route, bot protection, rate limiting, failure behaviour, logging, test framework) and Round 6 (copy and Design System amendments).
 4. Whether a paid or scheduled LinkedIn campaign is planned for launch (affects how much the landing route and UTM discipline matter).
 5. Whether Jeff or another admin will perform the Cloudflare dashboard actions (Turnstile hostnames, Web Analytics toggle) and the Supabase deploy steps, or whether the assistant should run the Supabase CLI commands.
 6. Launch checklist items L-1 to L-9 (Section 15.1), each verified outside the repository before production launch.
@@ -879,8 +935,8 @@ Organised by working capability. Order differs from the brief's draft in one res
 ### Sprint 6: Analytics, QA, and production readiness
 
 - **Objective:** the complete funnel is measurable and production-ready.
-- **Scope:** funnel events (D4.1), Cloudflare Web Analytics enablement, saved queries, full regression, accessibility audit, email re-verification, production smoke-test plan, documentation update, PR.
-- **Dependencies:** Round 4; all prior sprints.
+- **Scope:** `lead_magnet_events` migration and `record-lead-magnet-event` function; the client `funnel.ts` helper wired to the seven events (stubs from Sprint 4 become live); Cloudflare Web Analytics enablement (L-9); the eight saved queries under `supabase/queries/`; privacy-notice paragraph describing analytics; full regression; accessibility audit; email re-verification; production smoke-test plan; documentation update; PR.
+- **Dependencies:** Round 4 (decided); all prior sprints.
 - **Acceptance:** Section 38 of the brief (functional, visual, accessibility, email, analytics, data, security, regression, CI) all pass.
 - **Tests:** everything in Section 14.
 - **Risks:** event duplication under React StrictMode in development; verify in the production build.
@@ -908,3 +964,4 @@ Organised by working capability. Order differs from the brief's draft in one res
 | 2026-09-12 | Round 1 decided by Jeff: G-1 (stay on the existing branch), G-2, G-3 (approved asset is the new 31-page PDF, not yet supplied), D1.1 to D1.7 accepted as recommended. Follow-up items F-1 to F-5 recorded in §21.1 as out of scope. |
 | 2026-09-12 | Round 2 decided by Jeff: D2.1 two new tables (`contacts`, `lead_magnet_requests`), `leads` untouched; D2.2 one-hour email cooldown; D2.3 attribution set with no user agent and no raw IP; D2.4 no CRM; D2.5 lead vs subscriber; D2.6 no contact-form integration (F-6 added); D2.7 IP-hash retention recommendation documented (§9.1, §6.3). G-5 git identity (repository-local, metadata only). Visitor-facing sender fixed as `JiTpro <info@jit-pro.com>`; `jeff@jit-pro.com` never exposed. Sections 4.4, 4.5, 6, 9, 13 updated. |
 | 2026-09-12 | Round 3 decided by Jeff: D3.1 Resend only; D3.2 explicit Reply-To `info@`; D3.3 footer line and mailing address, transactional, legal review; D3.4 explicit unchecked checkbox, non-US prospects assumed; D3.5 no nurture, permissions by state; D3.6 no unsubscribe endpoint in V1, Resend suppression relied on, webhook deferred (F-7); D3.7 `/privacy` in scope; D3.8 internal notification From `noreply@mail.jit-pro.com`; D3.9 test safety; D3.10 consent evidence; D3.11 legal principle; D2.7 approved. Added §7.3 to §7.5, §10 rewrite, §15.1 launch checklist, §21.2 nurture prerequisites, D6.7 to D6.9, failure-matrix suppression rows, Sprint 3 to 5 scope updates. |
+| 2026-09-12 | Round 4 decided by Jeff: D4.1 to D4.10 accepted as recommended. Cloudflare Web Analytics plus Supabase `lead_magnet_events`; seven fixed event names (§8.1); fixed placements; `sessionStorage` UTMs; no ids, no personal data, no cookies, no GA4, no Plausible; eight saved queries (§8.3); email-join downstream conversion; no-cookie assumptions flagged for legal review (§8.4). Added §6.4 events table and the `record-lead-magnet-event` function to §4.3; Sprint 6 scope updated. |
