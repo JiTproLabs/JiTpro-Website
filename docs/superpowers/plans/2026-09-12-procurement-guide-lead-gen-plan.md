@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **Sprint 1a complete and CI-verified on draft PR #52 (2026-09-13). Sprint 1b waits on the approved 31-page PDF (L-8). Sprint 2 targets `jitpro_website`, the website's only Supabase project (G-8, D5.11 as amended 2026-09-14): a read-only inspection of that project and a proposed additive change set go to Jeff first, and nothing is applied, deployed, or configured until he approves it. Dependencies are Dependabot-only (G-6).** |
+| Status | **Sprint 1a complete and CI-verified on draft PR #52 (2026-09-13). Sprint 1b waits on the approved 31-page PDF (L-8). Sprint 2 targets `jitpro_website`, the website's only Supabase project (G-8, D5.11 as amended 2026-09-14). The read-only inspection is recorded and the three additive migrations are approved in principle (S2-1 to S2-9, 2026-09-14); the migration files are written but **not applied**, pending Jeff's final authorisation of the diff. No secret set, no function deployed. Dependencies are Dependabot-only (G-6).** |
 | Owner / approver | Jeff Kaufman |
 | Document created | 2026-09-12 |
 | Last updated | 2026-09-14 (single-project infrastructure amendment: G-8, D5.11 amended, §4.3, §4.8, §14, §15, §16, §21, §22, §28 revised; no staging project) |
@@ -95,6 +95,9 @@ Edge-function conventions worth reusing: `crypto.randomUUID()` request id in eve
 | `leads` | **No** (created outside the repo) | `id` (integer), `created_at`, `role`, `first_name`, `last_name`, `email`, `message`, `intent`, `source`, `page`, plus legacy nullable qualification columns (`phone`, `company`, `has_project`, `project_*`, `user_role`, `procurement_method`, `schedule_call`, `timestamp`). RLS enabled; only the service role writes. |
 | `demo_requests` | Yes (2026-01-26) | `id` uuid, `name`, `company`, `email`, `phone`, `role`, `status`, `created_at`. RLS enabled, anonymous insert policy removed. |
 | `investor_access` | Yes (2026-04-02) | `id` uuid, `name`, `email`, `company`, `investment_interest`, `status`, `access_token`, timestamps. RLS enabled. |
+| `profiles` | **No** (created outside the repo; found in the 2026-09-14 inspection) | `id` uuid, `email`, `name`, `company`, `role`, `created_at`. RLS enabled with own-profile SELECT and UPDATE policies. |
+
+*Correction from the 2026-09-14 inspection (§22, Sprint 2):* `demo_requests` does **not** exist in `jitpro_website` even though its migrations are in the repository, and the project has no migration history table at all.
 
 There is no contacts or people table, no unique constraint on email anywhere, and no consent or suppression columns. The contact form stores hard-coded attribution: `source='website'`, `page='/contact'`, `intent='contact'`.
 
@@ -258,7 +261,7 @@ Two new tables, created by migrations in this repository. The conceptual model i
 
 | Table | Answers | Rule |
 |---|---|---|
-| `contacts` | **Who is this person?** | One row per normalised unique email. Identity, first/last seen, first-touch attribution, consent and subscriber state. Designed to carry identity and consent state as the system grows. |
+| `contacts` | **Who is this person?** | One row per normalised unique email (the Edge Function normalises before writing; the database enforces uniqueness and rejects a non-normalised value, S2-2). Identity, first/last seen, first-touch attribution, consent and subscriber state. Designed to carry identity and consent state as the system grows. |
 | `lead_magnet_requests` | **What did this person request or do?** | One row per valid request. Asset id and version, request time, placement, approved attribution, fulfilment and email outcome, repeat-request state, and the foreign key to `contacts`. |
 | `leads` (existing) | The current contact and conversation-form pipeline | **Separate and unchanged in V1.** Guide requests never touch it. Its database webhook and email behaviour must not be disturbed. |
 
@@ -342,7 +345,7 @@ Frontend changes ship through PR → preview → squash merge → Cloudflare. Ba
 | Column | Type | Why |
 |---|---|---|
 | `id` | uuid pk | Stable identity |
-| `email` | text, unique index on `lower(trim(email))` | The one identifier the visitor gives; normalised on write |
+| `email` | text, `unique (email)` plus a check that the stored value equals `lower(btrim(email))` and is 3 to 254 characters (S2-2) | The one identifier the visitor gives; normalised by the Edge Function before persistence. A plain column constraint (rather than an expression index) is what the REST upsert `on_conflict=email` requires |
 | `first_seen_at`, `last_seen_at` | timestamptz | History without duplicate rows |
 | `first_source`, `first_medium`, `first_campaign`, `first_landing_path`, `first_referrer` | text | First-touch attribution, written once |
 | `consent_status` | text (`transactional_only` / `marketing_opt_in` / `unsubscribed`) | Current lead vs subscriber state (D2.5, D3.4). A guide request alone never produces `marketing_opt_in`; only the checked opt-in checkbox does. `unsubscribed` is never overwritten by a later unchecked request. |
@@ -360,7 +363,7 @@ Frontend changes ship through PR → preview → squash merge → Cloudflare. Ba
 | `email` | text | Denormalised for simple reporting |
 | `asset_id` | text | `procurement-field-guide` |
 | `asset_version` | text | Which PDF version was current |
-| `placement` | text | `home-band`, `learn-more-band`, `footer-link`, `landing-page` (CTA conversion) |
+| `placement` | text | `home-band`, `learn-more-band`, `footer-link`, `landing-page` (CTA conversion). **No database constraint**: validated server-side against the lead-magnet registry (S2-6) |
 | `page_path` | text | Where the form was submitted (page conversion) |
 | `landing_path` | text | First page of the session |
 | `referrer` | text | |
@@ -370,7 +373,7 @@ Frontend changes ship through PR → preview → squash merge → Cloudflare. Ba
 | `consent_text_version`, `consent_method` | text / text | Per-event consent evidence (D3.10): which sentence version was shown and how consent was expressed |
 | `turnstile_passed` | boolean | Audit |
 | `fulfilment_status` | text (`delivered_inline`) | Whether the visitor was shown the download |
-| `email_status` | text (`sent` / `failed` / `skipped_cooldown` / `suppressed`) | Outcome of the fulfilment send |
+| `email_status` | text (`sent` / `failed` / `skipped_cooldown` / `suppressed`), **nullable** | Outcome of the fulfilment send. `NULL` means no send has been attempted yet (S2-3); no placeholder status is invented |
 | `email_provider_id` | text | Resend message id for tracing |
 | `email_error` | text | Provider error summary, no secrets |
 | `created_at` | timestamptz | Request time |
@@ -379,7 +382,9 @@ Frontend changes ship through PR → preview → squash merge → Cloudflare. Ba
 
 | Column | Type | Why |
 |---|---|---|
+| `id` | bigint identity pk (S2-5) | Row identity |
 | `ip_hash` | text | Salted hash; salt is a secret combined with the UTC date so hashes cannot be linked across days |
+| `activity_kind` | text (`request` / `event`) (S2-4) | Keeps the 10-request and 100-event ceilings (D5.5) from consuming each other |
 | `created_at` | timestamptz | Window for rate limiting |
 
 Rows older than 24 hours are deleted opportunistically by the edge function on each request. No foreign key to `contacts` or `lead_magnet_requests`, so IP-derived data never becomes prospect or profile information.
@@ -400,7 +405,7 @@ Rows older than 24 hours are deleted opportunistically by the edge function on e
 
 **Deliberately not captured (Round 2):** user agent, raw IP address, name, company, phone number, job title, geolocation, enrichment data. The principle is to collect what is needed for funnel performance, attribution, fulfilment, and abuse prevention, and nothing because it is technically possible.
 
-RLS is enabled on all tables; only the service role writes; nothing reads from the browser.
+RLS is enabled on all tables, no policies are created, and `anon` and `authenticated` privileges are explicitly revoked on each new table (S2-1), because `jitpro_website`'s default privileges would otherwise grant them full table access. Only the service role (the Edge Functions) reads or writes; website visitors never access these tables directly.
 
 ---
 
@@ -719,7 +724,7 @@ These cannot be confirmed from code and are not assumed. Each is checked off, wi
 | L-9 | Cloudflare Web Analytics enabled on the Pages project (Metrics → Enable) | Jeff / admin | Open |
 | L-10 | Supabase production plan confirmed and the actual function-log retention period recorded here (not guessed) | Jeff / assistant with dashboard access | Open |
 | L-11 | Pulsetic HTTP monitor added for `https://jit-pro.com/guides/procurement-field-guide`, following the redirect | Jeff | Open |
-| L-12 | `jitpro_website` inspected read-only per Section 15.2 before the first migration, and the Sprint 2 change set approved by Jeff | Assistant inspects; Jeff approves | Open. *(Replaces the former `jitpro-staging` confirmation item, closed 2026-09-14 by G-8.)* |
+| L-12 | `jitpro_website` inspected read-only per Section 15.2 before the first migration, and the Sprint 2 change set approved by Jeff | Assistant inspects; Jeff approves | **Inspected and change set approved 2026-09-14** (report and S2-1 to S2-9 under Sprint 2 in §22). Final authorisation of the written migration diff pending. *(Replaces the former `jitpro-staging` confirmation item, closed 2026-09-14 by G-8.)* |
 | L-13 | New lead-magnet secrets set on `jitpro_website`: `LEAD_MAGNET_IP_SALT`, `LEAD_MAGNET_TEST_MODE` (testing only), optional `LEAD_MAGNET_NOTIFY_TO`. Existing secrets (`RESEND_API_KEY`, `TURNSTILE_SECRET_KEY`, `SITE_URL`) are shared with the existing functions and are **not changed** | Assistant via CLI with Jeff's approval | Open |
 | L-14 | Cloudflare Pages preview environment confirmed to reference `jitpro_website` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`), no separate staging values, with Jeff's explicit acknowledgement that preview submissions write to the live website project while test mode is on | Jeff / admin | Open |
 
@@ -743,13 +748,17 @@ The website has one Supabase project, so every backend change lands on the proje
 8. every index, constraint, RLS policy, trigger, and function it adds;
 9. the rollback or removal strategy for the newly created objects.
 
-No migration is applied until Jeff approves that change set. Migrations are additive only: no `drop`, `rename`, `truncate`, `alter` of an existing object, data rewrite, or repurposing. `supabase db reset`, `supabase migration repair`, and any other reset or history-rewriting operation are never run against `jitpro_website`.
+No migration is applied until Jeff approves that change set, and then gives final authorisation of the written migration diff. Migrations are additive only: no `drop`, `rename`, `truncate`, `alter` of an existing object, data rewrite, or repurposing. `supabase db reset`, `supabase migration repair`, and any other reset or history-rewriting operation are never run against `jitpro_website`.
+
+**Apply method (S2-7).** `jitpro_website` has no migration history table, so `supabase db push` is not used: it would attempt every repository migration, creating `demo_requests` and failing on the pre-existing `investor_access`. Each approved file is applied individually with `supabase db query --linked --project-ref pynjyrvnokfexyudimsn -f <file>`, followed by read-only verification.
+
+**No rollback migrations; recovery is proposed, not executed (S2-8).** No rollback migration containing `DROP` statements is created or committed; the project stays additive-only. If a problem during testing might justify removing a new object, work stops and Jeff receives the exact proposed recovery operation before anything runs. No `DROP`, `TRUNCATE`, migration repair, reset, or destructive cleanup is executed without his explicit approval. Once real lead data exists, removal additionally requires a data-preservation or export decision first. The conceptual removal path for the three Sprint 2 tables is dropping `lead_magnet_requests`, `lead_magnet_ip_activity`, and `contacts` (nothing else references them), recorded here as a strategy only.
 
 **Edge Function discipline.** Before deploying a function, Jeff is shown: the function name; what it does; which tables it reads and writes; which secrets it uses; its test-mode behaviour; its failure behaviour; how it is isolated from the existing contact-form workflow; and how it will be tested before any public CTA calls it. Only the new lead-magnet functions are deployed, always by explicit name. Existing functions are not altered or redeployed without Jeff's explicit approval.
 
 **Email and fulfilment test safety.** `LEAD_MAGNET_TEST_MODE` is set for the entire test period and restricts recipients to `@resend.dev` and `@jit-pro.com`. Resend's test recipients are the default; a JiTpro-owned mailbox is used only when a real mailbox check is necessary. No test email may reach a real prospect.
 
-**Database test safety.** Test data is clearly identifiable (Resend test recipients or `@jit-pro.com` addresses, and a recognisable marker such as `utm_campaign = lm-test`). Production lead records are never copied or modified. Test rows in the new tables are removed only by a deliberate, targeted `delete` that Jeff approves, never by a truncate or reset.
+**Database test safety.** Test data is clearly identifiable (Resend test recipients or `@jit-pro.com` addresses, and a recognisable marker such as `utm_campaign = lm-test`). Production lead records are never copied or modified. Test rows in the new tables are removed only by a deliberate, targeted `delete` that Jeff approves, never by a truncate or reset. Cleanup is never automatic: the exact `DELETE` criteria are brought to Jeff before the first cleanup (S2-9).
 
 **Frontend test safety.** The draft PR and its Cloudflare preview are used for frontend and CI verification. The production visitor-facing CTA stays inactive (nothing merges to `main`) until the backend is verified. When preview submissions call the live website project, that is stated explicitly and test mode stays on. The full flow is verified before normal visitors see the feature.
 
@@ -1025,6 +1034,34 @@ Organised by working capability. The persistence API is built **before** the vis
 - **Decision dependencies:** Jeff's approval of the migration change set and of the function change set.
 - **Definition of done:** all `curl` cases pass on `jitpro_website` in test mode; existing contact form verified unaffected; tests green; plan updated with the inspection report.
 - **Commit boundaries:** (1) migrations; (2) shared modules with tests; (3) edge function and `curl` script.
+
+**`jitpro_website` inspection report (2026-09-14, read-only, before any migration).**
+
+| Item | Finding |
+|---|---|
+| Project | `jitpro_website`, ref `pynjyrvnokfexyudimsn` (the repository's linked project), Postgres 17.6. Every command carried an explicit `--project-ref`. |
+| Method | `supabase db query --linked` with SELECT statements only; `supabase functions list`; `supabase secrets list` (names recorded, values not). No schema, data, function, secret, or configuration change. Side effect disclosed: the CLI's login step creates or refreshes the platform-managed `cli_login_postgres` role. |
+| 1. Migration history | **None.** The `supabase_migrations` schema does not exist. Of the repository's three migrations, the two `demo_requests` migrations were never applied (the table is absent) and `investor_access` exists but was created outside any recorded history. Consequence: `supabase db push` is unsafe (S2-7). |
+| 2. Relevant tables | `public.leads` (58 rows, latest 2026-09-09, RLS on, INSERT policy for the `public` role), `public.investor_access` (RLS on), `public.profiles` (RLS on, not in this repository). Schemas: `auth`, `extensions`, `graphql`, `graphql_public`, `net`, `public`, `realtime`, `storage`, `supabase_functions`, `vault`. No `cron`. |
+| 3. Relevant functions and configuration | Database: `public.rls_auto_enable`, run by event trigger `ensure_rls`, which enables RLS on every new table in `public`. One database-webhook trigger on `leads` INSERT calling `send-contact-notification`. Default privileges grant `anon` and `authenticated` full privileges on new `public` tables (hence S2-1). Extensions: `pg_net`, `pg_stat_statements`, `pgcrypto`, `plpgsql`, `supabase_vault`, `uuid-ossp`; `gen_random_uuid()` is native. Edge Functions: the same seven recorded in §3.3 (`submit-demo-request` still not deployed). Secrets: `ADMIN_PASSWORD`, `RESEND_API_KEY`, `SITE_URL`, `TURNSTILE_SECRET_KEY`, plus platform-provided `SUPABASE_*`. |
+| 4. Naming collisions | None. No relation, function, or type named `contacts` or `lead_magnet%` in any schema; no `LEAD_MAGNET_*` secret. |
+| Outside this project's scope (no action) | The `leads` INSERT policy for the `public` role lets the anon key insert rows directly without Turnstile (related to F-4). The dashboard-created webhook trigger stores the service-role key in its definition, which is the platform's normal behaviour; the value is not recorded anywhere in this repository. |
+
+**Sprint 2 database approvals (Jeff, 2026-09-14).**
+
+| ID | Decision |
+|---|---|
+| S2-1 | **Approved:** three additive migrations, `20260914000001_create_contacts.sql`, `20260914000002_create_lead_magnet_requests.sql`, `20260914000003_create_lead_magnet_ip_activity.sql`. Each creates new lead-magnet objects only, enables RLS, creates no policy, and revokes all `anon` and `authenticated` privileges on its table. The tables are accessed by the new server-side Edge Function, never directly by visitors. `leads`, `investor_access`, `profiles`, the `leads` webhook, existing database functions, existing Edge Functions, and existing data are not modified. |
+| S2-2 | Departure 1 approved: `unique (email)` on `contacts` plus a check that the stored value is already normalised. The Edge Function normalises email before persistence; this supports the REST upsert `on_conflict=email`. |
+| S2-3 | Departure 2 approved: `lead_magnet_requests.email_status` is `NULL` until an email send is attempted. No misleading status is invented. |
+| S2-4 | Departure 3 approved: `lead_magnet_ip_activity.activity_kind` (`request` / `event`), so the request and event rate limits do not interfere. |
+| S2-5 | Departure 4 approved: bigint identity primary key on `lead_magnet_ip_activity`. |
+| S2-6 | Departure 5 approved: no database constraint on request `placement`; validated server-side against the registry. `lead_magnet_events` keeps its separately approved constraints. |
+| S2-7 | Apply method: each file individually via `supabase db query --linked --project-ref pynjyrvnokfexyudimsn -f <file>`; never `db push`, `migration repair`, or `db reset`. Migrations are applied only after Jeff's final authorisation of the written diff. |
+| S2-8 | Rollback: strategy approved conceptually; **no rollback migration with `DROP` is created or committed**. Any recovery is brought to Jeff as an exact operation first; nothing destructive runs without explicit approval; real lead data requires a preservation or export decision first. |
+| S2-9 | Test-data cleanup: acceptable in principle for clearly identified test rows in the new tables only; never automatic, never `TRUNCATE`; the exact `DELETE` criteria go to Jeff before the first cleanup. |
+
+Sequence from here: migration files written and reviewed → Jeff's final authorisation → applied and verified → full `submit-lead-magnet-request` proposal per §15.2 → deployment only on approval. `LEAD_MAGNET_*` secrets are not set before Jeff approves them.
 
 **Staging inspection report (2026-09-13, read-only). Historical record: superseded by G-8 on 2026-09-14.** Retained because it established that `jitpro-staging` is the product application's database and must not be involved in website work. Its recommendation (a website-dedicated project or `jitpro-sandbox`) was not adopted; Jeff chose `jitpro_website` as the only website project.
 
@@ -1334,3 +1371,4 @@ Consolidated from the launch checklist (Section 15.1) so nothing is hidden insid
 | 2026-09-13 | Jeff decided G-6 (keep `fbd6c0d`) and G-7 (open the draft PR now). Draft PR #52 opened; `build-and-test` passed on its first run and Cloudflare Pages previews build on every push; Sprint 1a acceptance row updated to CI-verified. Read-only `jitpro-staging` inspection performed per §15.2 and recorded under Sprint 2 in §22: the project holds the product application's schema, no name collisions, `db push` unsafe because of a foreign migration history; recommendation is a website-dedicated project, starting with a read-only look at `jitpro-sandbox`. L-12 marked inspected, not confirmed; §21 item 1 replaced with the target decision. No staging change made; Sprint 2 paused. |
 | 2026-09-14 | Dependency governance: CLAUDE.md gains "Dependencies: report only, never correct" (commit `0c59e50`). Dependabot alone changes existing dependencies; Claude reports and stops; a genuinely new dependency for an explicitly approved task must be called out in the implementation report. §22 git expectations and G-6 updated to match. This break-point record added so work resumes cleanly from another machine. |
 | 2026-09-14 | **Single-project infrastructure amendment (Jeff).** G-8 added: `jitpro_website` is the website's only Supabase project; product-application projects (`jitpro-staging`, `jitpro-sandbox`, others) are separate infrastructure and are not used. No website staging project. D5.11 amended; §4.3 governance note and boundary; §4.5 and §14.4 test-mode wording; §4.8 apply methods (no reset or migration repair; functions deployed by explicit name); §14.2 testing on `jitpro_website`; §15 steps rewritten with no promotion step and a go-live switch; §15.2 replaced by single-project safeguards (migration discipline, Edge Function discipline, email, database, and frontend test safety); §16 test-mode row; L-6, L-7, L-12 to L-14 revised in §15.1 and §28; §21 item 1 replaced by the shared-secret testing question; Sprints 2, 3, 4, 6 revised; staging inspection report kept as a historical record. No other decision changed. |
+| 2026-09-14 | Read-only `jitpro_website` inspection recorded under Sprint 2 in §22 (no migration history; `demo_requests` absent; `profiles` present; no collisions; default privileges and `ensure_rls` noted). Jeff approved the Sprint 2 database change set: S2-1 to S2-9 (three additive migrations, departures 1 to 5, apply method, no rollback migrations, cleanup criteria to Jeff first). §3.4, §6.1 to §6.3, §15.1 L-12, and §15.2 updated. Migration files written; **not applied**, awaiting final authorisation. |
