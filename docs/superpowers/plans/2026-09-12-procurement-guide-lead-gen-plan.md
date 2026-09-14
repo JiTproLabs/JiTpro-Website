@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| Status | **Sprint 1a complete and CI-verified on draft PR #52 (2026-09-13). Sprint 1b waits on the approved 31-page PDF (L-8). Sprint 2 is paused after the read-only `jitpro-staging` inspection (report under Sprint 2 in §22): that project holds the product application's schema, so Jeff must choose the integration-test target (§21 item 1) before any staging change. Dependencies are Dependabot-only (G-6).** |
+| Status | **Sprint 1a complete and CI-verified on draft PR #52 (2026-09-13). Sprint 1b waits on the approved 31-page PDF (L-8). Sprint 2 targets `jitpro_website`, the website's only Supabase project (G-8, D5.11 as amended 2026-09-14): a read-only inspection of that project and a proposed additive change set go to Jeff first, and nothing is applied, deployed, or configured until he approves it. Dependencies are Dependabot-only (G-6).** |
 | Owner / approver | Jeff Kaufman |
 | Document created | 2026-09-12 |
-| Last updated | 2026-09-14 (break-point record: PR #52, decisions G-6 and G-7, staging inspection report, §21 and §22 updated, dependency governance) |
+| Last updated | 2026-09-14 (single-project infrastructure amendment: G-8, D5.11 amended, §4.3, §4.8, §14, §15, §16, §21, §22, §28 revised; no staging project) |
 | Working branch | `feature/navigation-simplification-lead-gen-guide` (decision G-1, 2026-09-12) |
 | Source of truth | This document. When a decision is made it is recorded here and not revisited without cause. |
 
@@ -241,7 +241,14 @@ Why an edge function rather than a Cloudflare Pages Function (DECIDED D5.9): the
 
 **Fail-open ordering inside the function (D5.6):** the guide URL is known from the registry before any I/O, so the response can always include it. The function attempts persistence, then email, and reports each outcome honestly in the response; a persistence failure produces an internal failure alert and still returns the guide URL.
 
-**Backend environments (D5.11):** the existing `jitpro-staging` Supabase project is the integration-test target, subject to the inspection in Section 15.2. Migrations and functions are exercised there first and promoted to production `jitpro_website` only after success.
+**Backend environment (G-8, D5.11 as amended 2026-09-14):**
+
+> **The JiTpro marketing website uses `jitpro_website` as its only Supabase project. JiTpro product-application Supabase projects are separate infrastructure and must not be used for website development, testing, migrations, functions, or storage.**
+
+- There is **no website staging project** and none is created. This is a deliberate simplification: website backend changes are infrequent, and a second project would add cost, configuration, environment syncing, and a promotion workflow that the website does not need.
+- `jitpro-staging`, `jitpro-sandbox`, and every other product-application project are out of bounds for this work. They are not inspected or modified unless Jeff explicitly asks.
+- All lead-magnet backend work is introduced into `jitpro_website` **additively and in isolation**: new tables (`contacts`, `lead_magnet_requests`, `lead_magnet_ip_activity`, later `lead_magnet_events`) and new functions (`submit-lead-magnet-request`, later `record-lead-magnet-event`) only. The existing `leads` table, its database webhook, `submit-contact`, `send-contact-notification`, the investor functions, `demo_requests`, `investor_access`, and all existing data are not touched without Jeff's explicit approval. No destructive migration, and no rename, drop, truncate, rewrite, or repurposing of an existing object.
+- Testing happens on that same project under the safeguards in Section 15.2: inspection before any migration, Jeff's approval of each exact change set, `LEAD_MAGNET_TEST_MODE` while testing, identifiable test data, and no visitor-facing CTA in production until the backend is verified. There is no staging-to-production promotion step.
 
 A second, deliberately tiny function `supabase/functions/record-lead-magnet-event/index.ts` (D4.1) accepts one funnel event, validates the event name, asset, placement, and page path against fixed allow-lists, truncates strings, inserts one row into `lead_magnet_events`, and returns 204. It stores no identifiers and reads nothing back.
 
@@ -285,7 +292,7 @@ Resend only (D3.1); no second provider. Sent synchronously from the edge functio
 
 **Internal notification (D3.8):** one per valid request, To `info@jit-pro.com`, From **`JiTpro Notifications <noreply@mail.jit-pro.com>`** (the existing internal sender domain, verified in Resend; DNS shows DKIM at `resend._domainkey.mail.jit-pro.com` and `send.mail.jit-pro.com`). Never From `info@` back to itself, never From `jeff@`.
 
-**Test safety (D3.9):** `LEAD_MAGNET_TEST_MODE` restricts recipients to `@resend.dev` and `@jit-pro.com` on non-production deployments; Resend's documented test recipients (`delivered@`, `bounced@`, `complained@`, `suppressed@resend.dev`) are used for development and automated checks.
+**Test safety (D3.9):** `LEAD_MAGNET_TEST_MODE` restricts recipients to `@resend.dev` and `@jit-pro.com` while it is set on `jitpro_website` during testing (there is no separate non-production project, G-8), and is removed before the production CTA goes live; Resend's documented test recipients (`delivered@`, `bounced@`, `complained@`, `suppressed@resend.dev`) are used for development and automated checks.
 
 ### 4.6 PDF delivery and versioning (DECIDED, Round 5, 2026-09-12)
 
@@ -309,7 +316,7 @@ Resend only (D3.1); no second provider. Sent synchronously from the edge functio
 
 ### 4.8 Deployment
 
-Frontend changes ship through PR → preview → squash merge → Cloudflare. Database migrations ship with `supabase db push` (requires the database password) and the edge function with `supabase functions deploy submit-lead-magnet-request` (the CLI is authenticated on this machine). Both are manual steps that must happen **before** the frontend that depends on them is merged. Section 15 has the ordered plan.
+Frontend changes ship through PR → preview → squash merge → Cloudflare. Backend changes go to `jitpro_website` only (G-8), each after a read-only inspection and Jeff's approval of the exact change set (Section 15.2). Migrations are added as new files in `supabase/migrations/` and applied by the method the inspection shows to be safe: `supabase db push` only if the remote migration history matches the repository, otherwise each new file applied individually; `supabase migration repair` and any reset are never run against `jitpro_website`. New functions ship with `supabase functions deploy <new-function-name>`, always naming the single new function (never a bare `functions deploy`, which would redeploy the existing functions). Both are manual steps that must be verified **before** the frontend that depends on them is merged. Section 15 has the ordered plan.
 
 ---
 
@@ -657,7 +664,7 @@ Testing is built into every sprint, not deferred.
 
 ### 14.2 Edge function and integration testing (DECIDED D5.11)
 
-Deno is not installed locally and is not added. Pure logic is tested with Vitest as above. The functions themselves are exercised **against the `jitpro-staging` Supabase project** after the inspection in Section 15.2: migrations applied there first, functions deployed there first, `curl` cases for every matrix row, Resend test recipients for the email paths, and a website preview pointed at staging for the full browser flow. Production is touched only after staging passes.
+Deno is not installed locally and is not added. Pure logic is tested with Vitest as above. The functions themselves are exercised **against `jitpro_website`, the website's only Supabase project** (G-8), under the safeguards in Section 15.2: the project is inspected read-only before any migration; each migration and each function is applied or deployed only after Jeff approves the exact change set; `LEAD_MAGNET_TEST_MODE` is set for the whole test period; `curl` cases cover every matrix row using identifiable test data; Resend test recipients cover the email paths; and the draft PR's Cloudflare preview exercises the full browser flow, explicitly calling the live website project with test mode on. Test cases that would require changing a secret shared with the existing contact-form functions (for example an invalid `RESEND_API_KEY` or a Cloudflare test `TURNSTILE_SECRET_KEY`) are not run that way; see §21 item 1. No production visitor-facing CTA exists until this verification is complete.
 
 ### 14.3 Browser (Chrome via the Claude in Chrome tools or the gstack browse skill; Playwright headless shells for screenshots)
 
@@ -672,8 +679,8 @@ Failure paths: empty email; malformed email; server 500 (point the client at a f
 ### 14.4 Email (DECIDED, D3.9)
 
 - Development and automated checks use Resend's documented test recipients: `delivered@resend.dev`, `bounced@resend.dev`, `complained@resend.dev`, `suppressed@resend.dev` (the first three accept `+label` suffixes). These consume sending quota, so they are used deliberately.
-- Non-production deployments run with `LEAD_MAGNET_TEST_MODE` set, which makes the function refuse any recipient outside `@resend.dev` and `@jit-pro.com`. Development emails never reach real leads.
-- Every send carries tags `asset` and `environment` so test traffic is filterable in the Resend dashboard, and an `Idempotency-Key` derived from the request id so retries cannot double-send.
+- While the lead-magnet functions are being tested on `jitpro_website`, `LEAD_MAGNET_TEST_MODE` is set, which makes the function refuse any recipient outside `@resend.dev` and `@jit-pro.com`. Development emails never reach real prospects. A JiTpro-owned address is used only when a real mailbox check is necessary. Test mode is removed only at go-live (L-6), after verification.
+- Every send carries tags `asset` and `environment` (`test` while test mode is set, otherwise `production`) so test traffic is filterable in the Resend dashboard, and an `Idempotency-Key` derived from the request id so retries cannot double-send.
 - Real-mailbox verification uses a JiTpro-owned address: sender name and address, explicit Reply-To, subject, preheader, body copy, footer line and mailing address, link target, logo, plain-text part, mobile and desktop rendering (Gmail web and iOS Mail at minimum), one-hour cooldown behaviour, suppressed and failed paths, failure logging.
 - No secrets or environment-specific credentials are hard-coded; configuration follows the existing `VITE_*` (browser) and Supabase-secrets (server) conventions.
 
@@ -685,14 +692,15 @@ Listed in Section 15.
 
 ## 15. Deployment plan
 
-1. Merge order matters. Database migrations and the edge functions must be live in **production** before the frontend PR that calls them is merged, and live in **staging** before that (D5.11).
-2. **Staging first:** apply migrations and deploy `submit-lead-magnet-request` and `record-lead-magnet-event` to `jitpro-staging` with staging secrets; run the `curl` matrix and Resend test-recipient cases; point a website preview at staging (Cloudflare Pages preview-environment variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`) for the full browser flow. Note: preview-environment variables apply to every preview deployment, so while they point at staging the contact form on previews would post to a project where `submit-contact` may not exist; the contact form already cannot complete on previews because of Turnstile, so this is a documented, temporary condition, not a regression.
-3. **Preview:** open the PR; Cloudflare builds a preview. Verify the CTA, dialog, stable route redirect, headers, and (with G-4 done) a real submission against staging.
-4. **Production backend release:** only after staging passes: `supabase db push` (migrations), `supabase functions deploy` for both functions, set production secrets (`LEAD_MAGNET_IP_SALT`; never `LEAD_MAGNET_TEST_MODE`), confirm with a `curl` against production using a JiTpro-owned test address.
-5. **Merge:** squash merge once `build-and-test` passes and review threads are resolved. Ask Jeff before the final merge.
-6. **Production verification (smoke test):** production CTA renders; dialog opens; test submission succeeds; `contacts` and `lead_magnet_requests` rows exist with attribution; email arrives; email link opens the correct 31-page PDF; inline Download works; analytics events appear; contact form, navigation, homepage, and Learn More still work.
-7. **Rollback:** revert the PR on GitHub. The edge functions and tables can stay deployed harmlessly; the CTA simply disappears. If a function itself misbehaves, redeploy the previous version or disable the CTA.
-8. Record the result in Section 22.
+1. Merge order matters. The migrations and the edge functions must be live and verified on `jitpro_website` before the frontend PR that calls them is merged (G-8, D5.11 as amended). There is one Supabase project and **no staging-to-production promotion step**.
+2. **Inspect, propose, approve, apply (per change set):** read-only inspection of `jitpro_website` (Section 15.2); Jeff receives the exact migration files or function change and approves it; only then is the migration applied or the new function deployed, by the method in Section 4.8. Secrets (`LEAD_MAGNET_IP_SALT`, `LEAD_MAGNET_TEST_MODE`, any other new one) are set only with Jeff's approval (L-13).
+3. **Backend verification in test mode:** with `LEAD_MAGNET_TEST_MODE` set, run the `curl` matrix and the Resend test-recipient cases against `jitpro_website` using identifiable test data; confirm the existing contact form still works and that `leads` and its webhook are unaffected.
+4. **Preview:** the existing draft PR #52 builds a Cloudflare preview on every push. Verify the CTA, dialog, stable route redirect, headers, and (with L-5 done) a real submission. Preview submissions call the live `jitpro_website` project; this is deliberate, and test mode stays on while they do (L-14).
+5. **Go-live switch (before the merge):** only after steps 3 and 4 pass and Jeff approves: remove `LEAD_MAGNET_TEST_MODE` and any test-only override (L-6), confirm the function in production mode with one `curl` using a JiTpro-owned address, and clean up test rows only if Jeff approves a deliberate, targeted cleanup of the new tables.
+6. **Merge:** squash merge once `build-and-test` passes and review threads are resolved. Ask Jeff before the final merge. The merge is what makes the visitor-facing CTA live.
+7. **Production verification (smoke test):** production CTA renders; dialog opens; test submission succeeds; `contacts` and `lead_magnet_requests` rows exist with attribution; email arrives; email link opens the correct 31-page PDF; inline Download works; analytics events appear; contact form, navigation, homepage, and Learn More still work.
+8. **Rollback:** revert the PR on GitHub. The edge functions and tables can stay deployed harmlessly; the CTA simply disappears. If a function itself misbehaves, redeploy the previous version or disable the CTA. Removing the new backend objects entirely follows the removal strategy recorded with each approved change set (Section 15.2) and touches only objects this project created.
+9. Record the result in Section 22.
 
 ### 15.1 Launch checklist: items that must be verified outside the repository
 
@@ -705,29 +713,47 @@ These cannot be confirmed from code and are not assumed. Each is checked off, wi
 | L-3 | Legal review completed: consent checkbox wording, privacy notice, fulfilment-email classification and wording | Jeff / counsel | Open |
 | L-4 | Resend dashboard confirms `jit-pro.com` and `mail.jit-pro.com` verified (DNS evidence already positive) | Jeff / assistant with dashboard access | Open |
 | L-5 | Turnstile widget hostnames include the Cloudflare preview URLs so submit can be tested on previews (G-4) | Jeff / admin | Open |
-| L-6 | Production Supabase secrets set: `LEAD_MAGNET_IP_SALT`, optional `LEAD_MAGNET_NOTIFY_TO`; `LEAD_MAGNET_TEST_MODE` **absent** in production | Assistant via CLI with Jeff's approval | Open |
-| L-7 | Migrations applied and both functions deployed to production, after staging passed, before the frontend PR merges | Assistant via CLI with Jeff's approval | Open |
+| L-6 | Go-live switch on `jitpro_website`: `LEAD_MAGNET_TEST_MODE` and any test-only override **removed**; `LEAD_MAGNET_IP_SALT` and optional `LEAD_MAGNET_NOTIFY_TO` present; production-mode `curl` with a JiTpro-owned address passes | Assistant via CLI with Jeff's approval | Open |
+| L-7 | All lead-magnet migrations applied and both new functions deployed to `jitpro_website`, each after Jeff approved its exact change set, and verified in test mode before the frontend PR merges | Assistant via CLI with Jeff's approval | Open |
 | L-8 | The approved 31-page PDF is obtained from Jeff and is the file committed (page count and title verified) | Jeff supplies; assistant verifies | Open |
 | L-9 | Cloudflare Web Analytics enabled on the Pages project (Metrics → Enable) | Jeff / admin | Open |
 | L-10 | Supabase production plan confirmed and the actual function-log retention period recorded here (not guessed) | Jeff / assistant with dashboard access | Open |
 | L-11 | Pulsetic HTTP monitor added for `https://jit-pro.com/guides/procurement-field-guide`, following the redirect | Jeff | Open |
-| L-12 | `jitpro-staging` inspected per Section 15.2 and confirmed safe as the integration-test target | Assistant inspects; Jeff confirms | **Inspected 2026-09-13; not confirmed.** The project is the product application's staging database; see the report under Sprint 2 in §22. Jeff to choose the target (§21 item 1). |
-| L-13 | Staging secrets set: `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY`, `LEAD_MAGNET_IP_SALT`, `LEAD_MAGNET_TEST_MODE`, `SITE_URL`, and any other required existing secret | Assistant via CLI with Jeff's approval | Open |
-| L-14 | Cloudflare Pages preview-environment variables pointed at staging for end-to-end browser testing, then reviewed after launch | Jeff / admin | Open |
+| L-12 | `jitpro_website` inspected read-only per Section 15.2 before the first migration, and the Sprint 2 change set approved by Jeff | Assistant inspects; Jeff approves | Open. *(Replaces the former `jitpro-staging` confirmation item, closed 2026-09-14 by G-8.)* |
+| L-13 | New lead-magnet secrets set on `jitpro_website`: `LEAD_MAGNET_IP_SALT`, `LEAD_MAGNET_TEST_MODE` (testing only), optional `LEAD_MAGNET_NOTIFY_TO`. Existing secrets (`RESEND_API_KEY`, `TURNSTILE_SECRET_KEY`, `SITE_URL`) are shared with the existing functions and are **not changed** | Assistant via CLI with Jeff's approval | Open |
+| L-14 | Cloudflare Pages preview environment confirmed to reference `jitpro_website` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`), no separate staging values, with Jeff's explicit acknowledgement that preview submissions write to the live website project while test mode is on | Jeff / admin | Open |
 
 None of the dashboard or account changes above is performed silently. Each is requested from Jeff, or performed with his explicit approval, when the sprint reaches it.
 
-### 15.2 Staging inspection protocol (D5.11, before any change to `jitpro-staging`)
+### 15.2 Single-project safeguards for `jitpro_website` (G-8, D5.11 as amended 2026-09-14)
 
-Before modifying `jitpro-staging`, the assistant inspects it read-only and reports:
+The website has one Supabase project, so every backend change lands on the project that serves the live contact form. The objective is not a staging-to-production system; it is small, isolated, reviewable, additive changes with enough safeguards that the existing website is never at risk.
 
-1. what schemas, tables, functions, and secrets currently exist;
-2. whether any other active development appears to depend on it (recent activity, deployed functions, table contents);
-3. whether applying this project's migrations is safe (no name collisions with `contacts`, `lead_magnet_*`);
-4. what secrets and configuration are already present (names only);
-5. whether it can safely serve as this project's integration-test environment.
+**Project boundary.** Only `jitpro_website` (ref `pynjyrvnokfexyudimsn`) is used. `jitpro-staging`, `jitpro-sandbox`, and all other product-application projects are not inspected, modified, or used unless Jeff explicitly asks. No website staging project is created.
 
-The staging project is **never reset, wiped, or destructively modified** merely because it is named staging. If the inspection raises doubt, the fallback is D5.11 option (a): production with `LEAD_MAGNET_TEST_MODE` and Resend test recipients, decided with Jeff.
+**Migration discipline.** Before applying any migration, the assistant inspects `jitpro_website` read-only and reports to Jeff:
+
+1. the current remote migration versions, compared with `supabase/migrations/`;
+2. the existing relevant tables;
+3. the existing relevant functions (database and edge);
+4. any naming collisions with the proposed objects;
+5. the exact new SQL migration files proposed;
+6. what each migration creates;
+7. whether each migration is additive only;
+8. every index, constraint, RLS policy, trigger, and function it adds;
+9. the rollback or removal strategy for the newly created objects.
+
+No migration is applied until Jeff approves that change set. Migrations are additive only: no `drop`, `rename`, `truncate`, `alter` of an existing object, data rewrite, or repurposing. `supabase db reset`, `supabase migration repair`, and any other reset or history-rewriting operation are never run against `jitpro_website`.
+
+**Edge Function discipline.** Before deploying a function, Jeff is shown: the function name; what it does; which tables it reads and writes; which secrets it uses; its test-mode behaviour; its failure behaviour; how it is isolated from the existing contact-form workflow; and how it will be tested before any public CTA calls it. Only the new lead-magnet functions are deployed, always by explicit name. Existing functions are not altered or redeployed without Jeff's explicit approval.
+
+**Email and fulfilment test safety.** `LEAD_MAGNET_TEST_MODE` is set for the entire test period and restricts recipients to `@resend.dev` and `@jit-pro.com`. Resend's test recipients are the default; a JiTpro-owned mailbox is used only when a real mailbox check is necessary. No test email may reach a real prospect.
+
+**Database test safety.** Test data is clearly identifiable (Resend test recipients or `@jit-pro.com` addresses, and a recognisable marker such as `utm_campaign = lm-test`). Production lead records are never copied or modified. Test rows in the new tables are removed only by a deliberate, targeted `delete` that Jeff approves, never by a truncate or reset.
+
+**Frontend test safety.** The draft PR and its Cloudflare preview are used for frontend and CI verification. The production visitor-facing CTA stays inactive (nothing merges to `main`) until the backend is verified. When preview submissions call the live website project, that is stated explicitly and test mode stays on. The full flow is verified before normal visitors see the feature.
+
+**Unchanged by this amendment:** fail-open guide access, the one-hour email cooldown, Turnstile behaviour, rate limiting, consent handling, sender identity, attribution, analytics, privacy design, CTA placement, and visitor-facing copy.
 
 ---
 
@@ -744,7 +770,7 @@ The staging project is **never reset, wiped, or destructively modified** merely 
 | `SITE_URL` | Building the absolute guide URL for the email | Edge function | Yes (`https://jit-pro.com`) | Supabase |
 | `LEAD_MAGNET_IP_SALT` | Secret half of the daily-rotating salt for IP hashing (D2.7) | Edge function | **New** | Supabase |
 | `LEAD_MAGNET_NOTIFY_TO` | Internal notification recipient | Edge function | **New**, optional (default `info@jit-pro.com`) | Supabase |
-| `LEAD_MAGNET_TEST_MODE` | When set, the function refuses recipients outside `@resend.dev` and `@jit-pro.com` (D3.9) | Edge function | **New** | Supabase, non-production or test deployments only; never set in production |
+| `LEAD_MAGNET_TEST_MODE` | When set, the function refuses recipients outside `@resend.dev` and `@jit-pro.com` (D3.9) | Edge function | **New** | Supabase `jitpro_website`, set only for the test period; removed at go-live (L-6) and never left set once the visitor-facing CTA is live |
 
 No secrets in source. New secrets are set with `supabase secrets set` and listed here when added. Production readiness is not claimed until this table is verified against the dashboards.
 
@@ -799,6 +825,7 @@ Status values: **OPEN** (needs Jeff), **RECOMMENDED** (recommendation made, awai
 | G-5 | Git identity for commits in this repository | Configured global identity (`JiTpro-Dev <jeffk@kaufmanbuilding.com>`) vs `Jeff Kaufman <jeff@jit-pro.com>` | Use whichever Jeff designates | **DECIDED: `Jeff Kaufman <jeff@jit-pro.com>`, set repository-locally** (`git config --local`), not globally. Commit `aabcf7e` is left as-is and is not rewritten for author identity. **This identity is repository metadata only.** It is not a visitor-facing address and must never be used as the sender or reply-to of the Field Guide workflow. | 2026-09-12 | Jeff Kaufman. Applied 2026-09-12. |
 | G-6 | Keep or drop the js-yaml lockfile patch `fbd6c0d` made during Sprint 1a? | (a) Keep. (b) Revert and wait for Dependabot. | None; recorded as an open item at the end of Sprint 1a. | **DECIDED: (a) keep `fbd6c0d`.** The audit identified the advisory, the lockfile-only patch resolved it, and the required checks passed. **This must not recur.** Dependency maintenance belongs exclusively to Dependabot: Claude reports dependency and audit problems and stops, and never upgrades, downgrades, replaces, patches, pins, or allowlists an existing dependency for advisories, vulnerabilities, CI failures, audits, compatibility, or maintenance. The rule is written in CLAUDE.md ("Dependencies: report only, never correct", commit `0c59e50`). The one narrow exception is a genuinely new dependency that an explicitly approved task requires, called out in the implementation report with the package name and reason. | 2026-09-12 | Jeff Kaufman. Rule written and tightened 2026-09-14. |
 | G-7 | When to open the pull request? | (a) One PR at the end of Sprint 6 (§22 as first written). (b) A draft PR now so `build-and-test` and Cloudflare Pages previews run on every push. | (b) offered as an open item at the end of Sprint 1a. | **DECIDED: (b).** Draft PR #52 opened 2026-09-13 from the working branch into `main` (https://github.com/JiTproLabs/JiTpro-Website/pull/52). It stays in draft and is **not merged without Jeff's explicit approval**. `build-and-test` passed on its first run at `38f0447`; Cloudflare Pages builds a preview per push (branch alias `https://feature-navigation-simplific.jitpro-website.pages.dev`). | 2026-09-12 | Jeff Kaufman. The PR description records the project state and is kept accurate as sprints complete. |
+| G-8 | Which Supabase project(s) may website work use? | (a) A website staging project plus production. (b) `jitpro_website` only. | None; decided by Jeff after the `jitpro-staging` inspection. | **DECIDED: (b).** **The JiTpro marketing website uses `jitpro_website` as its only Supabase project. JiTpro product-application Supabase projects are separate infrastructure and must not be used for website development, testing, migrations, functions, or storage.** No website staging project is created; `jitpro-staging` and `jitpro-sandbox` are not used, inspected, or modified unless Jeff explicitly asks. The 2026-09-13 inspection is retained as the evidence that `jitpro-staging` belongs to the product application. | 2026-09-14 | Jeff Kaufman. Deliberate simplification: website changes are infrequent and a second project's cost, configuration, syncing, and promotion workflow is not wanted. Safeguards in Section 15.2. |
 
 ### Round 1: Visitor experience
 
@@ -869,7 +896,7 @@ Status values: **OPEN** (needs Jeff), **RECOMMENDED** (recommendation made, awai
 | D5.8 | Test framework | (a) Vitest; (b) none; (c) Deno test | (a) | **DECIDED: (a) Vitest 5** on Vite 8; `npm test` in CI before build; pure-logic tests for the list in Section 14.1; no jsdom unless genuinely required; no abstraction solely for testability. | 2026-09-12 | Jeff Kaufman |
 | D5.9 | Server platform | Supabase Edge Functions vs Cloudflare Pages Functions | Supabase | **CONFIRMED: Supabase Edge Functions.** No Cloudflare Pages Functions for this workflow. | 2026-09-12 | Jeff Kaufman |
 | D5.10 | SEO and indexing | | noindex the PDF; index `/field-guide` | **DECIDED.** `X-Robots-Tag: noindex` on the actual PDF via `_headers`; `/field-guide` indexable with its own title and meta description; no `robots.txt` or sitemap work unless later approved. | 2026-09-12 | Jeff Kaufman |
-| D5.11 | Backend test environment | (a) production with test mode; (b) `jitpro-staging` first | (b) if available | **DECIDED: (b), subject to verification.** `jitpro-staging` is inspected per Section 15.2 before any change (schemas, tables, functions, dependants, migration safety, existing secrets). Never reset or destructively modified. If safe: staging secrets (L-13), preview environment pointed at staging (L-14), production promoted only after staging passes. | 2026-09-12 | Jeff Kaufman |
+| D5.11 | Backend test environment | (a) production with test mode; (b) `jitpro-staging` first | (b) if available | **AMENDED 2026-09-14: `jitpro_website` only, with single-project safeguards (G-8).** Backend work is additive and isolated on `jitpro_website`; read-only inspection before any migration; each migration and function applied only after Jeff approves the exact change set; `LEAD_MAGNET_TEST_MODE` and identifiable test data replace staging promotion; the draft PR's Cloudflare preview for frontend verification; production CTA inactive until the backend is verified; no destructive operation ever. Full rules in Section 15.2. *(Original 2026-09-12 decision: (b), `jitpro-staging` first subject to inspection, with staging secrets, a preview pointed at staging, and promotion to production. Superseded; the inspection found `jitpro-staging` to be the product application's database.)* | 2026-09-12, amended 2026-09-14 | Jeff Kaufman |
 | D5.12 | External configuration governance | | | **DECIDED.** No account or dashboard change requiring Jeff's approval or credentials is performed silently. The assistant states what is needed and guides Jeff through it when the step is reached (L-5, L-9 to L-14). | 2026-09-12 | Jeff Kaufman |
 
 ### Round 6: Final UX, content, and Design System amendments
@@ -896,9 +923,9 @@ Status values: **OPEN** (needs Jeff), **RECOMMENDED** (recommendation made, awai
 
 ## 21. Open questions (require Jeff)
 
-**One infrastructure decision is open: the Sprint 2 integration-test target (item 1).** All six decision rounds are recorded in Section 20. Everything else is external to the repository and is consolidated in Section 28:
+**The Sprint 2 integration-test target is decided** (G-8, D5.11 as amended 2026-09-14: `jitpro_website` only). All six decision rounds are recorded in Section 20. Everything else is external to the repository and is consolidated in Section 28:
 
-1. **Sprint 2 integration-test target** (opened 2026-09-13 after the `jitpro-staging` inspection; report under Sprint 2 in §22). Options: (a) inspect `jitpro-sandbox` (ref `bfafwzdhaziioiycxtes`) read-only under §15.2 and adopt it if empty, recording a D5.11 amendment; (b) create a new website-only Supabase project; (c) use `jitpro-staging` additively with the guardrails listed in the report; (d) D5.11 fallback, production with `LEAD_MAGNET_TEST_MODE`. **Recommendation: (a), then (b) if the sandbox is not clean.** Nothing on any staging project changes until Jeff decides.
+1. **Testing cases that shared secrets make unsafe on a single project** (raised 2026-09-14 by the G-8 amendment; decided with the Sprint 2 and Sprint 3 function change sets, not before). `TURNSTILE_SECRET_KEY` and `RESEND_API_KEY` are shared with the live contact-form functions, so they cannot be swapped for a Cloudflare always-pass test key or an invalid Resend key to exercise the valid-`curl`, simulated-persistence-failure, and email-failure cases. The options (for example a real browser token from the preview, or a test-only override honoured only while `LEAD_MAGNET_TEST_MODE` is set and removed at go-live) are presented to Jeff with the function proposal. Nothing is changed until he chooses.
 2. The approved 31-page PDF file (L-8).
 3. JiTpro's business mailing address (L-2).
 4. Legal review of the consent wording, fine print, privacy notice, and email classification (L-3); it can run in parallel with implementation and must complete before production launch.
@@ -985,21 +1012,21 @@ Organised by working capability. The persistence API is built **before** the vis
 - **Definition of done:** preview verified; plan updated.
 - **Commit boundaries:** (1) asset, redirect, headers, test in one commit (they are one working capability).
 
-### Sprint 2: Lead persistence and attribution (API, on staging)
+### Sprint 2: Lead persistence and attribution (API, on `jitpro_website` in test mode)
 
 - **Objective:** a valid request is safely recorded with approved attribution; abuse controls work; the function fails open.
-- **Scope:** read-only staging inspection (Section 15.2) and report; staging secrets (L-13) with Jeff's approval; migrations for `contacts`, `lead_magnet_requests`, `lead_magnet_ip_activity`; `submit-lead-magnet-request` with validation, server honeypot, Turnstile verification, 10-per-10-minute IP rate limit (single constant), contact upsert, repeat detection, one-hour cooldown decision, consent recording, **fail-open response shape** (`stored`, `email_status`, `guide_url`, `request_id`), persistence-failure recovery alert (Section 7.2.1), masked logging; shared pure modules; `curl`-level verification against **staging**. The existing `leads` table and `submit-contact` function are not touched.
-- **Out of scope:** email sending (Sprint 3, though the function's send step is stubbed to return `skipped` so the response shape is complete), UI, any change to the contact-form pipeline, production deployment (Sprint 6).
-- **Dependencies:** Sprint 1a; D5.11 inspection outcome (L-12); L-13.
-- **Tasks:** inspect staging and report; migrations; shared modules; function; `curl` script documented in the repo; tests.
-- **Acceptance criteria:** documented `curl` cases (valid, malformed, honeypot, repeat inside and outside the hour, rate-limited, bad or missing Turnstile, simulated persistence failure) behave per Section 13.3 against staging; rows appear with attribution and consent fields; `lead_magnet_ip_activity` rows expire; the recovery alert arrives at a JiTpro mailbox with the full email.
-- **Tests:** Vitest on validation, normalisation, attribution parsing, consent decisions, cooldown, rate limit, failure-state mapping, payload validation; manual function tests on staging.
-- **Risks:** staging unsuitable (fallback decided with Jeff per Section 15.2); `db push` needs the database password; Deno-only APIs must stay out of `_shared`.
-- **Decision dependencies:** none outstanding.
-- **Definition of done:** all `curl` cases pass on staging; tests green; plan updated with the staging inspection report.
+- **Scope:** read-only inspection of `jitpro_website` (Section 15.2) and report, **before any migration**; the proposed migration change set presented to Jeff and applied only on his approval; new secrets (L-13) with Jeff's approval; migrations for `contacts`, `lead_magnet_requests`, `lead_magnet_ip_activity`; `submit-lead-magnet-request` with validation, server honeypot, Turnstile verification, 10-per-10-minute IP rate limit (single constant), contact upsert, repeat detection, one-hour cooldown decision, consent recording, **fail-open response shape** (`stored`, `email_status`, `guide_url`, `request_id`), persistence-failure recovery alert (Section 7.2.1), masked logging, `LEAD_MAGNET_TEST_MODE`; shared pure modules; the function proposal (Section 15.2 Edge Function discipline) presented to Jeff and deployed to `jitpro_website` only on his approval; `curl`-level verification against `jitpro_website` **in test mode with identifiable test data**. The existing `leads` table, its webhook, `submit-contact`, `send-contact-notification`, and all existing data are not touched.
+- **Out of scope:** email sending (Sprint 3, though the function's send step is stubbed to return `skipped` so the response shape is complete), UI, any change to the contact-form pipeline, the go-live switch (Sprint 6). There is no staging project and no promotion step (G-8).
+- **Dependencies:** Sprint 1a; L-12 (inspection reported and Sprint 2 change set approved); L-13; §21 item 1 for the cases that shared secrets constrain.
+- **Tasks:** inspect `jitpro_website` and report; propose and, on approval, apply migrations; shared modules; function; propose and, on approval, deploy the function; `curl` script documented in the repo; tests.
+- **Acceptance criteria:** documented `curl` cases (valid, malformed, honeypot, repeat inside and outside the hour, rate-limited, bad or missing Turnstile, simulated persistence failure by the method Jeff approves under §21 item 1) behave per Section 13.3 against `jitpro_website` in test mode; rows appear with attribution and consent fields and are identifiable as test data; `lead_magnet_ip_activity` rows expire; the recovery alert arrives at a JiTpro mailbox with the full email; the existing contact form still submits and `leads` and its webhook are unaffected.
+- **Tests:** Vitest on validation, normalisation, attribution parsing, consent decisions, cooldown, rate limit, failure-state mapping, payload validation; manual function tests on `jitpro_website` in test mode.
+- **Risks:** remote migration history differing from the repository (the inspection decides the apply method; history is never repaired or rewritten); `db push` needs the database password; a test case needing a shared secret changed (not done; §21 item 1); Deno-only APIs must stay out of `_shared`.
+- **Decision dependencies:** Jeff's approval of the migration change set and of the function change set.
+- **Definition of done:** all `curl` cases pass on `jitpro_website` in test mode; existing contact form verified unaffected; tests green; plan updated with the inspection report.
 - **Commit boundaries:** (1) migrations; (2) shared modules with tests; (3) edge function and `curl` script.
 
-**Staging inspection report (2026-09-13, read-only; Sprint 2 paused here pending Jeff's target decision).**
+**Staging inspection report (2026-09-13, read-only). Historical record: superseded by G-8 on 2026-09-14.** Retained because it established that `jitpro-staging` is the product application's database and must not be involved in website work. Its recommendation (a website-dedicated project or `jitpro-sandbox`) was not adopted; Jeff chose `jitpro_website` as the only website project.
 
 | Item | Finding |
 |---|---|
@@ -1013,16 +1040,16 @@ Organised by working capability. The persistence API is built **before** the vis
 | Migration safety | The new tables collide with nothing, but **`supabase db push` from this repository is not safe against `jitpro-staging`**: the remote history holds two versions absent locally and lacks the three local versions, so the CLI would refuse and suggest `supabase migration repair`, which rewrites staging's history and must never be run; a forced push would also create `demo_requests` there as a side effect. Migrations could only be applied additively as explicit SQL files (`supabase db query --linked --project-ref <ref> -f <file>`), bypassing history. |
 | Suitable for integration testing? | **Usable additively, but not recommended as-is.** A generic `contacts` table would sit beside the product application's `people` and `organizations` tables and invites a future collision with its migrations; cleanup afterwards would be a destructive change on another codebase's environment; and the normal migration workflow cannot be rehearsed there, which weakens the staging-before-production rehearsal. |
 | Recommendation | Do not use `jitpro-staging` through `db push`. Prefer a website-dedicated project: (a) inspect `jitpro-sandbox` (ref `bfafwzdhaziioiycxtes`, created 2026-04-06, active, us-west-2, not yet inspected) read-only under §15.2 and adopt it if empty, recording a D5.11 amendment; or (b) create a new website-only project (Jeff's dashboard action). If Jeff prefers `jitpro-staging`, proceed additively with guardrails: explicit SQL files, `functions deploy` and `secrets set` only with an explicit `--project-ref`, never `link`, `db push`, or `migration repair`, and an approved cleanup after Sprint 6. Fallback remains D5.11 option (a), production with `LEAD_MAGNET_TEST_MODE`. |
-| Status | Report delivered to Jeff 2026-09-13. **No staging change made. Sprint 2 implementation not started.** Waiting on Jeff's target decision (§21 item 1, L-12). |
+| Status | Report delivered to Jeff 2026-09-13. **No staging change made.** Closed 2026-09-14 by G-8: `jitpro-staging` is not used. |
 
-### Sprint 3: Email fulfilment (on staging)
+### Sprint 3: Email fulfilment (on `jitpro_website` in test mode)
 
 - **Objective:** a successful request reliably produces the approved guide email and the internal notification.
 - **Scope:** HTML and plain-text templates per Section 25.7 with the footer line and the mailing-address placeholder; stable link; From `JiTpro <info@jit-pro.com>` with explicit Reply-To; tags `asset` and `environment`; `Idempotency-Key` from the request id; synchronous send with one retry; one-hour cooldown enforcement; `sent`, `skipped_cooldown`, `failed`, `suppressed` recorded on the row; internal notification per Section 25.8 From `JiTpro Notifications <noreply@mail.jit-pro.com>`; `LEAD_MAGNET_TEST_MODE` recipient restriction; failure logging.
 - **Out of scope:** nurture, unsubscribe endpoint, Resend webhook receiver (F-7).
 - **Dependencies:** Sprint 2; the mailing address (L-2) for the final footer, otherwise a clearly marked placeholder that a test asserts is replaced before production.
 - **Tasks:** templates; send module; notification module; test mode; tests; delivery verification.
-- **Acceptance criteria:** Section 14.4 checks pass against Resend test recipients and a JiTpro-owned mailbox (sender, Reply-To, subject, preheader, body, button link, footer, plain-text part, mobile and desktop rendering); cooldown verified; `suppressed@resend.dev` path recorded as suppressed; failure path verified with an invalid key on staging; test mode refuses an outside recipient; internal notification arrives with the approved fields and no IP data.
+- **Acceptance criteria:** Section 14.4 checks pass against Resend test recipients and a JiTpro-owned mailbox (sender, Reply-To, subject, preheader, body, button link, footer, plain-text part, mobile and desktop rendering); cooldown verified; `suppressed@resend.dev` path recorded as suppressed; failure path verified without changing the shared `RESEND_API_KEY`, by the method Jeff approves under §21 item 1; test mode refuses an outside recipient; any change to the deployed function is re-proposed to Jeff before redeploying (Section 15.2); internal notification arrives with the approved fields and no IP data.
 - **Tests:** template rendering (subject, link, footer, escaping, text part, placeholder guard); cooldown decision; notification formatting.
 - **Risks:** spam placement in a real mailbox (DNS already correct); mailing address still open.
 - **Decision dependencies:** none outstanding.
@@ -1034,7 +1061,7 @@ Organised by working capability. The persistence API is built **before** the vis
 - **Objective:** a visitor can encounter a CTA, enter an email, submit, and receive the correct outcome state, on desktop, tablet, and mobile, accessibly.
 - **Scope:** `LeadMagnetCTA` (band and footer-link variants), `LeadMagnetDialog` (lazy-loaded native `<dialog>` per A1), `LeadCaptureForm` with every state in Sections 13.2 and 25.6 including the unchecked checkbox, Turnstile interaction-only with expired-token handling, fine print linking `/privacy`, honeypot; `useAttribution` (`sessionStorage`); API client; the `/field-guide` landing page per Section 25.4 with its title and meta description; funnel event calls present but pointed at a no-op until Sprint 6; a single development placement for QA.
 - **Out of scope:** the production placements (Sprint 5), live analytics (Sprint 6).
-- **Dependencies:** Sprints 1a, 2, 3 (staging backend); Sprint 1b for the real PDF behind the route during QA; Cloudflare preview-environment variables pointed at staging (L-14) and Turnstile preview hostnames (L-5) for a full preview test.
+- **Dependencies:** Sprints 1a, 2, 3 (backend verified on `jitpro_website` in test mode); Sprint 1b for the real PDF behind the route during QA; the draft PR #52 preview confirmed to reference `jitpro_website` with test mode on (L-14) and Turnstile preview hostnames (L-5) for a full preview test.
 - **Tasks:** components; states; attribution; landing page; accessibility pass; responsive pass; reduced-motion verification; failure-path QA.
 - **Acceptance criteria:** Section 14.3 desktop, mobile (360, 390, 430), tablet (768, 1024), and accessibility checklists pass with screenshots recorded; every row of Section 13.3 produces the correct visitor state; keyboard-only completion; screen-reader announcement of errors and outcome headings; no horizontal overflow; Turnstile invisible in the normal path.
 - **Tests:** form reducer and failure-state mapping tests; browser QA with the Chrome tools and headless screenshots; reduced-motion verification per the recorded tooling note.
@@ -1059,11 +1086,11 @@ Organised by working capability. The persistence API is built **before** the vis
 
 ### Sprint 6: Analytics, QA, and production readiness
 
-- **Objective:** the complete funnel is measurable, verified, and promoted to production.
-- **Scope:** `lead_magnet_events` migration and `record-lead-magnet-event` function on staging, then production; `funnel.ts` wired to the seven events with impression deduplication; the eight saved queries under `supabase/queries/`; full regression; accessibility audit; email re-verification; **promotion of migrations and both functions to production** (L-6, L-7) after staging passes; production `curl` check with a JiTpro-owned address; Cloudflare Web Analytics enablement (L-9); Pulsetic monitor (L-11); PR opened with the Section 15 summary; production smoke test after merge; results recorded.
+- **Objective:** the complete funnel is measurable, verified, and live for visitors.
+- **Scope:** `lead_magnet_events` migration and `record-lead-magnet-event` function on `jitpro_website`, each after a fresh read-only inspection and Jeff's approval of the exact change set (Section 15.2), verified in test mode; `funnel.ts` wired to the seven events with impression deduplication; the eight saved queries under `supabase/queries/`; full regression; accessibility audit; email re-verification; **go-live switch** (L-6, L-7): test mode and any test-only override removed with Jeff's approval, production-mode `curl` check with a JiTpro-owned address, approved targeted cleanup of test rows if Jeff wants it; Cloudflare Web Analytics enablement (L-9); Pulsetic monitor (L-11); draft PR #52 marked ready with the Section 15 summary; production smoke test after merge; results recorded. No staging-to-production promotion (G-8).
 - **Out of scope:** any nurture prerequisite (Section 21.2), Resend webhook, report page.
 - **Dependencies:** Sprints 1 to 5; launch checklist L-1 to L-14 complete, including legal review (L-3) before merge to production.
-- **Tasks:** events; queries; audits; promotion; PR; smoke test; documentation.
+- **Tasks:** events; queries; audits; go-live switch; PR; smoke test; documentation.
 - **Acceptance criteria:** the brief's Section 38 review passes in full (functional, visual, accessibility, email, analytics, data, security, regression, CI); events appear once per action with no StrictMode duplication in the production build; queries return sensible results; all launch items checked; Jeff authorises the merge.
 - **Tests:** everything in Section 14; production smoke test per Section 15 step 6.
 - **Risks:** an external prerequisite still open at merge time (the PR waits); event duplication in development only.
@@ -1279,13 +1306,13 @@ Consolidated from the launch checklist (Section 15.1) so nothing is hidden insid
 | L-3 | Legal review: consent checkbox wording, fine print, privacy notice (Section 27), fulfilment-email classification and footer, the no-cookie analytics assumptions | Jeff / counsel | Before the production merge (Sprint 6) | Production launch |
 | L-1 | `info@jit-pro.com` mailbox confirmed monitored and receiving external mail | Jeff | Sprint 3 verification | Production launch |
 | L-4 | Resend dashboard confirms `jit-pro.com` and `mail.jit-pro.com` verified (DNS already positive) | Jeff, or assistant with dashboard access | Sprint 3 | Production launch |
-| L-12 | `jitpro-staging` read-only inspection (done 2026-09-13; report under Sprint 2 in §22) and Jeff's decision on the integration-test target (§21 item 1) | Assistant inspected; Jeff decides | Start of Sprint 2 | Sprint 2 |
-| L-13 | Staging secrets set (`RESEND_API_KEY`, `TURNSTILE_SECRET_KEY`, `LEAD_MAGNET_IP_SALT`, `LEAD_MAGNET_TEST_MODE`, `SITE_URL`, any other required existing secret) | Assistant via CLI with Jeff's approval | Sprint 2 | Sprint 2 function tests |
+| L-12 | `jitpro_website` read-only inspection reported and the Sprint 2 change set approved (Section 15.2) | Assistant inspects; Jeff approves | Start of Sprint 2 | Any migration or function deployment |
+| L-13 | New lead-magnet secrets set on `jitpro_website` (`LEAD_MAGNET_IP_SALT`, `LEAD_MAGNET_TEST_MODE` for testing, optional `LEAD_MAGNET_NOTIFY_TO`); shared existing secrets unchanged | Assistant via CLI with Jeff's approval | Sprint 2 | Sprint 2 function tests |
 | L-5 | Turnstile widget allowed hostnames extended to the Cloudflare preview URLs | Jeff / admin (Cloudflare dashboard) | Sprint 4 preview QA | Full submit test on previews (fallback: production smoke test) |
-| L-14 | Cloudflare Pages preview-environment variables pointed at staging (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) | Jeff / admin | Sprint 4 preview QA | Same |
+| L-14 | Cloudflare Pages preview environment confirmed to reference `jitpro_website` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`); Jeff acknowledges preview submissions write to the live website project in test mode | Jeff / admin | Sprint 4 preview QA | Same |
 | L-10 | Supabase production plan confirmed; actual function-log retention recorded here | Jeff / assistant with dashboard access | Sprint 6 | Observability record only |
-| L-6 | Production secrets set (`LEAD_MAGNET_IP_SALT`, optional `LEAD_MAGNET_NOTIFY_TO`; no test mode) | Assistant via CLI with Jeff's approval | Sprint 6 promotion | Production backend |
-| L-7 | Migrations applied and both functions deployed to production after staging passes | Assistant via CLI with Jeff's approval | Sprint 6, before the frontend merge | Production launch |
+| L-6 | Go-live switch: `LEAD_MAGNET_TEST_MODE` and any test-only override removed from `jitpro_website`; production-mode `curl` passes | Assistant via CLI with Jeff's approval | Sprint 6, before the frontend merge | Production launch |
+| L-7 | All lead-magnet migrations and both new functions live on `jitpro_website`, each approved by Jeff and verified in test mode | Assistant via CLI with Jeff's approval | Sprint 6, before the frontend merge | Production launch |
 | L-9 | Cloudflare Web Analytics enabled on the Pages project (Metrics → Enable) | Jeff / admin | Sprint 6 | Page-view reporting only |
 | L-11 | Pulsetic HTTP monitor for `https://jit-pro.com/guides/procurement-field-guide` following the redirect | Jeff | After the production merge | Monitoring only |
 
@@ -1306,3 +1333,4 @@ Consolidated from the launch checklist (Section 15.1) so nothing is hidden insid
 | 2026-09-12 | Round 6 decided by Jeff: approved copy for every surface with his edits (§25); visitor-facing failure language simplified to three access-granting states (§13.2, D6.10); no secondary sales CTA in success (D6.11); opt-in line kept in the internal notification (D6.12); full email in the recovery alert (D6.13); footer additions only (D6.15); Design System amendments A1 to A10 approved with implementation text (§26); complete privacy notice drafted (§27, subject to legal review); sprint plan finalised with Sprint 1 split into 1a and 1b, implementation order, acceptance criteria, and commit boundaries (§22); external prerequisites consolidated (§28); §21 reduced to external items and the Sprint 1 go-ahead; G-4 closed into L-5. **Sprint 0 complete. Implementation awaits Jeff's explicit authorisation.** |
 | 2026-09-13 | Jeff decided G-6 (keep `fbd6c0d`) and G-7 (open the draft PR now). Draft PR #52 opened; `build-and-test` passed on its first run and Cloudflare Pages previews build on every push; Sprint 1a acceptance row updated to CI-verified. Read-only `jitpro-staging` inspection performed per §15.2 and recorded under Sprint 2 in §22: the project holds the product application's schema, no name collisions, `db push` unsafe because of a foreign migration history; recommendation is a website-dedicated project, starting with a read-only look at `jitpro-sandbox`. L-12 marked inspected, not confirmed; §21 item 1 replaced with the target decision. No staging change made; Sprint 2 paused. |
 | 2026-09-14 | Dependency governance: CLAUDE.md gains "Dependencies: report only, never correct" (commit `0c59e50`). Dependabot alone changes existing dependencies; Claude reports and stops; a genuinely new dependency for an explicitly approved task must be called out in the implementation report. §22 git expectations and G-6 updated to match. This break-point record added so work resumes cleanly from another machine. |
+| 2026-09-14 | **Single-project infrastructure amendment (Jeff).** G-8 added: `jitpro_website` is the website's only Supabase project; product-application projects (`jitpro-staging`, `jitpro-sandbox`, others) are separate infrastructure and are not used. No website staging project. D5.11 amended; §4.3 governance note and boundary; §4.5 and §14.4 test-mode wording; §4.8 apply methods (no reset or migration repair; functions deployed by explicit name); §14.2 testing on `jitpro_website`; §15 steps rewritten with no promotion step and a go-live switch; §15.2 replaced by single-project safeguards (migration discipline, Edge Function discipline, email, database, and frontend test safety); §16 test-mode row; L-6, L-7, L-12 to L-14 revised in §15.1 and §28; §21 item 1 replaced by the shared-secret testing question; Sprints 2, 3, 4, 6 revised; staging inspection report kept as a historical record. No other decision changed. |
