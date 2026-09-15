@@ -104,6 +104,26 @@ It passes only when all of these hold:
 
 The email arriving in the `info@jit-pro.com` inbox is confirmed separately by Jeff.
 
+## Sprint 3 fulfilment run (single controlled run)
+
+Sprint 3 adds the visitor's guide email and the internal notification. Verify it with the nine requests below rather than the 19-case suite, using a new run id. Each request creates rows and consumes Resend quota, so run it once.
+
+Addresses are `delivered+lm-s3-<run-id>-<letter>@resend.dev` unless stated. Every request carries `utm_source=lm-test-script`, `utm_campaign=lm-test`, `utm_content=<run-id>`, `placement=landing-page`.
+
+| # | Request | Expected |
+|---|---|---|
+| 1 | New address `-a` | 200, `email_status: "sent"`; guide email arrives at Resend; notification to info@ shows `Fulfilment email: sent` |
+| 2 | `-a` again, immediately | 200, `skipped_cooldown`; **no** second guide email; notification still sent |
+| 3 | `suppressed@resend.dev` | 200, `suppressed`; contact carries `email_suppressed_at` and reason `provider` |
+| 4 | `complained@resend.dev` | 200, `sent` |
+| 5 | `bounced@resend.dev` | 200, `sent`. Resend accepts and bounces later; mirroring bounces is deferred (F-7) |
+| 6 | `-f` with fault header `email` plus the fault secret | 200, `failed`, guide URL still returned, no guide email sent |
+| 7 | `-g` with fault header `email_suppressed` plus the secret | 200, `suppressed` |
+| 8 | `-h` with the fault header but **no** secret | 200, `sent`: the gate holds |
+| 9 | `info@jit-pro.com` | 200, `sent`. Jeff checks the real message: sender, Reply-To, subject, preheader, body, button, link, signature, the two footer lines, and the plain-text part, on desktop and mobile |
+
+Expected footprint: about **6 contacts**, **8 requests** (case 2 is a repeat of `-a`), **8 IP-activity rows**, and roughly **12 Resend sends** (guide emails plus one notification per valid request). Verify with the read-only queries above plus `email_status`, `email_provider_id`, and `email_error`. Cleanup is proposed separately and never run automatically.
+
 ## Cleanup (never automatic)
 
 Test rows are removed only after Jeff approves the exact statements (plan decision S2-9). Never `TRUNCATE`. `lead_magnet_ip_activity` rows are not deleted by hand; they expire through the function's 24-hour retention.

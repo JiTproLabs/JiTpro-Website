@@ -1221,6 +1221,18 @@ Where it lives: the handler in `supabase/functions/submit-lead-magnet-request/in
 - **Definition of done:** real test messages verified in a mailbox; plan updated.
 - **Commit boundaries:** (1) templates with tests; (2) send and cooldown logic; (3) internal notification and test mode.
 
+**Implementation record (2026-09-15; code complete, not deployed).**
+
+| Item | Result |
+|---|---|
+| New modules | `fulfilmentEmail.ts` (visitor email, HTML and text, S3-1 footer), `internalNotification.ts` (§25.8, independent), `emailOutcome.ts` (cooldown and suppression planning, Resend failure classification), each with tests. |
+| Changed | `testMode.ts` gains the gated fault vocabulary `persistence` / `email` / `email_suppressed` (`requestedTestFault`); `rows.ts` gains `buildEmailStatusPatch` and `buildContactSuppressionPatch`; `outcome.ts` reports `email_status`; the handler sends the guide email, records the outcome, then sends the notification independently, with one retry on transport or 5xx errors reusing the idempotency key; `recoveryAlert` now shares the same Resend poster and diagnostics. |
+| Reads and writes | Adds `contacts.email_suppressed_at` to the existing lookup, a cooldown lookup of the latest `email_status='sent'` request, a `PATCH` of the request row's email fields, and a `PATCH` of contact suppression only on provider-reported suppression. **No migration, no new column, no other table.** |
+| Not created | No mailing-address module, placeholder, launch guard, or address test (S3-1). |
+| Tests | 179 unit tests across 18 files (was 144), covering the approved copy verbatim in both parts, the two-line footer, the absence of any postal address, unsubscribe link, or sales CTA, escaping, status mapping, cooldown boundaries, suppression, the fault gate, tags, and idempotency keys. The scratchpad simulation grew to 19 scenarios including cooldown, suppression, provider rejection, retry, both email faults, and notification independence. |
+| Local checks | Handler type-checked against the Deno shim; typecheck clean; lint 0 errors (4 pre-existing warnings); build; `audit-ci`; package files unchanged. |
+| Status | Committed and CI-verified; **`submit-lead-magnet-request` v3 not deployed**, and no Sprint 3 test data created. Deployment and the controlled run await Jeff's approval. |
+
 ### Sprint 4: Visitor capture experience
 
 - **Objective:** a visitor can encounter a CTA, enter an email, submit, and receive the correct outcome state, on desktop, tablet, and mobile, accessibly.
