@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  TEST_FAULT_EMAIL,
+  TEST_FAULT_EMAIL_SUPPRESSED,
+  TEST_FAULT_KINDS,
   TEST_FAULT_PERSISTENCE,
   TEST_FAULT_SECRET_MIN_LENGTH,
-  isPersistenceFaultRequested,
   isTestModeEnabled,
   isTestModeRecipientAllowed,
+  requestedTestFault,
   resolveTurnstileSecret,
 } from './testMode.ts';
 
@@ -68,39 +71,50 @@ describe('resolveTurnstileSecret (Decision 1A)', () => {
   });
 });
 
-describe('isPersistenceFaultRequested (Decision 1B)', () => {
+describe('requestedTestFault (Decision 1B and the S3 email faults)', () => {
   const valid = {
     testMode: true,
-    faultHeader: TEST_FAULT_PERSISTENCE,
-    providedSecret: FAULT_SECRET,
-    configuredSecret: FAULT_SECRET,
+    faultHeader: TEST_FAULT_PERSISTENCE as string | null,
+    providedSecret: FAULT_SECRET as string | null,
+    configuredSecret: FAULT_SECRET as string | undefined,
   };
 
-  it('activates only with test mode, the fault header, and a matching secret', async () => {
-    expect(await isPersistenceFaultRequested(valid)).toBe(true);
+  it('offers exactly the three approved faults', () => {
+    expect([...TEST_FAULT_KINDS]).toEqual(['persistence', 'email', 'email_suppressed']);
   });
 
+  it.each([TEST_FAULT_PERSISTENCE, TEST_FAULT_EMAIL, TEST_FAULT_EMAIL_SUPPRESSED])(
+    'activates %s with test mode, the header, and a matching secret',
+    async (kind) => {
+      expect(await requestedTestFault({ ...valid, faultHeader: kind })).toBe(kind);
+    },
+  );
+
   it('never activates outside test mode', async () => {
-    expect(await isPersistenceFaultRequested({ ...valid, testMode: false })).toBe(false);
+    for (const kind of TEST_FAULT_KINDS) {
+      expect(await requestedTestFault({ ...valid, testMode: false, faultHeader: kind })).toBeNull();
+    }
   });
 
   it('never activates from the fault header alone', async () => {
-    expect(await isPersistenceFaultRequested({ ...valid, providedSecret: null })).toBe(false);
+    expect(await requestedTestFault({ ...valid, providedSecret: null })).toBeNull();
+    expect(await requestedTestFault({ ...valid, faultHeader: TEST_FAULT_EMAIL, providedSecret: null })).toBeNull();
   });
 
   it('never activates with a wrong secret', async () => {
-    expect(await isPersistenceFaultRequested({ ...valid, providedSecret: 'g'.repeat(32) })).toBe(false);
-    expect(await isPersistenceFaultRequested({ ...valid, providedSecret: `${FAULT_SECRET}x` })).toBe(false);
+    expect(await requestedTestFault({ ...valid, providedSecret: 'g'.repeat(32) })).toBeNull();
+    expect(await requestedTestFault({ ...valid, providedSecret: `${FAULT_SECRET}x` })).toBeNull();
   });
 
-  it('never activates without the fault header or with another fault name', async () => {
-    expect(await isPersistenceFaultRequested({ ...valid, faultHeader: null })).toBe(false);
-    expect(await isPersistenceFaultRequested({ ...valid, faultHeader: 'email' })).toBe(false);
+  it('never activates without a known fault name', async () => {
+    expect(await requestedTestFault({ ...valid, faultHeader: null })).toBeNull();
+    expect(await requestedTestFault({ ...valid, faultHeader: 'database' })).toBeNull();
+    expect(await requestedTestFault({ ...valid, faultHeader: 'EMAIL' })).toBeNull();
   });
 
   it('never activates when no secret, or a too-short secret, is configured', async () => {
-    expect(await isPersistenceFaultRequested({ ...valid, configuredSecret: undefined })).toBe(false);
+    expect(await requestedTestFault({ ...valid, configuredSecret: undefined })).toBeNull();
     const short = 's'.repeat(TEST_FAULT_SECRET_MIN_LENGTH - 1);
-    expect(await isPersistenceFaultRequested({ ...valid, configuredSecret: short, providedSecret: short })).toBe(false);
+    expect(await requestedTestFault({ ...valid, configuredSecret: short, providedSecret: short })).toBeNull();
   });
 });

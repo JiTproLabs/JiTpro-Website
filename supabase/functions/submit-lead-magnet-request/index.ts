@@ -16,11 +16,19 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 import { isConsentStatus } from "../_shared/lead-magnet/consent.ts";
 import { corsHeadersFor, isAllowedOrigin } from "../_shared/lead-magnet/cors.ts";
+import { classifyResendFailure, planFulfilment, shouldRecordContactSuppression } from "../_shared/lead-magnet/emailOutcome.ts";
+import {
+  LEAD_MAGNET_FULFILMENT_FROM,
+  LEAD_MAGNET_REPLY_TO,
+  renderFulfilmentEmail,
+} from "../_shared/lead-magnet/fulfilmentEmail.ts";
+import { renderInternalNotification } from "../_shared/lead-magnet/internalNotification.ts";
 import { maskEmail, summariseError } from "../_shared/lead-magnet/logging.ts";
 import {
   acceptedResponse,
   errorResponse,
   guideUrlFor,
+  type FulfilmentEmailStatus,
   type LeadMagnetResponse,
 } from "../_shared/lead-magnet/outcome.ts";
 import {
@@ -38,15 +46,29 @@ import {
   renderRecoveryAlert,
 } from "../_shared/lead-magnet/recoveryAlert.ts";
 import { parseLeadMagnetRequest, type LeadMagnetRequestInput } from "../_shared/lead-magnet/request.ts";
-import { describeFetchFailure, describeResendResponse } from "../_shared/lead-magnet/resendDiagnostics.ts";
-import { buildExistingContactUpdate, buildNewContactRow, buildRequestRow } from "../_shared/lead-magnet/rows.ts";
 import {
+  describeFetchFailure,
+  describeResendResponse,
+  sanitiseDiagnosticText,
+} from "../_shared/lead-magnet/resendDiagnostics.ts";
+import {
+  buildContactSuppressionPatch,
+  buildEmailStatusPatch,
+  buildExistingContactUpdate,
+  buildNewContactRow,
+  buildRequestRow,
+} from "../_shared/lead-magnet/rows.ts";
+import {
+  TEST_FAULT_EMAIL,
+  TEST_FAULT_EMAIL_SUPPRESSED,
   TEST_FAULT_HEADER,
+  TEST_FAULT_PERSISTENCE,
   TEST_FAULT_SECRET_HEADER,
-  isPersistenceFaultRequested,
   isTestModeEnabled,
   isTestModeRecipientAllowed,
+  requestedTestFault,
   resolveTurnstileSecret,
+  type TestFaultKind,
 } from "../_shared/lead-magnet/testMode.ts";
 
 const FUNCTION_NAME = "submit-lead-magnet-request";
@@ -98,6 +120,8 @@ Deno.serve(async (req: Request) => {
   let verified = false;
   let stored = false;
   let recoveryAlertAttempted = false;
+  let persisted: PersistResult | null = null;
+  let emailStatus: FulfilmentEmailStatus | null = null;
 
   try {
     let body: unknown;
@@ -147,15 +171,15 @@ Deno.serve(async (req: Request) => {
       return send(errorResponse("rate_limited", requestId, guideUrl));
     }
 
-    const simulateFailure = await persistenceFaultRequested(req, testMode, logger);
+    const fault = await testFault(req, testMode, logger);
 
     try {
-      if (simulateFailure) {
+      if (fault === TEST_FAULT_PERSISTENCE) {
         throw new PersistenceError("simulated persistence failure (test mode)");
       }
-      const result = await persistRequest(input, requestId);
+      persisted = await persistRequest(input, requestId);
       stored = true;
-      logger.info("stored", { contactCreated: result.contactCreated, isRepeat: result.isRepeat });
+      logger.info("stored", { contactCreated: persisted.contactCreated, isRepeat: persisted.isRepeat });
     } catch (error) {
       const summary = summariseError(error);
       logger.error("persistence failed; granting access and sending recovery alert", { error: summary });
@@ -163,7 +187,13 @@ Deno.serve(async (req: Request) => {
       await sendRecoveryAlert(input, requestId, summary, environment, logger);
     }
 
-    return send(acceptedResponse(requestId, guideUrl, stored));
+    // The email step never gates guide access (D5.6): its outcome is recorded
+    // and reported honestly, and a failure here still returns the guide.
+    if (persisted) {
+      emailStatus = await fulfilAndNotify(input, requestId, persisted, fault, environment, logger);
+    }
+
+    return send(acceptedResponse(requestId, guideUrl, stored, emailStatus));
   } catch (error) {
     const summary = summariseError(error);
     logger.error("unexpected error", { error: summary });
@@ -211,21 +241,21 @@ async function verifyTurnstile(token: string | null, testMode: boolean, logger: 
   }
 }
 
-/** Decision 1B. Any error evaluating the hook means no simulated failure. */
-async function persistenceFaultRequested(req: Request, testMode: boolean, logger: Logger): Promise<boolean> {
-  if (!testMode) return false;
+/** Decision 1B and the S3 email faults. Any error evaluating the hook means no fault. */
+async function testFault(req: Request, testMode: boolean, logger: Logger): Promise<TestFaultKind | null> {
+  if (!testMode) return null;
   try {
-    const requested = await isPersistenceFaultRequested({
+    const requested = await requestedTestFault({
       testMode,
       faultHeader: req.headers.get(TEST_FAULT_HEADER),
       providedSecret: req.headers.get(TEST_FAULT_SECRET_HEADER),
       configuredSecret: Deno.env.get("LEAD_MAGNET_TEST_FAULT_SECRET"),
     });
-    if (requested) logger.info("test mode: simulated persistence failure requested");
+    if (requested) logger.info("test mode: simulated fault requested", { fault: requested });
     return requested;
   } catch (error) {
     logger.error("test fault check failed; continuing normally", { error: summariseError(error) });
-    return false;
+    return null;
   }
 }
 
@@ -330,10 +360,17 @@ async function deleteExpiredIpActivity(now: Date, logger: Logger): Promise<void>
   }
 }
 
-async function persistRequest(
-  input: LeadMagnetRequestInput,
-  requestId: string,
-): Promise<{ contactCreated: boolean; isRepeat: boolean }> {
+type PersistResult = {
+  contactId: string;
+  contactCreated: boolean;
+  isRepeat: boolean;
+  /** Set when the contact is already known to be undeliverable (D3.6). */
+  contactSuppressedAt: string | null;
+  /** `created_at` of the most recent successfully sent fulfilment email, the cooldown clock (S3). */
+  lastSentAt: Date | null;
+};
+
+async function persistRequest(input: LeadMagnetRequestInput, requestId: string): Promise<PersistResult> {
   const nowIso = new Date().toISOString();
 
   // Insert-if-absent: an existing contact is never overwritten by this insert,
@@ -347,21 +384,27 @@ async function persistRequest(
 
   let contactId: string;
   let contactCreated: boolean;
+  let contactSuppressedAt: string | null = null;
 
   if (inserted.length === 1) {
     contactId = inserted[0].id;
     contactCreated = true;
   } else {
     const lookup = await rest(
-      `contacts?select=id,consent_status&email=eq.${encodeURIComponent(input.email)}&limit=1`,
+      `contacts?select=id,consent_status,email_suppressed_at&email=eq.${encodeURIComponent(input.email)}&limit=1`,
       { method: "GET" },
     );
-    const rows = (await lookup.json()) as Array<{ id: string; consent_status: unknown }>;
+    const rows = (await lookup.json()) as Array<{
+      id: string;
+      consent_status: unknown;
+      email_suppressed_at: string | null;
+    }>;
     if (rows.length !== 1) {
       throw new PersistenceError("GET contacts failed: contact not found after insert");
     }
     contactId = rows[0].id;
     contactCreated = false;
+    contactSuppressedAt = rows[0].email_suppressed_at ?? null;
     const currentStatus = isConsentStatus(rows[0].consent_status) ? rows[0].consent_status : "transactional_only";
     await rest(`contacts?id=eq.${contactId}`, {
       method: "PATCH",
@@ -371,6 +414,7 @@ async function persistRequest(
   }
 
   let isRepeat = false;
+  let lastSentAt: Date | null = null;
   if (!contactCreated) {
     const prior = await rest(
       `lead_magnet_requests?select=id&contact_id=eq.${contactId}` +
@@ -378,6 +422,16 @@ async function persistRequest(
       { method: "GET" },
     );
     isRepeat = ((await prior.json()) as unknown[]).length > 0;
+
+    // The cooldown clock: the most recent request whose fulfilment email was
+    // actually sent. Its `created_at` stands in for the send time (S3).
+    const lastSent = await rest(
+      `lead_magnet_requests?select=created_at&contact_id=eq.${contactId}` +
+        `&email_status=eq.sent&order=created_at.desc&limit=1`,
+      { method: "GET" },
+    );
+    const sentRows = (await lastSent.json()) as Array<{ created_at: string }>;
+    if (sentRows.length === 1) lastSentAt = new Date(sentRows[0].created_at);
   }
 
   await rest("lead_magnet_requests", {
@@ -386,7 +440,230 @@ async function persistRequest(
     prefer: "return=minimal",
   });
 
-  return { contactCreated, isRepeat };
+  return { contactId, contactCreated, isRepeat, contactSuppressedAt, lastSentAt };
+}
+
+type ResendSendResult =
+  | { ok: true; messageId: string | null }
+  | { ok: false; suppressed: boolean; error: string | null; status: number | null };
+
+/**
+ * One Resend send with the approved tags and idempotency key, and a single
+ * retry on a transport error or a 5xx using the same key, so a retry can never
+ * double-send. Logs a marker before each attempt and a sanitised outcome after
+ * (S2-20). Never logs the body, headers, recipient, or any secret.
+ */
+async function postResend(
+  label: "fulfilment" | "internal_notification" | "recovery_alert",
+  payload: Record<string, unknown>,
+  idempotencyKey: string,
+  logger: Logger,
+): Promise<ResendSendResult> {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) {
+    logger.error(`${label} not sent: RESEND_API_KEY not configured`);
+    return { ok: false, suppressed: false, error: "RESEND_API_KEY not configured", status: null };
+  }
+
+  let lastResult: ResendSendResult = { ok: false, suppressed: false, error: "not attempted", status: null };
+
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    const startedAt = Date.now();
+    try {
+      logger.info(`${label}: calling Resend`, { attempt });
+      const response = await fetch(RESEND_EMAILS_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+          "Idempotency-Key": idempotencyKey,
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
+      });
+      const outcome = describeResendResponse(response.status, await response.text().catch(() => ""));
+      const elapsedMs = Date.now() - startedAt;
+
+      if (outcome.ok) {
+        logger.info(`${label} accepted by Resend`, {
+          status: outcome.status,
+          resendMessageId: outcome.messageId,
+          elapsedMs,
+          attempt,
+        });
+        return { ok: true, messageId: outcome.messageId };
+      }
+
+      const suppressed = classifyResendFailure(outcome) === "suppressed";
+      logger.error(`${label} rejected by Resend`, {
+        status: outcome.status,
+        errorName: outcome.errorName,
+        errorMessage: outcome.errorMessage,
+        suppressed,
+        elapsedMs,
+        attempt,
+      });
+      lastResult = {
+        ok: false,
+        suppressed,
+        error: outcome.errorName ?? outcome.errorMessage ?? `HTTP ${outcome.status}`,
+        status: outcome.status,
+      };
+      // Client-side rejections will not change on a retry.
+      if (outcome.status < 500) return lastResult;
+    } catch (error) {
+      const failure = describeFetchFailure(error);
+      logger.error(`${label} failed before a Resend response`, { ...failure, elapsedMs: Date.now() - startedAt, attempt });
+      lastResult = { ok: false, suppressed: false, error: failure.errorType, status: null };
+    }
+  }
+
+  return lastResult;
+}
+
+/**
+ * Sends the visitor's guide email, records the outcome on the request row, and
+ * then sends the internal notification independently: the notification reports
+ * the fulfilment status, but neither send can affect the other or the visitor's
+ * access to the guide (D5.6).
+ */
+async function fulfilAndNotify(
+  input: LeadMagnetRequestInput,
+  requestId: string,
+  persisted: PersistResult,
+  fault: TestFaultKind | null,
+  environment: string,
+  logger: Logger,
+): Promise<FulfilmentEmailStatus> {
+  const now = new Date();
+  const plan = planFulfilment({
+    contactSuppressedAt: persisted.contactSuppressedAt,
+    lastSentAt: persisted.lastSentAt,
+    now,
+  });
+
+  let status: FulfilmentEmailStatus;
+  let providerId: string | null = null;
+  let error: string | null = null;
+
+  if (plan.action === "skip") {
+    status = plan.status;
+    logger.info("fulfilment email not sent", { status });
+  } else if (fault === TEST_FAULT_EMAIL || fault === TEST_FAULT_EMAIL_SUPPRESSED) {
+    status = fault === TEST_FAULT_EMAIL_SUPPRESSED ? "suppressed" : "failed";
+    error = `simulated ${fault} (test mode)`;
+    logger.info("fulfilment email simulated failure (test mode)", { status });
+  } else {
+    const guideUrl = guideUrlFor(input.assetId, Deno.env.get("SITE_URL"));
+    const email = renderFulfilmentEmail({ assetId: input.assetId, guideUrl });
+    const result = await postResend(
+      "fulfilment",
+      {
+        from: LEAD_MAGNET_FULFILMENT_FROM,
+        to: [input.email],
+        reply_to: LEAD_MAGNET_REPLY_TO,
+        subject: email.subject,
+        html: email.html,
+        text: email.text,
+        tags: [
+          { name: "asset", value: input.assetId },
+          { name: "environment", value: environment },
+          { name: "message", value: "fulfilment" },
+        ],
+      },
+      `lead-magnet-fulfilment-${requestId}`,
+      logger,
+    );
+
+    if (result.ok) {
+      status = "sent";
+      providerId = result.messageId;
+    } else {
+      status = result.suppressed ? "suppressed" : "failed";
+      error = result.error;
+    }
+  }
+
+  await recordEmailOutcome(requestId, persisted, status, providerId, error, logger);
+  await sendInternalNotification(input, requestId, persisted, status, environment, logger);
+  return status;
+}
+
+/** Writes the honest outcome to the request row, and suppression to the contact. */
+async function recordEmailOutcome(
+  requestId: string,
+  persisted: PersistResult,
+  status: FulfilmentEmailStatus,
+  providerId: string | null,
+  error: string | null,
+  logger: Logger,
+): Promise<void> {
+  try {
+    await rest(`lead_magnet_requests?id=eq.${requestId}`, {
+      method: "PATCH",
+      body: buildEmailStatusPatch({ status, providerId, error: error ? sanitiseDiagnosticText(error) : null }),
+      prefer: "return=minimal",
+    });
+  } catch (patchError) {
+    logger.error("email status not recorded on the request row", { error: summariseError(patchError) });
+  }
+
+  if (!shouldRecordContactSuppression(status, persisted.contactSuppressedAt)) return;
+
+  try {
+    await rest(`contacts?id=eq.${persisted.contactId}`, {
+      method: "PATCH",
+      body: buildContactSuppressionPatch(new Date().toISOString()),
+      prefer: "return=minimal",
+    });
+    logger.info("contact marked as suppressed");
+  } catch (patchError) {
+    logger.error("contact suppression not recorded", { error: summariseError(patchError) });
+  }
+}
+
+/** §7.2. Independent of the visitor's email; its failure is logged and swallowed. */
+async function sendInternalNotification(
+  input: LeadMagnetRequestInput,
+  requestId: string,
+  persisted: PersistResult,
+  emailStatus: FulfilmentEmailStatus,
+  environment: string,
+  logger: Logger,
+): Promise<void> {
+  const notification = renderInternalNotification({
+    email: input.email,
+    placement: input.placement,
+    pagePath: input.pagePath,
+    landingPath: input.landingPath,
+    utmSource: input.utmSource,
+    utmMedium: input.utmMedium,
+    utmCampaign: input.utmCampaign,
+    referrer: input.referrer,
+    isRepeat: persisted.isRepeat,
+    marketingOptIn: input.marketingOptIn,
+    emailStatus,
+    requestId,
+    timestampIso: new Date().toISOString(),
+  });
+
+  await postResend(
+    "internal_notification",
+    {
+      from: LEAD_MAGNET_NOTIFICATIONS_FROM,
+      to: [LEAD_MAGNET_NOTIFY_TO],
+      subject: notification.subject,
+      html: notification.html,
+      text: notification.text,
+      tags: [
+        { name: "asset", value: input.assetId },
+        { name: "environment", value: environment },
+        { name: "message", value: "internal_notification" },
+      ],
+    },
+    `lead-magnet-notification-${requestId}`,
+    logger,
+  );
 }
 
 /** §7.2.1. A failure to send the alert is logged and never changes the visitor's response. */
@@ -397,12 +674,6 @@ async function sendRecoveryAlert(
   environment: string,
   logger: Logger,
 ): Promise<void> {
-  const apiKey = Deno.env.get("RESEND_API_KEY");
-  if (!apiKey) {
-    logger.error("recovery alert not sent: RESEND_API_KEY not configured");
-    return;
-  }
-
   const alert = renderRecoveryAlert({
     timestampIso: new Date().toISOString(),
     requestId,
@@ -412,51 +683,21 @@ async function sendRecoveryAlert(
     email: input.email,
   });
 
-  const startedAt = Date.now();
-
-  try {
-    logger.info("recovery alert: calling Resend");
-    const response = await fetch(RESEND_EMAILS_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-        "Idempotency-Key": `lead-magnet-recovery-${requestId}`,
-      },
-      body: JSON.stringify({
-        from: LEAD_MAGNET_NOTIFICATIONS_FROM,
-        to: [LEAD_MAGNET_NOTIFY_TO],
-        subject: alert.subject,
-        html: alert.html,
-        text: alert.text,
-        tags: [
-          { name: "asset", value: input.assetId },
-          { name: "environment", value: environment },
-          { name: "message", value: "recovery_alert" },
-        ],
-      }),
-      signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
-    });
-    const outcome = describeResendResponse(response.status, await response.text().catch(() => ""));
-    const elapsedMs = Date.now() - startedAt;
-    if (outcome.ok) {
-      logger.info("recovery alert accepted by Resend", {
-        status: outcome.status,
-        resendMessageId: outcome.messageId,
-        elapsedMs,
-      });
-    } else {
-      logger.error("recovery alert rejected by Resend", {
-        status: outcome.status,
-        errorName: outcome.errorName,
-        errorMessage: outcome.errorMessage,
-        elapsedMs,
-      });
-    }
-  } catch (error) {
-    logger.error("recovery alert failed before a Resend response", {
-      ...describeFetchFailure(error),
-      elapsedMs: Date.now() - startedAt,
-    });
-  }
+  await postResend(
+    "recovery_alert",
+    {
+      from: LEAD_MAGNET_NOTIFICATIONS_FROM,
+      to: [LEAD_MAGNET_NOTIFY_TO],
+      subject: alert.subject,
+      html: alert.html,
+      text: alert.text,
+      tags: [
+        { name: "asset", value: input.assetId },
+        { name: "environment", value: environment },
+        { name: "message", value: "recovery_alert" },
+      ],
+    },
+    `lead-magnet-recovery-${requestId}`,
+    logger,
+  );
 }

@@ -47,25 +47,35 @@ export function resolveTurnstileSecret(options: {
 export const TEST_FAULT_HEADER = 'x-lead-magnet-test-fault';
 export const TEST_FAULT_SECRET_HEADER = 'x-lead-magnet-test-fault-secret';
 export const TEST_FAULT_PERSISTENCE = 'persistence';
+export const TEST_FAULT_EMAIL = 'email';
+export const TEST_FAULT_EMAIL_SUPPRESSED = 'email_suppressed';
+/** The only faults the function will simulate, all test-mode only. */
+export const TEST_FAULT_KINDS = [TEST_FAULT_PERSISTENCE, TEST_FAULT_EMAIL, TEST_FAULT_EMAIL_SUPPRESSED] as const;
+export type TestFaultKind = (typeof TEST_FAULT_KINDS)[number];
 /** A configured fault secret shorter than this disables the hook. */
 export const TEST_FAULT_SECRET_MIN_LENGTH = 32;
 
 /**
- * Decision 1B: a simulated persistence failure requires ALL of test mode, the
- * fault header set to `persistence`, a configured fault secret of adequate
- * length, and a request header matching that secret. The header alone never
- * activates it.
+ * Decisions 1B and S3 email faults: a simulated fault requires ALL of test
+ * mode, a known fault name in the fault header, a configured fault secret of
+ * adequate length, and a request header matching that secret (compared in
+ * constant time). The header alone never activates anything, and an ordinary
+ * browser request cannot reach this: the fault headers are deliberately absent
+ * from the CORS allow-list. Every hook dies with the test secrets at go-live.
  */
-export async function isPersistenceFaultRequested(options: {
+export async function requestedTestFault(options: {
   testMode: boolean;
   faultHeader: string | null;
   providedSecret: string | null;
   configuredSecret: string | undefined;
-}): Promise<boolean> {
-  if (!options.testMode) return false;
-  if (options.faultHeader !== TEST_FAULT_PERSISTENCE) return false;
+}): Promise<TestFaultKind | null> {
+  if (!options.testMode) return null;
+  const requested = (TEST_FAULT_KINDS as readonly string[]).includes(options.faultHeader ?? '')
+    ? (options.faultHeader as TestFaultKind)
+    : null;
+  if (requested === null) return null;
   const configured = options.configuredSecret;
-  if (!configured || configured.length < TEST_FAULT_SECRET_MIN_LENGTH) return false;
-  if (!options.providedSecret) return false;
-  return constantTimeEqual(options.providedSecret, configured);
+  if (!configured || configured.length < TEST_FAULT_SECRET_MIN_LENGTH) return null;
+  if (!options.providedSecret) return null;
+  return (await constantTimeEqual(options.providedSecret, configured)) ? requested : null;
 }
