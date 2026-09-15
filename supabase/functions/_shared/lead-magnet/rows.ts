@@ -11,6 +11,7 @@ import {
   consentUpdateForExistingContact,
   type ConsentContext,
 } from './consent.ts';
+import type { FulfilmentEmailStatus } from './outcome.ts';
 import { getLeadMagnet } from './registry.ts';
 import type { LeadMagnetRequestInput } from './request.ts';
 
@@ -51,6 +52,28 @@ export function buildExistingContactUpdate(
     last_seen_at: nowIso,
     updated_at: nowIso,
     ...consentUpdateForExistingContact(currentStatus, consentContext(input, nowIso)),
+  };
+}
+
+/** Patch applied to the request row once the fulfilment send has been resolved. */
+export function buildEmailStatusPatch(options: {
+  status: FulfilmentEmailStatus;
+  providerId?: string | null;
+  error?: string | null;
+}) {
+  return {
+    email_status: options.status,
+    email_provider_id: options.providerId ?? null,
+    email_error: options.error ?? null,
+  };
+}
+
+/** Patch applied to the contact when the provider reports the address as suppressed (D3.6). */
+export function buildContactSuppressionPatch(nowIso: string) {
+  return {
+    email_suppressed_at: nowIso,
+    email_suppression_reason: 'provider' as const,
+    updated_at: nowIso,
   };
 }
 

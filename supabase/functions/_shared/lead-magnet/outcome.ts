@@ -45,11 +45,20 @@ export function guideUrlFor(assetId: LeadMagnetId, siteUrl?: string): string {
   return `${base}${getLeadMagnet(assetId).publicPath}`;
 }
 
-/** HTTP 200: the request was accepted; `stored` says honestly whether it was saved. */
-export function acceptedResponse(requestId: string, guideUrl: string | null, stored: boolean): LeadMagnetResponse {
+/**
+ * HTTP 200: the request was accepted. `stored` says honestly whether it was
+ * saved, and `email_status` reports the fulfilment outcome: null when no send
+ * was attempted (Sprint 2 behaviour, and any persistence failure).
+ */
+export function acceptedResponse(
+  requestId: string,
+  guideUrl: string | null,
+  stored: boolean,
+  emailStatus: FulfilmentEmailStatus | null = null,
+): LeadMagnetResponse {
   return {
     status: 200,
-    body: { ok: true, request_id: requestId, guide_url: guideUrl, stored, email_status: null },
+    body: { ok: true, request_id: requestId, guide_url: guideUrl, stored, email_status: emailStatus },
   };
 }
 

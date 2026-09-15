@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { LeadMagnetRequestInput } from './request.ts';
-import { buildExistingContactUpdate, buildNewContactRow, buildRequestRow } from './rows.ts';
+import {
+  buildContactSuppressionPatch,
+  buildEmailStatusPatch,
+  buildExistingContactUpdate,
+  buildNewContactRow,
+  buildRequestRow,
+} from './rows.ts';
 
 const NOW = '2026-09-15T12:00:00.000Z';
 const REQUEST_ID = '6f1d7c2e-2f44-4d7e-9a0a-1b2c3d4e5f60';
@@ -65,6 +71,44 @@ describe('buildExistingContactUpdate', () => {
       expect(update).not.toHaveProperty(column);
     }
     expect(update).toMatchObject({ consent_status: 'marketing_opt_in', marketing_opt_in_at: NOW });
+  });
+});
+
+describe('buildEmailStatusPatch', () => {
+  it('records a successful send with its Resend message id', () => {
+    expect(buildEmailStatusPatch({ status: 'sent', providerId: 'abc-123' })).toEqual({
+      email_status: 'sent',
+      email_provider_id: 'abc-123',
+      email_error: null,
+    });
+  });
+
+  it('records a failure with its sanitised summary and no provider id', () => {
+    expect(buildEmailStatusPatch({ status: 'failed', error: 'rate_limit_exceeded' })).toEqual({
+      email_status: 'failed',
+      email_provider_id: null,
+      email_error: 'rate_limit_exceeded',
+    });
+  });
+
+  it('records the skip states without provider data', () => {
+    for (const status of ['skipped_cooldown', 'suppressed'] as const) {
+      expect(buildEmailStatusPatch({ status })).toEqual({
+        email_status: status,
+        email_provider_id: null,
+        email_error: null,
+      });
+    }
+  });
+});
+
+describe('buildContactSuppressionPatch', () => {
+  it('marks the contact suppressed by the provider, touching nothing else', () => {
+    expect(buildContactSuppressionPatch(NOW)).toEqual({
+      email_suppressed_at: NOW,
+      email_suppression_reason: 'provider',
+      updated_at: NOW,
+    });
   });
 });
 
