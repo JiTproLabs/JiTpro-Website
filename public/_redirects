@@ -1,1 +1,10 @@
+# Stable lead-magnet guide routes (lead-gen plan, Decision D5.2): /guides/<asset-slug>
+# → the current versioned PDF. Cloudflare evaluates these top to bottom and
+# follows redirects regardless of asset matches, so they MUST stay above the SPA
+# catch-all. A new guide version is one line change plus a registry bump;
+# previously distributed links keep working.
+# src/content/leadMagnets.consistency.test.ts fails if this target, the
+# committed file, and the registry disagree.
+/guides/procurement-field-guide    /guides/jitpro-construction-procurement-field-guide-2026-09.pdf    302
+
 /*    /index.html   200
