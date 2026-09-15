@@ -10,7 +10,12 @@
 
 import type { LeadMagnetPlacement } from './registry.ts';
 
-export const LEAD_MAGNET_NOTIFICATIONS_FROM = 'JiTpro Notifications <noreply@mail.jit-pro.com>';
+/**
+ * Internal lead-magnet mail uses the verified marketing-site identity (S2-19).
+ * `mail.jit-pro.com` is NOT verified in the marketing-site Resend account and
+ * must not appear anywhere in this workflow.
+ */
+export const LEAD_MAGNET_NOTIFICATIONS_FROM = 'JiTpro Notifications <info@jit-pro.com>';
 export const LEAD_MAGNET_NOTIFY_TO = 'info@jit-pro.com';
 export const RECOVERY_ALERT_SUBJECT = 'Field Guide request could not be saved';
 

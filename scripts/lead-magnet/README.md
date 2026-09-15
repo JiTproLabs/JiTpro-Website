@@ -80,6 +80,30 @@ where created_at > now() - interval '1 hour'
 group by activity_kind;
 ```
 
+## Recovery-alert delivery check (single request)
+
+The 19-case script proves the visitor response on the fail-open path, not that Resend accepted the alert. Step 3 (2026-09-15) showed the difference: case 15 passed while Resend rejected the email with 403 because the old `mail.jit-pro.com` sender is not verified (S2-19, S2-20). Use this one-off request after any change to the alert sender or transport. It needs its own new run id and creates no contact or request row.
+
+```bash
+RUN_ID=<new-run-id>
+curl -sS -X POST https://pynjyrvnokfexyudimsn.supabase.co/functions/v1/submit-lead-magnet-request \
+  -H "Content-Type: application/json" \
+  -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+  -H "x-lead-magnet-test-fault: persistence" \
+  -H "x-lead-magnet-test-fault-secret: $(cat ~/.jitpro/lead-magnet-test-fault-secret)" \
+  --data "{\"email\":\"delivered+lm-test-${RUN_ID}-alert@resend.dev\",\"asset_id\":\"procurement-field-guide\",\"placement\":\"landing-page\",\"page_path\":\"/field-guide\",\"utm_source\":\"lm-test-script\",\"utm_medium\":\"cli\",\"utm_campaign\":\"lm-test\",\"utm_content\":\"${RUN_ID}\",\"marketing_opt_in\":false,\"consent_text_version\":\"v1\",\"turnstile_token\":\"XXXX.DUMMY.TOKEN.XXXX\"}"
+```
+
+It passes only when all of these hold:
+
+1. the response is `200` with `ok:true`, `stored:false`, and the guide URL;
+2. Resend accepted the `/emails` request with HTTP 200, showing From `JiTpro Notifications <info@jit-pro.com>`, To `info@jit-pro.com`, subject *Field Guide request could not be saved*, tags `environment=test` and `message=recovery_alert`;
+3. the function log shows `recovery alert accepted by Resend` with a `resendMessageId` matching that entry;
+4. no new `contacts` or `lead_magnet_requests` row exists; only one `lead_magnet_ip_activity` row is added (rate limiting runs before the simulated failure) and expires after 24 hours;
+5. `leads`, its webhook, and all other existing objects are unchanged.
+
+The email arriving in the `info@jit-pro.com` inbox is confirmed separately by Jeff.
+
 ## Cleanup (never automatic)
 
 Test rows are removed only after Jeff approves the exact statements (plan decision S2-9). Never `TRUNCATE`. `lead_magnet_ip_activity` rows are not deleted by hand; they expire through the function's 24-hour retention.

@@ -18,10 +18,16 @@ const details = {
 
 describe('recovery alert (§25.9)', () => {
   it('uses the approved sender, recipient, and subject', () => {
-    expect(LEAD_MAGNET_NOTIFICATIONS_FROM).toBe('JiTpro Notifications <noreply@mail.jit-pro.com>');
+    expect(LEAD_MAGNET_NOTIFICATIONS_FROM).toBe('JiTpro Notifications <info@jit-pro.com>');
     expect(LEAD_MAGNET_NOTIFY_TO).toBe('info@jit-pro.com');
     expect(renderRecoveryAlert(details).subject).toBe(RECOVERY_ALERT_SUBJECT);
     expect(RECOVERY_ALERT_SUBJECT).toBe('Field Guide request could not be saved');
+  });
+
+  it('sends only from the verified jit-pro.com root domain (S2-19)', () => {
+    expect(LEAD_MAGNET_NOTIFICATIONS_FROM).toMatch(/<[^@<>]+@jit-pro\.com>$/);
+    expect(LEAD_MAGNET_NOTIFICATIONS_FROM).not.toContain('mail.jit-pro.com');
+    expect(LEAD_MAGNET_NOTIFY_TO).toBe('info@jit-pro.com');
   });
 
   it('carries the approved fields, including the full requester email', () => {

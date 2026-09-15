@@ -38,6 +38,7 @@ import {
   renderRecoveryAlert,
 } from "../_shared/lead-magnet/recoveryAlert.ts";
 import { parseLeadMagnetRequest, type LeadMagnetRequestInput } from "../_shared/lead-magnet/request.ts";
+import { describeFetchFailure, describeResendResponse } from "../_shared/lead-magnet/resendDiagnostics.ts";
 import { buildExistingContactUpdate, buildNewContactRow, buildRequestRow } from "../_shared/lead-magnet/rows.ts";
 import {
   TEST_FAULT_HEADER,
@@ -411,7 +412,10 @@ async function sendRecoveryAlert(
     email: input.email,
   });
 
+  const startedAt = Date.now();
+
   try {
+    logger.info("recovery alert: calling Resend");
     const response = await fetch(RESEND_EMAILS_URL, {
       method: "POST",
       headers: {
@@ -433,12 +437,26 @@ async function sendRecoveryAlert(
       }),
       signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
     });
-    if (response.ok) {
-      logger.info("recovery alert sent");
+    const outcome = describeResendResponse(response.status, await response.text().catch(() => ""));
+    const elapsedMs = Date.now() - startedAt;
+    if (outcome.ok) {
+      logger.info("recovery alert accepted by Resend", {
+        status: outcome.status,
+        resendMessageId: outcome.messageId,
+        elapsedMs,
+      });
     } else {
-      logger.error("recovery alert failed", { status: response.status });
+      logger.error("recovery alert rejected by Resend", {
+        status: outcome.status,
+        errorName: outcome.errorName,
+        errorMessage: outcome.errorMessage,
+        elapsedMs,
+      });
     }
   } catch (error) {
-    logger.error("recovery alert failed", { error: summariseError(error) });
+    logger.error("recovery alert failed before a Resend response", {
+      ...describeFetchFailure(error),
+      elapsedMs: Date.now() - startedAt,
+    });
   }
 }
