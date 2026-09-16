@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   FUNNEL_ERROR_KINDS,
   FUNNEL_EVENTS,
+  buildEventBody,
   funnelOutcomeFor,
   recordImpression,
   sendFunnelEvent,
@@ -89,36 +90,137 @@ describe('shouldRecordImpression', () => {
   });
 });
 
-describe('sendFunnelEvent is inert until Sprint 6', () => {
-  it('sends nothing over the network', () => {
-    const fetchSpy = vi.fn();
-    const original = globalThis.fetch;
-    globalThis.fetch = fetchSpy as unknown as typeof fetch;
-    try {
-      sendFunnelEvent({
-        event: 'lead_magnet_form_submit',
-        assetId: 'procurement-field-guide',
-        placement: 'landing-page',
-        pagePath: '/field-guide',
-      });
-    } finally {
-      globalThis.fetch = original;
-    }
-    expect(fetchSpy).not.toHaveBeenCalled();
+describe('buildEventBody', () => {
+  it('sends exactly the five keys the endpoint parses', () => {
+    const body = buildEventBody({
+      event: 'lead_magnet_cta_click',
+      assetId: 'procurement-field-guide',
+      placement: 'home-band',
+      pagePath: '/',
+    });
+    expect(Object.keys(body).sort()).toEqual([
+      'asset_id',
+      'error_kind',
+      'event_name',
+      'page_path',
+      'placement',
+    ]);
   });
 
-  it('returns undefined and never throws, so analytics cannot break a capture', () => {
-    expect(
-      sendFunnelEvent({
-        event: 'lead_magnet_cta_click',
+  it('carries the error kind on the error event', () => {
+    const body = buildEventBody({
+      event: 'lead_magnet_request_error',
+      assetId: 'procurement-field-guide',
+      placement: 'landing-page',
+      pagePath: '/field-guide',
+      errorKind: 'rate_limited',
+    });
+    expect(body.error_kind).toBe('rate_limited');
+  });
+
+  it('never sends an error kind on any other event, which the endpoint would reject', () => {
+    for (const event of FUNNEL_EVENTS.filter((e) => e !== 'lead_magnet_request_error')) {
+      const body = buildEventBody({
+        event,
         assetId: 'procurement-field-guide',
         placement: 'home-band',
         pagePath: '/',
-      }),
-    ).toBeUndefined();
+        errorKind: 'server',
+      });
+      expect(body.error_kind, event).toBeNull();
+    }
   });
 
-  it('records an impression without touching the network', () => {
+  it('produces a body the server parser accepts', async () => {
+    const { parseFunnelEvent } = await import(
+      '../../../supabase/functions/_shared/lead-magnet/eventRequest.ts'
+    );
+    for (const event of FUNNEL_EVENTS) {
+      const body = buildEventBody({
+        event,
+        assetId: 'procurement-field-guide',
+        placement: 'home-band',
+        pagePath: '/',
+        ...(event === 'lead_magnet_request_error' ? { errorKind: 'network' as const } : {}),
+      });
+      expect(parseFunnelEvent(body).kind, event).toBe('valid');
+    }
+  });
+});
+
+describe('sendFunnelEvent never breaks a capture', () => {
+  it('prefers sendBeacon, which survives the page unloading', () => {
+    const beacon = vi.fn(() => true);
+    const fetchSpy = vi.fn();
+    const originalNavigator = globalThis.navigator;
+    const originalFetch = globalThis.fetch;
+    Object.defineProperty(globalThis, 'navigator', {
+      value: { sendBeacon: beacon },
+      configurable: true,
+    });
+    globalThis.fetch = fetchSpy as unknown as typeof fetch;
+    try {
+      sendFunnelEvent({
+        event: 'lead_magnet_download_click',
+        assetId: 'procurement-field-guide',
+        placement: 'home-band',
+        pagePath: '/',
+      });
+    } finally {
+      Object.defineProperty(globalThis, 'navigator', { value: originalNavigator, configurable: true });
+      globalThis.fetch = originalFetch;
+    }
+    expect(beacon).toHaveBeenCalledTimes(1);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('falls back to keepalive fetch when sendBeacon refuses', () => {
+    const beacon = vi.fn(() => false);
+    const fetchSpy = vi.fn(() => Promise.resolve(new Response(null, { status: 204 })));
+    const originalNavigator = globalThis.navigator;
+    const originalFetch = globalThis.fetch;
+    Object.defineProperty(globalThis, 'navigator', { value: { sendBeacon: beacon }, configurable: true });
+    globalThis.fetch = fetchSpy as unknown as typeof fetch;
+    try {
+      sendFunnelEvent({
+        event: 'lead_magnet_cta_view',
+        assetId: 'procurement-field-guide',
+        placement: 'home-band',
+        pagePath: '/',
+      });
+    } finally {
+      Object.defineProperty(globalThis, 'navigator', { value: originalNavigator, configurable: true });
+      globalThis.fetch = originalFetch;
+    }
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy.mock.calls[0][1]).toMatchObject({ keepalive: true, method: 'POST' });
+  });
+
+  it('swallows a throwing transport rather than surfacing it to the visitor', () => {
+    const originalNavigator = globalThis.navigator;
+    Object.defineProperty(globalThis, 'navigator', {
+      value: {
+        sendBeacon: () => {
+          throw new Error('blocked');
+        },
+      },
+      configurable: true,
+    });
+    try {
+      expect(() =>
+        sendFunnelEvent({
+          event: 'lead_magnet_form_submit',
+          assetId: 'procurement-field-guide',
+          placement: 'home-band',
+          pagePath: '/',
+        }),
+      ).not.toThrow();
+    } finally {
+      Object.defineProperty(globalThis, 'navigator', { value: originalNavigator, configurable: true });
+    }
+  });
+
+  it('records an impression without throwing', () => {
     const store = memoryStore();
     expect(() => recordImpression('procurement-field-guide', 'home-band', '/', store)).not.toThrow();
     expect(store.data['jp.leadMagnet.ctaView.procurement-field-guide.home-band']).toBe('1');

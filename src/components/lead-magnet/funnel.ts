@@ -1,11 +1,9 @@
 /**
  * The funnel event vocabulary and its transport.
  *
- * SPRINT 4 SHIPS THIS AS A NO-OP. The seven event names (plan §8.1) are fixed
- * now and the call sites are written now, so Sprint 6 turns the funnel on by
- * replacing one sender rather than by threading calls through finished
- * components. Until `lead_magnet_events` and `record-lead-magnet-event` exist
- * (Sprint 6), `sendFunnelEvent` deliberately does nothing.
+ * Sprint 4 fixed the seven names (plan §8.1) and wrote every call site behind
+ * an inert sender; Sprint 6 turned the funnel on by replacing that one
+ * function, exactly as intended, with no call site touched.
  *
  * WHAT MAY NEVER BE SENT (Decisions D4.6, D4.7, §8.4): no email address, no
  * visitor or session id, no raw referrer, no UTMs, nothing personal. An event
@@ -99,11 +97,64 @@ export function shouldRecordImpression(
  * It never throws and never returns a promise the caller must handle:
  * analytics must not be able to break a capture.
  */
+/** The wire body `record-lead-magnet-event` parses. Snake case, five keys. */
+export function buildEventBody(payload: FunnelPayload): Record<string, unknown> {
+  return {
+    event_name: payload.event,
+    asset_id: payload.assetId,
+    placement: payload.placement,
+    page_path: payload.pagePath,
+    // §6.4: present only on the error event. The endpoint and the table both
+    // reject it anywhere else, so sending it would lose the event.
+    error_kind: payload.event === 'lead_magnet_request_error' ? (payload.errorKind ?? null) : null,
+  };
+}
+
+/**
+ * Sends one funnel event, and CANNOT break a capture.
+ *
+ * `sendBeacon` is used first because it survives the page unloading, which
+ * matters for `lead_magnet_download_click`: the guide opens in a new tab and
+ * the visitor may leave immediately. It is fire-and-forget by design and
+ * returns only whether the browser queued the request, never what the server
+ * said. `fetch` with `keepalive` is the fallback where `sendBeacon` is absent
+ * or refuses (it has its own queue limits).
+ *
+ * Every failure path is swallowed. The endpoint answers 204 to everything for
+ * the same reason: analytics must never be visible in the visitor experience
+ * (contract approved 2026-09-16).
+ */
 export function sendFunnelEvent(payload: FunnelPayload): void {
-  /* Sprint 6 (plan §22). Intentionally inert: no network, no storage, no log.
-     The payload is accepted and discarded so every call site is already
-     correct when the sender is implemented. */
-  void payload;
+  try {
+    const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (!baseUrl || !anonKey) return;
+
+    const url = `${baseUrl}/functions/v1/record-lead-magnet-event`;
+    const body = JSON.stringify(buildEventBody(payload));
+
+    // sendBeacon cannot set the apikey header, so the key rides in the query
+    // string, which is how a beacon authenticates to a Supabase function. The
+    // anon key is public by design: it is already in the browser bundle, and
+    // the function grants nothing beyond inserting one constrained row.
+    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+      const beaconUrl = `${url}?apikey=${encodeURIComponent(anonKey)}`;
+      if (navigator.sendBeacon(beaconUrl, new Blob([body], { type: 'application/json' }))) return;
+    }
+
+    void fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+      },
+      body,
+      keepalive: true,
+    }).catch(() => undefined);
+  } catch {
+    /* Analytics never surfaces. The event is lost; the capture is unaffected. */
+  }
 }
 
 /**
