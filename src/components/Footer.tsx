@@ -1,6 +1,18 @@
 import { Link } from 'react-router-dom';
 import JiTproWordmark from './JiTproWordmark';
+import LeadMagnetCTA from './lead-magnet/LeadMagnetCTA';
 
+/**
+ * The site footer.
+ *
+ * TOKENS IN NEW CODE ONLY. The existing links carry raw palette classes
+ * (`text-slate-400`, `hover:text-slate-100`) that predate the token rules of
+ * Design System §8.8, §8.9 and §45. That is a scheduled migration, not a
+ * licence to add more: the two items added for the lead magnet (D6.15) use
+ * token classes, and the legacy links are deliberately left untouched as
+ * out of scope for that sprint. The two therefore do not match exactly until
+ * the footer is migrated.
+ */
 export default function Footer() {
   return (
     <footer className="border-t border-white/10 bg-slate-900">
@@ -72,6 +84,14 @@ export default function Footer() {
           <div>
             <h4 className="text-sm font-semibold text-slate-200 mb-4">Company</h4>
             <ul className="space-y-2">
+              {/* The lead-magnet offer as a quiet footer link (D6.15). It
+                  opens the approved dialog and records the page it was
+                  clicked from, so the same offer is attributable to the
+                  footer separately from the two bands. Token classes, per
+                  the note above. */}
+              <li>
+                <LeadMagnetCTA placement="footer-link" variant="footer-link" />
+              </li>
               <li>
                 <Link to="/why" className="text-slate-400 hover:text-slate-100 transition-colors">
                   Why JiTpro
@@ -100,12 +120,21 @@ export default function Footer() {
           <p className="text-sm text-slate-400">
             © {new Date().getFullYear()} JiTpro. Schedule certainty through procurement control.
           </p>
-          <Link
-            to="/investor"
-            className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
-          >
-            For Investors
-          </Link>
+          <div className="flex items-center gap-6">
+            {/* Token classes, per the note above (D6.15). */}
+            <Link
+              to="/privacy"
+              className="inline-flex min-h-[44px] items-center text-sm text-jp-text-muted transition-colors duration-200 ease-out hover:text-jp-brand-amber-active focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-jp-text-primary motion-reduce:transition-none"
+            >
+              Privacy
+            </Link>
+            <Link
+              to="/investor"
+              className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              For Investors
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
