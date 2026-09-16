@@ -3,6 +3,7 @@ import {
   ALL_CUSTOMER_FACING_STRINGS,
   FIELD_GUIDE,
   FIELD_GUIDE_COPY,
+  FIELD_GUIDE_ID,
   HOMEPAGE_GOVERNED_STRINGS,
   LEAD_MAGNET_ASSETS,
   LEAD_MAGNET_IDS,
@@ -96,5 +97,73 @@ describe('approved copy', () => {
     expect(FIELD_GUIDE_COPY.landing.heading).toBe(FIELD_GUIDE.siteTitle);
     expect(FIELD_GUIDE.siteTitle).toBe(FIELD_GUIDE.siteTitle.charAt(0) + FIELD_GUIDE.siteTitle.slice(1).toLowerCase());
     expect(FIELD_GUIDE_COPY.landing.browserTitle.startsWith(FIELD_GUIDE.publicationTitle)).toBe(true);
+  });
+});
+
+describe('the capture experience renders the approved strings verbatim (§25.5, §25.6)', () => {
+  it('carries the approved dialog sub line and browser-check notice', () => {
+    expect(FIELD_GUIDE_COPY.dialog.subline).toBe(
+      'What will stop work six months from now? We’ll open the guide right away and email you a link.',
+    );
+    expect(FIELD_GUIDE_COPY.dialog.turnstileNotice).toBe('One quick check before we open your guide.');
+    expect(FIELD_GUIDE_COPY.dialog.close).toBe('Close');
+  });
+
+  it('carries the approved fine print, pointing at the privacy notice', () => {
+    expect(FIELD_GUIDE_COPY.dialog.finePrint.before).toBe('We’ll email you a link to the guide. Read our ');
+    expect(FIELD_GUIDE_COPY.dialog.finePrint.linkText).toBe('privacy notice');
+    expect(FIELD_GUIDE_COPY.dialog.finePrint.after).toBe('.');
+    expect(FIELD_GUIDE_COPY.dialog.finePrint.linkHref).toBe('/privacy');
+  });
+
+  it('carries the two approved inline field errors', () => {
+    expect(FIELD_GUIDE_COPY.states.emptyEmail).toBe('Enter your email address to get the guide.');
+    expect(FIELD_GUIDE_COPY.states.invalidEmail).toBe('Enter a valid email address, like name@company.com.');
+  });
+
+  it('carries the approved submitting and slow-request labels (§32.1)', () => {
+    expect(FIELD_GUIDE_COPY.states.submitting).toBe('Getting your guide…');
+    expect(FIELD_GUIDE_COPY.states.stillWorking).toBe('Still working…');
+  });
+
+  it('carries the other two approved outcome bodies of §13.2', () => {
+    expect(FIELD_GUIDE_COPY.states.repeatWithinHour('a@b.co')).toBe(
+      'We emailed a link to a@b.co within the last hour, so we haven’t sent another. You can open the guide below.',
+    );
+    expect(FIELD_GUIDE_COPY.states.emailNotSent).toBe(
+      'We couldn’t email your copy just now, but you can open the guide below. If you’d like an emailed copy, write to info@jit-pro.com.',
+    );
+    expect(FIELD_GUIDE_COPY.states.tryAgain).toBe('Try again');
+  });
+
+  it('shares ONE outcome heading across all three states (D6.10)', () => {
+    expect(FIELD_GUIDE_COPY.states.outcomeHeading).toBe('Your guide is ready.');
+  });
+
+  it('offers no secondary sales CTA in any outcome state (D6.11)', () => {
+    const outcomeStrings = [
+      FIELD_GUIDE_COPY.states.outcomeHeading,
+      FIELD_GUIDE_COPY.states.openButton,
+      FIELD_GUIDE_COPY.states.success('a@b.co'),
+      FIELD_GUIDE_COPY.states.repeatWithinHour('a@b.co'),
+      FIELD_GUIDE_COPY.states.emailNotSent,
+    ];
+    for (const s of outcomeStrings) {
+      expect(s.toLowerCase(), s).not.toContain('demo');
+      expect(s.toLowerCase(), s).not.toContain('contact us');
+      expect(s.toLowerCase(), s).not.toContain('book a');
+    }
+  });
+
+  it('never names a backend cause to the visitor (§33.1, D6.10)', () => {
+    const forbidden = ['database', 'rate limit', 'turnstile', 'verification', 'network', 'server', 'timeout'];
+    for (const s of HOMEPAGE_GOVERNED_STRINGS) {
+      for (const word of forbidden) expect(s.toLowerCase(), s).not.toContain(word);
+    }
+  });
+
+  it('exposes the asset id at its literal type for the request body and events', () => {
+    expect(FIELD_GUIDE_ID).toBe('procurement-field-guide');
+    expect(FIELD_GUIDE_ID).toBe(FIELD_GUIDE.id);
   });
 });

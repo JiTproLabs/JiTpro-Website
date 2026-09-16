@@ -8,7 +8,9 @@ declare global {
         callback: (token: string) => void;
         'expired-callback'?: () => void;
         'error-callback'?: () => void;
+        'before-interactive-callback'?: () => void;
         theme?: 'light' | 'dark' | 'auto';
+        appearance?: 'always' | 'execute' | 'interaction-only';
       }) => string;
       reset: (widgetId: string) => void;
       remove: (widgetId: string) => void;
@@ -20,9 +22,31 @@ interface TurnstileProps {
   onToken: (token: string) => void;
   onExpire?: () => void;
   theme?: 'light' | 'dark' | 'auto';
+  /**
+   * `interaction-only` keeps the widget invisible unless Cloudflare actually
+   * needs a challenge, which is what lets the lead-capture dialog hold to one
+   * visible field (lead-gen plan §4.2, Decision D5.4). Omitted means
+   * Cloudflare's default, so the contact form is unchanged.
+   */
+  appearance?: 'always' | 'execute' | 'interaction-only';
+  /**
+   * Fires when Turnstile is about to show a challenge. Under
+   * `interaction-only` this is the moment the widget stops being invisible,
+   * so the caller can reveal the line that explains it.
+   */
+  onInteractive?: () => void;
+  /** Wrapper classes. Defaults to the contact form's spacing. */
+  className?: string;
 }
 
-export default function Turnstile({ onToken, onExpire, theme }: TurnstileProps) {
+export default function Turnstile({
+  onToken,
+  onExpire,
+  theme,
+  appearance,
+  onInteractive,
+  className = 'mt-2',
+}: TurnstileProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
 
@@ -43,7 +67,9 @@ export default function Turnstile({ onToken, onExpire, theme }: TurnstileProps) 
         'error-callback': () => {
           onExpire?.();
         },
+        ...(onInteractive ? { 'before-interactive-callback': onInteractive } : {}),
         ...(theme ? { theme } : {}),
+        ...(appearance ? { appearance } : {}),
       });
     };
 
@@ -66,7 +92,7 @@ export default function Turnstile({ onToken, onExpire, theme }: TurnstileProps) 
         widgetIdRef.current = null;
       }
     };
-  }, [onToken, onExpire, theme]);
+  }, [onToken, onExpire, theme, appearance, onInteractive]);
 
-  return <div ref={containerRef} className="mt-2" />;
+  return <div ref={containerRef} className={className} />;
 }

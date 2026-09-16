@@ -47,6 +47,13 @@ export {
 
 export const FIELD_GUIDE = getLeadMagnet('procurement-field-guide');
 
+/**
+ * The asset id at its literal type. `FIELD_GUIDE.id` widens to `string`
+ * through the `LeadMagnetAsset` annotation, and the request body, the funnel
+ * events, and the placement checks all need the narrow `LeadMagnetId`.
+ */
+export const FIELD_GUIDE_ID = LEAD_MAGNET_ASSETS['procurement-field-guide'].id;
+
 export const FIELD_GUIDE_COPY = {
   /** The offer band (homepage after the final CTA; Learn More after the close). */
   band: {
