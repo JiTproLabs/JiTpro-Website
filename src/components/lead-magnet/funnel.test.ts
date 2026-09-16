@@ -176,7 +176,11 @@ describe('sendFunnelEvent never breaks a capture', () => {
 
   it('falls back to keepalive fetch when sendBeacon refuses', () => {
     const beacon = vi.fn(() => false);
-    const fetchSpy = vi.fn(() => Promise.resolve(new Response(null, { status: 204 })));
+    // Typed with fetch's own signature so the recorded call tuple is typed,
+    // and the parameters are used so no-unused-vars stays satisfied.
+    const fetchSpy = vi.fn((input: RequestInfo | URL, init?: RequestInit) =>
+      Promise.resolve(new Response(JSON.stringify({ input: String(input), method: init?.method }), { status: 204 })),
+    );
     const originalNavigator = globalThis.navigator;
     const originalFetch = globalThis.fetch;
     Object.defineProperty(globalThis, 'navigator', { value: { sendBeacon: beacon }, configurable: true });
@@ -193,7 +197,7 @@ describe('sendFunnelEvent never breaks a capture', () => {
       globalThis.fetch = originalFetch;
     }
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy.mock.calls[0][1]).toMatchObject({ keepalive: true, method: 'POST' });
+    expect(fetchSpy.mock.calls[0]?.[1]).toMatchObject({ keepalive: true, method: 'POST' });
   });
 
   it('swallows a throwing transport rather than surfacing it to the visitor', () => {
