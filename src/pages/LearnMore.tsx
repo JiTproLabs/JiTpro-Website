@@ -13,6 +13,7 @@ import WhoSection from '../components/learn-more/WhoSection';
 import BuiltByContractorsSection from '../components/learn-more/BuiltByContractorsSection';
 import LearnMoreFinalCTA from '../components/learn-more/LearnMoreFinalCTA';
 import GuideRail from '../components/learn-more/GuideRail';
+import LeadMagnetCTA from '../components/lead-magnet/LeadMagnetCTA';
 import { GUIDE_ANCHOR_ID } from '../content/learnMore';
 import { SECTION_SCROLL_MT } from '../components/learn-more/guideLayout';
 
@@ -91,6 +92,17 @@ import { SECTION_SCROLL_MT } from '../components/learn-more/guideLayout';
  * COPY GOVERNANCE for every string on this page lives with the copy, in
  * src/content/learnMore.ts. Section 20.1 applies in full, and em dashes are
  * prohibited (Section 50.7).
+ *
+ * THE FIELD GUIDE BAND SITS OUTSIDE THE GUIDE AREA, and that placement is
+ * the whole point (Section 20.2, the Section 50.5 amendment, lead-gen plan
+ * A8). Rendering it inside the wrapper would drop it into the rail's grid
+ * column and make it read as a twelfth numbered section; outside, it follows
+ * the close as a post-argument band. It carries no ordinal, is not listed in
+ * the guide or the rail, and takes the Section 26.1 hairline secondary rather
+ * than a Brand Amber primary, so within the meaning of Section 50.5 the
+ * numbered argument still carries exactly three identical primary actions and
+ * one secondary action. At most one such band per page. Nothing above it
+ * changes.
  */
 export default function LearnMore() {
   return (
@@ -127,6 +139,10 @@ export default function LearnMore() {
           <LearnMoreFinalCTA />
         </div>
       </div>
+
+      {/* Outside the guide area on purpose: outside the numbered sequence and
+          outside the rail's grid column (A8). */}
+      <LeadMagnetCTA placement="learn-more-band" variant="band" />
     </div>
   );
 }

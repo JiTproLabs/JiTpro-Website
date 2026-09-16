@@ -10,6 +10,8 @@ import Documentation from './pages/Documentation';
 import About from './pages/About';
 import FounderStory from './pages/FounderStory';
 import Demo from './pages/Demo';
+import FieldGuide from './pages/FieldGuide';
+import Privacy from './pages/Privacy';
 import Contact from './pages/contact/Contact';
 import ThankYou from './pages/ThankYou';
 import GeneralContractors from './pages/roles/GeneralContractors';
@@ -60,6 +62,12 @@ const ScopeValidationScreen = lazy(() => import('./components/demo/screens/Scope
    from any surface; the page marks itself noindex, nofollow. */
 const ProcurementScheduleReview = lazy(() => import('./pages/review/ProcurementScheduleReview'));
 
+/* TEAM REVIEW - unlisted, in the production build. The lead-magnet band and
+   dialog outside any production surface, so the capture experience can be
+   reviewed on a Cloudflare preview before Sprint 5 places it. Deleted when
+   Sprint 5 lands. Not linked from any surface; noindex, nofollow. */
+const LeadMagnetReview = lazy(() => import('./pages/review/LeadMagnetReview'));
+
 import HomepageConcept from './pages/HomepageConcept';
 import CompanyProjectHealth from './pages/CompanyProjectHealth';
 
@@ -80,6 +88,10 @@ function App() {
         <Route
           path="/review/procurement-schedule"
           element={<Suspense fallback={null}><ProcurementScheduleReview /></Suspense>}
+        />
+        <Route
+          path="/review/lead-magnet"
+          element={<Suspense fallback={null}><LeadMagnetReview /></Suspense>}
         />
 
         {/* Investor sub-site — own nav/footer */}
@@ -144,6 +156,13 @@ function App() {
           <Route path="/contact/owner" element={<Navigate to="/contact" replace />} />
           <Route path="/thank-you" element={<ThankYou />} />
           <Route path="/faq" element={<FAQ />} />
+          {/* Lead magnet: the indexable campaign landing page, and the
+              destination every CTA links to so the offer still works without
+              JavaScript (lead-gen plan D1.1). */}
+          <Route path="/field-guide" element={<FieldGuide />} />
+          {/* Linked from the capture form's fine print, and from the footer
+              in Sprint 5 (D3.7). */}
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/demo" element={<Demo />} />
           {/* Unlisted — not in nav. Direct-link only. Plan to re-integrate later. */}
           <Route path="/homepage-concept" element={<HomepageConcept />} />

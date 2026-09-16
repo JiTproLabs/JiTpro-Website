@@ -3,3 +3,13 @@
 # <meta name="robots"> itself, so the directive does not depend on the host.
 /review/*
   X-Robots-Tag: noindex, nofollow
+
+# The Field Guide PDF (lead-gen plan, Decisions D5.1, D5.10). Headers target the
+# actual file, not the /guides/procurement-field-guide route, because Cloudflare
+# applies redirects before headers. Inline so the browser opens it, saved under
+# the clean visitor-facing filename, never indexed, and cached hard because the
+# filename carries the version.
+/guides/jitpro-construction-procurement-field-guide-2026-09.pdf
+  Content-Disposition: inline; filename="JiTpro-Construction-Procurement-Field-Guide.pdf"
+  X-Robots-Tag: noindex
+  Cache-Control: public, max-age=31536000, immutable

@@ -44,6 +44,7 @@ The check covers:
 | Check | What it catches | Blocks merging? |
 |---|---|---|
 | Type checking & linting | Coding mistakes and formatting issues | ✅ Yes |
+| Unit tests (`npm test`, Vitest) | A logic regression in a tested module (for example the lead-magnet registries or validation) | ✅ Yes |
 | Build | The site fails to build | ✅ Yes |
 | Dependency audit (`audit-ci`) | A newly introduced High/Critical severity vulnerability | ✅ Yes |
 | Broken links, images & files | A dead internal link, missing image, or missing file | ✅ Yes |
@@ -190,5 +191,5 @@ README for the full rules and how to adjust them.
 | Default branch | `main` |
 | Hosting / Deployment | Cloudflare Pages |
 | Node.js version | 24 (see `.nvmrc`) |
-| Last updated | August 11, 2026 |
+| Last updated | September 12, 2026 |
 |

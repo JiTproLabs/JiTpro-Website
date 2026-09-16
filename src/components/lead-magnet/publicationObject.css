@@ -1,0 +1,114 @@
+/**
+ * The publication object, to Design System §20.2.1 (approved 2026-09-16,
+ * amendment A11).
+ *
+ * Plain CSS rather than utilities because this is a 3D transform with a
+ * perspective ancestor, two generated page edges, and a reduced-motion-free
+ * but breakpoint-dependent rotation. Utilities express none of that cleanly.
+ * Scoped to `jp-pub`, following the precedent of the dialog's stylesheet.
+ *
+ * EVERY COLOUR IS A TOKEN (§8.8, §8.9, §45). No hex, no `rgba()`, no Tailwind
+ * colour utility; the translucency is produced with `color-mix` over the
+ * approved custom properties.
+ *
+ * NO AMBER LIVES HERE (§20.2 amber budget, A11). The band spends its two
+ * amber elements on the eyebrow and the action. The cover artwork contains
+ * amber of its own, and that belongs to the publication.
+ */
+
+.jp-pub {
+  /* The perspective ancestor. A modest depth: enough for the rotation to read
+     as an object, far short of a marketing mock-up. */
+  perspective: 1600px;
+  display: flex;
+  justify-content: center;
+  /* Contains the rotated child so no transform can push the page sideways
+     (§20.2.1, mobile). */
+  overflow: hidden;
+  padding: 0.5rem 0;
+}
+
+/* The faint technical grid that gives the object something to sit against.
+   Single-digit opacity, no amber. */
+.jp-pub__ground {
+  position: relative;
+  width: 100%;
+  max-width: 17rem;
+  display: flex;
+  justify-content: center;
+}
+
+.jp-pub__ground::before {
+  content: '';
+  position: absolute;
+  inset: -12% -18%;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--jp-border) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--jp-border) 5%, transparent) 1px, transparent 1px);
+  background-size: 28px 28px;
+  /* Fades out at the edges so the grid never reads as a bordered panel. */
+  mask-image: radial-gradient(ellipse at center, black 40%, transparent 78%);
+  pointer-events: none;
+}
+
+.jp-pub__book {
+  position: relative;
+  width: 100%;
+  transform-style: preserve-3d;
+  /* Near-flat on small screens (§20.2.1). The desktop angle arrives at lg. */
+  transform: rotateY(-2deg);
+}
+
+@media (min-width: 1024px) {
+  .jp-pub__ground {
+    max-width: 21rem;
+  }
+
+  .jp-pub__book {
+    transform: rotateY(-9deg) rotateX(1.5deg);
+  }
+}
+
+/* THE STRUCTURAL HAIRLINE (§20.2.1). Not decoration: the cover's ground is
+   #02101B, which measures 1.08:1 against --jp-surface, so the artwork has
+   almost no edge of its own and would dissolve into the band without this. */
+.jp-pub__cover {
+  display: block;
+  width: 100%;
+  height: auto;
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--jp-border) 22%, transparent);
+  border-radius: 2px;
+  /* One restrained shadow, composed from the page canvas. No glow. */
+  box-shadow:
+    0 18px 40px -18px color-mix(in srgb, var(--jp-background) 92%, transparent),
+    0 4px 12px -6px color-mix(in srgb, var(--jp-background) 80%, transparent);
+}
+
+/* The stacked-page edge: two thin slivers on the trailing side, set back in
+   depth so the rotation separates them from the cover. */
+.jp-pub__book::before,
+.jp-pub__book::after {
+  content: '';
+  position: absolute;
+  top: 1.5%;
+  bottom: 1.5%;
+  border-radius: 0 2px 2px 0;
+  pointer-events: none;
+}
+
+.jp-pub__book::before {
+  right: -5px;
+  width: 5px;
+  background: color-mix(in srgb, var(--jp-border) 30%, var(--jp-background));
+  transform: translateZ(-6px);
+}
+
+.jp-pub__book::after {
+  top: 3%;
+  bottom: 3%;
+  right: -9px;
+  width: 4px;
+  background: color-mix(in srgb, var(--jp-border) 16%, var(--jp-background));
+  transform: translateZ(-12px);
+}

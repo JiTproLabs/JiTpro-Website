@@ -41,6 +41,22 @@ JITpro marketing website — a React SPA built with Vite, TypeScript, and Tailwi
 - `npm run preview` — preview production build locally
 - `npm run lint` — run ESLint (flat config, `eslint.config.js`)
 - `npm run typecheck` — run TypeScript type checking (`tsc --noEmit -p tsconfig.app.json`)
+- `npm test` — run the Vitest unit tests (`vitest.config.ts`; pure-logic tests under `src/**/*.test.ts` and `supabase/functions/_shared/**/*.test.ts`)
+
+## Dependencies: report only, never correct
+
+**Dependabot maintains this repository's dependencies. Claude does not.** Vulnerability advisories, version bumps, and lockfile changes are handled through Dependabot's own pull requests, which Jeff reviews and merges.
+
+When you encounter a dependency problem, **report it and stop**. Do not fix it. Specifically:
+
+- Do not run `npm audit fix`, `npm update`, `npm install <package>@<version>`, or any command whose purpose is to change an existing dependency's version.
+- Do not hand-edit `package.json` or `package-lock.json` to bump, pin, or override a version.
+- Do not add exceptions or allowlist entries to `audit-ci.jsonc` to make an advisory pass.
+- Do not commit a "chore(deps)" patch, even a lockfile-only one, even when the advisory is pre-existing, even when it blocks the `audit-ci` step in CI.
+
+If `npx audit-ci` or `npm audit` fails, or a build or test failure traces back to a dependency, report: the package, the installed and fixed versions, the advisory identifier, what it blocks, and whether a Dependabot PR already exists (`gh pr list --author app/dependabot`). Then wait for Jeff. If CI is red for this reason, say so; do not work around it.
+
+**The only exception, narrowly.** Adding a *new* dependency is permitted only when it is genuinely required to implement an explicitly approved task. This exception does not permit upgrading, downgrading, replacing, patching, pinning, or otherwise changing existing dependencies to resolve advisories, vulnerabilities, CI failures, audits, compatibility issues, or maintenance concerns. Those remain exclusively with Dependabot. Before adding a new dependency, call it out in the implementation report with the package name and why it was required.
 
 ## Architecture
 

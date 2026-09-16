@@ -1,0 +1,154 @@
+# Lead-magnet integration tests
+
+`submit-request-curl-tests.sh` exercises the deployed `submit-lead-magnet-request` Edge Function from the command line. It is the Sprint 2 `curl` matrix in the lead-gen plan (`docs/superpowers/plans/2026-09-12-procurement-guide-lead-gen-plan.md`, §14.2, §15.2, Sprint 2).
+
+The website has **one** Supabase project, `jitpro_website` (plan decision G-8). These tests therefore run against the live website project, and every safeguard below exists to keep them from touching real prospects or existing website data.
+
+## Before running (each step needs Jeff's approval)
+
+1. `submit-lead-magnet-request` is deployed to `jitpro_website`.
+2. These secrets are set on `jitpro_website`:
+   - `LEAD_MAGNET_TEST_MODE=true` (refuses recipients outside `@resend.dev` and `@jit-pro.com`, before anything is stored)
+   - `LEAD_MAGNET_TURNSTILE_TEST_SECRET` = Cloudflare's always-pass test secret, so the script can use Cloudflare's dummy token. Honoured only while test mode is on; the shared `TURNSTILE_SECRET_KEY` is never changed.
+   - `LEAD_MAGNET_TEST_FAULT_SECRET` = a random value of at least 32 characters. The simulated persistence failure needs test mode, the fault header, **and** this value.
+   - `LEAD_MAGNET_IP_SALT` = a random value.
+3. No earlier run from the same network in the last 10 minutes (the rate-limit case counts attempts per address).
+
+## Running
+
+```bash
+LEAD_MAGNET_FUNCTION_URL=https://pynjyrvnokfexyudimsn.supabase.co/functions/v1/submit-lead-magnet-request \
+SUPABASE_ANON_KEY=<the site's VITE_SUPABASE_ANON_KEY> \
+LEAD_MAGNET_TEST_FAULT_SECRET=<the value set on jitpro_website> \
+scripts/lead-magnet/submit-request-curl-tests.sh <run-id>
+```
+
+`<run-id>` is 3 to 32 lowercase letters, digits, or hyphens and must be new for every run (for example `20260916a`). The script refuses any other function URL, prints `PASS` or `FAIL` per case, and exits non-zero on any failure. Never print or commit the fault secret.
+
+## Cases
+
+| # | Case | Expected |
+|---|---|---|
+| 01 | New contact A, checkbox unchecked | 200, `stored:true`, `email_status:null`, guide URL |
+| 02 | Contact A again, unchecked | 200, `stored:true` |
+| 03 | Contact A again, checked | 200, `stored:true`; A becomes `marketing_opt_in` |
+| 04 | New contact B, checked | 200, `stored:true` |
+| 05 | Invalid email | 400 `invalid_email`, no guide URL |
+| 06 | Unknown asset | 400 `invalid_request`, no guide URL |
+| 07 | Unknown placement | 400 `invalid_request`, guide URL |
+| 08 | Unknown consent text version | 400 `invalid_request` |
+| 09 | Body is not JSON | 400 `invalid_request` |
+| 10 | Honeypot filled (C) | 200 ordinary-looking success; nothing stored |
+| 11 | Turnstile token missing (D) | 403 `verification_failed`, guide URL; nothing stored |
+| 12 | `lm-test-<run-id>@example.com` | 403 `test_mode_refused`, guide URL; nothing stored |
+| 13 | Fault header without secret (E) | 200, `stored:true` (hook not activated) |
+| 14 | Fault header with wrong secret (F) | 200, `stored:true` (hook not activated) |
+| 15 | Fault header with correct secret (G) | 200, `stored:false`, guide URL; recovery alert emailed to info@jit-pro.com |
+| 16 | Preflight from `https://jit-pro.com` | 204, origin echoed |
+| 17 | Preflight from `https://evil.example` | 403, no `Access-Control-Allow-Origin` |
+| 18 | `GET` | 405 |
+| 19 | Contact H four times | 200, 200, 200, then 429 `rate_limited` with guide URL |
+
+## Rows one run creates
+
+Addresses are `delivered+lm-test-<run-id>-<letter>@resend.dev`. Every request row has `utm_source=lm-test-script`, `utm_medium=cli`, `utm_campaign=lm-test`, `utm_content=<run-id>`, `placement=landing-page`, `page_path=/field-guide`, `landing_path=/field-guide`, `referrer=https://www.linkedin.com/feed/` (query strings and fragments stripped), `asset_id=procurement-field-guide`, `asset_version=2026-09`, `consent_text_version=v1`, `consent_method=checkbox`, `turnstile_passed=true`, `fulfilment_status=delivered_inline`, `email_status=null`.
+
+| Table | Rows |
+|---|---|
+| `contacts` | **5**: A (`marketing_opt_in` after case 03), B (`marketing_opt_in`), E, F, H (`transactional_only`) |
+| `lead_magnet_requests` | **9**: A ×3 (`is_repeat` false, true, true; checkbox false, false, true), B ×1, E ×1, F ×1, H ×3 (`is_repeat` false, true, true) |
+| `lead_magnet_ip_activity` | **11** `request` rows sharing one salted hash (cases 01-04, 13-15, and the four case-19 attempts); removed automatically by the function's 24-hour retention |
+
+Nothing is stored for C, D, G, the `example.com` address, or cases 05-09. The only email sent is one recovery alert to info@jit-pro.com naming G's address.
+
+## Read-only verification
+
+```sql
+select email, consent_status, marketing_opt_in_at is not null as opted_in, first_source, first_campaign, first_landing_path, first_referrer
+from public.contacts
+where email like 'delivered+lm-test-<run-id>-%@resend.dev'
+order by email;
+
+select email, is_repeat, marketing_opt_in_checked, placement, page_path, landing_path, referrer, utm_content, email_status
+from public.lead_magnet_requests
+where utm_campaign = 'lm-test' and utm_content = '<run-id>'
+order by created_at;
+
+select activity_kind, count(*)
+from public.lead_magnet_ip_activity
+where created_at > now() - interval '1 hour'
+group by activity_kind;
+```
+
+## Recovery-alert delivery check (single request)
+
+The 19-case script proves the visitor response on the fail-open path, not that Resend accepted the alert. Step 3 (2026-09-15) showed the difference: case 15 passed while Resend rejected the email with 403 because the old `mail.jit-pro.com` sender is not verified (S2-19, S2-20). Use this one-off request after any change to the alert sender or transport. It needs its own new run id and creates no contact or request row.
+
+```bash
+RUN_ID=<new-run-id>
+curl -sS -X POST https://pynjyrvnokfexyudimsn.supabase.co/functions/v1/submit-lead-magnet-request \
+  -H "Content-Type: application/json" \
+  -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+  -H "x-lead-magnet-test-fault: persistence" \
+  -H "x-lead-magnet-test-fault-secret: $(cat ~/.jitpro/lead-magnet-test-fault-secret)" \
+  --data "{\"email\":\"delivered+lm-test-${RUN_ID}-alert@resend.dev\",\"asset_id\":\"procurement-field-guide\",\"placement\":\"landing-page\",\"page_path\":\"/field-guide\",\"utm_source\":\"lm-test-script\",\"utm_medium\":\"cli\",\"utm_campaign\":\"lm-test\",\"utm_content\":\"${RUN_ID}\",\"marketing_opt_in\":false,\"consent_text_version\":\"v1\",\"turnstile_token\":\"XXXX.DUMMY.TOKEN.XXXX\"}"
+```
+
+It passes only when all of these hold:
+
+1. the response is `200` with `ok:true`, `stored:false`, and the guide URL;
+2. Resend accepted the `/emails` request with HTTP 200, showing From `JiTpro Notifications <info@jit-pro.com>`, To `info@jit-pro.com`, subject *Field Guide request could not be saved*, tags `environment=test` and `message=recovery_alert`;
+3. the function log shows `recovery alert accepted by Resend` with a `resendMessageId` matching that entry;
+4. no new `contacts` or `lead_magnet_requests` row exists; only one `lead_magnet_ip_activity` row is added (rate limiting runs before the simulated failure) and expires after 24 hours;
+5. `leads`, its webhook, and all other existing objects are unchanged.
+
+The email arriving in the `info@jit-pro.com` inbox is confirmed separately by Jeff.
+
+## Sprint 3 fulfilment run (single controlled run)
+
+Sprint 3 adds the visitor's guide email and the internal notification. Verify it with the nine requests below rather than the 19-case suite, using a new run id. Each request creates rows and consumes Resend quota, so run it once.
+
+Addresses are `delivered+lm-s3-<run-id>-<letter>@resend.dev` unless stated. Every request carries `utm_source=lm-test-script`, `utm_campaign=lm-test`, `utm_content=<run-id>`, `placement=landing-page`.
+
+| # | Request | Expected |
+|---|---|---|
+| 1 | New address `-a` | 200, `email_status: "sent"`; guide email arrives at Resend; notification to info@ shows `Fulfilment email: sent` |
+| 2 | `-a` again, immediately | 200, `skipped_cooldown`; **no** second guide email; notification still sent |
+| 3 | `suppressed@resend.dev` | 200, `suppressed`; contact carries `email_suppressed_at` and reason `provider` |
+| 4 | `complained@resend.dev` | 200, `sent` |
+| 5 | `bounced@resend.dev` | 200, `sent`. Resend accepts and bounces later; mirroring bounces is deferred (F-7) |
+| 6 | `-f` with fault header `email` plus the fault secret | 200, `failed`, guide URL still returned, no guide email sent |
+| 7 | `-g` with fault header `email_suppressed` plus the secret | 200, `suppressed` |
+| 8 | `-h` with the fault header but **no** secret | 200, `sent`: the gate holds |
+| 9 | `info@jit-pro.com` | 200, `sent`. Jeff checks the real message: sender, Reply-To, subject, preheader, body, button, link, signature, the two footer lines, and the plain-text part, on desktop and mobile |
+
+Exact expected footprint, with no rounding:
+
+- **8 new contacts**, one per distinct address: `-a` (case 1), `suppressed@resend.dev` (3), `complained@resend.dev` (4), `bounced@resend.dev` (5), `-f` (6), `-g` (7), `-h` (8), `info@jit-pro.com` (9). Case 2 reuses `-a`.
+- **9 new `lead_magnet_requests`**, one per case. Case 2 is the only repeat (`is_repeat = true`).
+- **9 new `lead_magnet_ip_activity`** rows, one per request, all `activity_kind = request` under one daily hash. Nine attempts stay inside the 10-per-10-minute limit.
+- **Suppression state** on two contacts: case 7 through the gated fault, and case 3 if Resend rejects `suppressed@resend.dev` as suppressed.
+- **No visitor fulfilment email** for cases 2 (cooldown), 6 and 7 (faults).
+- **Resend calls: 15** — **6 fulfilment** (cases 1, 3, 4, 5, 8, 9) and **9 internal notifications**, one per persisted request regardless of the fulfilment outcome. A retry is added only if Resend returns a 5xx.
+- **Messages actually reaching `info@jit-pro.com`: 10** — 9 notifications plus the case 9 guide email. The `@resend.dev` addresses never leave Resend.
+
+Verify with the read-only queries above plus `email_status`, `email_provider_id`, and `email_error`. Cleanup is proposed separately and never run automatically.
+
+## Re-sending the guide email during development (S3-2)
+
+The one-hour cooldown holds for visitors and is never weakened. To re-test the email without waiting, add both headers below. The bypass needs test mode, an approved test recipient, the explicit header, and the fault secret; browsers cannot send it because the header is not CORS-allowed.
+
+```bash
+curl -sS -X POST https://pynjyrvnokfexyudimsn.supabase.co/functions/v1/submit-lead-magnet-request \
+  -H "Content-Type: application/json" \
+  -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+  -H "x-lead-magnet-test-bypass-cooldown: cooldown" \
+  -H "x-lead-magnet-test-fault-secret: $(cat ~/.jitpro/lead-magnet-test-fault-secret)" \
+  --data '{"email":"info@jit-pro.com","asset_id":"procurement-field-guide","placement":"landing-page","page_path":"/field-guide","utm_source":"lm-test-script","utm_medium":"cli","utm_campaign":"lm-test","utm_content":"<run-id>","marketing_opt_in":false,"consent_text_version":"v1","turnstile_token":"XXXX.DUMMY.TOKEN.XXXX"}'
+```
+
+Expect `"email_status":"sent"` every time. Without the secret, a repeat inside the hour returns `skipped_cooldown` and sends nothing. Each call still creates one request row and one IP-activity row.
+
+## Cleanup (never automatic)
+
+Test rows are removed only after Jeff approves the exact statements (plan decision S2-9). Never `TRUNCATE`. `lead_magnet_ip_activity` rows are not deleted by hand; they expire through the function's 24-hour retention.
