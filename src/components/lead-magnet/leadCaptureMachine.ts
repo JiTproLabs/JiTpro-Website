@@ -102,7 +102,23 @@ export function outcomeFor(result: SubmitResult): { outcome: VisitorOutcome; ret
       return { outcome: 'repeat_within_hour', retryable: false };
     case 'failed':
     case 'suppressed':
+      return { outcome: 'email_not_sent', retryable: false };
     case null:
+      /**
+       * THE HONEYPOT PATH (§13.3, "Honeypot filled": visitor state Success).
+       *
+       * The function answers a honeypot-filled request with `stored: true`
+       * and no email status: an ordinary-looking acceptance that stores
+       * nothing and sends nothing. The plan requires the submitter to see
+       * plain success, because a bot that can tell the honeypot apart from a
+       * real submission can simply stop filling it in.
+       *
+       * This is the only path that reports a stored request with no email
+       * status. Every genuinely stored request attempts a send and records
+       * one of the four statuses (Sprint 3), which the test beside this file
+       * pins, so no real visitor is promised an email that is not coming.
+       */
+      return { outcome: 'success', retryable: false };
     default:
       return { outcome: 'email_not_sent', retryable: false };
   }

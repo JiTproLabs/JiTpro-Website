@@ -61,11 +61,23 @@ export default function LeadMagnetCTA({ placement, variant }: LeadMagnetCTAProps
     recordImpression(FIELD_GUIDE_ID, placement, pagePath, store);
   }, [placement, pagePath]);
 
-  const handleClose = useCallback(() => {
-    setOpen(false);
-    // §28.1: focus returns to the control that opened the dialog.
-    triggerRef.current?.focus();
-  }, []);
+  const handleClose = useCallback(() => setOpen(false), []);
+
+  /**
+   * §28.1 and WCAG 2.4.3: focus returns to the control that opened the dialog.
+   *
+   * It MUST happen here rather than inside the close handler. Closing runs in
+   * this order: the handler sets state, React unmounts the dialog, and the
+   * dialog's own cleanup calls `close()` on the element. A native `close()`
+   * moves focus, so a `focus()` call made in the handler is overwritten a
+   * moment later and the visitor is dropped on `<body>`. A parent effect runs
+   * after the child's cleanup, which is the first moment the focus sticks.
+   */
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (wasOpen.current && !open) triggerRef.current?.focus();
+    wasOpen.current = open;
+  }, [open]);
 
   function handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
     // Leave a deliberate new-tab or new-window click alone.

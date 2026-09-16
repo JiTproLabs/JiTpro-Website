@@ -72,6 +72,16 @@ describe('outcomeFor: the §13.3 to §13.2 collapse', () => {
     ).toBe('email_not_sent');
   });
 
+  it('shows a bot plain success on the honeypot path, so the trap stays hidden (§13.3)', () => {
+    // The function answers a honeypot-filled request with stored: true and no
+    // email status. A distinguishable message would teach a spammer to stop
+    // filling the field in.
+    expect(outcomeFor({ kind: 'accepted', guideUrl: GUIDE, stored: true, emailStatus: null })).toEqual({
+      outcome: 'success',
+      retryable: false,
+    });
+  });
+
   it('maps a persistence failure to email not sent even when the response is ok', () => {
     expect(outcomeFor({ kind: 'accepted', guideUrl: GUIDE, stored: false, emailStatus: null }).outcome).toBe(
       'email_not_sent',
