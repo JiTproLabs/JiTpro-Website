@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| Status | **Sprint 1a complete and CI-verified on draft PR #52 (2026-09-13). Sprint 1b complete 2026-09-15: the approved 31-page PDF is committed and the stable route, headers, and consistency test are verified on the preview (L-8 done). Sprint 2 targets `jitpro_website`, the website's only Supabase project (G-8, D5.11 as amended 2026-09-14). All four Sprint 2 migrations are **applied to `jitpro_website` and verified** (2026-09-14 and 2026-09-15, records under Sprint 2 in §22), including the sequence-privilege fix `20260914000004`. `submit-lead-magnet-request` is implemented and CI-verified (S2-11 to S2-17); the four `LEAD_MAGNET_*` test-period secrets were set on 2026-09-15 (Step 1). Step 2 is complete: the function is deployed (v1, `ACTIVE`, `verify_jwt: false`) and verified with read-only checks and no-data probes. Step 3, the single controlled integration run `20260915s3`, passed all 19 cases; its 5 contacts, 9 requests, and 11 IP-activity rows remain in place pending Jeff's approval of the cleanup. **Sprint 2 is complete (2026-09-15):** migrations applied and verified, the function deployed (v2) and verified across all 19 cases, the recovery-alert sender corrected (S2-19, S2-20) with delivery to `info@jit-pro.com` manually confirmed by Jeff, and the test contacts and requests removed under the approved guarded cleanup. The 12 IP-activity rows expire on their own. Test mode and the test secrets stay set until go-live (L-6). **Sprint 3 is complete and formally closed (2026-09-16):** the fulfilment and internal-notification email is implemented and deployed (`submit-lead-magnet-request` **v5**, `ACTIVE`, `verify_jwt: false`), controlled run `20260916s3f` passed 9/9, the email presentation was redesigned and approved by Jeff in Outlook desktop as the baseline, S3-2 added an authenticated test-mode-only cooldown bypass, and the approved guarded cleanup ran after a passing read-only gate, leaving `contacts` and `lead_magnet_requests` empty. **Sprint 5 is complete and formally closed (2026-09-16).** **Sprint 6 is under way:** the `lead_magnet_events` table is applied and verified, `record-lead-magnet-event` is deployed (v1, `ACTIVE`, `verify_jwt: false`) with the original eight functions showing zero drift, the funnel vocabulary is corrected to §8.1 with the S6-2 conversion fix, the live sender and the eight saved queries are in, and all three implementation-dependent privacy claims have been verified against the running system: two were wrong and were corrected with Jeff's approval, and the third was confirmed accurate. Analytics were verified on the production build with every event intercepted, so no row was created; the database holds no lead-magnet data at all. **Remaining: the L-6 go-live switch, production Turnstile and Resend verification, PR #52 marked ready, Jeff's merge approval, the squash merge, the production smoke test and its cleanup** - each gated on Jeff. Under S6-3, generic L-3 no longer hard-blocks this launch. Test mode and the three test secrets stay set until L-6. Nothing is visitor-facing yet. Dependencies are Dependabot-only (G-6).** |
+| Status | **Sprint 1a complete and CI-verified on draft PR #52 (2026-09-13). Sprint 1b complete 2026-09-15: the approved 31-page PDF is committed and the stable route, headers, and consistency test are verified on the preview (L-8 done). Sprint 2 targets `jitpro_website`, the website's only Supabase project (G-8, D5.11 as amended 2026-09-14). All four Sprint 2 migrations are **applied to `jitpro_website` and verified** (2026-09-14 and 2026-09-15, records under Sprint 2 in §22), including the sequence-privilege fix `20260914000004`. `submit-lead-magnet-request` is implemented and CI-verified (S2-11 to S2-17); the four `LEAD_MAGNET_*` test-period secrets were set on 2026-09-15 (Step 1). Step 2 is complete: the function is deployed (v1, `ACTIVE`, `verify_jwt: false`) and verified with read-only checks and no-data probes. Step 3, the single controlled integration run `20260915s3`, passed all 19 cases; its 5 contacts, 9 requests, and 11 IP-activity rows remain in place pending Jeff's approval of the cleanup. **Sprint 2 is complete (2026-09-15):** migrations applied and verified, the function deployed (v2) and verified across all 19 cases, the recovery-alert sender corrected (S2-19, S2-20) with delivery to `info@jit-pro.com` manually confirmed by Jeff, and the test contacts and requests removed under the approved guarded cleanup. The 12 IP-activity rows expire on their own. Test mode and the test secrets stay set until go-live (L-6). **Sprint 3 is complete and formally closed (2026-09-16):** the fulfilment and internal-notification email is implemented and deployed (`submit-lead-magnet-request` **v5**, `ACTIVE`, `verify_jwt: false`), controlled run `20260916s3f` passed 9/9, the email presentation was redesigned and approved by Jeff in Outlook desktop as the baseline, S3-2 added an authenticated test-mode-only cooldown bypass, and the approved guarded cleanup ran after a passing read-only gate, leaving `contacts` and `lead_magnet_requests` empty. **Sprints 1 to 5 are complete and closed. Sprint 6 is in progress and the backend is now in PRODUCTION MODE.** L-6 ran successfully on 2026-09-16: the three test secrets removed (15 to 12), `LEAD_MAGNET_IP_SALT` retained, all nine Edge Functions version-bumped with identical bundles and configuration, and the database untouched. Production Turnstile was proven by the dummy token now returning 403, and one real fulfilment to `jeffk@kaufmanbuilding.com` returned `email_status: sent`, with the internal notification delivered to `info@jit-pro.com` and **Jeff confirming receipt of the external email**. **One verification contact and request (marker `20260916l6prod`) remain in the database pending an approved guarded cleanup, preserved in the break-point record below.** **PR #52 is still a draft and has NOT been merged; the production website does not yet have the feature and no post-merge smoke test has occurred.** The branch is clean, pushed, current with `main`, and CI is green. **Next: resume on the MacBook Pro, verify repository synchronization and deployed state, then continue from the PR #52 ready/cleanup/merge gate. Do not merge without Jeff's explicit approval.** Dependencies are Dependabot-only (G-6).** |
 | Owner / approver | Jeff Kaufman |
 | Document created | 2026-09-12 |
-| Last updated | 2026-09-16 (**Sprint 5 formally closed**: all three placements live on the branch, the offer band redesigned under Design System amendment A11 and visually approved by Jeff as the governed baseline; Sprint 6 in planning, implementation not started) |
+| Last updated | 2026-09-16 (**break point: machine handover to the MacBook Pro.** Sprints 1 to 5 closed; Sprint 6 in progress with **L-6 complete and production mode active**; one L-6 verification row (`20260916l6prod`) pending cleanup; PR #52 still draft and unmerged; the production website does not yet have the feature) |
 | Working branch | `feature/navigation-simplification-lead-gen-guide` (decision G-1, 2026-09-12) |
 | Source of truth | This document. When a decision is made it is recorded here and not revisited without cause. |
 
@@ -1501,6 +1501,119 @@ A baseline of every secret digest, all nine Edge Functions (version, bundle hash
 **Local development override removed.** `.env.local`, which supplied Cloudflare's published dummy Turnstile site key for Sprint 4 QA (S4-2), was deleted so future local development cannot silently use it. It was confirmed git-ignored and its removal produced no repository change.
 
 **Verification rows still in place.** The one contact and one request from run `20260916l6prod` are deliberately left for Jeff's review, with the guarded cleanup proposed separately. The IP-activity row expires under normal 24-hour retention.
+
+---
+
+## BREAK POINT (2026-09-16): machine handover, Windows PC to MacBook Pro
+
+**THE NEXT DECISION AND ACTION:**
+
+> **Resume on the MacBook Pro, verify repository synchronization and deployed state, then continue from the PR #52 ready/cleanup/merge gate. Do not merge without Jeff's explicit approval.**
+
+### Where the project stands
+
+| | |
+|---|---|
+| **Sprints 1a, 1b, 2, 3, 4, 5** | **Complete and formally closed.** |
+| **Sprint 6** | **In progress.** Analytics built, deployed and verified; privacy claims verified and corrected; **L-6 complete**. Remaining: the guarded cleanup of the L-6 verification row, marking PR #52 ready, Jeff's merge approval, the squash merge, the Cloudflare production check, the live smoke test and its cleanup. |
+| **Production website** | **Has NOT received the feature.** Nothing is visitor-facing; the CTA exists only on the branch. |
+| **PR #52** | **Still a draft. Not merged.** Description updated to the final §15 summary. |
+| **Post-merge smoke test** | **Not performed.** |
+
+### Backend state: production mode is ACTIVE
+
+**L-6 completed successfully on 2026-09-16.** The three test secrets were removed:
+
+- `LEAD_MAGNET_TEST_MODE` — removed
+- `LEAD_MAGNET_TURNSTILE_TEST_SECRET` — removed
+- `LEAD_MAGNET_TEST_FAULT_SECRET` — removed
+
+**`LEAD_MAGNET_IP_SALT` is retained** with its digest unchanged, because production rate limiting depends on it. Secrets went 15 to 12; no other digest changed; `LEAD_MAGNET_NOTIFY_TO` remains deliberately unset so internal notifications default to `info@jit-pro.com`.
+
+Because test mode is gone, every test hook is dead: the recipient restriction, the three simulated faults, the Cloudflare test-secret path, and the S3-2 development cooldown bypass. **The one-hour cooldown is now absolute**, which matters for any future testing.
+
+**9 Edge Functions, all `ACTIVE`.** All nine version-bumped by one when the secrets changed (S2-18), with **every bundle hash, `verify_jwt`, status, entrypoint and import-map setting identical** to the pre-L-6 baseline. Current versions: `submit-lead-magnet-request` v6, `record-lead-magnet-event` v2, `send-contact-notification` v22, `submit-contact` v7, `submit-investor-request` v9, `approve-investor` v9, `verify-investor-token` v7, `revoke-investor` v7, `list-investor-requests` v7.
+
+### Production verification that has already passed
+
+**Turnstile negative test: PASSED.** The Cloudflare dummy token that worked while test mode was on now returns **403 `verification_failed`**, with no database footprint at all. This is the proof the test path is genuinely gone.
+
+**External production fulfilment: SUCCEEDED.** One real request to **`jeffk@kaufmanbuilding.com`**, outside both `jit-pro.com` and `resend.dev`, returned HTTP 200 with `stored: true` and **`email_status: sent`**.
+
+**Internal notification to `info@jit-pro.com`: SUCCEEDED**, sent independently of the fulfilment email.
+
+**Jeff personally confirmed receipt of the external fulfilment email.**
+
+### The one outstanding database row
+
+**One verification contact and one request remain in `jitpro_website`, pending cleanup.** They are **not** production leads and must not be treated as such.
+
+**Identifying run marker: `20260916l6prod`** (`utm_source=lm-l6-verify`, `utm_medium=prod-check`, `utm_campaign=lm-test`, `utm_content=20260916l6prod`).
+
+Contact `jeffk@kaufmanbuilding.com`, `transactional_only`, `marketing_opt_in_at` null. Request: `placement=home-band`, `page_path=/`, `consent_text_version=v1`, `turnstile_passed=true`, `email_status=sent`, provider id present.
+
+**The approved-pattern guarded cleanup, preserved so the Mac session need not reconstruct it.** It is **not executed**; it needs Jeff's approval, and he may prefer to run it after the smoke test so one cleanup covers both sets of rows.
+
+```sql
+do $$
+declare v_req bigint; v_other_req bigint; v_other_con bigint; v_dr bigint; v_dc bigint;
+begin
+  create temporary table _tmp_l6 on commit drop as
+    select id, contact_id from public.lead_magnet_requests
+    where utm_source='lm-l6-verify' and utm_medium='prod-check'
+      and utm_campaign='lm-test' and utm_content='20260916l6prod';
+
+  select count(*) into v_req from _tmp_l6;
+  select count(*) into v_other_req from public.lead_magnet_requests r
+    where not exists (select 1 from _tmp_l6 t where t.id=r.id);
+  select count(*) into v_other_con from public.contacts c
+    where not exists (select 1 from _tmp_l6 t where t.contact_id=c.id);
+
+  if v_req <> 1 then raise exception 'GATE: expected 1 request, found %', v_req; end if;
+  if v_other_req <> 0 then raise exception 'GATE: expected 0 other requests, found %', v_other_req; end if;
+  if v_other_con <> 0 then raise exception 'GATE: expected 0 other contacts, found %', v_other_con; end if;
+
+  delete from public.lead_magnet_requests r using _tmp_l6 t where r.id=t.id;
+  get diagnostics v_dr = row_count;
+  delete from public.contacts c using _tmp_l6 t where c.id=t.contact_id
+    and not exists (select 1 from public.lead_magnet_requests r where r.contact_id=c.id);
+  get diagnostics v_dc = row_count;
+
+  if v_dr <> 1 then raise exception 'ABORT: deleted % requests', v_dr; end if;
+  if v_dc <> 1 then raise exception 'ABORT: deleted % contacts', v_dc; end if;
+end $$;
+```
+
+**Gate before running it:** exactly 1 request carrying the marker, 0 non-marker requests, 0 non-marker contacts. **If anything differs, STOP** — a difference after this date may mean a real visitor lead exists, which changes the decision entirely. IP-activity rows are never hand-deleted; they expire under the 24-hour retention.
+
+### Database state at the break point
+
+`contacts` **1**, `lead_magnet_requests` **1** (both the verification row above), `lead_magnet_events` **0**, `lead_magnet_ip_activity` 29 (expiring), **`leads` 59 with its latest timestamp unchanged**, webhook invocations **52**, `investor_access` 10, `profiles` 0, 7 public tables, 3 RLS policies, 1 database function, 1 trigger. The contact form and its pipeline were never touched at any point.
+
+### Repository state
+
+Branch `feature/navigation-simplification-lead-gen-guide`, working tree clean, fully pushed and synchronized with `origin`. **Branch is current with `main`** (`main` has not advanced; the branch is ahead only). **Final CI is green:** `build-and-test` and Cloudflare Pages both pass. Locally: 342 tests, typecheck clean, lint 0 errors (4 pre-existing warnings), build and `audit-ci` pass, `package.json` and the lockfile unchanged throughout the project.
+
+### What does NOT transfer through GitHub
+
+- **`.env`** is git-ignored and must be recreated on the MacBook Pro. It holds three values: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_TURNSTILE_SITE_KEY`. All three are also set in the Cloudflare Pages environment, which is the authoritative copy.
+- **`.env.local` no longer exists and must not be recreated.** It carried Cloudflare's dummy Turnstile site key for Sprint 4 QA and was deliberately removed at L-6 so local development cannot silently bypass production Turnstile.
+- **Supabase CLI authentication** is per-machine; run `supabase login` on the Mac.
+- `node_modules/`, `dist/` and `supabase/.temp/` are regenerated by `npm ci` and the build.
+- **`~/.jitpro/lead-magnet-test-fault-secret` is now obsolete** and must NOT be carried over. The secret it mirrored was removed from Supabase at L-6, so the file is inert; it can be deleted on this PC whenever convenient.
+
+### Remaining sequence after resuming
+
+1. Verify repository sync and deployed state (9 functions, 12 secrets, the row counts above).
+2. Decide the cleanup timing for `20260916l6prod`: now, or together with the smoke-test rows.
+3. Mark PR #52 ready **on Jeff's instruction**.
+4. **Jeff's explicit merge approval**, then the squash merge (squash-only ruleset; `build-and-test` required and strict).
+5. Verify the Cloudflare production deployment.
+6. Run the live smoke test, verify the email and the analytics events.
+7. Propose the guarded cleanup of the smoke-test rows.
+8. Record the launch in this plan.
+
+**Recommended but not launch-blocking:** L-9 Cloudflare Web Analytics, L-11 Pulsetic monitor, L-10 Supabase log retention, L-1 mailbox monitoring confirmation. **Deferred:** L-5 Turnstile preview hostnames, F-7 Resend webhook receiver, and the unsubscribe mechanism, which is required only before the first marketing email and this launch sends none.
 
 ---
 
