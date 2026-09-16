@@ -9,8 +9,10 @@
  *   - The plan's bracketed notes ([verify at Sprint 5], [verify against the
  *     actual launch implementation], the S3-1 amendment line) are editorial
  *     instructions to the implementers, not text for a visitor, so they are
- *     not rendered. They are carried in `PENDING_VERIFICATION` so the Sprint 5
- *     and Sprint 6 checks have a list to work from.
+ *     not rendered. Three of them were checked against the running system on
+ *     2026-09-16 and are recorded in `VERIFIED_CLAIMS`; two required the copy
+ *     to change and were corrected with Jeff's approval. `PENDING_VERIFICATION`
+ *     now holds only the publication date.
  *   - NO POSTAL ADDRESS ANYWHERE (S3-1, 2026-09-15). Contact is
  *     `info@jit-pro.com` and nothing else. The test beside this file enforces
  *     that, so the address cannot return by accident.
@@ -92,7 +94,7 @@ export const PRIVACY_SECTIONS: readonly PrivacySection[] = [
   {
     heading: 'Cookies.',
     body: [
-      'We do not set cookies for analytics or advertising. Cloudflare, which serves our website, may set strictly necessary technical cookies for security and performance. Session storage, described above, is not a cookie and is cleared at the end of your visit.',
+      'We do not set cookies for analytics or advertising. The infrastructure providers that serve and protect the website and process your request may set strictly necessary technical cookies for security and performance. For example, submitting the Field Guide form may cause a short-lived security cookie to be set as part of processing and protecting the request. Session storage, described above, is not a cookie and is cleared at the end of your visit.',
     ],
   },
   {
@@ -114,7 +116,7 @@ export const PRIVACY_SECTIONS: readonly PrivacySection[] = [
   {
     heading: 'Email delivery records.',
     body: [
-      'Our email service tells us whether a message was delivered, bounced, or was reported as unwanted. If an address bounces or is reported as unwanted, we stop sending to it. We keep that status so we do not try again.',
+      'We use an email provider to deliver the guide. The provider processes delivery information and may stop delivering to an address it identifies as undeliverable or problematic. When we send you the guide you requested, we record the immediate result our provider returns for that attempt, so we know whether the message was accepted and can tell you if it was not.',
     ],
   },
   {
@@ -168,10 +170,18 @@ export const PRIVACY_SECTIONS: readonly PrivacySection[] = [
  * published (plan §27, Sprint 5 and Sprint 6).
  */
 export const PENDING_VERIFICATION: readonly string[] = [
-  'Cookies: confirm whether Cloudflare sets strictly necessary technical cookies on this project (Sprint 5).',
-  'Email delivery records: confirm the paragraph against the launch implementation and Resend behaviour before publication.',
-  'Service providers: confirm the no-sale, no-sharing sentence at final review.',
   'Last updated: set the publication date at go-live (Sprint 6).',
+];
+
+/**
+ * The implementation-dependent claims the draft carried, and what verifying
+ * them produced. Kept here rather than deleted so the next person can see that
+ * each was checked against the running system rather than assumed.
+ */
+export const VERIFIED_CLAIMS: readonly string[] = [
+  'Cookies: VERIFIED AND CORRECTED 2026-09-16. jit-pro.com itself sets no cookies on any route, but a short-lived security cookie is set when the browser calls the Supabase Edge Functions that process a request. The sentence previously attributed all cookies to the provider serving the website; it now covers the providers that process the request as well.',
+  'Email delivery records: VERIFIED AND CORRECTED 2026-09-16. The original paragraph described a system with a webhook receiver. There is none (F-7 is deferred), so JiTpro never receives asynchronous bounce or complaint notifications; it records only the immediate result of its own send attempt, and the provider handles suppression. The paragraph now says exactly that.',
+  'Service providers: VERIFIED ACCURATE 2026-09-16, unchanged. The services that actually receive data are Resend (email), Cloudflare (hosting and Turnstile), Supabase (database and functions) and Microsoft 365 (the info@ mailbox). No advertiser, data broker or enrichment service is involved, and nothing is sold.',
 ];
 
 /** Every string a visitor reads on the privacy page, for the governance tests. */

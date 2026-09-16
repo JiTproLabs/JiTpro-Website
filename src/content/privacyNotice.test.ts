@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   PENDING_VERIFICATION,
+  VERIFIED_CLAIMS,
   PRIVACY_CONTACT_EMAIL,
   PRIVACY_INTRO,
   PRIVACY_LAST_UPDATED,
@@ -73,6 +74,46 @@ describe('what the notice claims about the implementation', () => {
     expect(cookies?.body?.[0]).toContain('Session storage, described above, is not a cookie');
   });
 
+  /**
+   * Corrected 2026-09-16 after verification. jit-pro.com sets no cookies on any
+   * route, but submitting the form causes a short-lived security cookie to be
+   * set by the infrastructure that processes the request. The old sentence
+   * attributed every cookie to the provider serving the website.
+   */
+  it('covers the providers that PROCESS a request, not only the one serving the site', () => {
+    const cookies = PRIVACY_SECTIONS.find((section) => section.heading === 'Cookies.')?.body?.[0] ?? '';
+    expect(cookies).toContain('process your request');
+    expect(cookies).toContain('submitting the Field Guide form may cause a short-lived security cookie');
+    // The superseded attribution must not come back.
+    expect(cookies).not.toContain('Cloudflare, which serves our website, may set');
+  });
+
+  /**
+   * Corrected 2026-09-16. There is no Resend webhook receiver (F-7 deferred),
+   * so JiTpro never receives asynchronous bounce or complaint notifications.
+   * The old paragraph described a system that does.
+   */
+  it('claims only the immediate send result, never asynchronous bounce or complaint notices', () => {
+    const email = PRIVACY_SECTIONS.find((s) => s.heading === 'Email delivery records.')?.body?.[0] ?? '';
+    expect(email).toContain('we record the immediate result our provider returns for that attempt');
+    expect(email).toContain('may stop delivering to an address it identifies as undeliverable or problematic');
+    for (const withdrawn of [
+      'tells us whether a message was delivered, bounced, or was reported as unwanted',
+      'If an address bounces or is reported as unwanted, we stop sending to it',
+      'We keep that status so we do not try again',
+    ]) {
+      expect(email, withdrawn).not.toContain(withdrawn);
+    }
+  });
+
+  it('records what verification produced, so the checks are visible rather than assumed', () => {
+    expect(VERIFIED_CLAIMS).toHaveLength(3);
+    for (const claim of VERIFIED_CLAIMS) expect(claim).toMatch(/VERIFIED/);
+    // Only the publication date is still outstanding.
+    expect(PENDING_VERIFICATION).toHaveLength(1);
+    expect(PENDING_VERIFICATION[0]).toContain('Last updated');
+  });
+
   it('describes the salted IP hash and its 24-hour retention (D2.7)', () => {
     const abuse = PRIVACY_SECTIONS.find((section) => section.heading === 'Information used only to prevent abuse.');
     expect(abuse?.bullets?.[1]).toContain('one-way, salted hash');
@@ -98,6 +139,13 @@ describe('editorial governance', () => {
 
   it('keeps the outstanding verification items as a working list instead', () => {
     expect(PENDING_VERIFICATION.length).toBeGreaterThan(0);
+  });
+
+  it('renders no verification bookkeeping to a visitor', () => {
+    for (const value of PRIVACY_STRINGS) {
+      expect(value, value).not.toContain('VERIFIED');
+      expect(value, value).not.toContain('F-7');
+    }
   });
 
   it('uses no em dashes (§7.7)', () => {
