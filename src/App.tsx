@@ -54,7 +54,6 @@ const ProductRegisterScreen = lazy(() => import('./components/demo/screens/Produ
 const CommitmentRegisterLive = lazy(() => import('./components/demo/screens/CommitmentRegisterScreen'));
 const ScopeGapAnalysisScreen = lazy(() => import('./components/demo/screens/ScopeGapAnalysisScreen'));
 const ScopeValidationScreen = lazy(() => import('./components/demo/screens/ScopeValidationScreen'));
-const LeadMagnetQA = lazy(() => import('./pages/LeadMagnetQA'));
 
 /* TEAM REVIEW - unlisted, in the production build. The procurement schedule
    prototype behind a plain URL the team can open, rendering the same
@@ -62,6 +61,12 @@ const LeadMagnetQA = lazy(() => import('./pages/LeadMagnetQA'));
    Lazy so the schedule and its stylesheet stay in their own chunk. Not linked
    from any surface; the page marks itself noindex, nofollow. */
 const ProcurementScheduleReview = lazy(() => import('./pages/review/ProcurementScheduleReview'));
+
+/* TEAM REVIEW - unlisted, in the production build. The lead-magnet band and
+   dialog outside any production surface, so the capture experience can be
+   reviewed on a Cloudflare preview before Sprint 5 places it. Deleted when
+   Sprint 5 lands. Not linked from any surface; noindex, nofollow. */
+const LeadMagnetReview = lazy(() => import('./pages/review/LeadMagnetReview'));
 
 import HomepageConcept from './pages/HomepageConcept';
 import CompanyProjectHealth from './pages/CompanyProjectHealth';
@@ -83,6 +88,10 @@ function App() {
         <Route
           path="/review/procurement-schedule"
           element={<Suspense fallback={null}><ProcurementScheduleReview /></Suspense>}
+        />
+        <Route
+          path="/review/lead-magnet"
+          element={<Suspense fallback={null}><LeadMagnetReview /></Suspense>}
         />
 
         {/* Investor sub-site — own nav/footer */}
@@ -118,9 +127,6 @@ function App() {
             <Route path="/demo-lab/scope-gap-analysis-compare" element={<Suspense fallback={null}><ScreenCompareLab component={ScopeGapAnalysisScreen} reference="scope-gap-analysis" title="Scope Gap Analysis" initial="side" /></Suspense>} />
             <Route path="/demo-lab/scope-validation" element={<Suspense fallback={null}><ScreenCompareLab component={ScopeValidationScreen} reference="scope-validation" title="Scope Validation" /></Suspense>} />
             <Route path="/demo-lab/scope-validation-compare" element={<Suspense fallback={null}><ScreenCompareLab component={ScopeValidationScreen} reference="scope-validation" title="Scope Validation" initial="side" /></Suspense>} />
-            {/* Lead-magnet QA harness: the band and dialog outside any
-                production surface. Sprint 5 adds the real placements. */}
-            <Route path="/lead-magnet-qa" element={<Suspense fallback={null}><LeadMagnetQA /></Suspense>} />
           </>
         )}
 
