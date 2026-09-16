@@ -165,97 +165,112 @@ describe('sendFunnelEvent never breaks a capture', () => {
     vi.unstubAllEnvs();
   });
 
-  it('sends nothing at all when the function URL or key is missing', () => {
-    vi.stubEnv('VITE_SUPABASE_URL', '');
-    const beacon = vi.fn(() => true);
-    const originalNavigator = globalThis.navigator;
-    Object.defineProperty(globalThis, 'navigator', { value: { sendBeacon: beacon }, configurable: true });
-    try {
-      sendFunnelEvent({
-        event: 'lead_magnet_cta_view',
-        assetId: 'procurement-field-guide',
-        placement: 'home-band',
-        pagePath: '/',
-      });
-    } finally {
-      Object.defineProperty(globalThis, 'navigator', { value: originalNavigator, configurable: true });
-    }
-    expect(beacon).not.toHaveBeenCalled();
-  });
+  const EVENT_URL = 'https://example.supabase.co/functions/v1/record-lead-magnet-event';
 
-  it('prefers sendBeacon, which survives the page unloading', () => {
+  const CLICK = {
+    event: 'lead_magnet_download_click',
+    assetId: 'procurement-field-guide',
+    placement: 'home-band',
+    pagePath: '/',
+  } as const;
+
+  /**
+   * Runs `send` against a navigator that offers a willing `sendBeacon` and a
+   * fake `fetch`, restoring both. The beacon is deliberately available and
+   * deliberately returns true: the fix is that it must not be used at all,
+   * because its credentialed preflight fails against the function's CORS
+   * headers and the event is silently lost (diagnosed 2026-09-16).
+   */
+  function withTransport(
+    send: () => void,
+    fetchImpl: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> = () =>
+      Promise.resolve(new Response(null, { status: 204 })),
+  ) {
     const beacon = vi.fn(() => true);
-    const fetchSpy = vi.fn();
+    const fetchSpy = vi.fn(fetchImpl);
     const originalNavigator = globalThis.navigator;
     const originalFetch = globalThis.fetch;
-    Object.defineProperty(globalThis, 'navigator', {
-      value: { sendBeacon: beacon },
-      configurable: true,
-    });
+    Object.defineProperty(globalThis, 'navigator', { value: { sendBeacon: beacon }, configurable: true });
     globalThis.fetch = fetchSpy as unknown as typeof fetch;
     try {
-      sendFunnelEvent({
-        event: 'lead_magnet_download_click',
-        assetId: 'procurement-field-guide',
-        placement: 'home-band',
-        pagePath: '/',
-      });
+      send();
     } finally {
       Object.defineProperty(globalThis, 'navigator', { value: originalNavigator, configurable: true });
       globalThis.fetch = originalFetch;
     }
-    expect(beacon).toHaveBeenCalledTimes(1);
+    const call = fetchSpy.mock.calls[0];
+    return { beacon, fetchSpy, url: call ? String(call[0]) : undefined, init: call?.[1] };
+  }
+
+  it('sends nothing at all when the function URL or key is missing', () => {
+    vi.stubEnv('VITE_SUPABASE_URL', '');
+    const { beacon, fetchSpy } = withTransport(() => sendFunnelEvent(CLICK));
+    expect(beacon).not.toHaveBeenCalled();
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it('falls back to keepalive fetch when sendBeacon refuses', () => {
-    const beacon = vi.fn(() => false);
-    // Typed with fetch's own signature so the recorded call tuple is typed,
-    // and the parameters are used so no-unused-vars stays satisfied.
-    const fetchSpy = vi.fn((input: RequestInfo | URL, init?: RequestInit) =>
-      Promise.resolve(new Response(JSON.stringify({ input: String(input), method: init?.method }), { status: 204 })),
-    );
-    const originalNavigator = globalThis.navigator;
-    const originalFetch = globalThis.fetch;
-    Object.defineProperty(globalThis, 'navigator', { value: { sendBeacon: beacon }, configurable: true });
-    globalThis.fetch = fetchSpy as unknown as typeof fetch;
-    try {
-      sendFunnelEvent({
-        event: 'lead_magnet_cta_view',
-        assetId: 'procurement-field-guide',
-        placement: 'home-band',
-        pagePath: '/',
-      });
-    } finally {
-      Object.defineProperty(globalThis, 'navigator', { value: originalNavigator, configurable: true });
-      globalThis.fetch = originalFetch;
-    }
+  it('posts to the bare function URL, with no key in the query string', () => {
+    const { fetchSpy, url } = withTransport(() => sendFunnelEvent(CLICK));
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy.mock.calls[0]?.[1]).toMatchObject({ keepalive: true, method: 'POST' });
+    expect(url).toBe(EVENT_URL);
+    expect(url).not.toContain('?');
+    expect(url).not.toContain('test-anon-key');
   });
 
-  it('swallows a throwing transport rather than surfacing it to the visitor', () => {
-    const originalNavigator = globalThis.navigator;
-    Object.defineProperty(globalThis, 'navigator', {
-      value: {
-        sendBeacon: () => {
+  it('sends the same headers as the proven submission path', () => {
+    const { init } = withTransport(() => sendFunnelEvent(CLICK));
+    expect(init?.method).toBe('POST');
+    expect(init?.headers).toEqual({
+      'Content-Type': 'application/json',
+      apikey: 'test-anon-key',
+      Authorization: 'Bearer test-anon-key',
+    });
+  });
+
+  it('keeps the request alive across navigation', () => {
+    const { init } = withTransport(() => sendFunnelEvent(CLICK));
+    expect(init?.keepalive).toBe(true);
+  });
+
+  it('sends exactly the wire body the endpoint parses', () => {
+    const errorEvent = {
+      event: 'lead_magnet_request_error',
+      errorKind: 'rate_limited',
+      assetId: 'procurement-field-guide',
+      placement: 'footer-link',
+      pagePath: '/field-guide',
+    } as const;
+    const { init } = withTransport(() => sendFunnelEvent(errorEvent));
+    expect(typeof init?.body).toBe('string');
+    expect(JSON.parse(init?.body as string)).toEqual(buildEventBody(errorEvent));
+  });
+
+  it('never uses sendBeacon, whose credentialed preflight the function cannot pass', () => {
+    const { beacon, fetchSpy } = withTransport(() => sendFunnelEvent(CLICK));
+    expect(beacon).not.toHaveBeenCalled();
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('swallows a transport that throws rather than surfacing it to the visitor', () => {
+    expect(() =>
+      withTransport(
+        () => sendFunnelEvent(CLICK),
+        () => {
           throw new Error('blocked');
         },
-      },
-      configurable: true,
-    });
-    try {
-      expect(() =>
-        sendFunnelEvent({
-          event: 'lead_magnet_form_submit',
-          assetId: 'procurement-field-guide',
-          placement: 'home-band',
-          pagePath: '/',
-        }),
-      ).not.toThrow();
-    } finally {
-      Object.defineProperty(globalThis, 'navigator', { value: originalNavigator, configurable: true });
-    }
+      ),
+    ).not.toThrow();
+  });
+
+  it('swallows a transport that rejects, leaving no unhandled rejection behind', async () => {
+    expect(() =>
+      withTransport(
+        () => sendFunnelEvent(CLICK),
+        () => Promise.reject(new Error('offline')),
+      ),
+    ).not.toThrow();
+    // Let the rejection settle; Vitest fails the run if it was left unhandled.
+    await new Promise((resolve) => setTimeout(resolve, 0));
   });
 
   it('records an impression without throwing', () => {

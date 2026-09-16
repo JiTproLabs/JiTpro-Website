@@ -89,14 +89,6 @@ export function shouldRecordImpression(
   }
 }
 
-/**
- * Sprint 6 replaces this body with a `navigator.sendBeacon` call (fetch with
- * `keepalive` as the fallback) to `record-lead-magnet-event`. Its signature
- * and every call site are already correct.
- *
- * It never throws and never returns a promise the caller must handle:
- * analytics must not be able to break a capture.
- */
 /** The wire body `record-lead-magnet-event` parses. Snake case, five keys. */
 export function buildEventBody(payload: FunnelPayload): Record<string, unknown> {
   return {
@@ -113,16 +105,23 @@ export function buildEventBody(payload: FunnelPayload): Record<string, unknown> 
 /**
  * Sends one funnel event, and CANNOT break a capture.
  *
- * `sendBeacon` is used first because it survives the page unloading, which
- * matters for `lead_magnet_download_click`: the guide opens in a new tab and
- * the visitor may leave immediately. It is fire-and-forget by design and
- * returns only whether the browser queued the request, never what the server
- * said. `fetch` with `keepalive` is the fallback where `sendBeacon` is absent
- * or refuses (it has its own queue limits).
+ * The request has exactly the shape of the proven submission path: `fetch`,
+ * a JSON body, and the `apikey` and `Authorization` headers, so it passes the
+ * same CORS preflight against the same shared helper. `keepalive` lets the
+ * request outlive navigation, which matters for `lead_magnet_download_click`.
  *
- * Every failure path is swallowed. The endpoint answers 204 to everything for
- * the same reason: analytics must never be visible in the visitor experience
- * (contract approved 2026-09-16).
+ * `navigator.sendBeacon` is deliberately NOT used (diagnosed 2026-09-16). A
+ * beacon is a credentialed request, and its JSON body forces a preflight that
+ * the browser accepts only when the response grants credentials, which the
+ * lead-magnet CORS helper never does. Chrome therefore discarded every beacon
+ * after `sendBeacon` had already reported success, and no event was ever
+ * posted. A beacon would also carry the key in the query string and send the
+ * visitor's cookies; this transport does neither.
+ *
+ * It is fire-and-forget: the response is ignored and every failure path is
+ * swallowed. The endpoint answers 204 to everything for the same reason:
+ * analytics must never be visible in the visitor experience (contract
+ * approved 2026-09-16).
  */
 export function sendFunnelEvent(payload: FunnelPayload): void {
   try {
@@ -130,26 +129,14 @@ export function sendFunnelEvent(payload: FunnelPayload): void {
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     if (!baseUrl || !anonKey) return;
 
-    const url = `${baseUrl}/functions/v1/record-lead-magnet-event`;
-    const body = JSON.stringify(buildEventBody(payload));
-
-    // sendBeacon cannot set the apikey header, so the key rides in the query
-    // string, which is how a beacon authenticates to a Supabase function. The
-    // anon key is public by design: it is already in the browser bundle, and
-    // the function grants nothing beyond inserting one constrained row.
-    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
-      const beaconUrl = `${url}?apikey=${encodeURIComponent(anonKey)}`;
-      if (navigator.sendBeacon(beaconUrl, new Blob([body], { type: 'application/json' }))) return;
-    }
-
-    void fetch(url, {
+    void fetch(`${baseUrl}/functions/v1/record-lead-magnet-event`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         apikey: anonKey,
         Authorization: `Bearer ${anonKey}`,
       },
-      body,
+      body: JSON.stringify(buildEventBody(payload)),
       keepalive: true,
     }).catch(() => undefined);
   } catch {
