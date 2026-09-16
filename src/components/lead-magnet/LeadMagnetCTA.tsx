@@ -1,7 +1,16 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FIELD_GUIDE, FIELD_GUIDE_COPY, FIELD_GUIDE_ID, type LeadMagnetPlacement } from '../../content/leadMagnets';
+import { ArrowRight } from 'lucide-react';
+import {
+  FIELD_GUIDE,
+  FIELD_GUIDE_COPY,
+  FIELD_GUIDE_ID,
+  GUIDE_COVER_WIDTHS,
+  guideCoverPath,
+  type LeadMagnetPlacement,
+} from '../../content/leadMagnets';
 import { recordImpression, sendFunnelEvent } from './funnel';
+import './publicationObject.css';
 
 /**
  * The Field Guide offer, as a band (Design System §20.2) or as a quiet footer
@@ -24,17 +33,23 @@ import { recordImpression, sendFunnelEvent } from './funnel';
 
 const LeadMagnetDialog = lazy(() => import('./LeadMagnetDialog'));
 
-/** §20.2: the band's eyebrow is its only amber. */
+/** §20.2: one of the band's two permitted amber elements (A11). */
 const BAND_EYEBROW_CLASSES =
   'font-mono text-xs uppercase tracking-[0.18em] text-jp-brand-amber';
 
 /**
- * §26.1 hairline secondary. The band's action must stay subordinate to the
- * page's commercial primary action, so it takes no fill and its one hover
- * gesture moves border and label together.
+ * The band's action (§20.2 as amended by A11). Brand Amber fill with
+ * `--jp-background` ink, matching the approved fulfilment-email CTA.
+ *
+ * SUBORDINATION IS CARRIED BY WEIGHT, NOT HUE. This is the same amber as the
+ * page's commercial primary, so every other property has to do the work:
+ * `px-6 py-3.5` and `text-[0.9375rem]` against the primary's larger padding
+ * and type, and crucially NO shadow, glow, or elevation, where the commercial
+ * primary carries an amber glow. §48.1 still holds, because it is scoped to a
+ * surface and the band is its own surface under §48.6.
  */
-const HAIRLINE_BUTTON_CLASSES =
-  'inline-flex w-full max-w-md items-center justify-center rounded-xl border border-jp-border/30 px-7 py-4 text-[0.9375rem] font-semibold text-jp-text-primary transition-colors duration-200 ease-out hover:border-jp-brand-amber-active hover:text-jp-brand-amber-active focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-jp-text-primary motion-reduce:transition-none sm:w-auto';
+const BAND_ACTION_CLASSES =
+  'inline-flex w-full max-w-md items-center justify-center gap-2 rounded-xl bg-jp-brand-amber px-6 py-3.5 text-[0.9375rem] font-semibold text-jp-background transition-colors duration-200 ease-out hover:bg-jp-brand-amber-active focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-jp-text-primary motion-reduce:transition-none sm:w-auto';
 
 const FOOTER_LINK_CLASSES =
   'inline-flex min-h-[44px] items-center text-[0.9375rem] text-jp-text-secondary transition-colors duration-200 ease-out hover:text-jp-brand-amber-active focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-jp-text-primary motion-reduce:transition-none';
@@ -108,14 +123,18 @@ export default function LeadMagnetCTA({ placement, variant }: LeadMagnetCTAProps
 
   return (
     <>
-      {/* §20.2: elevated band tone, hairlines top and bottom, left-aligned,
-          two columns from lg with the action right- and bottom-aligned. */}
+      {/* §20.2 as amended by A11: a product-style feature band. The copy
+          column carries the eyebrow, heading, supporting sentence and the
+          action; the publication column carries the object of §20.2.1. Below
+          lg it stacks eyebrow, heading, copy, action, object, so the reader
+          reaches the action before the picture. */}
       <section
         aria-labelledby="lead-magnet-band-heading"
         className="border-y border-jp-border/12 bg-jp-surface"
       >
         <div className="mx-auto max-w-7xl px-6 py-20 sm:px-8 sm:py-24 lg:px-10 lg:py-28">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
+          <div className="flex flex-col gap-12 lg:grid lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-center lg:gap-16">
+            {/* Copy column. */}
             <div className="max-w-2xl">
               <p className={BAND_EYEBROW_CLASSES}>{FIELD_GUIDE_COPY.band.eyebrow}</p>
               <h2
@@ -124,20 +143,47 @@ export default function LeadMagnetCTA({ placement, variant }: LeadMagnetCTAProps
               >
                 {FIELD_GUIDE_COPY.band.heading}
               </h2>
-              <p className="mt-4 text-lg leading-relaxed text-jp-text-secondary">
+              <p className="mt-5 text-lg leading-relaxed text-jp-text-secondary">
                 {FIELD_GUIDE_COPY.band.supporting}
               </p>
+
+              <div className="mt-9">
+                <a
+                  ref={triggerRef}
+                  href={FIELD_GUIDE.landingPath}
+                  onClick={handleClick}
+                  className={BAND_ACTION_CLASSES}
+                >
+                  {FIELD_GUIDE_COPY.band.button}
+                  <ArrowRight size={18} aria-hidden="true" className="shrink-0" />
+                </a>
+              </div>
             </div>
 
-            <div className="flex-none">
-              <a
-                ref={triggerRef}
-                href={FIELD_GUIDE.landingPath}
-                onClick={handleClick}
-                className={HAIRLINE_BUTTON_CLASSES}
-              >
-                {FIELD_GUIDE_COPY.band.button}
-              </a>
+            {/* Publication column (§20.2.1). A mechanical render of page 1 of
+                the approved PDF, never a recreation. Decorative in the
+                accessibility tree: the eyebrow, heading and supporting
+                sentence above already name the publication, so a screen
+                reader repeating the cover text would be redundant. Never
+                interactive (§20.2). */}
+            <div className="jp-pub" aria-hidden="true">
+              <div className="jp-pub__ground">
+                <div className="jp-pub__book">
+                  <img
+                    className="jp-pub__cover"
+                    src={`${import.meta.env.BASE_URL}${guideCoverPath(FIELD_GUIDE, 1600)}`}
+                    srcSet={GUIDE_COVER_WIDTHS.map(
+                      (width) => `${import.meta.env.BASE_URL}${guideCoverPath(FIELD_GUIDE, width)} ${width}w`,
+                    ).join(', ')}
+                    sizes="(min-width: 1024px) 21rem, 17rem"
+                    width={1600}
+                    height={2070}
+                    loading="lazy"
+                    decoding="async"
+                    alt=""
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
