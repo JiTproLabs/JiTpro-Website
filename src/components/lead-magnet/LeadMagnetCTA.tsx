@@ -100,7 +100,7 @@ export default function LeadMagnetCTA({ placement, variant }: LeadMagnetCTAProps
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
 
     event.preventDefault();
-    sendFunnelEvent({ event: 'cta_click', assetId: FIELD_GUIDE_ID, placement, pagePath });
+    sendFunnelEvent({ event: 'lead_magnet_cta_click', assetId: FIELD_GUIDE_ID, placement, pagePath });
     setOpen(true);
   }
 

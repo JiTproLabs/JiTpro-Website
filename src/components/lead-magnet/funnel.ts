@@ -15,25 +15,48 @@
  */
 
 import type { LeadMagnetId, LeadMagnetPlacement } from '../../content/leadMagnets';
+import type { SubmitResult } from './leadCaptureMachine';
 
-/** The seven names, fixed by the plan. Implementation and reporting use these exactly. */
+/**
+ * The seven names, fixed by plan §8.1. Implementation and reporting use these
+ * exactly, and the `lead_magnet_events` CHECK constraint is written from this
+ * same list, so a name that drifts here fails at the database rather than
+ * silently producing an unreadable funnel.
+ */
 export const FUNNEL_EVENTS = [
-  'cta_view',
-  'cta_click',
-  'form_view',
-  'form_submit',
-  'request_succeeded',
-  'request_failed',
-  'guide_opened',
+  'lead_magnet_cta_view',
+  'lead_magnet_cta_click',
+  'lead_magnet_form_view',
+  'lead_magnet_form_submit',
+  'lead_magnet_request_success',
+  'lead_magnet_request_error',
+  'lead_magnet_download_click',
 ] as const;
 
 export type FunnelEvent = (typeof FUNNEL_EVENTS)[number];
+
+/** The five classifications carried on a failed request (§6.4, §8.1). */
+export const FUNNEL_ERROR_KINDS = [
+  'network',
+  'validation',
+  'verification',
+  'rate_limited',
+  'server',
+] as const;
+
+export type FunnelErrorKind = (typeof FUNNEL_ERROR_KINDS)[number];
 
 export type FunnelPayload = {
   event: FunnelEvent;
   assetId: LeadMagnetId;
   placement: LeadMagnetPlacement;
   pagePath: string;
+  /**
+   * Set ONLY on `lead_magnet_request_error` (§6.4). The database carries a
+   * constraint to the same effect, because an `error_kind` attached to a
+   * non-error event would corrupt the funnel silently.
+   */
+  errorKind?: FunnelErrorKind;
 };
 
 const DEDUPE_KEY_PREFIX = 'jp.leadMagnet.ctaView.';
@@ -83,7 +106,53 @@ export function sendFunnelEvent(payload: FunnelPayload): void {
   void payload;
 }
 
-/** `cta_view`, deduplicated per placement per session. */
+/**
+ * The outcome of a submit, as the funnel records it (§8.1, §6.4).
+ *
+ * SUCCESS MEANS THE LEAD WAS STORED AND ACCESS WAS GRANTED. It does NOT mean
+ * the email was delivered. §8.1 defines `lead_magnet_request_success` as "the
+ * server returned success (lead recorded; access granted)", so a stored
+ * request whose email hit the one-hour cooldown, failed, or went to a
+ * suppressed address is still a successful lead-magnet request here. Email
+ * outcomes are measured separately, from `lead_magnet_requests.email_status`
+ * (saved query 6); folding them in would count the same fact twice in two
+ * places and let the two disagree.
+ *
+ * This also keeps the honeypot indistinguishable: it answers with
+ * `stored: true`, so a bot logs a success exactly as a visitor does (§13.3).
+ */
+export function funnelOutcomeFor(result: SubmitResult): FunnelPayloadOutcome {
+  if (result.kind === 'network') {
+    return { event: 'lead_magnet_request_error', errorKind: 'network' };
+  }
+
+  if (result.kind === 'accepted') {
+    if (result.stored) return { event: 'lead_magnet_request_success' };
+    // Accepted but not persisted: the function failed open and still granted
+    // the guide, but no lead exists, so this is not a conversion.
+    return { event: 'lead_magnet_request_error', errorKind: 'server' };
+  }
+
+  switch (result.error) {
+    case 'invalid_email':
+    case 'invalid_request':
+      return { event: 'lead_magnet_request_error', errorKind: 'validation' };
+    case 'verification_failed':
+      return { event: 'lead_magnet_request_error', errorKind: 'verification' };
+    case 'rate_limited':
+      return { event: 'lead_magnet_request_error', errorKind: 'rate_limited' };
+    case 'server_error':
+    case 'test_mode_refused':
+    default:
+      return { event: 'lead_magnet_request_error', errorKind: 'server' };
+  }
+}
+
+export type FunnelPayloadOutcome =
+  | { event: 'lead_magnet_request_success'; errorKind?: undefined }
+  | { event: 'lead_magnet_request_error'; errorKind: FunnelErrorKind };
+
+/** `lead_magnet_cta_view`, deduplicated per placement per session. */
 export function recordImpression(
   assetId: LeadMagnetId,
   placement: LeadMagnetPlacement,
@@ -91,5 +160,5 @@ export function recordImpression(
   store: FunnelStore | null,
 ): void {
   if (!shouldRecordImpression(assetId, placement, store)) return;
-  sendFunnelEvent({ event: 'cta_view', assetId, placement, pagePath });
+  sendFunnelEvent({ event: 'lead_magnet_cta_view', assetId, placement, pagePath });
 }

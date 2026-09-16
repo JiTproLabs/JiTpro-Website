@@ -4,7 +4,7 @@ import Turnstile from '../Turnstile';
 import { CURRENT_CONSENT_TEXT_VERSION, CONSENT_TEXTS } from '../../content/consentTexts';
 import { FIELD_GUIDE, FIELD_GUIDE_COPY, FIELD_GUIDE_ID, type LeadMagnetPlacement } from '../../content/leadMagnets';
 import { resolveAttribution, type ArrivalContext } from './attribution';
-import { sendFunnelEvent } from './funnel';
+import { funnelOutcomeFor, sendFunnelEvent } from './funnel';
 import { INITIAL_STATE, leadCaptureReducer, validateEmail } from './leadCaptureMachine';
 import { localGuideUrl, submitLeadMagnetRequest } from './submitLeadMagnetRequest';
 
@@ -92,7 +92,7 @@ export default function LeadCaptureForm({ placement, pagePath, onOutcome, headin
 
   /* `form_view` fires once when the form is mounted, wherever it lives. */
   useEffect(() => {
-    sendFunnelEvent({ event: 'form_view', assetId: FIELD_GUIDE_ID, placement, pagePath });
+    sendFunnelEvent({ event: 'lead_magnet_form_view', assetId: FIELD_GUIDE_ID, placement, pagePath });
   }, [placement, pagePath]);
 
   /* §32.1: the muted line, and nothing else, after fifteen seconds. */
@@ -131,7 +131,7 @@ export default function LeadCaptureForm({ placement, pagePath, onOutcome, headin
     if (validateEmail(email)) return;
 
     const trimmed = email.trim();
-    sendFunnelEvent({ event: 'form_submit', assetId: FIELD_GUIDE_ID, placement, pagePath });
+    sendFunnelEvent({ event: 'lead_magnet_form_submit', assetId: FIELD_GUIDE_ID, placement, pagePath });
 
     const fallbackGuideUrl = localGuideUrl(FIELD_GUIDE.publicPath);
     const result = await submitLeadMagnetRequest(
@@ -155,13 +155,9 @@ export default function LeadCaptureForm({ placement, pagePath, onOutcome, headin
 
     dispatch({ type: 'settled', email: trimmed, result });
 
-    const succeeded = result.kind === 'accepted' && result.stored && result.emailStatus === 'sent';
-    sendFunnelEvent({
-      event: succeeded ? 'request_succeeded' : 'request_failed',
-      assetId: FIELD_GUIDE_ID,
-      placement,
-      pagePath,
-    });
+    /* §8.1: success means the lead was stored and access granted. The email
+       outcome is measured separately from the request row, not here. */
+    sendFunnelEvent({ ...funnelOutcomeFor(result), assetId: FIELD_GUIDE_ID, placement, pagePath });
 
     /* A failed check is reset silently so a later attempt can succeed (§13.3). */
     if (result.kind === 'rejected' && result.error === 'verification_failed') setTurnstileToken(null);
@@ -199,7 +195,7 @@ export default function LeadCaptureForm({ placement, pagePath, onOutcome, headin
           target="_blank"
           rel="noopener noreferrer"
           onClick={() =>
-            sendFunnelEvent({ event: 'guide_opened', assetId: FIELD_GUIDE_ID, placement, pagePath })
+            sendFunnelEvent({ event: 'lead_magnet_download_click', assetId: FIELD_GUIDE_ID, placement, pagePath })
           }
           className={`${PRIMARY_BUTTON_CLASSES} block text-center`}
         >
