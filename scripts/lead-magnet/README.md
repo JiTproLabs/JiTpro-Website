@@ -122,7 +122,17 @@ Addresses are `delivered+lm-s3-<run-id>-<letter>@resend.dev` unless stated. Ever
 | 8 | `-h` with the fault header but **no** secret | 200, `sent`: the gate holds |
 | 9 | `info@jit-pro.com` | 200, `sent`. Jeff checks the real message: sender, Reply-To, subject, preheader, body, button, link, signature, the two footer lines, and the plain-text part, on desktop and mobile |
 
-Expected footprint: about **6 contacts**, **8 requests** (case 2 is a repeat of `-a`), **8 IP-activity rows**, and roughly **12 Resend sends** (guide emails plus one notification per valid request). Verify with the read-only queries above plus `email_status`, `email_provider_id`, and `email_error`. Cleanup is proposed separately and never run automatically.
+Exact expected footprint, with no rounding:
+
+- **8 new contacts**, one per distinct address: `-a` (case 1), `suppressed@resend.dev` (3), `complained@resend.dev` (4), `bounced@resend.dev` (5), `-f` (6), `-g` (7), `-h` (8), `info@jit-pro.com` (9). Case 2 reuses `-a`.
+- **9 new `lead_magnet_requests`**, one per case. Case 2 is the only repeat (`is_repeat = true`).
+- **9 new `lead_magnet_ip_activity`** rows, one per request, all `activity_kind = request` under one daily hash. Nine attempts stay inside the 10-per-10-minute limit.
+- **Suppression state** on two contacts: case 7 through the gated fault, and case 3 if Resend rejects `suppressed@resend.dev` as suppressed.
+- **No visitor fulfilment email** for cases 2 (cooldown), 6 and 7 (faults).
+- **Resend calls: 15** — **6 fulfilment** (cases 1, 3, 4, 5, 8, 9) and **9 internal notifications**, one per persisted request regardless of the fulfilment outcome. A retry is added only if Resend returns a 5xx.
+- **Messages actually reaching `info@jit-pro.com`: 10** — 9 notifications plus the case 9 guide email. The `@resend.dev` addresses never leave Resend.
+
+Verify with the read-only queries above plus `email_status`, `email_provider_id`, and `email_error`. Cleanup is proposed separately and never run automatically.
 
 ## Cleanup (never automatic)
 
