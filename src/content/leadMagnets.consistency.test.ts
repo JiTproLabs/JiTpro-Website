@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { LEAD_MAGNET_ASSETS, LEAD_MAGNET_IDS } from './leadMagnets';
+import { GUIDE_COVER_WIDTHS, LEAD_MAGNET_ASSETS, LEAD_MAGNET_IDS, guideCoverPath } from './leadMagnets';
 
 /**
  * Sprint 1b consistency checks (lead-gen plan, Decisions D5.1, D5.2, D5.10).
@@ -55,6 +55,44 @@ describe.each(LEAD_MAGNET_IDS)('asset consistency: %s', (id) => {
     expect(block).toContain(`Content-Disposition: inline; filename="${asset.downloadFileName}"`);
     expect(block).toContain('X-Robots-Tag: noindex');
     expect(block).toMatch(/Cache-Control: public, max-age=31536000, immutable/);
+  });
+
+  /**
+   * Design System §20.2.1: the offer band shows a mechanical render of page 1
+   * of THIS version of the PDF. These three assertions are what make a stale
+   * or missing cover a CI failure instead of a silent visual bug, so a future
+   * asset version cannot ship without regenerating the cover
+   * (`scripts/generate-guide-cover.sh`).
+   */
+  it('has both committed cover widths for the publication object', () => {
+    for (const width of GUIDE_COVER_WIDTHS) {
+      const coverPath = `public/${guideCoverPath(asset, width)}`;
+      expect(existsSync(coverPath), `${coverPath} is missing; regenerate the cover`).toBe(true);
+      expect(statSync(coverPath).size).toBeGreaterThan(5_000);
+      // RIFF....WEBP, so the committed file really is what the srcSet claims.
+      const header = readFileSync(coverPath).subarray(0, 12).toString('latin1');
+      expect(header.startsWith('RIFF')).toBe(true);
+      expect(header.slice(8, 12)).toBe('WEBP');
+    }
+  });
+
+  /**
+   * This is what makes a version bump fail CI. Shipping a new PDF means a new
+   * `version`, which means a new `fileName` AND a new `coverBaseName`; the
+   * existence test above then fails until the cover is regenerated under the
+   * new name. (Modification times cannot carry this: git does not preserve
+   * mtimes, so on a fresh CI checkout every file is written at once and their
+   * relative order is arbitrary.)
+   */
+  it('names its cover with the same version label as the PDF', () => {
+    expect(
+      asset.coverBaseName.includes(asset.version),
+      `coverBaseName "${asset.coverBaseName}" does not carry version "${asset.version}"`,
+    ).toBe(true);
+    expect(
+      asset.fileName.includes(asset.version),
+      `fileName "${asset.fileName}" does not carry version "${asset.version}"`,
+    ).toBe(true);
   });
 
   it('keeps the SPA catch-all intact for every other route', () => {

@@ -1,9 +1,12 @@
 import {
   GUIDES_ROUTE_PREFIX,
+  GUIDE_COVER_DIR,
+  GUIDE_COVER_WIDTHS,
   LEAD_MAGNET_ASSETS,
   LEAD_MAGNET_IDS,
   LEAD_MAGNET_PLACEMENTS,
   getLeadMagnet,
+  guideCoverPath,
   isLeadMagnetId,
   isLeadMagnetPlacement,
   stableRouteFor,
@@ -14,10 +17,13 @@ import {
 
 export {
   GUIDES_ROUTE_PREFIX,
+  GUIDE_COVER_DIR,
+  GUIDE_COVER_WIDTHS,
   LEAD_MAGNET_ASSETS,
   LEAD_MAGNET_IDS,
   LEAD_MAGNET_PLACEMENTS,
   getLeadMagnet,
+  guideCoverPath,
   isLeadMagnetId,
   isLeadMagnetPlacement,
   stableRouteFor,

@@ -53,6 +53,19 @@ export type LeadMagnetAsset = {
   downloadFileName: string;
   /** The campaign landing route that renders the capture form inline. */
   landingPath: string;
+  /**
+   * Basename of the publication cover under `public/assets/guides/`, WITHOUT
+   * the width suffix or extension. The site renders `<basename>-800.webp` and
+   * `<basename>-1600.webp` as a `srcSet`.
+   *
+   * The basename carries the same version label as the PDF on purpose: the
+   * cover is a mechanical render of page 1 of THAT file (Design System
+   * §20.2.1), so a new asset version needs a new cover. The consistency test
+   * asserts both files exist and that the version labels agree, which is what
+   * makes a stale cover a CI failure rather than a silent visual bug.
+   * Regenerate with `scripts/generate-guide-cover.sh`.
+   */
+  coverBaseName: string;
   /** Page count of the approved asset, for reference and verification. */
   pageCount: number;
   /** Title-case publication title. Email and PDF surfaces only (Design System §7.7 note). */
@@ -75,6 +88,7 @@ export const LEAD_MAGNET_ASSETS = {
     fileName: 'jitpro-construction-procurement-field-guide-2026-09.pdf',
     downloadFileName: 'JiTpro-Construction-Procurement-Field-Guide.pdf',
     landingPath: '/field-guide',
+    coverBaseName: 'field-guide-cover-2026-09',
     pageCount: 31,
     publicationTitle: 'What Will Stop Work Six Months From Now?',
     subtitle: 'The JiTpro Field Guide to Construction Procurement Control',
@@ -96,6 +110,17 @@ export function isLeadMagnetId(value: unknown): value is LeadMagnetId {
 
 export function getLeadMagnet(id: LeadMagnetId): LeadMagnetAsset {
   return LEAD_MAGNET_ASSETS[id];
+}
+
+/** The directory the publication covers live in, relative to `public/`. */
+export const GUIDE_COVER_DIR = 'assets/guides';
+
+/** The two widths the site's responsive-image convention uses. */
+export const GUIDE_COVER_WIDTHS = [800, 1600] as const;
+
+/** The public path of one cover width, e.g. `assets/guides/...-800.webp`. */
+export function guideCoverPath(asset: LeadMagnetAsset, width: (typeof GUIDE_COVER_WIDTHS)[number]): string {
+  return `${GUIDE_COVER_DIR}/${asset.coverBaseName}-${width}.webp`;
 }
 
 /** The route an asset's id implies under the `/guides/<asset-slug>` convention. */
