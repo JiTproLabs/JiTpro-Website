@@ -3,6 +3,7 @@ import ProblemSection from '../components/home/ProblemSection';
 import MethodSection from '../components/home/MethodSection';
 import OutcomesSection from '../components/home/OutcomesSection';
 import HomeFinalCTA from '../components/home/HomeFinalCTA';
+import LeadMagnetCTA from '../components/lead-magnet/LeadMagnetCTA';
 
 /**
  * The five-section homepage on the buyer's psychological journey, in three
@@ -34,6 +35,14 @@ import HomeFinalCTA from '../components/home/HomeFinalCTA';
  *   05  HomeFinalCTA     -> gains the timing markers (award, preconstruction,
  *                           buyout, mobilization); already the 05 base
  *
+ * THE FIELD GUIDE BAND sits AFTER section 05, outside the five-section
+ * doctrine (Design System §20.2, approved 2026-09-12; lead-gen plan A7,
+ * D6.6). It is a post-CTA band, never a sixth section: it follows the final
+ * commercial CTA and never precedes it, its eyebrow is its only amber, and
+ * its action is the §26.1 hairline secondary so the page keeps exactly one
+ * Brand Amber primary, `Protect your next project` (§48.1). Nothing above it
+ * changes.
+ *
  * Preserved states: the pre-rebuild homepage at tag
  * `homepage-pre-buyer-journey-rebuild-2026-08-25`, and the eight-section
  * beat-three build at tag `homepage-eight-section-beat3-2026-08-26`.
@@ -47,6 +56,8 @@ export default function Home() {
 
       <OutcomesSection />
       <HomeFinalCTA />
+
+      <LeadMagnetCTA placement="home-band" variant="band" />
     </div>
   );
 }
