@@ -1,0 +1,120 @@
+/**
+ * Lead-capture dialog presentation, to Design System §28.1 (approved
+ * 2026-09-12).
+ *
+ * Plain CSS rather than utilities because the parts that matter here are the
+ * `::backdrop` pseudo-element, the `[open]` state, and a reduced-motion
+ * variant of an entrance animation, none of which a utility class expresses
+ * cleanly. Scoped to `jp-lead-dialog`, following the precedent set by the
+ * demo system's `tokens.css`.
+ *
+ * EVERY COLOUR IS A TOKEN (§8.8, §8.9, §45). There is no hex value, no
+ * `rgba()`, and no Tailwind colour utility in this file; the translucency
+ * §28.1 specifies is produced with `color-mix` over the approved custom
+ * properties.
+ */
+
+.jp-lead-dialog {
+  /* The platform centres a top-layer dialog; these reset the UA defaults that
+     would otherwise fight it. */
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  max-width: 32rem;
+  width: calc(100% - 2rem);
+  max-height: calc(100dvh - 2rem);
+  overflow: visible;
+  color: var(--jp-text-primary);
+}
+
+/* §28.1: --jp-background at 88%. No blur, no gradient, no image. */
+.jp-lead-dialog::backdrop {
+  background-color: color-mix(in srgb, var(--jp-background) 88%, transparent);
+}
+
+/* §28.1 entrance: 160ms opacity only. No scale, no slide, no bounce. */
+.jp-lead-dialog[open],
+.jp-lead-dialog[open]::backdrop {
+  animation: jp-lead-dialog-in 160ms ease-out;
+}
+
+@keyframes jp-lead-dialog-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* §46.5: no animation at all, rather than a faster one. */
+@media (prefers-reduced-motion: reduce) {
+  .jp-lead-dialog[open],
+  .jp-lead-dialog[open]::backdrop {
+    animation: none;
+  }
+}
+
+/* §28.1 panel: the §27.1 default card. Content scrolls inside the panel,
+   never the page, which is what keeps the field reachable with a software
+   keyboard open. */
+.jp-lead-dialog__panel {
+  background-color: var(--jp-surface);
+  border: 1px solid color-mix(in srgb, var(--jp-border) 15%, transparent);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (min-width: 640px) {
+  .jp-lead-dialog__panel {
+    padding: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .jp-lead-dialog__panel {
+    padding: 2.5rem;
+  }
+}
+
+/* §28.1 close control: a labelled quiet pill taking the established lightbox
+   treatment expressed in tokens. It must not read as a second call to action,
+   so it carries no amber at rest and none on hover. */
+.jp-lead-dialog__close {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex: none;
+  min-height: 44px;
+  padding: 0 0.875rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--jp-text-primary) 26%, transparent);
+  background-color: color-mix(in srgb, var(--jp-background) 72%, transparent);
+  color: var(--jp-text-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 200ms ease-out,
+    border-color 200ms ease-out;
+}
+
+.jp-lead-dialog__close:hover {
+  border-color: color-mix(in srgb, var(--jp-text-primary) 44%, transparent);
+  background-color: color-mix(in srgb, var(--jp-background) 88%, transparent);
+}
+
+.jp-lead-dialog__close:focus-visible {
+  outline: 2px solid var(--jp-text-primary);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jp-lead-dialog__close {
+    transition: none;
+  }
+}
