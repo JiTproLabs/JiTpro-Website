@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  TEST_COOLDOWN_BYPASS_VALUE,
   TEST_FAULT_EMAIL,
   TEST_FAULT_EMAIL_SUPPRESSED,
   TEST_FAULT_KINDS,
   TEST_FAULT_PERSISTENCE,
   TEST_FAULT_SECRET_MIN_LENGTH,
+  isCooldownBypassRequested,
   isTestModeEnabled,
   isTestModeRecipientAllowed,
   requestedTestFault,
@@ -116,5 +118,45 @@ describe('requestedTestFault (Decision 1B and the S3 email faults)', () => {
     expect(await requestedTestFault({ ...valid, configuredSecret: undefined })).toBeNull();
     const short = 's'.repeat(TEST_FAULT_SECRET_MIN_LENGTH - 1);
     expect(await requestedTestFault({ ...valid, configuredSecret: short, providedSecret: short })).toBeNull();
+  });
+});
+
+describe('isCooldownBypassRequested (S3-2, development override)', () => {
+  const valid = {
+    testMode: true,
+    recipientAllowed: true,
+    bypassHeader: TEST_COOLDOWN_BYPASS_VALUE as string | null,
+    providedSecret: FAULT_SECRET as string | null,
+    configuredSecret: FAULT_SECRET as string | undefined,
+  };
+
+  it('bypasses only with test mode, an approved recipient, the header, and the matching secret', async () => {
+    expect(await isCooldownBypassRequested(valid)).toBe(true);
+  });
+
+  it('never bypasses when test mode is off, whatever the headers say', async () => {
+    expect(await isCooldownBypassRequested({ ...valid, testMode: false })).toBe(false);
+  });
+
+  it('never bypasses from the header alone, or with a wrong secret', async () => {
+    expect(await isCooldownBypassRequested({ ...valid, providedSecret: null })).toBe(false);
+    expect(await isCooldownBypassRequested({ ...valid, providedSecret: 'g'.repeat(32) })).toBe(false);
+    expect(await isCooldownBypassRequested({ ...valid, providedSecret: `${FAULT_SECRET}x` })).toBe(false);
+  });
+
+  it('never bypasses without the explicit header value', async () => {
+    expect(await isCooldownBypassRequested({ ...valid, bypassHeader: null })).toBe(false);
+    expect(await isCooldownBypassRequested({ ...valid, bypassHeader: 'true' })).toBe(false);
+    expect(await isCooldownBypassRequested({ ...valid, bypassHeader: 'COOLDOWN' })).toBe(false);
+  });
+
+  it('never bypasses for a recipient the test-mode restriction disallows', async () => {
+    expect(await isCooldownBypassRequested({ ...valid, recipientAllowed: false })).toBe(false);
+  });
+
+  it('never bypasses when no secret, or a too-short secret, is configured', async () => {
+    expect(await isCooldownBypassRequested({ ...valid, configuredSecret: undefined })).toBe(false);
+    const short = 's'.repeat(TEST_FAULT_SECRET_MIN_LENGTH - 1);
+    expect(await isCooldownBypassRequested({ ...valid, configuredSecret: short, providedSecret: short })).toBe(false);
   });
 });

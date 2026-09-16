@@ -134,6 +134,21 @@ Exact expected footprint, with no rounding:
 
 Verify with the read-only queries above plus `email_status`, `email_provider_id`, and `email_error`. Cleanup is proposed separately and never run automatically.
 
+## Re-sending the guide email during development (S3-2)
+
+The one-hour cooldown holds for visitors and is never weakened. To re-test the email without waiting, add both headers below. The bypass needs test mode, an approved test recipient, the explicit header, and the fault secret; browsers cannot send it because the header is not CORS-allowed.
+
+```bash
+curl -sS -X POST https://pynjyrvnokfexyudimsn.supabase.co/functions/v1/submit-lead-magnet-request \
+  -H "Content-Type: application/json" \
+  -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+  -H "x-lead-magnet-test-bypass-cooldown: cooldown" \
+  -H "x-lead-magnet-test-fault-secret: $(cat ~/.jitpro/lead-magnet-test-fault-secret)" \
+  --data '{"email":"info@jit-pro.com","asset_id":"procurement-field-guide","placement":"landing-page","page_path":"/field-guide","utm_source":"lm-test-script","utm_medium":"cli","utm_campaign":"lm-test","utm_content":"<run-id>","marketing_opt_in":false,"consent_text_version":"v1","turnstile_token":"XXXX.DUMMY.TOKEN.XXXX"}'
+```
+
+Expect `"email_status":"sent"` every time. Without the secret, a repeat inside the hour returns `skipped_cooldown` and sends nothing. Each call still creates one request row and one IP-activity row.
+
 ## Cleanup (never automatic)
 
 Test rows are removed only after Jeff approves the exact statements (plan decision S2-9). Never `TRUNCATE`. `lead_magnet_ip_activity` rows are not deleted by hand; they expire through the function's 24-hour retention.

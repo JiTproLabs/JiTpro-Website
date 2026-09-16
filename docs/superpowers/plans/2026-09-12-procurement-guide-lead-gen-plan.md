@@ -787,7 +787,7 @@ No migration is applied until Jeff approves that change set, and then gives fina
 | `LEAD_MAGNET_NOTIFY_TO` | Internal notification recipient | Edge function | **New**, optional (default `info@jit-pro.com`) | Supabase |
 | `LEAD_MAGNET_TEST_MODE` | When set, the function refuses recipients outside `@resend.dev` and `@jit-pro.com` (D3.9) | Edge function | **New** | Supabase `jitpro_website`, set only for the test period; removed at go-live (L-6) and never left set once the visitor-facing CTA is live |
 | `LEAD_MAGNET_TURNSTILE_TEST_SECRET` | Cloudflare's published always-pass Turnstile test secret, so command-line tests can use Cloudflare's dummy token. Honoured **only** when `LEAD_MAGNET_TEST_MODE=true`; the shared `TURNSTILE_SECRET_KEY` is never changed (S2-11) | Edge function | **New** | Supabase `jitpro_website`, test period only; removed at go-live (L-6) |
-| `LEAD_MAGNET_TEST_FAULT_SECRET` | Random value of at least 32 characters. A simulated persistence failure needs test mode, the `x-lead-magnet-test-fault: persistence` header, **and** a matching `x-lead-magnet-test-fault-secret` header (S2-12). Never logged, never returned | Edge function | **New** | Supabase `jitpro_website`, test period only; removed at go-live (L-6) |
+| `LEAD_MAGNET_TEST_FAULT_SECRET` | Random value of at least 32 characters. Gates the simulated faults (`persistence`, `email`, `email_suppressed`) and the development cooldown bypass (S2-12, S3-2): each needs test mode, its own explicit header, **and** a constant-time match of this secret in `x-lead-magnet-test-fault-secret`. Never logged, never returned | Edge function | **New** | Supabase `jitpro_website`, test period only; removed at go-live (L-6) |
 
 No secrets in source. New secrets are set with `supabase secrets set` and listed here when added. Production readiness is not claimed until this table is verified against the dashboards.
 
@@ -1206,6 +1206,16 @@ Where it lives: the handler in `supabase/functions/submit-lead-magnet-request/in
 | Status | Report delivered to Jeff 2026-09-13. **No staging change made.** Closed 2026-09-14 by G-8: `jitpro-staging` is not used. |
 
 ### Sprint 3: Email fulfilment (on `jitpro_website` in test mode)
+
+**S3-2: authenticated development cooldown bypass (standing rule; Jeff, 2026-09-16).** The one-hour fulfilment-email cooldown (D2.2) is correct for visitors and is **never weakened, shortened, or globally exempted for any domain**. To let the email be re-tested during active development, the function honours an explicit, authenticated override that requires **all** of:
+
+1. `LEAD_MAGNET_TEST_MODE=true`;
+2. a recipient the existing test-mode restriction already allows (`@resend.dev` or `@jit-pro.com`);
+3. the explicit request header `x-lead-magnet-test-bypass-cooldown: cooldown`;
+4. the existing `LEAD_MAGNET_TEST_FAULT_SECRET` in the existing `x-lead-magnet-test-fault-secret` header;
+5. a constant-time match of that secret, using the same mechanism as the fault hooks.
+
+It reuses the secret-gated testing architecture rather than adding another authentication path, and the bypass header is deliberately **absent from the CORS allow-list**, so no browser request can carry it. It overrides the cooldown **only**: a suppressed contact is still never emailed, and every other control (Turnstile, honeypot, validation, rate limiting, recipient restriction) is unaffected. Any error while evaluating it leaves the cooldown enforced. Like every test hook, it dies at go-live when `LEAD_MAGNET_TEST_MODE` and the test secrets are removed (L-6). Four behaviours are proven by tests: no bypass keeps `skipped_cooldown`; a valid bypass sends every time; the header without a valid secret keeps the cooldown; and with test mode off the headers are ignored entirely.
 
 **S3-1: no mailing address anywhere in this project (Jeff, 2026-09-15).** Jeff's business and personal mailing addresses are not included in the fulfilment email, the capture experience, or any other part of the lead-magnet implementation, and no address blocks development, testing, Sprint 3, Sprint 5, or production launch. There is no placeholder, no `mailingAddress` module, no `LAUNCH_READY` address guard, and no address-related CI test. L-2 is withdrawn. The fulfilment email stays strictly transactional: the recipient explicitly requested the guide and this message fulfils that request; it never becomes a marketing or nurture message, and it carries no unsubscribe link. Marketing remains separately controlled by the explicit unchecked opt-in and any future marketing implementation. The approved footer is exactly: *You received this email because you requested the JiTpro Field Guide at jit-pro.com.* and *Questions? info@jit-pro.com*. This supersedes the mailing-address elements of D3.3, D6.8, §7.1, §10 item 7, §25.7, and the §27 contact line.
 

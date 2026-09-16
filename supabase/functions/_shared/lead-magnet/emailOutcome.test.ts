@@ -64,3 +64,34 @@ describe('shouldRecordContactSuppression', () => {
     }
   });
 });
+
+describe('planFulfilment with the S3-2 development cooldown bypass', () => {
+  const insideCooldown = { contactSuppressedAt: null, lastSentAt: new Date('2026-09-16T11:30:00.000Z'), now: NOW };
+
+  it('production default: an unauthenticated repeat inside the hour is still held back', () => {
+    expect(planFulfilment(insideCooldown)).toEqual({ action: 'skip', status: 'skipped_cooldown' });
+    expect(planFulfilment({ ...insideCooldown, bypassCooldown: false })).toEqual({
+      action: 'skip',
+      status: 'skipped_cooldown',
+    });
+  });
+
+  it('sends every time when the authenticated bypass is granted', () => {
+    expect(planFulfilment({ ...insideCooldown, bypassCooldown: true })).toEqual({ action: 'send' });
+    expect(
+      planFulfilment({ contactSuppressedAt: null, lastSentAt: new Date(NOW.getTime() - 1000), bypassCooldown: true, now: NOW }),
+    ).toEqual({ action: 'send' });
+  });
+
+  it('bypasses the cooldown only: a suppressed contact is still never emailed', () => {
+    expect(
+      planFulfilment({ contactSuppressedAt: '2026-09-01T00:00:00.000Z', lastSentAt: null, bypassCooldown: true, now: NOW }),
+    ).toEqual({ action: 'skip', status: 'suppressed' });
+  });
+
+  it('does not change the one-hour duration for anyone else', () => {
+    expect(planFulfilment({ contactSuppressedAt: null, lastSentAt: new Date('2026-09-16T10:59:00.000Z'), now: NOW })).toEqual({
+      action: 'send',
+    });
+  });
+});

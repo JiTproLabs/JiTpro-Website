@@ -22,8 +22,14 @@ export function planFulfilment(options: {
   contactSuppressedAt: string | null;
   lastSentAt: Date | null;
   now: Date;
+  /**
+   * Test-mode-only override (S3-2). Skips the cooldown, and only the cooldown:
+   * suppression still wins, so a suppressed contact is never emailed.
+   */
+  bypassCooldown?: boolean;
 }): FulfilmentPlan {
   if (options.contactSuppressedAt) return { action: 'skip', status: 'suppressed' };
+  if (options.bypassCooldown) return { action: 'send' };
   if (!shouldSendFulfilmentEmail(options.lastSentAt, options.now)) {
     return { action: 'skip', status: 'skipped_cooldown' };
   }

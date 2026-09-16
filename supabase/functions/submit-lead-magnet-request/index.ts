@@ -59,11 +59,13 @@ import {
   buildRequestRow,
 } from "../_shared/lead-magnet/rows.ts";
 import {
+  TEST_COOLDOWN_BYPASS_HEADER,
   TEST_FAULT_EMAIL,
   TEST_FAULT_EMAIL_SUPPRESSED,
   TEST_FAULT_HEADER,
   TEST_FAULT_PERSISTENCE,
   TEST_FAULT_SECRET_HEADER,
+  isCooldownBypassRequested,
   isTestModeEnabled,
   isTestModeRecipientAllowed,
   requestedTestFault,
@@ -190,7 +192,8 @@ Deno.serve(async (req: Request) => {
     // The email step never gates guide access (D5.6): its outcome is recorded
     // and reported honestly, and a failure here still returns the guide.
     if (persisted) {
-      emailStatus = await fulfilAndNotify(input, requestId, persisted, fault, environment, logger);
+      const bypassCooldown = await cooldownBypass(req, testMode, input.email, logger);
+      emailStatus = await fulfilAndNotify(input, requestId, persisted, fault, environment, logger, bypassCooldown);
     }
 
     return send(acceptedResponse(requestId, guideUrl, stored, emailStatus));
@@ -256,6 +259,28 @@ async function testFault(req: Request, testMode: boolean, logger: Logger): Promi
   } catch (error) {
     logger.error("test fault check failed; continuing normally", { error: summariseError(error) });
     return null;
+  }
+}
+
+/**
+ * S3-2. Any error evaluating the override means no bypass, so the cooldown
+ * stands. Never reachable from a browser: the header is not CORS-allowed.
+ */
+async function cooldownBypass(req: Request, testMode: boolean, email: string, logger: Logger): Promise<boolean> {
+  if (!testMode) return false;
+  try {
+    const requested = await isCooldownBypassRequested({
+      testMode,
+      recipientAllowed: isTestModeRecipientAllowed(email),
+      bypassHeader: req.headers.get(TEST_COOLDOWN_BYPASS_HEADER),
+      providedSecret: req.headers.get(TEST_FAULT_SECRET_HEADER),
+      configuredSecret: Deno.env.get("LEAD_MAGNET_TEST_FAULT_SECRET"),
+    });
+    if (requested) logger.info("test mode: fulfilment cooldown bypassed for an approved test recipient");
+    return requested;
+  } catch (error) {
+    logger.error("cooldown bypass check failed; cooldown enforced", { error: summariseError(error) });
+    return false;
   }
 }
 
@@ -534,12 +559,14 @@ async function fulfilAndNotify(
   fault: TestFaultKind | null,
   environment: string,
   logger: Logger,
+  bypassCooldown = false,
 ): Promise<FulfilmentEmailStatus> {
   const now = new Date();
   const plan = planFulfilment({
     contactSuppressedAt: persisted.contactSuppressedAt,
     lastSentAt: persisted.lastSentAt,
     now,
+    bypassCooldown,
   });
 
   let status: FulfilmentEmailStatus;

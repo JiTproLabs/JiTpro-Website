@@ -79,3 +79,39 @@ export async function requestedTestFault(options: {
   if (!options.providedSecret) return null;
   return (await constantTimeEqual(options.providedSecret, configured)) ? requested : null;
 }
+
+export const TEST_COOLDOWN_BYPASS_HEADER = 'x-lead-magnet-test-bypass-cooldown';
+export const TEST_COOLDOWN_BYPASS_VALUE = 'cooldown';
+
+/**
+ * Development-only cooldown override (S3-2, approved 2026-09-16).
+ *
+ * The one-hour fulfilment cooldown is correct for visitors and is never
+ * weakened. This lets a developer re-send the guide email to an approved test
+ * recipient without waiting, and it requires ALL of:
+ *   - `LEAD_MAGNET_TEST_MODE=true`;
+ *   - a recipient the test-mode restriction already allows;
+ *   - an explicit `x-lead-magnet-test-bypass-cooldown: cooldown` request;
+ *   - the configured test-fault secret, supplied in the existing secret header
+ *     and compared in constant time.
+ *
+ * The header is deliberately absent from the CORS allow-list, so a browser can
+ * never send it, and the whole hook dies with the test secrets at go-live
+ * (L-6). `@jit-pro.com` is never globally exempt: without this authenticated
+ * request the cooldown applies to every recipient equally.
+ */
+export async function isCooldownBypassRequested(options: {
+  testMode: boolean;
+  recipientAllowed: boolean;
+  bypassHeader: string | null;
+  providedSecret: string | null;
+  configuredSecret: string | undefined;
+}): Promise<boolean> {
+  if (!options.testMode) return false;
+  if (!options.recipientAllowed) return false;
+  if (options.bypassHeader !== TEST_COOLDOWN_BYPASS_VALUE) return false;
+  const configured = options.configuredSecret;
+  if (!configured || configured.length < TEST_FAULT_SECRET_MIN_LENGTH) return false;
+  if (!options.providedSecret) return false;
+  return constantTimeEqual(options.providedSecret, configured);
+}
