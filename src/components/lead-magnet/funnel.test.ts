@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   FUNNEL_ERROR_KINDS,
   FUNNEL_EVENTS,
@@ -149,6 +149,40 @@ describe('buildEventBody', () => {
 });
 
 describe('sendFunnelEvent never breaks a capture', () => {
+  /**
+   * The sender reads VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY and returns
+   * early without either. Stub them so these tests assert the transport rather
+   * than whatever .env happens to exist: locally that file is present, in CI it
+   * is git-ignored and absent, and the difference silently turned these into
+   * no-ops on the first CI run.
+   */
+  beforeEach(() => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'test-anon-key');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('sends nothing at all when the function URL or key is missing', () => {
+    vi.stubEnv('VITE_SUPABASE_URL', '');
+    const beacon = vi.fn(() => true);
+    const originalNavigator = globalThis.navigator;
+    Object.defineProperty(globalThis, 'navigator', { value: { sendBeacon: beacon }, configurable: true });
+    try {
+      sendFunnelEvent({
+        event: 'lead_magnet_cta_view',
+        assetId: 'procurement-field-guide',
+        placement: 'home-band',
+        pagePath: '/',
+      });
+    } finally {
+      Object.defineProperty(globalThis, 'navigator', { value: originalNavigator, configurable: true });
+    }
+    expect(beacon).not.toHaveBeenCalled();
+  });
+
   it('prefers sendBeacon, which survives the page unloading', () => {
     const beacon = vi.fn(() => true);
     const fetchSpy = vi.fn();
