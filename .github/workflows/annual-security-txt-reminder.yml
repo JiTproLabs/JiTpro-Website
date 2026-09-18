@@ -1,0 +1,45 @@
+name: Annual Security.txt Renewal Reminder
+on:
+  schedule:
+    - cron: '0 9 1 9 *'  # Runs once a year, at 9am UTC, every September 1st
+  workflow_dispatch:
+
+jobs:
+  create-reminder:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const title = 'Annual Maintenance: Renew security.txt';
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+            const alreadyOpen = issues.some(issue => issue.title === title);
+            if (alreadyOpen) {
+              console.log('Reminder issue already open, skipping.');
+              return;
+            }
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              labels: ['maintenance'],
+              body: `## Annual security.txt Renewal
+
+            The \`Expires\` date in \`public/.well-known/security.txt\` needs to be
+            updated once a year. An expired file tells security researchers the
+            contact information is stale and should not be trusted.
+
+            ### Checklist
+            - [ ] Open \`public/.well-known/security.txt\`
+            - [ ] Update the \`Expires\` date to one year from today in this format: \`YYYY-MM-DDT00:00:00.000Z\`
+            - [ ] Open a PR using branch name \`chore/renew-security-txt\`
+            - [ ] Merge once CI passes
+
+            Reference: [security.txt standard RFC 9116](https://www.rfc-editor.org/rfc/rfc9116)`
+            })

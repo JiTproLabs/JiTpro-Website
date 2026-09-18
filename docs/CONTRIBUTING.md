@@ -176,6 +176,7 @@ README for the full rules and how to adjust them.
 - [x] All known dependency vulnerabilities resolved
 - [x] GitHub Pages mirror removed and unpublished
 - [x] Uptime, SSL, and domain-expiry monitoring set up (Pulsetic)
+- [x] security.txt added (`public/.well-known/security.txt`) — see [operations](docs/operations.md)
 
 ## Future Ideas (Not Yet Implemented)
 
