@@ -4,6 +4,11 @@ import { CORS_ALLOWED_HEADERS, corsHeadersFor, isAllowedOrigin } from './cors.ts
 describe('isAllowedOrigin (Decision 4)', () => {
   it.each([
     'https://jit-pro.com',
+    // S6-3 (2026-09-18, Issue #54): `www` is a second production custom domain.
+    // The Cloudflare www → apex 301 is the primary canonical-host control; this
+    // is the secondary control behind it, so losing that rule cannot silently
+    // break lead capture again.
+    'https://www.jit-pro.com',
     'http://localhost:5173',
     'https://feature-navigation-simplific.jitpro-website.pages.dev',
     'https://a0b70718.jitpro-website.pages.dev',
@@ -16,7 +21,12 @@ describe('isAllowedOrigin (Decision 4)', () => {
     '',
     'null',
     'http://jit-pro.com',
-    'https://www.jit-pro.com',
+    // S6-3 keeps every near-miss on the www host refused: the allowance is one
+    // exact string, not a pattern.
+    'http://www.jit-pro.com',
+    'https://www.jit-pro.com/',
+    'https://www2.jit-pro.com',
+    'https://www.jit-pro.com.evil.example',
     'https://jit-pro.com.evil.example',
     'https://evil.example',
     'https://jitpro-website.pages.dev',
@@ -39,6 +49,16 @@ describe('corsHeadersFor', () => {
     expect(headers['Access-Control-Allow-Origin']).toBe('https://jit-pro.com');
     expect(headers['Access-Control-Allow-Methods']).toBe('POST, OPTIONS');
     expect(headers.Vary).toBe('Origin');
+  });
+
+  /**
+   * S6-3: the www host is echoed back as itself, never rewritten to the apex.
+   * Rewriting it would fail the browser's CORS check, which compares the header
+   * against the requesting origin byte for byte.
+   */
+  it('echoes the www production origin as itself', () => {
+    const headers = corsHeadersFor('https://www.jit-pro.com');
+    expect(headers['Access-Control-Allow-Origin']).toBe('https://www.jit-pro.com');
   });
 
   it('never reflects a disallowed origin', () => {
