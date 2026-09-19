@@ -156,13 +156,21 @@ Deno.serve(async (req: Request) => {
   const noContent = () => new Response(null, { status: 204, headers: cors });
 
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: isAllowedOrigin(origin) ? 204 : 403, headers: cors });
+    // Named in the log (Issue #54). A silent 403 here is what made the
+    // 2026-09-18 www mismatch cost a full investigation: every event for that
+    // visitor was dropped at the preflight with nothing recorded anywhere. The
+    // origin is a hostname, not personal data, and is never reflected back.
+    if (!isAllowedOrigin(origin)) {
+      logger.info("preflight rejected: origin not allowed", { origin: origin ?? "(absent)" });
+      return new Response(null, { status: 403, headers: cors });
+    }
+    return new Response(null, { status: 204, headers: cors });
   }
   if (req.method !== "POST") {
     return new Response(null, { status: 405, headers: { ...cors, Allow: "POST, OPTIONS" } });
   }
   if (!isAllowedOrigin(origin)) {
-    logger.info("rejected: origin not allowed");
+    logger.info("rejected: origin not allowed", { origin: origin ?? "(absent)" });
     return new Response(null, { status: 403, headers: cors });
   }
 

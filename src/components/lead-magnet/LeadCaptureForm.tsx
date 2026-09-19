@@ -3,10 +3,12 @@ import { AlertCircle } from 'lucide-react';
 import Turnstile from '../Turnstile';
 import { CURRENT_CONSENT_TEXT_VERSION, CONSENT_TEXTS } from '../../content/consentTexts';
 import { FIELD_GUIDE, FIELD_GUIDE_COPY, FIELD_GUIDE_ID, type LeadMagnetPlacement } from '../../content/leadMagnets';
+import { shouldWaitForToken, type TurnstileStatus } from '../turnstilePolicy';
 import { resolveAttribution, type ArrivalContext } from './attribution';
 import { funnelOutcomeFor, sendFunnelEvent } from './funnel';
 import { INITIAL_STATE, leadCaptureReducer, validateEmail } from './leadCaptureMachine';
 import { localGuideUrl, submitLeadMagnetRequest } from './submitLeadMagnetRequest';
+import { TOKEN_WAIT_MS, createTokenGate, type TokenGate } from './tokenGate';
 
 /**
  * The lead-capture form: one email field, one optional consent checkbox, an
@@ -76,7 +78,6 @@ export default function LeadCaptureForm({ placement, pagePath, onOutcome, headin
   const [email, setEmail] = useState('');
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [honeypot, setHoneypot] = useState('');
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileVisible, setTurnstileVisible] = useState(false);
   const [stillWorking, setStillWorking] = useState(false);
 
@@ -85,6 +86,27 @@ export default function LeadCaptureForm({ placement, pagePath, onOutcome, headin
   const consentId = `${fieldId}-consent`;
   const outcomeHeadingRef = useRef<HTMLHeadingElement>(null);
   const fieldRef = useRef<HTMLInputElement>(null);
+
+  /**
+   * The token lives in a gate, not in React state (Issue #54). `handleSubmit`
+   * closes over the render that created it, so a token arriving between the
+   * click and the request, or during the bounded wait below, would be invisible
+   * to it. The gate is written synchronously by Turnstile's callback and read
+   * synchronously here, so neither window exists. Nothing renders from it.
+   */
+  const gateRef = useRef<TokenGate | null>(null);
+  if (gateRef.current === null) gateRef.current = createTokenGate();
+  const gate = gateRef.current;
+
+  /** Whether a token can still arrive on its own. Read at submit only. */
+  const turnstileStatusRef = useRef<TurnstileStatus>('pending');
+
+  /**
+   * §32.1's duplicate guard, moved off render state. `state.phase` is read from
+   * the render closure, so two clicks dispatched in the same task could both
+   * pass it before React committed the first. A ref is set synchronously.
+   */
+  const submittingRef = useRef(false);
 
   const copy = FIELD_GUIDE_COPY;
   const isSubmitting = state.phase === 'submitting';
@@ -119,48 +141,75 @@ export default function LeadCaptureForm({ placement, pagePath, onOutcome, headin
     }
   }, [isOutcome, onOutcome]);
 
-  const handleToken = useCallback((token: string) => setTurnstileToken(token), []);
-  const handleExpire = useCallback(() => setTurnstileToken(null), []);
+  const handleToken = useCallback((token: string) => gate.set(token), [gate]);
+  const handleExpire = useCallback(() => gate.clear(), [gate]);
   const handleInteractive = useCallback(() => setTurnstileVisible(true), []);
+  const handleTurnstileStatus = useCallback((status: TurnstileStatus) => {
+    turnstileStatusRef.current = status;
+  }, []);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (isSubmitting) return;
+    if (submittingRef.current) return;
 
     dispatch({ type: 'submit', email });
     if (validateEmail(email)) return;
 
-    const trimmed = email.trim();
-    sendFunnelEvent({ event: 'lead_magnet_form_submit', assetId: FIELD_GUIDE_ID, placement, pagePath });
+    submittingRef.current = true;
+    try {
+      const trimmed = email.trim();
+      sendFunnelEvent({ event: 'lead_magnet_form_submit', assetId: FIELD_GUIDE_ID, placement, pagePath });
 
-    const fallbackGuideUrl = localGuideUrl(FIELD_GUIDE.publicPath);
-    const result = await submitLeadMagnetRequest(
-      {
-        email: trimmed,
-        assetId: FIELD_GUIDE_ID,
-        placement,
-        pagePath,
-        marketingOptIn,
-        consentTextVersion: CURRENT_CONSENT_TEXT_VERSION,
-        turnstileToken,
-        attribution: resolveAttribution(
-          arrivalFromWindow(),
-          typeof window === 'undefined' ? null : window.location.origin,
-          sessionStore(),
-        ),
-        honeypot,
-      },
-      fallbackGuideUrl,
-    );
+      /**
+       * THE BOUNDED WAIT (Issue #54).
+       *
+       * A token already in hand costs nothing: `gate.get()` returns it and the
+       * request goes out immediately. Only when there is no token, and only
+       * while one could still arrive by itself, does the submit pause. An
+       * interactive challenge needs a human and a missing script is not coming
+       * back inside the wait, so those states go straight through.
+       *
+       * This does NOT gate the form. If the wait times out the request is sent
+       * exactly as before, with a null token, and §13.3's fail-open path still
+       * grants the guide. The wait runs inside the submitting phase, so the
+       * button already reads "Getting your guide…" (§32.1).
+       */
+      let turnstileToken = gate.get();
+      if (turnstileToken === null && shouldWaitForToken(turnstileStatusRef.current)) {
+        turnstileToken = await gate.wait(TOKEN_WAIT_MS);
+      }
 
-    dispatch({ type: 'settled', email: trimmed, result });
+      const fallbackGuideUrl = localGuideUrl(FIELD_GUIDE.publicPath);
+      const result = await submitLeadMagnetRequest(
+        {
+          email: trimmed,
+          assetId: FIELD_GUIDE_ID,
+          placement,
+          pagePath,
+          marketingOptIn,
+          consentTextVersion: CURRENT_CONSENT_TEXT_VERSION,
+          turnstileToken,
+          attribution: resolveAttribution(
+            arrivalFromWindow(),
+            typeof window === 'undefined' ? null : window.location.origin,
+            sessionStore(),
+          ),
+          honeypot,
+        },
+        fallbackGuideUrl,
+      );
 
-    /* §8.1: success means the lead was stored and access granted. The email
-       outcome is measured separately from the request row, not here. */
-    sendFunnelEvent({ ...funnelOutcomeFor(result), assetId: FIELD_GUIDE_ID, placement, pagePath });
+      dispatch({ type: 'settled', email: trimmed, result });
 
-    /* A failed check is reset silently so a later attempt can succeed (§13.3). */
-    if (result.kind === 'rejected' && result.error === 'verification_failed') setTurnstileToken(null);
+      /* §8.1: success means the lead was stored and access granted. The email
+         outcome is measured separately from the request row, not here. */
+      sendFunnelEvent({ ...funnelOutcomeFor(result), assetId: FIELD_GUIDE_ID, placement, pagePath });
+
+      /* A failed check is reset silently so a later attempt can succeed (§13.3). */
+      if (result.kind === 'rejected' && result.error === 'verification_failed') gate.clear();
+    } finally {
+      submittingRef.current = false;
+    }
   }
 
   if (isOutcome) {
@@ -300,6 +349,7 @@ export default function LeadCaptureForm({ placement, pagePath, onOutcome, headin
         onToken={handleToken}
         onExpire={handleExpire}
         onInteractive={handleInteractive}
+        onStatusChange={handleTurnstileStatus}
         appearance="interaction-only"
         theme="dark"
         className={turnstileVisible ? 'mt-2' : 'sr-only'}
