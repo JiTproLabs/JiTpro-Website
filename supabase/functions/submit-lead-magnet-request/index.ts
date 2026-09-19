@@ -110,7 +110,16 @@ Deno.serve(async (req: Request) => {
     });
 
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: isAllowedOrigin(origin) ? 204 : 403, headers: cors });
+    // A rejected preflight used to return 403 with no log of any kind, so a
+    // legitimate visitor on a hostname the allowlist did not cover failed
+    // silently: no POST, no "request received", nothing to diagnose from
+    // (Issue #54). The origin is a hostname, not personal data, and it is
+    // logged only, never reflected into Access-Control-Allow-Origin.
+    if (!isAllowedOrigin(origin)) {
+      logger.info("preflight rejected: origin not allowed", { origin: origin ?? "(absent)" });
+      return new Response(null, { status: 403, headers: cors });
+    }
+    return new Response(null, { status: 204, headers: cors });
   }
   if (req.method !== "POST") {
     return new Response(null, { status: 405, headers: { ...cors, Allow: "POST, OPTIONS" } });
