@@ -190,6 +190,7 @@ All notifications send to `Tech@jit-pro.com`.
 | JiTpro Website Deployment Alert | A production deployment succeeds or fails | If success, no action needed. If failure, check the Deployments tab in the jitpro-website Pages project for the error. |
 | JiTpro SSL Certificate Alert | The SSL certificate has a renewal problem | Go to Cloudflare, then jit-pro.com, then SSL/TLS. Cloudflare renews certificates automatically. This alert means the automatic renewal hit a problem. Contact Cloudflare support if it does not resolve within 24 hours. |
 | JiTpro Abuse Report Alert | An abuse report is filed against jit-pro.com | Review the report immediately. Contact Cloudflare if the report is incorrect. |
+| JiTpro Web Analytics Weekly Report | Sent every week regardless | No action needed. It is a digest of visits, page views and median load time. Read it for the trend, not for alarms. |
 
 ### 4.9 Deployment cleanup Worker
 
@@ -240,7 +241,7 @@ matters.
 | Pulsetic | Site uptime at `jit-pro.com`, `www.jit-pro.com`, and `jitpro-website.pages.dev`. SSL certificate validity. Domain registration expiry (registered until June 2029). | Email to `Tech@jit-pro.com` |
 | Cloudflare Notifications | Deployment success and failure. SSL certificate problems. Cloudflare infrastructure incidents. Abuse reports. | Email to `Tech@jit-pro.com` |
 | GitHub Actions | Code quality including typecheck, lint, tests, build, dependency audit, and broken links. | Email to the PR author |
-| Cloudflare Web Analytics | Visitors, page views, popular pages, Core Web Vitals performance. Enabled on the Pages project. | Check manually, no automatic alerts |
+| Cloudflare Web Analytics | Visitors, page views, popular pages, Core Web Vitals performance. Enabled on the Pages project. | Weekly email digest to `Tech@jit-pro.com`. No alert when traffic changes suddenly, so check manually too. |
 | Google Search Console | Google indexing, search visibility, crawl errors. | Email for critical issues, check manually monthly |
 | Cleanup Worker | Weekly summary of deployments deleted. | Email to `Tech@jit-pro.com` every Wednesday |
 
@@ -308,6 +309,7 @@ This catches slow or silent problems that alerts do not cover.
 | Google Search Console | Any new coverage errors or drop in impressions | Google Search Console, Domain property |
 | Cleanup Worker email | Confirm the Wednesday email arrived the past few weeks | Tech@jit-pro.com inbox |
 | GitHub Dependabot | Any open security alerts on the repository | GitHub, then JiTproLabs/JiTpro-Website, then Security tab |
+| This document | Skim it against reality and correct anything stale | `docs/operations.md` |
 
 ---
 
