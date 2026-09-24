@@ -24,6 +24,7 @@ Everything involved in running the marketing website.
 | GitHub Actions `annual-security-txt-reminder` | Annual reminder to renew the security.txt expiry date | JiTproLabs org |
 | Cloudflare Pages `jitpro-website` | Hosts and deploys the built website | Tech@jit-pro.com account |
 | Cloudflare `jit-pro.com` zone | Manages the domain, DNS, SSL, and security | Tech@jit-pro.com account |
+| Cloudflare Registrar | Registers and renews the jit-pro.com domain | Tech@jit-pro.com account |
 | Cloudflare Workers `jitpro-deployment-cleanup` | Weekly cleanup of old Cloudflare Pages deployments | Tech@jit-pro.com account |
 | Pulsetic | External uptime monitoring, checks the site every 5 minutes | JiTpro |
 | Supabase `jitpro_website` | Backend database and Edge Functions for the website | JiTpro |
@@ -192,7 +193,51 @@ All notifications send to `Tech@jit-pro.com`.
 | JiTpro Abuse Report Alert | An abuse report is filed against jit-pro.com | Review the report immediately. Contact Cloudflare if the report is incorrect. |
 | JiTpro Web Analytics Weekly Report | Sent every week regardless | No action needed. It is a digest of visits, page views and median load time. Read it for the trend, not for alarms. |
 
-### 4.9 Deployment cleanup Worker
+### 4.9 Incident Alert component filter
+
+By default the Cloudflare Incident Alert sends a notification for every
+incident across Cloudflare's entire platform, at every severity. That
+produced roughly 65 emails in three days, almost none of which touched
+this site.
+
+The alert is therefore filtered to the thirteen services the site
+actually depends on:
+
+| Component | Why it is included |
+|---|---|
+| Analytics | Feeds the dashboards used in the monthly check |
+| Authoritative DNS | Answers DNS for jit-pro.com |
+| CDN/Cache | Delivers the site |
+| Challenge Platform | Runs when a visitor is challenged |
+| DNS Updates | Pushes DNS changes to the edge |
+| Infrastructure | Underlying platform capacity |
+| Network | The network everything rides on |
+| Pages | Hosts and deploys the site |
+| Registrar | The domain is registered with Cloudflare |
+| Rules | Covers the www redirect, WAF rules and security headers |
+| SSL Certificate Provisioning | The certificate for the site |
+| Turnstile | The widget on the contact and capture forms |
+| Workers | Runs the deployment cleanup Worker |
+
+**The selection rule:** include a component only if an incident there
+would affect visitors to the site, the deployment pipeline, or the
+domain itself. Everything else stays out, including every data centre
+region and every Cloudflare product the site does not use.
+
+Notes on two exclusions that look like omissions:
+- **Firewall** is a legacy component superseded by Rules, whose
+  description explicitly covers WAF and DDoS rules.
+- **Marketing Site** is Cloudflare's own website at www.cloudflare.com,
+  not this one.
+
+Incident Impact is deliberately left unfiltered, so Minor incidents
+still arrive. The component filter was expected to do most of the work.
+If the volume is still uncomfortable, restricting to Major and Critical
+is the next step.
+
+Reviewed September 2026.
+
+### 4.10 Deployment cleanup Worker
 
 The `jitpro-deployment-cleanup` Worker runs every Wednesday at 16:00 UTC and
 deletes old Cloudflare Pages deployments automatically. A summary email is sent
@@ -287,6 +332,16 @@ Real files always win over the catch-all, which is why the Field Guide PDF at
 `/guides/...` works correctly. Adding `robots.txt` and `sitemap.xml` as real
 files under `public/` will make them resolve properly.
 
+### Supabase has no alerting here
+
+The lead-capture Edge Function and the database behind it run on
+Supabase, not Cloudflare. No Cloudflare notification covers them, and
+Pulsetic monitors the website rather than the function.
+
+If Supabase has an outage, the site stays up and form submissions fail
+quietly. Supabase publishes its own status page, and subscribing to it
+would close this gap.
+
 ### Owned by Jeff
 
 | Item | Note |
@@ -340,5 +395,13 @@ duplicate if one is already open.
 | Resend | JiTpro account |
 | Google Search Console | Tech@jit-pro.com owns both properties, contributors added as users |
 
-**Domain registration:** `jit-pro.com` is registered through June 2029.
+**Domain registration:** `jit-pro.com` is registered with **Cloudflare
+Registrar**, on the same account as everything else. Cloudflare is
+therefore both registrar and DNS provider. Registered through June 2029.
+Manage it at the account level under Domain Registration, not inside
+the zone.
+
 Pulsetic monitors domain expiry and will alert before it lapses.
+Auto-renew is on, confirmed September 2026. The more likely failure is
+an expired payment card rather than a missed date, so confirm the card
+on file during the annual maintenance review.
