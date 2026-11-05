@@ -49,6 +49,16 @@ Deno.serve(async (req: Request) => {
   const requestId = crypto.randomUUID();
   console.log("send-contact-notification: start", { requestId });
 
+  // Diagnostic only: log whether the request carries the expected token.
+  // Nothing is rejected. The token value is never written to the logs.
+  const expectedSecret = Deno.env.get("NOTIFY_WEBHOOK_SECRET");
+  const presentedSecret = req.headers.get("x-notify-secret") ?? "";
+  console.log("caller token check (diagnostic)", {
+    requestId,
+    configured: Boolean(expectedSecret),
+    matches: Boolean(expectedSecret) && presentedSecret === expectedSecret,
+  });
+
   try {
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
 
