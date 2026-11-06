@@ -44,7 +44,7 @@ export default function KnowWhatsComingSection() {
           </h3>
           <div className="mt-4 space-y-5 text-[1.0625rem] leading-[1.7] text-jp-ink-secondary sm:text-[1.125rem]">
             <p>
-              But when a new project starts, there&apos;s so much to do that accurate planning gets pushed aside. Before long, you&apos;re putting out the same fires you promised yourself you&apos;d avoid after the last project.
+              But when a new project starts, your team gets buried in the same problems as the last job, and detailed planning gets pushed aside. Before long, you&apos;re putting out the same fires you promised yourself you&apos;d avoid next time.
             </p>
             <p className="font-semibold text-jp-background">
               JiTpro gives your team dedicated planning support from the start, so you can stay ahead of problems instead of chasing them.

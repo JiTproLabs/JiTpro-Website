@@ -7,10 +7,13 @@ import { Link } from 'react-router-dom';
  *
  *   EYEBROW   "Your project. Your team. Our expertise." (revised 2026-11-05,
  *             replacing "Built by contractors")
- *   H1        "Broken schedules. / Broken promises. / Broken profits." — one
- *             h1, three lines, the last in Brand Amber (revised 2026-11-05)
- *   COPY      two short statements: the symptoms, then the fact that they
- *             were preventable
+ *   H1        "Broken schedules? / Broken promises? / Broken profits?" — one
+ *             h1, three lines, all in primary ink (revised 2026-11-05)
+ *   TURN      "It doesn't have to be this way." in Brand Amber, directly
+ *             beneath the headline: the move from familiar problems to the
+ *             possibility of better outcomes
+ *   COPY      three short statements in primary ink: the symptoms, the call
+ *             to action, and JiTpro's value statement (the last in semibold)
  *   ACTIONS   the primary to /contact and the quiet secondary to /learn-more
  *
  * COMPACT BY DESIGN (revised 2026-11-05 after review): the headline, the
@@ -28,10 +31,9 @@ import { Link } from 'react-router-dom';
  * treatment: the same opacity, mask, `lighten` merge, scrim, grain and bottom
  * hand-off, without the reveal.
  *
- * AMBER on this surface (§48.7): the eyebrow, the headline's second line,
- * the primary action, and the lighting (the warm key and the top hairline).
- * The headline line takes the place the previous hero's underline held. The emphasis lines
- * in the copy are ink, not amber.
+ * AMBER on this surface (§48.7): the eyebrow, the turn line beneath the
+ * headline, the primary action, and the lighting (the warm key and the top
+ * hairline). The headline and the supporting statements are ink, not amber.
  */
 
 // Very light grain over the hero lighting, matching HomeHero.tsx.
@@ -86,20 +88,24 @@ export default function ProfitHero() {
           Your project. Your team. Our expertise.
         </p>
 
-        {/* One h1, three lines: the cause and its effect on the client in
-            primary ink, the consequence in Brand Amber. Sized so the three
-            lines, the copy and the primary action share one desktop viewport. */}
-        <h1 className="mx-auto mt-4 text-center font-heading text-[2.25rem] font-extrabold leading-[1.02] tracking-[-0.03em] text-jp-text-primary sm:mt-5 sm:text-[3rem] lg:text-[3.5rem] xl:text-[3.75rem]">
-          <span className="block">Broken schedules.</span>
-          <span className="block">Broken promises.</span>
-          <span className="block text-jp-brand-amber">Broken profits.</span>
+        {/* One h1, three lines, all in primary ink. One step smaller below
+            `sm` so each question holds a single line on a narrow phone. */}
+        <h1 className="mx-auto mt-4 text-center font-heading text-[2rem] font-extrabold leading-[1.04] tracking-[-0.03em] text-jp-text-primary sm:mt-5 sm:text-[3rem] lg:text-[3.5rem] xl:text-[3.75rem]">
+          <span className="block">Broken schedules?</span>
+          <span className="block">Broken promises?</span>
+          <span className="block">Broken profits?</span>
         </h1>
 
-        <div className="mx-auto mt-6 max-w-[52ch] space-y-2 text-center text-[1.0625rem] leading-[1.6] text-jp-text-secondary sm:mt-7 sm:text-[1.125rem] lg:text-[1.1875rem]">
+        {/* The turn: the hero's one amber statement, set in the heading face
+            between the headline and the body register. */}
+        <p className="mx-auto mt-4 text-center font-heading text-[1.5rem] font-bold leading-[1.2] tracking-[-0.02em] text-balance text-jp-brand-amber sm:mt-5 sm:text-[1.875rem] lg:text-[2.125rem]">
+          It doesn&apos;t have to be this way.
+        </p>
+
+        <div className="mx-auto mt-5 max-w-[52ch] text-center text-[1.0625rem] leading-[1.55] text-balance text-jp-text-primary sm:mt-6 sm:text-[1.125rem] lg:text-[1.1875rem]">
           <p>Late materials. Wrong products. Idle crews. No clear answers.</p>
-          <p className="font-semibold text-jp-text-primary">
-            Many of these costly problems can be prevented months before they reach the field.
-          </p>
+          <p className="mt-1">Don&apos;t let these problems become part of your next project.</p>
+          <p className="mt-4 font-semibold">JiTpro helps get the field what it needs, when it needs it.</p>
         </div>
 
         {/* One decision with two doors (§48.1): the primary, and the quiet

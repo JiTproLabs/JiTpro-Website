@@ -1,4 +1,5 @@
 import ProfitHero from '../components/home/ProfitHero';
+import CoreBeliefSection from '../components/home/CoreBeliefSection';
 import FewerSurprisesSection from '../components/home/FewerSurprisesSection';
 import KnowWhatsComingSection from '../components/home/KnowWhatsComingSection';
 import ThroughoutProjectSection from '../components/home/ThroughoutProjectSection';
@@ -13,6 +14,7 @@ import NextProblemCTA from '../components/home/NextProblemCTA';
  *
  *   ACT ONE — the problem and the promise, on --jp-background
  *     1 Hero                  broken schedules, promises, profits
+ *     1a What we believe      the core belief, on the --jp-surface band
  *     2 Fewer surprises       see it coming; keep a clear record
  *
  *   ACT TWO — the work, on --jp-surface-light
@@ -41,6 +43,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-jp-background text-jp-text-primary">
       <ProfitHero />
+      <CoreBeliefSection />
       <FewerSurprisesSection />
       <KnowWhatsComingSection />
       <ThroughoutProjectSection />
