@@ -45,19 +45,55 @@ function safe(value: string | null | undefined): string {
   return escapeHtmlEntities(trimmed);
 }
 
+/**
+ * Checks two secrets are identical without stopping at the first wrong
+ * character. A normal `===` returns faster for a guess that starts
+ * correctly, which lets an attacker find a secret one character at a time.
+ */
+async function secretsMatch(expectedSecret: string, presentedSecret: string): Promise<boolean> {
+  const textEncoder = new TextEncoder();
+
+  // Convert inputs to uniform 32-byte blocks using native Web Crypto
+  const [expectedHash, presentedHash] = await Promise.all([
+    crypto.subtle.digest("SHA-256", textEncoder.encode(expectedSecret)),
+    crypto.subtle.digest("SHA-256", textEncoder.encode(presentedSecret)),
+  ]);
+
+  const expectedBytes = new Uint8Array(expectedHash);
+  const presentedBytes = new Uint8Array(presentedHash);
+
+  // Collect every difference rather than returning at the first one.
+  let differences = 0;
+  for (let index = 0; index < expectedBytes.length; index++) {
+    differences |= expectedBytes[index] ^ presentedBytes[index];
+  }
+
+  return differences === 0;
+}
+
 Deno.serve(async (req: Request) => {
   const requestId = crypto.randomUUID();
   console.log("send-contact-notification: start", { requestId });
 
-  // Diagnostic only: log whether the request carries the expected token.
-  // Nothing is rejected. The token value is never written to the logs.
   const expectedSecret = Deno.env.get("NOTIFY_WEBHOOK_SECRET");
+  if (!expectedSecret) {
+    console.error("NOTIFY_WEBHOOK_SECRET is not set; refusing all requests", { requestId });
+    return new Response(
+      JSON.stringify({ ok: false, error: "Server not configured" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
   const presentedSecret = req.headers.get("x-notify-secret") ?? "";
-  console.log("caller token check (diagnostic)", {
-    requestId,
-    configured: Boolean(expectedSecret),
-    matches: Boolean(expectedSecret) && presentedSecret === expectedSecret,
-  });
+  const isAuthorized = await secretsMatch(expectedSecret, presentedSecret);
+
+  if (!isAuthorized) {
+    console.warn("Request rejected: missing or wrong x-notify-secret", { requestId });
+    return new Response(
+      JSON.stringify({ ok: false, error: "Unauthorized" }),
+      { status: 401, headers: { "Content-Type": "application/json" } }
+    );
+  }
 
   try {
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
