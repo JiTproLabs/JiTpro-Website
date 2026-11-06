@@ -24,7 +24,7 @@ export default function ThroughoutProjectSection() {
           <p>
             We show them which decisions are due, who needs to be contacted, which materials need attention, and what could become a problem if nobody acts.
           </p>
-          <p>Your PMs still run the job. We help them stay ahead of it.</p>
+          <p>Your PMs still run the job. We give them the visibility to stay ahead of it.</p>
           <p>And when things change, we update the plan and keep track of what happened.</p>
         </div>
       </div>

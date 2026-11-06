@@ -58,6 +58,7 @@
      against it (§8.1.1, amber on light surfaces). Hierarchy is ink. */
   --jp-surface-light: #f1f5f9; /* role inversion of --jp-text-primary */
   --jp-ink-secondary: #475569; /* body and structural linework on light */
+  --jp-surface-white: #ffffff; /* raised light zone within a light act (§8.8, 2026-11-05) */
 }
 
 /*
@@ -84,6 +85,7 @@
 
   --color-jp-surface-light: var(--jp-surface-light);
   --color-jp-ink-secondary: var(--jp-ink-secondary);
+  --color-jp-surface-white: var(--jp-surface-white);
 }
 
 /*
