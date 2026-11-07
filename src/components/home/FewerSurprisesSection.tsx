@@ -48,7 +48,7 @@ export default function FewerSurprisesSection() {
 
           <div className="mt-12 max-w-[56ch] space-y-6 text-[1.0625rem] leading-[1.7] text-jp-text-secondary sm:text-[1.125rem] lg:mt-2 lg:text-[1.1875rem]">
             <p>
-              You can&apos;t prevent every problem in construction. But you shouldn&apos;t have to find out about a problem when it&apos;s threatening to stop your crews.
+              You can&apos;t prevent every problem in construction. But many procurement problems can be identified and addressed before they disrupt the field.
             </p>
             <p>JiTpro helps you see what&apos;s coming, long before it reaches the field.</p>
             <p>

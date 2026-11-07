@@ -50,6 +50,7 @@ const DemoLab = lazy(() => import('./demo-lab/DemoLab'));
 const TableFidelityTest = lazy(() => import('./demo-lab/TableFidelityTest'));
 const ScheduleLab = lazy(() => import('./demo-lab/schedule/ScheduleLab'));
 const ScreenCompareLab = lazy(() => import('./demo-lab/ScreenCompareLab'));
+const ProcurementChainLab = lazy(() => import('./demo-lab/procurement-chain/ProcurementChainLab'));
 const ProductRegisterScreen = lazy(() => import('./components/demo/screens/ProductRegisterScreen'));
 const CommitmentRegisterLive = lazy(() => import('./components/demo/screens/CommitmentRegisterScreen'));
 const ScopeGapAnalysisScreen = lazy(() => import('./components/demo/screens/ScopeGapAnalysisScreen'));
@@ -120,6 +121,7 @@ function App() {
             <Route path="/demo-lab/table-test" element={<Suspense fallback={null}><TableFidelityTest /></Suspense>} />
             <Route path="/demo-lab/procurement-schedule" element={<Suspense fallback={null}><ScheduleLab initial="inspect" /></Suspense>} />
             <Route path="/demo-lab/procurement-schedule-compare" element={<Suspense fallback={null}><ScheduleLab initial="compare" /></Suspense>} />
+            <Route path="/demo-lab/procurement-chain" element={<Suspense fallback={null}><ProcurementChainLab /></Suspense>} />
             <Route path="/demo-lab/product-register" element={<Suspense fallback={null}><ScreenCompareLab component={ProductRegisterScreen} reference="product-register" title="Product Register" /></Suspense>} />
             <Route path="/demo-lab/product-register-compare" element={<Suspense fallback={null}><ScreenCompareLab component={ProductRegisterScreen} reference="product-register" title="Product Register" initial="side" /></Suspense>} />
             <Route path="/demo-lab/commitment-register-live" element={<Suspense fallback={null}><ScreenCompareLab component={CommitmentRegisterLive} reference="commitment-capture" title="Commitment Register (production)" initial="live" /></Suspense>} />

@@ -1,10 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import PhaseInspector, {
-  useEscapeToDismiss,
-  targetId,
-  type Anchor,
-  type InspectTarget,
-} from './PhaseInspector';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import PhaseInspector from './PhaseInspector';
+import ScheduleRowMarks from './ScheduleRowMarks';
+import { useMarkInspection } from './useMarkInspection';
 import { useInspection } from '../../inspection';
 import { DATA_DATE, parse, type ScheduleItem } from './scheduleModel';
 import { nonWorkingRuns } from './workCalendar';
@@ -98,8 +95,6 @@ function buildTicks(domainStart: Date, domainEnd: Date, zoom: Zoom): Tick[] {
   return ticks;
 }
 
-const familyVar = (f: string) => `var(--jpd-phase-${f})`;
-
 type Props = {
   items: ScheduleItem[];
   zoom: Zoom;
@@ -125,82 +120,13 @@ export default function DemoGantt({
   const { enabled } = useInspection();
 
   /**
-   * THREE SEPARATE STATES, NOT ONE.
-   *
-   * Hover is transient pointer state and must never behave like a selection.
-   * Focus belongs to the keyboard. Pinning is an intentional touch action.
-   * Collapsing them into a single `anchor` was the bug: a mouse hover wrote a
-   * value nothing was responsible for clearing, so the card outlived the
-   * gesture that created it.
-   *
-   * Priority: focused, then hovered, then pinned.
+   * Hover, focus and pin state, the grace ring, tap-outside and Escape live
+   * in useMarkInspection (extracted 2026-11-06, behaviour unchanged) so the
+   * homepage comparison inspects marks through the same logic.
    */
-  const [hovered, setHovered] = useState<Anchor | null>(null);
-  const [focused, setFocused] = useState<Anchor | null>(null);
-  const [pinned, setPinned] = useState<Anchor | null>(null);
-  const anchor = focused ?? hovered ?? pinned;
+  const { anchor, hovered, dismiss, clearHover, handlersFor } = useMarkInspection(enabled);
 
   const hostRef = useRef<HTMLDivElement>(null);
-  /** The element the hover bubble currently belongs to. */
-  const activeElRef = useRef<HTMLElement | null>(null);
-
-  const dismiss = useCallback(() => {
-    activeElRef.current = null;
-    setHovered(null);
-    setFocused(null);
-    setPinned(null);
-  }, []);
-  useEscapeToDismiss(!!anchor, dismiss);
-
-  /**
-   * THE HOVER BUBBLE BELONGS TO ONE SEGMENT, NOT TO ANY CONTAINER.
-   *
-   * The previous attempt tested the pointer against the whole Gantt's rect,
-   * which is a ~943x786 safe zone - so the card survived blank timeline space,
-   * other rows and most of the schedule. The boundary is now the ACTIVE
-   * SEGMENT's own rect plus a 12px grace ring, and nothing larger.
-   *
-   * Each pointermove asks three questions, in cost order:
-   *
-   *   1. Is the pointer within 12px of the active target's LIVE rect?
-   *      -> keep. This is anti-flicker tolerance and nothing more.
-   *   2. Is it over some OTHER inspectable segment?
-   *      -> keep; that segment's own enter handler re-targets the card. This
-   *         is what keeps fast horizontal scrubbing continuous.
-   *   3. Otherwise -> clear immediately.
-   *
-   * The rect is re-read from the live element rather than reused from the
-   * stored anchor, so scrolling, zooming or a resize cannot leave a stale
-   * boundary behind. `elementFromPoint` is consulted only when the cheap
-   * distance test fails, and it reports what is under the cursor rather than
-   * the card, because the card is `pointer-events: none`.
-   *
-   * Only mouse input is governed here. Touch has no hover to end.
-   */
-  const GRACE_PX = 12;
-
-  useEffect(() => {
-    if (!hovered) return;
-    const onMove = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse') return;
-
-      const el = activeElRef.current;
-      if (el) {
-        const r = el.getBoundingClientRect();
-        const dx = Math.max(r.left - e.clientX, 0, e.clientX - r.right);
-        const dy = Math.max(r.top - e.clientY, 0, e.clientY - r.bottom);
-        if (Math.hypot(dx, dy) <= GRACE_PX) return;
-      }
-
-      const under = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
-      if (under && under.closest('button.jpd-step, button.jpd-commit, button.jpd-issue')) return;
-
-      activeElRef.current = null;
-      setHovered(null);
-    };
-    document.addEventListener('pointermove', onMove, true);
-    return () => document.removeEventListener('pointermove', onMove, true);
-  }, [hovered]);
 
   /**
    * A zoom-band change or a different selected item moves or replaces every
@@ -208,9 +134,8 @@ export default function DemoGantt({
    * definition.
    */
   useEffect(() => {
-    activeElRef.current = null;
-    setHovered(null);
-  }, [zoom, selectedItemId]);
+    clearHover();
+  }, [zoom, selectedItemId, clearHover]);
 
   /** Domain: the earliest scheduled start to the latest Required On-Site,
       padded to whole months so the header bands start cleanly. */
@@ -258,68 +183,6 @@ export default function DemoGantt({
   const todayX = x(DATA_DATE);
 
   /**
-   * The segment hit area, tracking the fitted row pitch. 34px at the authored
-   * 63px row; never so tall that the row loses its blank margin, never so
-   * short that an 18px bar becomes hard to hit.
-   */
-  const hitH = Math.max(22, Math.min(34, rowHeight - 20));
-
-  /**
-   * THE RAISED BAND.
-   *
-   * External commitments sit ABOVE the bar rather than on it, because they are
-   * not part of the procurement work - they are what the work is waiting for.
-   * Height carries that distinction on its own: anything on the bar line is
-   * the package's own sequence, anything raised above it is owed by someone
-   * else. Colour and shape reinforce it; position is what makes it readable at
-   * a glance across fifteen rows.
-   *
-   * Derived from the bar rather than fixed, so it tracks the fitted row pitch.
-   * Floored so the marker cannot ride up into the row divider on a tight row.
-   */
-  const barTop = (rowHeight - 18) / 2;
-  const commitCY = Math.max(7, barTop - 8);
-  const COMMIT_HIT = 13;
-
-  /**
-   * ISSUES SIT BELOW THE BAR, COMMITMENTS ABOVE IT.
-   *
-   * The two raised bands mean different things and are separated by side so
-   * they can be told apart without reading either one: above the bar is what
-   * the package is WAITING FOR, below it is what has GONE WRONG. It also keeps
-   * their hit areas from competing on a row that carries both.
-   */
-  const issueCY = Math.min(rowHeight - 7, rowHeight - commitCY);
-  const ISSUE_HIT = 13;
-
-  /**
-   * The card is placed against the ROW, not the cursor, so the row rect is
-   * captured alongside the segment. `rowId` lets the inspector hold its
-   * position while the visitor scrubs along one procurement path.
-   */
-  const makeAnchor = (el: HTMLElement, target: InspectTarget, rowId: string): Anchor => {
-    const row = el.closest('[data-gantt-row]') as HTMLElement | null;
-    return {
-      segRect: el.getBoundingClientRect(),
-      rowRect: (row ?? el).getBoundingClientRect(),
-      rowId,
-      target,
-    };
-  };
-
-  // Touch: a tap anywhere that is not a segment clears the pinned card.
-  useEffect(() => {
-    if (!pinned) return;
-    const onDown = (e: PointerEvent) => {
-      if (e.pointerType === 'mouse') return;
-      const t = e.target as HTMLElement | null;
-      if (!t || !t.closest('button.jpd-step, button.jpd-commit, button.jpd-issue')) setPinned(null);
-    };
-    document.addEventListener('pointerdown', onDown, true);
-    return () => document.removeEventListener('pointerdown', onDown, true);
-  }, [pinned]);
-
-  /**
    * Changing the selected procurement item clears every transient state, so
    * phase detail from the previous item can never be left floating over the
    * newly selected one. An intentional pin is cleared too: it belonged to the
@@ -327,13 +190,10 @@ export default function DemoGantt({
    */
   const selectItem = useCallback(
     (id: string) => {
-      activeElRef.current = null;
-      setHovered(null);
-      setPinned(null);
-      setFocused(null);
+      dismiss();
       onSelectItem(id);
     },
-    [onSelectItem],
+    [dismiss, onSelectItem],
   );
 
   return (
@@ -344,8 +204,7 @@ export default function DemoGantt({
       onPointerLeave={(e) => {
         // Fast path only. The per-segment distance test is the guarantee.
         if (e.pointerType !== 'mouse') return;
-        activeElRef.current = null;
-        setHovered(null);
+        clearHover();
       }}
     >
       {/* ---------------------------------------------- LEFT DATA AREA */}
@@ -450,8 +309,7 @@ export default function DemoGantt({
         }}
         onScroll={() => {
           if (!hovered) return;
-          activeElRef.current = null;
-          setHovered(null);
+          clearHover();
         }}
       >
         <div style={{ width: totalWidth, position: 'relative' }}>
@@ -546,218 +404,15 @@ export default function DemoGantt({
                       style={{ left: b.left, width: b.width }}
                     />
                   ))}
-                  {it.steps.map((s) => {
-                    const isMilestone = s.kind === 'milestone';
-                    const isRos = s.family === 'required';
-                    const left = x(s.startDate);
-                    const w = Math.max(2, x(s.endDate) + pxPerDay - left);
-
-                    // Hit area can exceed the visible mark so narrow segments
-                    // stay targetable; the visible geometry is never inflated.
-                    const hitW = isMilestone ? 14 : Math.max(w, 8);
-                    const hitLeft = isMilestone ? left - 7 : left;
-
-                    const isActive = anchor != null && targetId(anchor.target) === s.id;
-                    const common = {
-                      className:
-                        `jpd-step${enabled ? ' jpd-step--interactive' : ''}` +
-                        (s.status === 'complete' ? ' jpd-step--complete' : '') +
-                        (isActive ? ' jpd-step--active' : ''),
-                      /**
-                       * THE HIT AREA IS THE BAR, NOT THE ROW.
-                       *
-                       * These were `top: 0; bottom: 0`, so every segment's
-                       * target was a full-height column spanning the 63px row.
-                       * Anywhere in the row band therefore counted as "over a
-                       * segment", which is what kept the hover bubble alive no
-                       * matter which container-level dismissal was tried.
-                       *
-                       * The target is the 18px bar plus vertical padding:
-                       * comfortably clickable, while leaving real blank space
-                       * above and below that reads as blank.
-                       *
-                       * It is derived from `rowHeight` rather than fixed at
-                       * 34, because the row pitch is fitted to the canvas and
-                       * a constant would eat the whole row once the rows
-                       * compress - the blank margin that makes a row feel like
-                       * a row would vanish first, and the hit areas of stacked
-                       * rows would end up touching. Centred either way, so the
-                       * bar, the diamond and the Required On-Site cap (all
-                       * `top: 50%` inside this button) stay aligned with it at
-                       * every pitch.
-                       */
-                      style: {
-                        left: hitLeft,
-                        width: hitW,
-                        top: '50%',
-                        height: hitH,
-                        transform: 'translateY(-50%)',
-                      } as const,
-                      onPointerEnter: (e: React.PointerEvent<HTMLElement>) => {
-                        if (!enabled || e.pointerType !== 'mouse') return;
-                        const el = e.currentTarget as HTMLElement;
-                        activeElRef.current = el;
-                        setHovered(makeAnchor(el, { kind: 'step', step: s }, it.id));
-                      },
-                      // Touch and pen pin intentionally; a mouse click never
-                      // creates persistent state, so it cannot go stale.
-                      onPointerUp: (e: React.PointerEvent<HTMLElement>) => {
-                        if (!enabled || e.pointerType === 'mouse') return;
-                        e.stopPropagation();
-                        setPinned(makeAnchor(e.currentTarget as HTMLElement, { kind: 'step', step: s }, it.id));
-                      },
-                      onFocus: (e: React.FocusEvent<HTMLElement>) => {
-                        if (!enabled) return;
-                        setFocused(makeAnchor(e.currentTarget as HTMLElement, { kind: 'step', step: s }, it.id));
-                      },
-                      onBlur: () => setFocused(null),
-                      onClick: (e: React.MouseEvent<HTMLElement>) => e.stopPropagation(),
-                    };
-
-                    if (isRos) {
-                      return (
-                        <button
-                          key={s.id}
-                          type="button"
-                          {...common}
-                          tabIndex={enabled ? 0 : -1}
-                          aria-label={`${it.name}: Required On-Site ${s.startDate}`}
-                        >
-                          <span className="jpd-ros" style={{ left: 7 }} />
-                          <span className="jpd-ros__cap" style={{ left: 8 }} />
-                        </button>
-                      );
-                    }
-
-                    return (
-                      <button
-                        key={s.id}
-                        type="button"
-                        {...common}
-                        tabIndex={enabled ? 0 : -1}
-                        aria-label={`${it.name}: ${s.name}`}
-                      >
-                        {isMilestone ? (
-                          <span
-                            className="jpd-step__diamond"
-                            style={{ left: 7, background: familyVar(s.family) }}
-                          />
-                        ) : (
-                          <span
-                            className="jpd-step__bar"
-                            style={{ left: 0, width: w, background: familyVar(s.family) }}
-                          />
-                        )}
-                      </button>
-                    );
-                  })}
-
-                  {/* ------------------------------ EXTERNAL COMMITMENTS
-                      Drawn after the steps so a commitment sitting over the
-                      top edge of a bar's hit area wins the pointer: where the
-                      two overlap, the raised marker is the more specific
-                      target. Positioned from `requiredBy` through the same
-                      `x()` the bars use, so it cannot drift from its date
-                      under horizontal scroll or a zoom-band change. */}
-                  {it.commitments.map((c) => {
-                    const cx = x(c.requiredBy) + pxPerDay / 2;
-                    const isActive =
-                      anchor != null && targetId(anchor.target) === c.id;
-                    const target: InspectTarget = { kind: 'commitment', commitment: c };
-                    return (
-                      <button
-                        key={c.id}
-                        type="button"
-                        className={
-                          `jpd-commit jpd-commit--${c.status}` +
-                          (enabled ? ' jpd-commit--interactive' : '') +
-                          (isActive ? ' jpd-commit--active' : '')
-                        }
-                        tabIndex={enabled ? 0 : -1}
-                        aria-label={`${it.name}: ${c.name} required by ${c.requiredBy}, owned by ${c.ownerRole}`}
-                        style={{
-                          left: cx - COMMIT_HIT / 2,
-                          width: COMMIT_HIT,
-                          top: commitCY - COMMIT_HIT / 2,
-                          height: COMMIT_HIT,
-                        }}
-                        onPointerEnter={(e) => {
-                          if (!enabled || e.pointerType !== 'mouse') return;
-                          const el = e.currentTarget as HTMLElement;
-                          activeElRef.current = el;
-                          setHovered(makeAnchor(el, target, it.id));
-                        }}
-                        onPointerUp={(e) => {
-                          if (!enabled || e.pointerType === 'mouse') return;
-                          e.stopPropagation();
-                          setPinned(makeAnchor(e.currentTarget as HTMLElement, target, it.id));
-                        }}
-                        onFocus={(e) => {
-                          if (!enabled) return;
-                          setFocused(makeAnchor(e.currentTarget as HTMLElement, target, it.id));
-                        }}
-                        onBlur={() => setFocused(null)}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <span className="jpd-commit__mark" />
-                      </button>
-                    );
-                  })}
-
-                  {/* ------------------------------------ ISSUES / RISKS
-                      Placed at the date the project LEARNED of the problem,
-                      which is what makes the early-warning story legible: the
-                      marker sits months to the left of the work it threatens.
-                      Same x() as everything else, so it cannot drift under
-                      scroll or a zoom change. */}
-                  {it.issues.map((is) => {
-                    const ix = x(is.identifiedOn) + pxPerDay / 2;
-                    const isActive =
-                      anchor != null && targetId(anchor.target) === is.id;
-                    const target: InspectTarget = {
-                      kind: 'issue',
-                      issue: is,
-                      item: it,
-                    };
-                    return (
-                      <button
-                        key={is.id}
-                        type="button"
-                        className={
-                          `jpd-issue jpd-issue--${it.health}` +
-                          (enabled ? ' jpd-issue--interactive' : '') +
-                          (isActive ? ' jpd-issue--active' : '')
-                        }
-                        tabIndex={enabled ? 0 : -1}
-                        aria-label={`${it.name}: ${is.title}, identified ${is.identifiedOn}, package ${it.health}`}
-                        style={{
-                          left: ix - ISSUE_HIT / 2,
-                          width: ISSUE_HIT,
-                          top: issueCY - ISSUE_HIT / 2,
-                          height: ISSUE_HIT,
-                        }}
-                        onPointerEnter={(e) => {
-                          if (!enabled || e.pointerType !== 'mouse') return;
-                          const el = e.currentTarget as HTMLElement;
-                          activeElRef.current = el;
-                          setHovered(makeAnchor(el, target, it.id));
-                        }}
-                        onPointerUp={(e) => {
-                          if (!enabled || e.pointerType === 'mouse') return;
-                          e.stopPropagation();
-                          setPinned(makeAnchor(e.currentTarget as HTMLElement, target, it.id));
-                        }}
-                        onFocus={(e) => {
-                          if (!enabled) return;
-                          setFocused(makeAnchor(e.currentTarget as HTMLElement, target, it.id));
-                        }}
-                        onBlur={() => setFocused(null)}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <span className="jpd-issue__mark" />
-                      </button>
-                    );
-                  })}
+                  <ScheduleRowMarks
+                    item={it}
+                    x={x}
+                    pxPerDay={pxPerDay}
+                    rowHeight={rowHeight}
+                    enabled={enabled}
+                    anchor={anchor}
+                    handlersFor={handlersFor}
+                  />
                 </div>
               );
             })}

@@ -50,6 +50,26 @@ TODO:
 
 | Date | Decision | Scope | Owner | Source/Rationale |
 | --- | --- | --- | --- | --- |
+| 2026-11-07 | **Homepage step direction recorded for Steps 02–04 (new Section 53). Not implemented.** **Step 02** will show how construction schedule activities establish Required On-Site dates: a simplified construction schedule Gantt of several field activities; the dates the field needs specific products and materials highlighted and identified as Required On-Site Dates; the Gantt fading away while the markers stay; the dates carried visually into the Product Register. **Step 03** will show backward procurement planning from the Required On-Site date with the Procurement Chain alone, with no comparison against a conventional construction schedule (restating the Step 03 entry above). **Step 04** will progressively introduce the chain's supporting commitments and issues. Each is approved for further design and development. Its visual and motion conventions (the fade, the carry into the register, the progressive reveal) are **not yet specified** and MUST be specified in this document, under Section 46, before code. | Homepage Steps 02–04 (direction only). No code changes. | Jeff Kaufman | Founder direction of 2026-11-07, recorded at the PC-to-MacBook handoff so the work resumes without reconstructing decisions. |
+| 2026-11-07 | **Procurement Chain scenario review and revision durations revised: 312 working days (Section 51.2 updated).** First Submittal Review 15, First Revision Cycle 12, Second Submittal Review 10, Second Revision Cycle 7, Third Submittal Review 5 working days, replacing 15/12 for every cycle. All other durations and the fixed Required On Site date (30 Nov 2027) are unchanged. The engine derives a Buyout start of 31 Aug 2026 (previously 3 Aug 2026). A total of 310 was stated with the direction; the approved individual durations sum to 312, which is the recorded total. **Open, unchanged:** a proposal to move the demonstration data date from Thu 26 Nov 2026 (Thanksgiving) to Mon 30 Nov 2026 has not been decided; `DATA_DATE` remains 26 Nov 2026. | Procurement Chain scenario (`chainScenario.ts`) and Section 51.2. Neither the engine nor the shared schedule fixture changes. | Jeff Kaufman | Founder direction of 2026-11-07. Section 51.2 is updated after implementation to match the approved scenario (not to match accidental code); the dates were re-verified against the engine and an independent working-day count. |
+| 2026-11-07 | **Homepage Step 01 shows a curated Product Register (new Section 52).** Beneath Step 01's unchanged title and description: a curated **Product Register** for the Oak Ridge Residence on a fixed 1280 × 740 application canvas. It has the sidebar with Products active, four summary cards, a simplified filter row, six products in six columns (Fabrication Duration replacing Lead Time), the **Heritage Steel Windows and Doors** row selected, and a simplified detail panel ending on Required On-Site. **One story, one source:** the selected item's Required On-Site (30 Nov 2027), fabrication duration (180 working days), supplier and category are derived from the Procurement Chain scenario that Steps 02–04 use. Its status is Pending. The older 7 Jun 2027 date and 14-week lead time are excluded. **Below `lg`** a simplified card of the selected product replaces the canvas, which is never shrunk past readability. This is the homepage's second approved product demonstration, alongside Step 03's (amending the *one approved homepage product demonstration* wording of 2026-11-06). The step stack, the full Product Register screen and its fixture are unchanged. | Homepage Step 01 only. | Jeff Kaufman | Founder-approved direction of 2026-11-07, following the Step 01 inspection report. Title kept as *Product Register* to match the JiTpro software demonstration. Status Pending so Step 01 agrees with the reviews still ahead in Step 03. |
+| 2026-11-07 | **Procurement Chain milestones share one end-of-work rule with their chevrons (Sections 51.3 and 51.4 corrected).** A chevron's right edge and every finish milestone are now placed by one function of the finish date (`workEndX`). Work followed by more work ends at the start of the next working day, so the milestone sits on the joint. The chain's final work ends at the calendar end of its last day, the Required On Site instant. Dates, labels and accessible names are unchanged. Nothing is positioned by hand. | Procurement Chain layout only (`chainLayout.ts`). The full Procurement Schedule draws bars without the reach across non-working days, so its rule (Section 51.14) is unaffected. | Jeff Kaufman | Reported after the review-duration change: milestones not following the recalculated work. Root cause: two rules for one instant. Chevrons reached the next working day; diamonds stopped at the calendar end of their date. A sweep of 120 anchor dates found 167 of 720 milestone placements detached by 2–3 days, every one before a weekend or holiday. Guarded by new regression tests (anchor-date sweep and duration variants), which fail on the old rule. |
+| 2026-11-07 | **The Procurement Chain header moves to the dark navy band (Section 51.9 amended).** The header background is `--jp-surface`, filling to the container's rounded top corners. The logo is the dark-ground variant `JiTpro_Amber_white_text.svg`, unmodified. The title is in `--jp-text-primary` and the subtitle in `--jp-text-secondary`. The logo divider is `--jp-border` at 25%. Everything below the header (chain, markers, calendar, summary, legend) stays white. Existing tokens only, with no gradient or effect; typography, spacing and proportions are unchanged. | Procurement Chain header only. | Jeff Kaufman | Founder-directed visual refinement after approval of the chain design. `--jp-surface` is the site's dark band tone (the Step 03 intro panel). The white-text logo is the approved dark-ground variant already in production on the investor navigation. Its file carries three designer spacing annotations in near-black at about 2px on display, effectively invisible on navy; the asset is left unmodified. |
+| 2026-11-07 | **Homepage Step 03 drops the schedule comparison. The Procurement Chain is built as an isolated component (Sections 46.10, 51.2–51.4, 51.8 and 51.13 amended).** **Step 03 direction:** the typical-versus-JiTpro comparison is withdrawn from the approved direction. Step 03 will show only the JiTpro Procurement Chain for Custom Steel Windows and Doors, eventually revealed backward from the fixed Required On Site date. The comparison component stays live, unchanged, until the replacement is built, tested and visually approved, and no reusable scheduling component is deleted. **The chain:** one continuous bar of sequential activities, never parallel bars or extra lanes. Commitments sit above it, issues below it. It reads its own scenario (`chainScenario.ts`; Required On Site 30 Nov 2027, start 3 Aug 2026, 332 working days), leaving the shared Heritage fixture untouched. Display labels are authored, and representative agreed and actual dates are working-day offsets from engine-derived requirements, so the whole demonstration follows its anchor date. **Refinements made during implementation and recorded here, not invented in code:** `MIN_PX_PER_DAY` 8 rather than 7; chevron joints centred on their boundary date, so each chevron's area equals its span; Inter Tight throughout, because Inter is loaded only to weight 600. The four open decisions of Section 51.13 are resolved. Nine fixture packages with no review activity between resubmittal and approval are recorded as a methodology issue for separate review. | Procurement Chain (new, isolated, previewed at `/demo-lab/procurement-chain`, DEV only). The homepage is unchanged pending visual approval. | Jeff Kaufman | Founder decisions of 2026-11-07 (Phase 2 authorization and the final methodology clarification). Verified by the layout tests (`chainLayout.test.ts`: continuity, proportionality, date alignment of every mark, no overlapping cards or labels, relationships preserved when the anchor moves) and the engine tests. |
+| 2026-11-07 | **Scheduling correction: activities consume time, milestones record events (new Section 51.14; Sections 51.2–51.5 and 51.13 corrected).** Zero-duration milestones no longer consume a working day. Finish milestones (the default) share the finish date of the step before them. Start milestones exist only when declared explicitly, never inferred from a name. Consecutive milestones may share a date. **Required On Site shares the finish date of Shipping and Delivery.** Explicit gaps are preserved exactly. The current and baseline schedules now come from one shared backward pass. **Rendering:** milestone marks sit at their instant (a finish milestone at the end of its date, where its predecessor's bar ends). Same-instant milestones are stacked vertically at the shared x, never moved to another date. **Fixture impact:** every package now spans its activity total plus explicit float only. Each one shortens by its number of milestones (4–7 working days), and no activity duration changes. Two representative stories pinned to the derived requirement were re-pinned to keep their authored variance: Structural Steel's late connection criteria (five working days late) and Heritage Steel's late finish selection (six working days late, with its issue date). The 338-working-day figure recorded earlier the same day is withdrawn. | Scheduling engine (`scheduleModel.ts`), the representative schedule fixture, the full Procurement Schedule, the homepage Build-the-chain comparison (dates and Required On-Site alignment only), the Procurement Chain specification. | Jeff Kaufman | The engine gave each milestone its own working day: the `Math.max(1, gap)` step back was applied to milestones as well as phases, so a predecessor could never finish on a milestone's date. Corrected under the founder-approved methodology of 2026-11-07. Verified by new engine unit tests (13 of 14 fail against the previous engine; the duration invariant passes on both), by the existing QA harness (0 errors before and after the re-pins), and by an independent working-day count for the 332-day scenario. |
+| 2026-11-07 | **The Procurement Chain visualization is approved as a new standard (new Section 51).** One procurement item's backward-scheduled sequence is drawn as connected, color-coded chevrons on a single calendar-day axis. The approved visual reference is `docs/design/procurement-chain-reference/` (`procurement-chain.html`, `render.png`), approved for its visual character only. Its coordinates, dates, durations, hex values, typeface, placeholder logo and hand-drawn icons are not normative. **Five decisions.** (1) **Data:** the Heritage Steel item, to be updated to the approved custom steel windows and doors scenario (332 activity working days, with zero-duration milestones). All dates come from the existing backward pass and working-day calendar, unchanged. Required On Site is fixed, and the reference's dates are not to be trusted. (2) **Color:** the reference's hue structure, adjusted for WCAG AA white text at the lightest gradient stop. A dedicated `--jpd-chain-*` sub-namespace of the approved product-demo namespace, declared once in a new `chainTokens.css`. The existing `--jpd-phase-*` values are unchanged. Fabrication moves to a red-orange clear of the brand amber. (3) **Commitments above, issues below** (Decision Log 2026-11-06 convention retained), each at its record's actual date, interactive through the existing inspector. (4) **Zero-duration steps are milestones, not chevrons.** Required On Site gets distinct emphasis: a larger diamond, a full-height date rule and a terminal label. The reference's rounded end cap is withdrawn. (5) **Callouts use calendar dates** (*October 29, 2026*), never relative day numbers. **Proportional accuracy is mandatory.** Widths derive only from dates, and the figure scrolls horizontally rather than distorting durations (`MIN_PX_PER_DAY` floor). Segment geometry, milestone placement and clustering, label-fit tiers, composition, the real logo (`JiTpro_Amber.svg`), provenance and accessibility are specified in Section 51. A **backward-building animation** (a planning edge travelling right to left from the fixed Required On Site date, driven by one shared progress value, with reduced motion presenting the final state) is documented in Section 51.12 and **not authorized for implementation**. Four decisions remain open (Section 51.13). | Procurement Chain component (new, isolated). Not the full Procurement Schedule, `ScheduleRowMarks`, the `--jpd-phase-*` tokens, or the homepage; homepage placement needs its own entry. | Jeff Kaufman | Founder-approved design decisions of 2026-11-07, following the procurement-chain inspection report. Contrast ratios computed against WCAG 2.x relative luminance and recorded in Section 51.7. *Amended the same day by the scheduling correction (entry above):* this entry originally recorded the engine's behaviour as milestones each occupying one working day, giving a 338-working-day span for the approved scenario. That behaviour was an error and has been corrected. Milestones take zero working days, and the approved scenario spans exactly 332. |
+| 2026-11-06 | **The homepage step-stack intro panel is rewritten and moves to the dark band tone (amending the intro-panel entry below).** Approved copy, exactly: eyebrow *How we do it* (uppercase via CSS); heading *A level of procurement planning most projects never get.*; *We examine your schedule, drawings, specifications, and project information to identify everything the field will need.*; *Then we build a detailed, step-by-step procurement plan that shows what needs to happen, in what order, who's responsible, and when each step must be completed.*; closing statement *Every product. Every required step. Every critical commitment.* It replaces the two lead-in sentences (*We start by looking at...*, *We do the detailed planning...*), which leave the page. **Surface:** `--jp-surface` with a `--jp-border` 12% top hairline (Section 48.6), so Step 01 rises dark-to-light over it; the step panels keep white / light / white / light. **Composition:** the homepage's 5fr/7fr grid from `lg`, columns vertically centred in the panel; left the eyebrow (standard eyebrow treatment, `--jp-brand-amber`, the panel's only amber, Section 48.7) and the heading at the homepage section-heading register in `--jp-text-primary`; right the two paragraphs at the secondary body register in `--jp-text-secondary` within the Section 7.7 measure, then the closing statement at the semibold heading-face statement register in `--jp-text-primary`, emphasized but a clear step below the heading. Stacked below `lg`. No new register, token or color. Still unnumbered, outside the list, and covered by Step 01; the stack mechanism, step copy, the Step 03 comparison and the edge treatment are unchanged. "Procurement" in the heading and second paragraph is a further scoped exception to the Section 20.1 retired-language rule. | Marketing website (homepage) | Jeff Kaufman | Sections 7.7, 20.1, 46.11, 48.6, 48.7. Approved copy and direction supplied by Jeff Kaufman 2026-11-06: the preceding section says why JiTpro's support is needed; this panel says what makes the plan different, without repeating it. |
+| 2026-11-06 | **The homepage step stack opens with an unnumbered intro panel (Section 46.11 amended).** The two lead-in sentences, *We start by looking at your schedule, drawings, and project information.* and *We do the detailed planning so your team knows exactly what needs to happen.*, unchanged, leave their floating position above the stack and become its first panel: full width, at least one view tall from `lg`, on `--jp-surface-light` with the surface hairline along its top, the two sentences one per line at the existing bold heading-face statement register in `--jp-background`. It is not a step: no ordinal, no count, not part of the numbered list, which still begins at *01 What does the project need?* As the reader scrolls, Step 01 rises over it and covers it exactly as each later step covers the one before, so Step 01 now casts the passing-edge shadow too; the intro covers nothing and casts none. Surfaces read light (intro) / white / light / white / light, Step 03 still on white. Steps 01-04, their copy, the Step 03 comparison, the sticky mechanism, its `lg` / 40rem / reduced-motion conditions and the edge values are unchanged. | Marketing website (homepage) | Jeff Kaufman | Sections 7.7, 46.11, 48.6, 8.8. Direction supplied by Jeff Kaufman 2026-11-06: the lead-in read as floating copy above the first slide rather than as the opening of the sequence. |
+| 2026-11-06 | **The homepage sticky step stack gains a passing edge on each incoming panel (Section 46.11 amended).** Steps 02-04 each keep their existing 1px top hairline (`--jp-ink-secondary` at 20%, the approved light-surface hairline, unchanged) and add one restrained upward shadow from that edge onto the panel being covered: `0 -10px 18px -14px`, coloured `--jp-background` mixed to 38% with `color-mix()`, so no colour literal exists. The negative spread holds it to a thin band at the edge; it is not a card shadow and nothing else gains one. Step 01 covers nothing and casts none. Like the stack itself it applies only from `lg`, on a view at least 40rem tall, without reduced motion. No rectangular border, rounding, amber or other effect. Surfaces, dimensions, content, typography and the sticky mechanism are unchanged. **Amends:** Section 46.11's "no shadows" for this one edge treatment. | Marketing website (homepage) | Jeff Kaufman | Sections 8.8, 45, 46.11, 48.6. Direction supplied by Jeff Kaufman 2026-11-06: the alternating surfaces alone did not define the transitions enough. |
+| 2026-11-06 | **The homepage sticky step stack alternates its panel surfaces (Section 46.11 applied).** Step 01 `--jp-surface-white`, Step 02 `--jp-surface-light`, Step 03 `--jp-surface-white`, Step 04 `--jp-surface-light`, each fully opaque across the whole panel, so a rising panel visibly covers the one beneath it. Existing tokens only; no new color, token, shadow, gradient or border. Ink is unchanged and already approved on both grounds (Section 8.8: `--jp-background` 18.41:1, `--jp-ink-secondary` 6.92:1, its 85% label floor 4.79:1 on `--jp-surface-light`, higher on white). Step 03, which holds the Build-the-chain comparison and its `--jpd-*` demonstration palette, stays on white. **Amends:** Section 46.11's "on the section's existing surface" for this use, which now alternates between the two light surfaces of the section's act. Behavior, dimensions, typography and content are unchanged. | Marketing website (homepage) | Jeff Kaufman | Sections 8.8, 46.11, 48.6. Direction supplied by Jeff Kaufman 2026-11-06: with four white panels the transition between them was hard to see. |
+| 2026-11-06 | **The four-step snap sequence is withdrawn the same day and replaced by a sticky step stack (Section 46.11 rewritten).** The snap implementation was not the intended interaction. As the reader scrolls, Step 01 holds still, Step 02 rises from the bottom of the view and progressively covers it, then Step 03, then Step 04; scrolling up uncovers them in reverse; after Step 04 the page scrolls normally. **Continuous and scroll-driven by the reader's own scroll**: plain `position: sticky` on each opaque full-width panel inside its own list, so nothing is animated, snapped, timed or intercepted, and no dependency is added. A panel taller than the view (Step 03, with the Build-the-chain comparison) takes a measured negative sticky offset so it scrolls fully into view and is covered only after its bottom has been reached. Active only from `lg`, on a view at least 40rem tall, and when `prefers-reduced-motion` is not `reduce`; otherwise the panels are ordinary content. The comparison's inspection card now mounts on `<body>` so a rising panel cannot paint over it. Panels, copy, registers, the `01 / 04` count, and the lead-in placement are unchanged from the snap entry below. **Supersedes:** the snap entry below in full (never released), and still the Section 46.10 manual-only rule for these four steps only. | Marketing website (homepage) | Jeff Kaufman | Sections 46.2, 46.5, 46.10, 46.11, 48.6, 49.1. Direction supplied by Jeff Kaufman 2026-11-06, with reference to the stacked-panel scroll of the *Meet the Operators* section on canaglobal.com (behaviour only, not its design). |
+| 2026-11-06 | **The homepage *Know what's coming* four steps become a step snap sequence (new Section 46.11), superseding their Section 46.10 disclosure-list presentation.** Founder-approved direction. Each step is a full-width panel on `--jp-surface-white` with every description visible: the ordinal with a restrained `01 / 04` count (Section 48.9, data face), the step title at the existing extrabold statement register (the Zone 3 register), and the description at the secondary body register; hairlines in `--jp-ink-secondary` at 20% between panels. **Copy, order and the Step 03/04 distinction are unchanged.** From `lg`, and only when `prefers-reduced-motion` is not `reduce`, each panel is at least one viewport tall below the sticky navigation and is a native CSS scroll-snap point on the root scroller (`scroll-snap-type: y proximity`, `scroll-snap-align: start`, `scroll-snap-stop: always`, `scroll-padding-top` = the navigation bar). The root rule is switched on only while the steps are mounted. **Proximity, never mandatory; no wheel, key or touch interception; no scroll lock; no dependency.** Below `lg`, or under reduced motion, the steps scroll normally. Step 03 keeps the Build-the-chain comparison unchanged beneath its description and grows past one viewport to hold it, scrolling freely inside its own snap area. The comparison's 2026-11-06 panel breakout is withdrawn because the panel is already full width. **Supersedes:** the Section 46.10 manual-only, no-scroll-driven rule *for these four steps only* (Section 46.10 itself remains APPROVED for other uses), and the 2026-11-06 Section 46.10 Step 03 disclosed-content amendment. The lead-in sentences keep the shared left edge above the panels. No other homepage section and no other design-system rule is changed. | Marketing website (homepage) | Jeff Kaufman | Sections 46.10, 46.11, 46.2, 46.5, 48.6, 48.9, 49.1. Direction supplied by Jeff Kaufman 2026-11-06: the four steps read as full-screen presentation slides between normally scrolling content, with reference to the section-to-section behavior (not the branding) of the Webflow *Simple Snap Scroll with FullPage.js* demonstration. |
+| 2026-11-06 | **Step 03 of the homepage *Know what's coming* steps gains the Build-the-chain comparison, the one approved homepage product demonstration (Section 46.10 amended; Sections 20.1 and 48.8 applied).** When *03 Build the chain.* is open, beneath its unchanged description: the heading *The dates fit. But does the work?*; the explanation *A schedule can look achievable when buyout, coordination, submittals, and approvals are compressed into a few activities. JiTpro plans each required step using realistic durations, then works backward to show when procurement must begin.*; two schedules of one item, Heritage Steel Windows & Exterior Doors, on one calendar scale with one Required On-Site date (7 Jun 2027): **Typical construction schedule**, an explicitly illustrative two-activity plan (*Buyout and Submittals*, 40 working days; *Fabrication and Delivery*, 60 working days) in the neutral `--jpd-summary-bar`, run through the demo's own backward pass and working-day calendar, so it starts 13 Jan 2027; and **JiTpro procurement schedule**, the existing fixture item drawn by the full schedule's own row renderer, starting 16 Jul 2026, with every phase and milestone, the external-commitment diamonds above the bar and the issue mark below it, inspectable by hover, keyboard and touch through the existing `PhaseInspector`; a key for the two mark positions; the instruction *Explore the segments and diamonds to see the work and commitments behind the dates.*; and a disclosure that the typical schedule is illustrative and the JiTpro schedule is representative demonstration data. The difference in start dates is the argument and falls out of the durations; nothing is positioned by hand, and the fixture is unchanged. **Planning view:** no data-date line and no completed-work dimming on the homepage (scoped `.jpd-plan`); the full Procurement Schedule keeps both. **Layout:** from `lg` the Step 03 panel breaks out of the 7fr column to the full container width (container-query units), its description padded back under the step title; the timeline is fitted to the width with a 2.5px-per-day floor, below which it scrolls horizontally inside the step. **Tokens:** the `--jpd-*` namespace (Decision Log 2026-09-04) inside `.jpd`; one alias added, `--jpd-summary-bar` (= `--jpd-text-muted`). **Scope:** this authorizes this one comparison inside Step 03 only; it does not restore the retired homepage product demonstrations. The illustrative durations are labelled as an assumption and MUST NOT be presented as industry averages, project records, or universal durations. "Procurement" in the label and explanation is a further scoped exception to the Section 20.1 retired-language rule. | Marketing website (homepage) | Jeff Kaufman | Sections 20.1, 46.10, 48.8, 48.10, 8.9, 45. Direction supplied by Jeff Kaufman 2026-11-06: making a bar shorter does not make the work take less time; realistic procurement planning exposes schedule assumptions that an oversimplified Gantt chart conceals. |
+| 2026-11-06 | **The homepage procurement section gains a consequence statement, and the *Fewer surprises* opening paragraph is revised (Section 20.1 amendment extended).** The procurement section's closing paragraph now reads *That's why procurement is so difficult to get right. One missed decision or late approval can delay deliveries, disrupt crews, and push work further down the schedule.*, followed by *Those delays spread. Costs grow. Profits shrink.* at the existing bold heading-face statement register in primary ink (the register of the former Method section's statements), the column's strongest line and a step below the `h2`. *Fewer surprises*' opening paragraph now reads *You can't prevent every problem in construction. But many procurement problems can be identified and addressed before they disrupt the field.* **No new register, token, or treatment is created;** layouts and surfaces are unchanged. **Supersedes in part:** the Section 20.1 retired-language rule, whose scoped "procurement" exceptions now also cover that *Fewer surprises* paragraph. | Marketing website (homepage) | Jeff Kaufman | Sections 20.1, 7.7. Approved copy and direction supplied by Jeff Kaufman 2026-11-06: connect procurement failures to schedule disruption and lost profit before introducing JiTpro's solution. |
+| 2026-11-06 | **The homepage gains a procurement section between the core belief and *Fewer surprises* (Section 20.1 amendment extended), and "procurement" is released for that section's copy.** The approved copy, exactly and in order: the `h2` *Procurement is more than buying materials.*; *Every product, material, and service your project needs depends on a series of intricate steps that must happen in the right order, at the right time, with realistic durations.*; *Drawings must be complete. Decisions must be made. Products must be selected. Subcontractors must be hired. Submittals must be approved. Materials must be ordered, built, and delivered.* (each sentence set on its own line); the key insight *And much of that work depends on people outside your company.*; and *That's why procurement is so difficult to get right. One missed decision or late approval can affect everything that follows.* On `--jp-background`, on the shared left edge, in the homepage's 5fr/7fr two-column composition from `lg` (stacked below). **No new register, token, or treatment is created:** the `h2` takes the homepage section-heading register, the paragraphs the secondary body register, and the key insight the semibold heading-face statement register in primary ink. No amber, cards, icons, or graphics. *Fewer surprises*' existing amber-start hairline is the seam beneath it. **Supersedes in part:** the Section 20.1 rule that "procurement" stays retired from homepage copy, now excepted for the core-belief supporting paragraph and this section only; and the six-section architecture, which gains this section as 1b without renumbering. | Marketing website (homepage) | Jeff Kaufman | Sections 7.7, 20.1, 48.6, 48.7. Approved copy and direction supplied by Jeff Kaufman 2026-11-06: explain why procurement is complex without making the homepage complicated. |
+| 2026-11-06 | **The homepage core-belief closing statement is removed and the supporting statement takes Brand Amber (Section 20.1 core-belief bullet and Section 7.7 supporting-copy allowance amended).** *Broken schedules lead to broken profits.* leaves the band because the hero already carries the message. The supporting statement *Early, accurate procurement planning is the first real opportunity general contractors have to make sure the construction schedule can hold.* moves from the secondary body register to the existing semibold heading-face statement register in `--jp-brand-amber` (the register and color the homepage final CTA's amber line already uses), prominent but a clear step below the white `h2`. **No new register, token, or color is created.** **Supersedes in part:** the 2026-11-05 rule that the eyebrow is the band's only amber; the band now carries exactly two ambers, the eyebrow and the supporting statement, and nothing else in it may take amber (Section 48.7). | Marketing website (homepage) | Jeff Kaufman | Sections 7.7, 20.1, 48.7. Direction supplied by Jeff Kaufman 2026-11-06: remove the repeated hero message and highlight the planning statement. |
+| 2026-11-06 | **The homepage core-belief statement and supporting paragraph are revised (Section 20.1 core-belief bullet amended), and "procurement" is released for this one sentence only.** The `h2` now reads *Even the most robust construction schedule can't hold if the field doesn't have what it needs, when it needs it.* and the supporting paragraph *Early, accurate procurement planning is the first real opportunity general contractors have to make sure the construction schedule can hold.* Eyebrow, closing statement, registers and layout are unchanged. **Supersedes in part:** the Section 20.1 rule that "procurement" stays retired from homepage copy, for the core-belief supporting paragraph only. The word remains retired everywhere else on the homepage. | Marketing website (homepage) | Jeff Kaufman | Section 20.1. Approved copy supplied by Jeff Kaufman 2026-11-06, with explicit direction to record a scoped exception rather than release the word. |
+| 2026-11-06 | **The homepage core-belief band gains a supporting paragraph and a closing statement (Section 20.1 core-belief bullet amended), and the Section 7.7 eyebrow allowance is extended for this one use.** The band now reads, in order: the eyebrow *What we believe*; the `h2` *Even the best construction schedule can't hold if the field doesn't have what it needs, when it needs it.* (the quotation marks of the 2026-11-05 copy are dropped); the supporting paragraph *Late materials, wrong products, and missing services disrupt the schedule. Those disruptions spread, costs grow, and profits shrink.*; and the closing statement *Broken schedules lead to broken profits.* **No new register, token, or treatment is created:** the paragraph takes the homepage's secondary body register (`--jp-text-secondary`), centered on the Section 7.7 52ch measure as the hero's centered statements are; the closing statement takes the existing semibold heading-face statement register in primary ink, a clear step below the `h2`. The eyebrow remains the band's only amber. **Supersedes in part:** the 2026-11-05 rule that nothing but the eyebrow and statement appears in the band, and the Section 7.7 eyebrow allowance's "still no supporting body copy" for this band only. The flanked form and every other centered editorial statement are unchanged. | Marketing website (homepage) | Jeff Kaufman | Sections 7.7, 20.1, 48.6, 48.7. Approved copy and direction supplied by Jeff Kaufman 2026-11-06: connect the belief to its consequence in cost and profit, closing on the line the hero no longer carries. |
 | 2026-11-05 | **`--jp-surface-white` (`#FFFFFF`) is added to the light surface set (Section 8.8), and the homepage *Know what's coming* section is divided into three zones, amending the same-day six-section surface assignment.** Zone 1, the challenge (h2 and the capacity copy), stays on `--jp-surface-light`. Zone 2, the process (the two lead-in sentences and the Section 46.10 step list), sits on `--jp-surface-white`. Zone 3, the result (the two concluding statements), sits on `--jp-surface`, so Section 3 now ends on a dark band before Section 4 returns to `--jp-surface-light`. From `lg` up, Zones 1 and 2 use the two-column 5fr/7fr composition Section 4 already uses; below `lg` they stack. Zone 3 holds the shared left edge; its three closing sentences are each set on their own line in the strongest dark-surface ink, with *You know what's coming.* in `--jp-brand-amber` as the band's only amber (Section 48.7). **No copy is added, removed, or reordered**, apart from the approved closing sentence now reading *Your team knows what to do and when to do it.* No card, icon, or new type register is created. **Supersedes in part:** the 2026-08-25 note that only one new light-surface value exists. White is the ramp's lightest endpoint, not a third intermediate gray, so it adds a clearly separate step rather than a near-duplicate of `--jp-surface-light`. | Marketing website (homepage) | Jeff Kaufman | Sections 8.8, 45.2, 46.10, 48.6, 48.7, 49.1. Direction supplied by Jeff Kaufman 2026-11-05: the section carried too much on one continuous ground. The white token was chosen over an ink tint (which is close to the rejected third gray) and over hairlines alone (separation too weak). |
 | 2026-11-05 | **The homepage *Know what's coming* steps become a Section 46.10 step disclosure list, a new approved pattern, and the four questions are replaced by four approved steps.** The approved copy: *01 What does the project need?* — *Identify every product, material, and service required to complete the work.* · *02 When does it need to arrive on-site?* — *Establish when each item must be available to support the construction schedule.* · *03 Build the chain.* — *Identify and sequence every step required to get each item to the field, using realistic durations and working backward from its required on-site date.* · *04 Link everything required to support the chain.* — *Connect the decisions, information, approvals, and commitments each step depends on. Identify who's responsible and when action is required.* Each step is a full-width row (ordinal, title, trailing chevron) between ink hairlines; every row starts collapsed; click, tap, Enter, or Space toggles that row's description independently. Manual only: no scroll-driven or automatic expansion. **No new register, token, or icon is created:** the ordinal keeps Section 48.9 on light, the title keeps the section's existing heading register, the description takes the section's secondary body register, and the hover wash, focus outline, and chevron are the Section 46.8 light-surface row treatments reused. **Methodology distinction, carried by copy:** step 3 establishes the procurement chain (sequence and realistic durations); step 4 connects the requirements that keep that chain moving. The rows share one treatment so the distinction rests on the approved titles and descriptions, not on a visual device. | Marketing website (homepage) | Jeff Kaufman | Sections 46.10, 46.8, 46.2, 46.4, 46.5, 48.4, 48.9, 49.1. Direction and all step copy supplied by Jeff Kaufman 2026-11-05. **Why a new pattern:** Section 46.8 explicitly does not approve one collapsible body per row, and Section 46.9 is a scroll narrative that forbids disclosure semantics, so no existing standard covered a per-row click-to-expand list. **Known mismatch, left for review:** the lead-in above the list still reads *Then we answer four simple questions:* while steps 03 and 04 are now statements rather than questions; the lead-in is preserved as instructed. A later scroll-activated behavior is anticipated and requires its own entry. |
 | 2026-11-05 | **The homepage gains a core-belief section between the hero and *Fewer surprises* (Section 20.1 amendment extended), and the Section 7.7 centered editorial statement gains an eyebrow allowance.** The section is the eyebrow *What we believe* and one statement, *"Even the best construction schedule can't hold if the field doesn't have what it needs, when it needs it."*, centered on the elevated band tone (`--jp-surface`, `border-y` hairlines in `--jp-border` at 12%, Section 48.6) as a subtle transition out of the hero. The statement is the section's `h2`. The eyebrow is the band's only amber. **Superseded in part:** the Section 7.7 centered-statement rule "no eyebrow" now permits one small eyebrow naming the kind of statement; the flanked form is unchanged. | Marketing website (homepage) | Jeff Kaufman | Sections 7.7, 20.1, 48.6, 48.7. Approved copy and direction supplied by Jeff Kaufman on 2026-11-05: state the belief behind JiTpro as a foundational statement, not a sales pitch. This is the page's one centered editorial statement under Section 7.7. |
@@ -749,7 +769,7 @@ This exception is narrow:
 - It applies ONLY to a single, short, heading-behaving statement standing alone in its own section - no eyebrow, no supporting body copy, no controls, no graphic.
 - Its measure MUST remain tightly constrained (well inside the body-copy ceiling above) so it breaks as a few balanced lines, not a wide band of display type.
 - It MUST be used sparingly. A page earns at most one or two such moments; a rhythm of centered bands is a different, unapproved design.
-- **Eyebrow allowance (amended 2026-11-05, Decision Log).** The statement MAY carry one small eyebrow above it, in the standard eyebrow treatment, where the eyebrow names what kind of statement it is (first use: *What we believe* on the homepage). Nothing else is added: still no supporting body copy, no controls, no graphic. The flanked form below is not amended and keeps its no-eyebrow rule.
+- **Eyebrow allowance (amended 2026-11-05, Decision Log).** The statement MAY carry one small eyebrow above it, in the standard eyebrow treatment, where the eyebrow names what kind of statement it is (first use: *What we believe* on the homepage). Nothing else is added: still no supporting body copy, no controls, no graphic. The flanked form below is not amended and keeps its no-eyebrow rule. **Supporting-copy allowance (amended 2026-11-06, Decision Log), homepage core belief only:** that band MAY carry one short supporting statement beneath the statement (the semibold heading-face statement register, centered, within the 52ch measure, prominent but secondary to the statement; revised 2026-11-06, the closing statement is withdrawn). No other centered editorial statement gains this allowance.
 - Ordinary sections, headings, and body copy remain governed by the left-alignment rule above and the shared-left-edge rule in Section 48.6. This exception does not create any allowance for centered body copy.
 
 **The flanked form - approved amendment (2026-08-27, superseding the framed form of the same day).** Such a statement MAY be set between two short horizontal rules - `rule - statement - rule`, all on one centre line - as the closing statement of a composition it belongs to.
@@ -2084,9 +2104,10 @@ Status: APPROVED (2026-11-05). Direction supplied by Jeff Kaufman. Scope: the ma
 - **Profit protection is an approved business outcome.** "Profit" and "profits" MAY name what JiTpro helps the contractor protect, as well as what schedule failure costs them. They remain subject to every claim-strength rule in this section: no figures, no percentages, no recovery amounts, no guarantees, except for the illustrative figures permitted in the next bullet. The same latitude applies to "margin", which was released on 2026-08-27.
 - **Illustrative figures about the reader's own job.** A figure MAY appear when it plainly describes the contractor's own estimate or bid as an illustration (*You bid the job at 12% profit.*), never JiTpro's results, typical industry margins, savings, or recovered amounts. It MUST be phrased as the reader's example, MUST NOT be paired with any JiTpro outcome figure, and the question it raises MUST stay open (no implied answer about what JiTpro will return).
 - **The short operating promise.** *Get the field what it needs, when it needs it.* is approved as the homepage's short form of the two-part operating requirement. It MUST be framed as help JiTpro gives the contractor's team (*We help you get the field what it needs, when it needs it.*), never as a delivery guarantee. The full statement, coordination AND timing, continues to govern every surface that explains the method.
-- **Plain English on the homepage; operational detail elsewhere.** The homepage MAY teach the mechanism as a plain-English summary: what the project needs, when it needs it, who is responsible, and what is missing or putting the schedule at risk. The operational detail the retired-language rule requires is carried by the supporting surfaces, currently `/learn-more`. This is not permission to become abstract: every homepage section MUST still describe concrete work the contractor recognizes. "Procurement" stays retired from homepage copy, and describing JiTpro as software stays retired.
+- **Plain English on the homepage; operational detail elsewhere.** The homepage MAY teach the mechanism as a plain-English summary: what the project needs, when it needs it, who is responsible, and what is missing or putting the schedule at risk. The operational detail the retired-language rule requires is carried by the supporting surfaces, currently `/learn-more`. This is not permission to become abstract: every homepage section MUST still describe concrete work the contractor recognizes. "Procurement" stays retired from homepage copy (sole exceptions: the core-belief supporting paragraph, the *Procurement is more than buying materials* section, the *Fewer surprises* opening paragraph, the Step 03 Build-the-chain comparison, and the step-stack intro panel, 2026-11-06), and describing JiTpro as software stays retired.
 - **No absolute claims.** Phrasing of the form "no more guessing" reads as a promise that a problem disappears and MUST NOT be used. Use comparative language ("less guessing").
-- **The core belief (added 2026-11-05).** Directly beneath the hero and before *Fewer surprises*, a centered editorial statement (Section 7.7, with its eyebrow allowance) on the elevated band tone (Section 48.6): the eyebrow *What we believe* and the statement *"Even the best construction schedule can't hold if the field doesn't have what it needs, when it needs it."*, used exactly as approved. Nothing else appears in the band. Its eyebrow is the band's only amber.
+- **The core belief (added 2026-11-05).** Directly beneath the hero and before *Fewer surprises*, a centered editorial statement (Section 7.7, with its eyebrow allowance) on the elevated band tone (Section 48.6): the eyebrow *What we believe*, the statement *Even the most robust construction schedule can't hold if the field doesn't have what it needs, when it needs it.*, the supporting paragraph *Early, accurate procurement planning is the first real opportunity general contractors have to make sure the construction schedule can hold.*, used exactly as approved (revised on 2026-11-06; the statement's quotation marks are dropped, and the closing statement *Broken schedules lead to broken profits.* is withdrawn because the hero carries it). The supporting paragraph is the one approved homepage use of "procurement" (scoped exception, Decision Log 2026-11-06). The paragraph takes the semibold heading-face statement register in `--jp-brand-amber`, prominent but secondary to the white statement (Section 7.7 supporting-copy allowance). Nothing else appears in the band. Its two ambers are the eyebrow and the supporting paragraph; nothing else in the band takes amber.
+- **Procurement is more than buying materials (added 2026-11-06).** Directly beneath the core belief and before *Fewer surprises*, on `--jp-background` and the shared left edge, in the 5fr/7fr two-column composition from `lg`: the `h2` *Procurement is more than buying materials.*, the opening paragraph, the six "must" sentences each on their own line, the key insight *And much of that work depends on people outside your company.* at the semibold statement register in primary ink, the closing paragraph, and the consequence *Those delays spread. Costs grow. Profits shrink.* at the bold statement register in primary ink, used exactly as approved (Decision Log 2026-11-06). No amber. Its use of "procurement" is a scoped exception to the retired-language rule.
 - **The engagement model is unchanged.** Copy describing the weekly cadence MUST keep the GC's team responsible for running the work (*Your PMs still run the job.*).
 
 ## 20.2 APPROVED - Lead-magnet offer band
@@ -3545,6 +3566,8 @@ A genuine ordered process MAY be presented as a pinned, scroll-driven sequential
 
 Status: APPROVED (2026-11-05). First approved use: the homepage *Know what's coming* steps. Does NOT supersede Section 46.8 or Section 46.9.
 
+**No current production use (2026-11-06).** The homepage steps moved to the Section 46.11 sticky step stack (Decision Log 2026-11-06). This pattern stays APPROVED for a future use, which starts from this section.
+
 A short ordered process MAY be presented as a vertical list of steps whose titles are always visible and whose descriptions are disclosed on demand. This is a disclosure list, not a stage selector: there is no single active index and no reserved content area. Each row discloses its own description.
 
 **Rows**
@@ -3561,6 +3584,27 @@ A short ordered process MAY be presented as a vertical list of steps whose title
 **Motion**
 - The description opens with a short height reveal (about 200 ms, gentle ease-out), and the chevron turns with the same duration and easing. No bounce, overshoot, scaling, or fade-in delay (Section 46.4). The copy is readable as soon as it is revealed (Section 46.2).
 - Under `prefers-reduced-motion: reduce` the description appears and disappears without transition; the interaction is otherwise identical (Section 46.5).
+
+**Disclosed content (amended 2026-11-06, Decision Log; superseded the same day by Section 46.11, no current use)**
+- A row discloses its description and nothing else, with one exception: on the homepage, *03 Build the chain.* also discloses the Build-the-chain comparison beneath its description, and from `lg` that one panel MAY break out to the full content width. The comparison's own marks are inspectable; the row's open state is still the only thing the row control changes. No other row gains content. *(Direction changed 2026-11-07, Decision Log: the comparison is withdrawn from the approved direction. Step 03 will instead disclose the single JiTpro Procurement Chain for Custom Steel Windows and Doors (Section 51). The comparison stays live until that replacement is built, tested and visually approved.)*
+
+## 46.11 Sticky step stack
+
+Status: APPROVED (2026-11-06, replacing the same-day step snap sequence). First approved use: the homepage *Know what's coming* four steps. Does NOT supersede Section 46.8, 46.9 or 46.10.
+
+A short ordered process MAY be presented as a stack of full-width panels, one per step, that the reader's own scroll lays one over another: each panel holds still as it reaches the top of the view and the next rises from below to cover it. Scrolling up uncovers them in reverse. Before and after the stack the page scrolls normally.
+
+**Panels**
+- One opaque full-width panel per step, in process order, on the section's existing surface, with that surface's hairline along its top edge. Panels MAY alternate between two approved surfaces of the same act so each rising panel reads against the one it covers (homepage: white / light / white / light, Decision Log 2026-11-06). Every panel uses one treatment: ordinal and count (`01 / 04`, Section 48.9), title, description. No cards, imagery, gradients, shadows or ornament, with one exception: each incoming panel MAY cast a single tight upward shadow from its top hairline onto the panel it covers, coloured from an approved token, never a card shadow (homepage values, Decision Log 2026-11-06).
+- All copy is always visible. Nothing is disclosed, hidden or revealed by scroll position; the only change is which panel lies on top.
+- From `lg` a panel is at least one view tall below the sticky navigation. A panel whose content needs more MAY grow, is never clipped, never given an inner scroll container, and is never covered before its last line has been in view.
+
+**Mechanism**
+- `position: sticky` only, the panels sticking inside their own list so the stack ends with its last panel. **Prohibited:** scroll snapping, wheel/key/touch interception, scroll locks, timed or automatic transitions, scroll-linked animation of the panels, and scroll-jacking libraries. The movement IS the reader's scroll; the reader can rest anywhere.
+- Active only from `lg`, on a view at least 40rem tall, and when `prefers-reduced-motion` is not `reduce` (Section 46.5). Otherwise the panels are ordinary content in the same order.
+- Interactive content inside a panel keeps working, and any popover it opens mounts outside the stack so a rising panel cannot cover it. Keyboard, find-in-page, anchor links and history behave as on any other content; headings and reading order are the process order.
+- At most one such stack per page.
+- **An intro panel (amended 2026-11-06).** The stack MAY open with ONE unnumbered panel that sets up the process: same panel treatment and dimensions, no ordinal or count, outside the numbered list, covered by the first step as each step covers the one before. It carries only approved copy at existing registers, and MAY take the act's dark band tone so the first step reads rising over it (homepage: Decision Log 2026-11-06).
 
 ## 46.6 User control
 
@@ -3909,3 +3953,476 @@ A guide that has scrolled out of the viewport is a table of contents the reader 
 - The rail is a `<nav>` landmark containing an ordered list of real anchors, exactly as Section 50.4 requires. Keyboard reach, focus visibility, and open-in-new-tab all survive.
 - Scrolling is the document's own smooth behaviour, which MUST resolve instantly under `prefers-reduced-motion: reduce` (Section 46.5).
 - The rail MUST NOT obscure content at raised zoom levels. Because it is sticky inside a column rather than fixed over the page, it reflows with everything else; a rail that overlaps body text at 200% zoom is a defect.
+
+---
+
+# 51. Procurement Chain Visualization Standard
+
+Status: APPROVED (2026-11-07). Direction supplied by Jeff Kaufman (Decision Log 2026-11-07). Scope: the **procurement chain**, a figure that shows one procurement item's backward-scheduled sequence as connected, color-coded chevrons on a calendar axis. It is built first as an isolated component. Placing it on the homepage or any other page requires its own approval and Decision Log entry. This section does not change the full Procurement Schedule (`DemoGantt`), its row renderer (`ScheduleRowMarks`), the `--jpd-phase-*` family tokens, or the homepage Build-the-chain comparison.
+
+**Approved visual reference:** `docs/design/procurement-chain-reference/procurement-chain.html` and `render.png`. The reference is approved for its **visual character**: connected chevrons, distinctive activity colors, subtle gradients and depth, clean typography, clear milestone diamonds, legible duration labels, clean commitment and issue callouts, generous whitespace, and the header and legend composition.
+
+Nothing else in the reference is normative:
+- its x coordinates
+- its dates and durations, which are not mathematically correct and must never be copied
+- its equal-width segments
+- its hex values
+- its typeface
+- its placeholder logo
+- its hand-drawn icons
+- its callout copy.
+
+Where this section and the reference disagree, this section governs.
+
+## 51.1 Governing principle
+
+**The scheduling engine is authoritative. The figure is a projection of it.**
+
+- Every date, duration, milestone, commitment and issue comes from a `ScheduleItem` resolved by `buildItem()` (`scheduleModel.ts`), over the working-day calendar in `workCalendar.ts`. The figure MUST NOT compute, adjust, round, pad or author a schedule date.
+- Every horizontal position is a function of a date, and every width is a function of two dates. No pixel position or width is ever authored.
+- Proportional accuracy is mandatory. Durations MUST NOT be distorted to fit a viewport. When the figure is wider than its container, it scrolls (Section 51.9). It never compresses.
+- Scheduling calculation and visual presentation are separated by a pure layout function (Section 51.11). The renderer draws the layout and computes nothing.
+
+## 51.2 Data source and the approved scenario
+
+**The chain is one continuous bar.** One procurement item, one bar of sequential activities, never parallel bars, branches or extra lanes. What other parties owe the chain (design information, selections, calculations, approvals, permits) are **commitments above the bar**, never bars of their own. What threatens it are **issues below the bar**.
+
+The figure reads its own demonstration scenario, *Custom Steel Windows and Doors* (`chainScenario.ts`, decided 2026-11-07). It is deliberately separate from the shared schedule fixture, whose Heritage Steel item feeds the full Procurement Schedule, the product register, the schedule lab and the homepage comparison, and which is unchanged. The approved sequence is:
+
+| # | Step | Kind | Working days |
+| --- | --- | --- | --- |
+| 1 | Buyout | phase | 20 |
+| 2 | Submittal Coordination | phase | 25 |
+| 3 | Submittal Preparation | phase | 30 |
+| 4 | Initial Submittal | milestone | 0 |
+| 5 | First Submittal Review | phase | 15 |
+| 6 | First Revision Cycle | phase | 12 |
+| 7 | First Resubmittal | milestone | 0 |
+| 8 | Second Submittal Review | phase | 10 |
+| 9 | Second Revision Cycle | phase | 7 |
+| 10 | Second Resubmittal | milestone | 0 |
+| 11 | Third Submittal Review | phase | 5 |
+| 12 | Final Approval | milestone | 0 |
+| 13 | Release for Fabrication | milestone | 0 |
+| 14 | Fabrication | phase | 180 |
+| 15 | Shipping and Delivery | phase | 8 |
+| 16 | Required On Site | milestone (fixed) | 0 |
+
+The duration-bearing activities total **312 working days**.
+
+**Review and revision durations (revised 2026-11-07, Decision Log).** Review and revision cycles shorten as comments are resolved: 15 and 12 working days in the first cycle, 10 and 7 in the second, and a 5-day third review. Every other duration, and the fixed Required On Site date of 30 November 2027, is unchanged. This replaced the earlier 15/12 for all three cycles, which totalled 332 working days. *A total of 310 was stated when the change was directed; the approved individual durations sum to 312, so 312 is the recorded total.*
+
+**Milestones add no time (corrected 2026-11-07, Section 51.14).** Activities consume time; milestones record events. The six milestones are zero-duration events that share a date with an activity and add no working day. With every step back to back (`gap: 1`), the span from the first day of Buyout through the Required On Site date is therefore **exactly 312 working days**, the same as the activity total. There is one total, not two. The figure shows what the engine produces and MUST NOT re-derive it.
+
+*Superseded:* this section first recorded that each milestone occupied a working day of its own, giving a 338-working-day span. That was the engine's previous behaviour, and it was an error. The engine has been corrected and the 338-day figure withdrawn (Decision Log 2026-11-07, scheduling correction).
+
+**Informative check, not a source of truth.** On 2026-11-07, running the approved 312-day scenario through the corrected engine with Required On Site fixed at 30 Nov 2027 gives the following. It matches an independent working-day count that shares no code with the engine.
+- Buyout starts Mon 31 Aug 2026
+- Submittal Preparation ends 17 Dec 2026, and Initial Submittal falls on the same date
+- First Submittal Review runs 18 Dec 2026 – 11 Jan 2027; First Revision Cycle 12 – 28 Jan 2027
+- Second Submittal Review runs 29 Jan – 11 Feb 2027; Second Revision Cycle 12 – 23 Feb 2027
+- Third Submittal Review runs 24 Feb – 2 Mar 2027, and Final Approval and Release for Fabrication fall on 2 Mar 2027
+- Fabrication runs 3 Mar – 17 Nov 2027
+- Shipping and Delivery runs 18 – 30 Nov 2027, crossing Thanksgiving, and Required On Site falls on its last day.
+
+These values illustrate the engine's behaviour. They MUST NOT be typed into a component or copy. The engine's regression test (`scheduleModel.test.ts`) deliberately pins the earlier 332-day sequence (start 3 Aug 2026) as an engine regression against an independent count, not as the scenario; the scenario's 312-day total is held by the layout tests (`chainLayout.test.ts`).
+
+## 51.3 Horizontal axis: calendar time
+
+- **One calendar-day scale for the whole figure:** `x(date) = (date − domainStart) in calendar days × pxPerDay`. This is the same convention the full Procurement Schedule uses, so the two can never disagree about where a date is.
+- **The day slot.** A date D occupies the interval `[x(D), x(D) + pxPerDay)`. Commitment and issue marks sit at the centre of their day slot, `x(D) + pxPerDay / 2`, matching the existing convention. **Milestones are instants, not days** (Section 51.14). A finish milestone sits exactly where its predecessor's work ends on screen, by the shared `workEndX` rule (Section 51.4). In the chain that is the start of the next working day when more work follows, and the end of its date for the final work. A start milestone sits at the start of its date, `x(D)`.
+- **Working-day durations, calendar-day widths.** A duration is labelled in working days, the unit the model stores (Section 48.10), and drawn across the calendar days it actually spans. A 15-working-day review that crosses a weekend and a holiday is therefore wider than a 15-working-day review that does not. That is correct, and it MUST NOT be "normalised".
+- **Domain.** The domain runs from the first day of Buyout's month to the first day of the month after Required On Site, so the calendar axis starts and ends on whole months. The domain is padded, never the scale.
+- **Scale.** `pxPerDay = max(containerWidth / domainDays, MIN_PX_PER_DAY)`. `MIN_PX_PER_DAY` is one named constant in the layout module, **8** (raised from the initially specified 7 during implementation: at 7, *Revision 2*'s 18-calendar-day chevron could not hold its label). At that scale every duration-bearing step in the approved scenario reaches label tier A or B (Section 51.6), and `chainLayout.test.ts` asserts it. It may only change with a test that proves the tier guarantee still holds.
+- **Calendar axis.** A month band sits beneath the chain (month labels, with the year on the first month and on every January), with hairline ticks in the existing `--jpd-grid` and `--jpd-grid-strong` tokens.
+- **Non-working-day shading** is not drawn in the first release; the chain is a planning view, like the homepage comparison. If it is added later, it MUST come from `nonWorkingRuns()` and follow Section 51.7's tokens.
+
+## 51.4 Segment geometry
+
+**Visual span.** A duration-bearing step is drawn from `x(startDate)` to `x(nextWorkday(endDate))`, meaning up to the start of the first working day after it ends. This absorbs the weekends and holidays that trail the step, so consecutive phases (`gap: 1`) meet with no visible hole, while real float (`gap > 1`) still shows as a gap of exactly its calendar length. Milestones take no span, so a chevron followed by a milestone and then another activity still meets that activity with no hole.
+
+**One rule for where work ends** (corrected 2026-11-07). A chevron's right edge and the finish milestones that record its completion are both placed by the same pure function of the finish date, `workEndX(date)`:
+- **Work that more work follows** ends at the start of the next working day. The chevron reaches across any non-working days in between, so the bar stays continuous. The finish milestone sits there too: on the joint, exactly where the work it completes ends on screen.
+- **The chain's final work** has nothing after it to connect to, so it ends at the calendar end of its last day. That is the Required On Site instant, so the Required On Site diamond and date rule land on their own date.
+
+The milestone's date, label and accessible name always state its true date. Only the drawing rule is shared.
+
+*(Superseded twice the same day. First, a dedicated milestone day slot between chevrons. Then a rule that placed a milestone at the calendar end of its date while its chevron was drawn to the next working day. Under that rule, every milestone falling before a weekend or holiday sat days inside its chevron instead of at its end, which is about one placement in four across anchor dates.)*
+
+**Chevron shape.** All values are in CSS px at the figure's base scale and are named constants in the layout module:
+- Bar height `H = 56`.
+- Point depth `D = round(0.3 × H) = 17`.
+- Joint gap `G = 3`. Adjacent chevrons interlock with a constant `G` between one segment's point and the next segment's notch.
+- **Each joint is centred on its boundary date** (refined 2026-11-07 during implementation). The slanted joint between two chevrons straddles the date where one activity ends and the next begins, by half the point depth either side. The point a chevron gains on its right is exactly the notch it loses on its left, so every chevron's area equals its span × `H`. The geometry never adds width to a duration, and the chain reads as one connected bar, as in the reference. *(The first text, "drawn inside the visual span", would have left a visible V-shaped hole at every joint.)*
+- The first segment has a rounded leading end (radius `H / 2`), also drawn inside its span. Every other segment has a notched leading edge.
+- If a segment is narrower than `2D + G`, `D` shrinks for that segment to `(span − G) / 2`. The span is never widened.
+
+**Fill and depth.**
+- Each segment fills with a vertical linear gradient. The top stop is the family token, and the bottom stop is the same token mixed toward `--jpd-text` at 12% (`color-mix(in srgb, <token> 88%, var(--jpd-text))`). The gradient only ever darkens, so text contrast is never lower than the token's flat-fill contrast (Section 51.7).
+- A drop shadow sits under the bar: offset y 3, blur 4, colour `color-mix(in srgb, var(--jpd-text) 18%, transparent)`.
+- No other shadow, glow or gradient.
+
+**Each step stays its own element.** Every segment and every milestone is an independent, inspectable, focusable mark. The chain is never one path, one gradient or one image.
+
+## 51.5 Milestones
+
+**Placement.** At the milestone's instant (Section 51.3): the end of its date for a finish milestone, the start for a start milestone, on the bar's vertical centre line. A diamond overlapping its neighbouring chevrons is expected. The date governs position, never spacing.
+
+**Shape.**
+- A diamond `0.46 × H` across, filled with `--jpd-chain-milestone`, with a 2px `--jpd-surface` stroke so it separates from any chevron beneath it.
+- Labels sit below the bar: the name in bold strong ink, then the date in the date register (Section 51.8).
+- Labels stagger across two rows when neighbours would collide. A label in the second row gets a 1px stem back to its diamond.
+
+**Milestones at the same instant** (for example Final Approval and Release for Fabrication, which share the date Third Submittal Review ends) are stacked vertically at that one x, in sequence order from top to bottom, as Section 51.14 specifies for every procurement schedule view. Their labels merge into one block that lists each name with the shared date. Each remains independently focusable.
+
+**Near-coincident milestones** (different instants whose diamonds would still collide, i.e. closer than one diamond width plus 4px):
+- each is drawn at its own true x, overlapping in date order with the later one on top
+- labels merge as above
+- hit areas are split at the midpoint between the two.
+
+Positions are never nudged apart.
+
+**Required On Site, the controlling deadline, gets distinct emphasis:**
+- a diamond `1.35 ×` the standard size, in `--jpd-chain-ros`
+- a dashed vertical date rule (1.5px, `--jpd-chain-ros`) through the full height of the figure, from the commitment band to the calendar axis
+- a terminal label block to its right: **Required On Site** in bold, the date beneath it, and the qualifier *Fixed* in the muted register.
+
+It is the only milestone with a full-height rule and the only one labelled to the right. It is drawn last, so nothing covers it. The reference's rounded end-cap chevron is withdrawn, because a chevron implies a duration and Required On Site has none.
+
+## 51.6 Label-fit tiers
+
+A segment's label content is chosen by measuring its inner width (visual span minus `2D`, minus 12px padding). Text is never compressed, scaled or clipped mid-word.
+
+| Tier | Condition | Inside the chevron | Below the chevron |
+| --- | --- | --- | --- |
+| **A** | inner width ≥ icon + 8 + widest label line | icon, then the name (at most 2 lines) | duration |
+| **B** | inner width ≥ icon | icon only | name (bold) above the duration |
+| **C** | inner width < icon | nothing | duration only if it fits the span; otherwise none. The name and duration remain in the inspector, the screen-reader list and the legend |
+
+- The label is the step's `name` from the model. No display name is invented in the view layer (Section 51.13).
+- Duration labels read "N working days" and are centred under the visual span.
+- When neighbouring below-bar labels would collide, the later one moves to a second row. They never overlap.
+- Icons come from `lucide-react` only (Section 48.4), sized to the label, white on the chevron, and `aria-hidden`:
+
+| Family | Icon |
+| --- | --- |
+| buyout | `Handshake` |
+| coordination | `Network` |
+| preparation | `FileText` |
+| review | `Search` |
+| revision | `RefreshCw` |
+| production | `Factory` |
+| logistics | `Truck` |
+
+  Milestones carry no icon. The legend's Required On Site entry uses `CalendarDays`.
+
+## 51.7 Color tokens
+
+**Namespace and location.** The chain uses a dedicated sub-namespace, `--jpd-chain-*`, inside the approved product-demo namespace (Decision Log 2026-09-04 (d)). It follows the same precedent as the schedule's `--jpd-phase-*`. These tokens:
+- are declared once, in a new file, `src/components/demo/screens/procurement-chain/chainTokens.css`, scoped under `.jpd`
+- are imported only by the chain component
+- are the only place their values appear.
+
+Components reference `var(--jpd-chain-*)`, including in SVG `fill`, `stroke` and `stop-color`, and never a literal (Section 45). The existing `--jpd-phase-*` values are **not** changed. The full schedule and the homepage comparison keep their palette until a separate decision migrates them.
+
+**Activity families.** These follow the reference's hue structure, adjusted so white label text meets WCAG AA (4.5:1) at the lightest point of every gradient:
+
+| Token | Value | Family / role | White text |
+| --- | --- | --- | --- |
+| `--jpd-chain-buyout` | `#1e40af` | Buyout | 8.72:1 |
+| `--jpd-chain-coordination` | `#0e7490` | Submittal Coordination | 5.36:1 |
+| `--jpd-chain-preparation` | `#1d5fe0` | Submittal Preparation | 5.58:1 |
+| `--jpd-chain-review` | `#7c3aed` | Submittal Review | 5.70:1 |
+| `--jpd-chain-revision` | `#5b21b6` | Revision Cycle | 8.98:1 |
+| `--jpd-chain-production` | `#c2410c` | Fabrication | 5.18:1 |
+| `--jpd-chain-logistics` | `#7c2d12` | Shipping and Delivery | 9.37:1 |
+| `--jpd-chain-milestone` | `#0d1730` | All milestones except Required On Site | (mark) 17.76:1 on white |
+| `--jpd-chain-ros` | `#15803d` | Required On Site | 5.02:1 |
+
+**Adjustments from the reference, and why:**
+- Fabrication `#f28c12` carried white text at 2.46:1. It moves to a red-orange that is clear of the brand amber: 2.41:1 against `--jp-brand-amber`, and never used for illuminated, animated or active states (Section 8.1.1). It is an activity hue, not a third amber.
+- Coordination (4.14:1) and Required On Site (4.42:1) were darkened to pass.
+- Buyout was deepened so it reads apart from Preparation.
+- Review and Revision keep the reference's violet pairing, separated by lightness (1.58:1 between them), by icon and by label.
+
+No pair of families is distinguished by color alone (Section 8.7). Icon, label, position and legend always carry the distinction.
+
+**Aliases, not new values:**
+
+| Token | Value |
+| --- | --- |
+| `--jpd-chain-commitment` | `var(--jpd-commitment)` |
+| `--jpd-chain-commitment-late` | `var(--jpd-commitment-late)` |
+| `--jpd-chain-issue-at-risk` | `var(--jpd-warn-fg)` (3.64:1 as a graphic, which passes the 3:1 non-text minimum, unlike `--jpd-warn-dot`) |
+| `--jpd-chain-issue-impacted` | `var(--jpd-error-fg)` |
+| `--jpd-chain-ink` | `var(--jpd-text-strong)` |
+| `--jpd-chain-ink-secondary` | `var(--jpd-text-secondary)` |
+| `--jpd-chain-on-fill` | `var(--jpd-surface)` |
+
+Callout fills are derived, never authored: `color-mix(in srgb, var(--jpd-chain-commitment) 7%, var(--jpd-surface))`, and the same at 9% for the issue tone.
+
+**Interaction states** reuse the existing demo treatment:
+- Hover is `filter: brightness(1.12)`.
+- The active or focused mark gets the existing double ring (a `--jpd-surface` inner ring and a `--jpd-text` outer ring), drawn in SVG as two strokes that follow the mark's own outline.
+
+## 51.8 Typography and registers
+
+- **Typeface.** The figure is set in **Inter Tight**, the face of the `--jpd` product-demo surfaces, throughout (amended 2026-11-07 during implementation). The site loads Inter only to weight 600, so bold chevron and label text in Inter would be synthesised. Inter Tight is loaded to 800. The reference's typeface is not adopted.
+- **Base-scale sizes (CSS px):**
+
+| Element | Size and weight |
+| --- | --- |
+| Title | 28 / 700 |
+| Subtitle | 16 / 500 |
+| Chevron label | 14 / 700, 13 / 600 for a parenthetical second line |
+| Duration | 13 / 500 |
+| Milestone name | 12 / 700, with its date at 12 / 500 |
+| Callout title | 14 / 700 |
+| Callout body | 13 / 500 |
+| Legend title | 13 / 700 |
+| Legend description | 12 / 500 |
+
+  Below `sm`, the header stacks and the type steps down one level. The chain's own type never scales with the scroll width.
+- **One kind of absolute date (Section 48.10).** Every absolute date in the figure, whether start, milestone, commitment, issue or Required On Site, is the same kind of quantity and uses one register. Dates are written out as *October 29, 2026* (`month: 'long'`, UTC), with no weekday. Durations use a different register ("N working days", medium weight, no date formatting). Relative day numbers ("Day 75") are not used.
+- **Provenance.** The figure carries names, dates and durations from constructed data. So it carries the one-line provenance statement in the caption register, beneath the legend: it is representative demonstration data (Section 48.10). The product-screen exemption does not extend to this figure.
+
+## 51.9 Composition and scrolling
+
+From top to bottom:
+1. **Header** (does not scroll), **on the dark navy band** (amended 2026-11-07):
+   - **Background:** `--jp-surface`, the site's dark band tone, filling the header to the container's rounded top corners. Only the header is dark: the chain, markers, calendar, summary and legend stay on the white body.
+   - **Logo:** the approved dark-ground asset `public/assets/logo/JiTpro_Amber_white_text.svg` (white wordmark, amber mark), used unmodified. It is the variant the dark investor navigation already uses, and its viewBox is already cropped to the artwork. Referenced through `import.meta.env.BASE_URL`, with its height matched to the title block and `alt="JiTpro"`.
+   - **Divider:** a 1px vertical divider in `--jp-border` at 25% opacity.
+   - **Text:** the title *Procurement Chain — {item name}* in `--jp-text-primary` (16.3:1 on the band), and a one-line subtitle in `--jp-text-secondary` (12.0:1).
+   - Typography, spacing and proportions are unchanged from the light header. No new color, gradient or effect.
+   - The reference's placeholder logo is never used.
+2. **Commitment band:** callout cards, their leader lines, and the commitment marks on the bar's top edge (Section 51.10).
+3. **The chain:** segments and milestone diamonds.
+4. **Below-bar labels:** durations, tier-B names and milestone labels.
+5. **Issue band:** issue marks on the bar's bottom edge, their leaders, and issue callout cards (Section 51.10).
+6. **Calendar axis.**
+7. **Summary row** (does not scroll): *Start:* {date} · *Total duration:* {N working days} · *Required On Site:* {date}, with the reference's arrow rules in `--jpd-chain-ink-secondary`.
+8. **Legend card** (does not scroll): one swatch and description per activity family present in the item, then Milestone, Commitment and Issue. It is generated from the same records and tokens, so it cannot drift.
+
+Bands 2 to 6 sit inside one horizontal scroll container:
+- `overflow-x: auto`, `role="region"`, an `aria-label`, and `tabIndex=0` so the keyboard can scroll it.
+- On first render it is scrolled to its **right end**, so the fixed Required On Site date is in view first. That is the direction the method works.
+- Focusing a mark scrolls it into view.
+
+## 51.10 Commitments above, issues below
+
+The existing convention is unchanged (Decision Log 2026-11-06): commitments sit **above** the chain and issues **below** it. Both stay interactive and keep their records' relationships.
+
+**Commitments.**
+- The mark sits at the centre of `requiredBy`'s day slot, on the bar's top edge. It keeps the existing status semantics:
+
+| Status | Mark |
+| --- | --- |
+| open | hollow |
+| committed | filled |
+| beyond-required | filled with the late tone |
+| complete | filled at reduced weight in the full schedule only. The chain is a planning view and does not dim. |
+
+- A callout card above carries:
+  - the commitment's `typeLabel`
+  - its `name`
+  - **Required by:** {date}
+  - the owner role
+  - where they exist, **Committed for:** {date} and the variance in working days. A positive variance uses `--jpd-chain-commitment-late`.
+
+  Format example only (the date is illustrative, not engine output): *Final Window & Door Design · Required by: October 29, 2026 · Architect*.
+- Every value is read from the `ScheduleCommitment` record. `committedFor` is never shown in place of `requiredBy`.
+
+**Issues.**
+- The triangle mark sits at the centre of `identifiedOn`'s day slot, on the bar's bottom edge, toned by package health (at-risk or impacted aliases, Section 51.7).
+- A callout card below carries:
+  - `kindLabel`
+  - `title`
+  - **Identified:** {date}
+  - `impact`
+  - where the issue has a root commitment, its name.
+- Issues stay at the date the project **learned** of the problem. That is what makes the early warning legible. The affected work is reached through the inspector (`rootCommitment.requiredForStepId`, `leadStepId`). A drawn connector to the affected step is not part of this release.
+
+**Callout layout.**
+- Cards are placed by one left-to-right pass that pushes overlapping cards apart horizontally, then into a second tier.
+- The leader line always drops from the card to the mark's true x. Only the card moves, never the mark.
+- Card width is 220 to 300px.
+- Leaders are 1.5px in the mark's own token.
+
+## 51.11 Architecture and interaction (informative)
+
+The layout module is pure and DOM-free:
+
+```
+buildChainLayout(item: ScheduleItem, opts: { containerWidth: number; measureText: (s, font) => number })
+  -> {
+       pxPerDay, domainStart, width, height,
+       segments:    { stepId, family, x0, x1, tier, labelLines, durationLabel, path, gradientId }[],
+       milestones:  { stepId, cx, size, isRos, labelRow, cluster?: string }[],
+       commitments: { commitmentId, cx, status, card: { x, y, w, h, tier } }[],
+       issues:      { issueId, cx, health, card: { x, y, w, h, tier } }[],
+       axis:        { months: { x, w, label }[] },
+       summary:     { startDate, rosDate, totalWorkdays },
+       revealOrder: string[]   // mark ids, Required On Site first, then backward
+     }
+```
+
+- **Rendering is two layers built from the one layout.** The SVG visual layer draws every shape. An HTML hit layer of absolutely positioned `<button>`s, one per mark, carries the existing classes (`jpd-step`, `jpd-commit`, `jpd-issue`). That lets the unchanged `useMarkInspection` hook (whose selector matches `button.*`) and the unchanged `PhaseInspector` handle hover, focus, touch pinning and the popover. The chain band carries `data-gantt-row={item.id}`, so the inspector keeps its cards off the chain.
+- **Accessibility.** Every mark is keyboard-reachable in date order and has an accessible name (name, dates, duration or owner). The screen-reader list (`.jpd-sr-list`) repeats the whole chain in order. Icons are `aria-hidden`. Meaning never depends on color alone.
+
+## 51.12 Backward-building animation (documented, not implemented)
+
+The future homepage presentation demonstrates the method: the date is fixed, and the work is derived backward from it. It is **not** a left-to-right wipe of a finished graphic. Building it requires its own approval.
+
+**Narrative stages:**
+1. Introduce the package (the header).
+2. Establish the fixed Required On Site date: the diamond, the date rule and the label appear alone.
+3. and 4. A **planning edge** travels **right to left** from Required On Site toward the start, at constant calendar speed (Section 46.4: travel through a real sequence is linear).
+   - Each segment is revealed from its right end as the edge passes, by clipping to `[max(start, edge), visualEnd]`.
+   - Its label and duration appear once the edge clears the segment's start.
+   - Each milestone appears when the edge reaches its date.
+   - A running readout gives the working days before Required On Site at the edge, computed with `workdaysBetween`.
+5. The completed chain and the calendar axis resolve.
+6. Commitments and then issues appear at their dates.
+
+**One shared state (Section 46.3).** A single progress value `p ∈ [0, 1]` from one driver (scroll position or one clock) is mapped once, through one ordered table of stage boundaries, to the planning edge's date and the stage. Every element derives its visibility from that date and the layout's `revealOrder`, through one pure function `revealAt(layout, p)`. There are no per-element timers, delays or duplicated constants. Because the chain is wider than the viewport, the scroll container follows the edge during the reveal, and this is derived from the same `p`.
+
+**Reduced motion (Section 46.5)** presents the completed final state, stage 6, immediately. The static figure is always complete and comprehensible without the animation (Section 46.2). No bounce, overshoot, pulse or loop (Section 46.4). Marks become interactive once they are revealed.
+
+## 51.13 Open decisions
+
+All four were resolved on 2026-11-07. Each one's record is kept below, so the reasoning survives.
+
+1. ~~**Summary total.**~~ *Resolved by the 2026-11-07 scheduling correction:* milestones add no working days, so the activity total and the span from start to Required On Site are the same number (312 working days for the approved scenario since the 2026-11-07 review-duration revision; 332 before it). The summary row shows that single total, derived from the engine. The 338-working-day figure was an artefact of the engine error and no longer exists.
+2. ~~**Required On Site date.**~~ *Resolved 2026-11-07:* **30 November 2027**, for this demonstration only, in its own scenario (Section 51.2). The chain therefore starts 31 August 2026 (3 August 2026 before the review-duration revision).
+3. ~~**Step names.**~~ *Resolved 2026-11-07:* the approved full names stay in the data, the inspector and every accessible description. The chain may show shorter **authored** display labels (for example *Review 1*), declared in the scenario (`CHAIN_LABELS`), never invented by the renderer.
+4. ~~**Commitment and issue content.**~~ *Resolved 2026-11-07:*
+   - Three commitments and one issue, all connected to their records:
+     - the Architect's final window and door design, required by Submittal Coordination
+     - the Owner's frame finish and color selection, required by Submittal Preparation, provided six working days late
+     - the Architect's final glazing selection, required by the First Revision Cycle, committed four working days late
+     - the resulting *Frame Finish Selection Received Late* issue.
+   - A subcontractor submittal-package commitment is **not** included. The commitment model defines a commitment as an obligation outside the General Contractor's control, owed by the design team, the Owner or consultants. The submittal package is the chain's own Initial Submittal milestone.
+
+**Representative dates follow the anchor (2026-11-07).** In demonstration scenarios only, agreed and actual dates are authored as working-day offsets from the required-by dates the engine derives. Moving the Required On Site date moves every date, and every story keeps its shape: a selection six working days late stays six working days late. This is done with the existing engine, run once to read the derived requirements and once with the offsets applied. There is no second engine and no model change. Real project actuals are recorded facts and are never derived this way.
+
+**Recorded methodology issues (pending separate review, not to be resolved by editing durations).** In the shared schedule fixture, nine packages go straight from a resubmittal milestone to an approval milestone with no review activity between them: Concrete, Switchgear, Mechanical, Elevator, Stone, Casework, Railings, Interior Doors and Lighting. Under Section 51.14, approval then falls on the day of resubmission. Casework holds four milestones on one date. The previous engine hid a one-day review there. Whether each package needs a review activity, and how long it should be, is a methodology question recorded here for separate review.
+
+## 51.14 Activities and milestones: scheduling semantics and rendering
+
+Status: APPROVED (2026-11-07, Decision Log *scheduling correction*). Direction supplied by Jeff Kaufman. **Scope: every procurement schedule view**: the full Procurement Schedule (`DemoGantt` / `ScheduleRowMarks`), the homepage Build-the-chain comparison, and the Procurement Chain. It governs the scheduling engine (`scheduleModel.ts`) as well as the drawing, because a mark can only be as truthful as the date it is drawn from.
+
+**Governing rule: activities consume time; milestones record events. A zero-duration milestone never creates an additional day in a procurement schedule.**
+
+**Activities (`kind: 'phase'`).**
+- An activity is work and has a realistic duration in working days.
+- Anything that takes time is an activity. That includes processing a submittal, reviewing it, and receiving, inspecting or staging material. It MUST NOT be hidden inside a milestone. If such work is needed, it is added as an activity, and its duration is counted.
+
+**Milestones (`kind: 'milestone'`).**
+- A milestone is an event at a point in time. It has one calendar date and zero duration. It never advances or delays the schedule and never consumes a working day.
+- **Finish milestones (the default)** record the completion of the step before them. They share that step's finish date. Example: GC Submittal Processing finishes Wednesday, so *Submitted to Architect* is Wednesday and Architect Review begins Thursday.
+- **Start milestones** mark the start of the step after them and share its start date. A milestone is a start milestone only when its specification says so explicitly (`anchor: 'start'`). The relationship is never inferred from the milestone's name.
+- Several milestones in sequence share one date. Example: Final Approval and Release for Fabrication on the day the final review finishes.
+
+**Required On Site** is a finish milestone. The final activity (Shipping and Delivery) finishes on the Required On Site date, and the milestone shares that date. If receiving, inspection or staging must happen before the material is ready for the field, those are activities with durations, or they are reflected in the Required On Site date itself.
+
+**Gaps.**
+- `gap: 1` (the default) means no slack: an activity starts on the next working day after its predecessor finishes, and a finish milestone falls on its predecessor's finish date.
+- Each unit above 1 is one working day of explicit float, and is preserved exactly. Nothing compresses it.
+
+**One engine.** The current schedule and the baseline are produced by the same backward pass (`backwardPass()`), so they cannot apply different milestone logic. The rule is held by the engine's unit tests (`scheduleModel.test.ts`), which assert that it holds, including a regression on the 332-working-day sequence as first approved (the scenario itself is now 312 working days, Section 51.2).
+
+**Rendering.**
+- **Milestone marks are drawn at their instant.** A finish milestone sits at the end of its date (`x(D) + pxPerDay`), so its diamond lands exactly where the predecessor's bar ends. A start milestone sits at `x(D)`. The Required On-Site mark and any Required On-Site date rule follow the same rule.
+- A milestone is never moved to another date, or offset horizontally, for spacing.
+- **Same-instant milestones are stacked vertically at the shared x,** in sequence order from top to bottom:
+  - spacing at most 9px, reduced so the whole stack stays within 18px of the bar's centre line
+  - horizontal position still states the date exactly
+  - each milestone keeps its own mark, its own equal slice of the hit area, its own focus stop and its own accessible name
+  - a Required On-Site rule keeps its full height and takes no pointer events; only its cap takes a stack position.
+- Milestone hit areas sit above the activity bars they straddle. Commitment and issue markers sit above milestones, so the raised marker remains the more specific target where they overlap.
+
+*Superseded:* the engine previously gave every milestone a working day of its own, so each milestone silently lengthened its package by a day, and diamonds were drawn at the start of that extra day. Both are withdrawn.
+
+---
+
+# 52. Homepage Product Register (Step 01)
+
+Status: APPROVED (2026-11-07). Direction supplied by Jeff Kaufman (Decision Log 2026-11-07). Scope: Step 01 of the homepage *Know what's coming* step stack (Section 46.11). The full Product Register screen (`ProductRegisterScreen`), the application shell (`JiTproShell`) and the register fixture are not changed by this section.
+
+**Purpose.** Step 01 asks *What does the project need?* It shows a curated, credible view of the JiTpro **Product Register** and introduces the one item the homepage then follows through every step: **Heritage Steel Windows and Doors** on the Oak Ridge Residence. It is a website demonstration of the product, not a claim about a mobile interface.
+
+## 52.1 One story, one source
+
+The four homepage steps follow one example:
+- Step 01 identifies the product.
+- Step 02 establishes its Required On-Site date.
+- Step 03 builds the chain backward from that date.
+- Step 04 shows the complete chain with its commitments and issues.
+
+**The selected item's facts come from the Procurement Chain scenario** (`chainScenario.ts`, Section 51.2), never from a second copy:
+- **Required On-Site:** the scenario's fixed date (30 November 2027).
+- **Fabrication duration:** the scenario's fabrication activity (180 working days). This is fabrication only, not the whole procurement duration. The column and field are labelled *Fabrication Duration* so the distinction is explicit.
+- **Supplier:** the organization responsible for that fabrication (Heritage Steel Window & Door).
+- **Category:** the scenario's category.
+
+Authored on the homepage record: the product name, the description, the trade, and the register status (**Pending**, so the register agrees that the submittal reviews of Step 03 are still ahead). The older schedule package's Required On-Site date (7 June 2027) and its 14-week lead time MUST NOT appear in the homepage story.
+
+The other five rows (Exterior Stone Veneer, Custom HVAC Equipment, Tile Package, Passenger Elevator, Roofing Membrane) are read from the existing register fixture. Their fabrication durations come from their schedule packages' production activities in working days. The roofing membrane has no schedule package, so its authored 14-week lead time is stated in working days on the fixture's own 5-working-day week, exactly as the fixture defines its weeks.
+
+## 52.2 Composition
+
+A fixed **1280 × 740** application canvas, authored like the other representative screens and scaled as one unit, never reflowed (Decision Log 2026-09-04). It is built in its own component (`HomeProductRegister`) from the same tokens and primitives as the full screen, which stays untouched.
+- **Sidebar:**
+  - the wordmark
+  - the project identity
+  - the six application nav items, *Products* active
+  - the signed-in user
+- **Top bar:** the project selector, notifications and *Project Team*.
+- **Main column:**
+  - **Header:** *Product Register*, *Oak Ridge Residence*, one supporting line, and one primary action.
+  - **Summary cards (four):** Total Products, Approved, Pending Approval, Long Lead Items, with the register's own totals.
+  - **Filter row:** search, Status and Category selects, and *Filters*.
+  - **Table:** six rows and six columns (Product / Description, Category, Trade, Status, Fabrication Duration, Required On-Site), then *Showing 6 of 246 products*.
+- **Selected row:** Heritage Steel Windows and Doors, with the register's existing selected-row tint and left bar.
+- **Detail panel:** product name, status, project, category, trade, supplier, fabrication duration, and **Required On-Site last, as the panel's strongest value**. That is the hand-off to Step 02.
+
+No pagination, export, drawing references, contacts or related commitments: commitments belong to Step 04. Colors are `--jpd-*` tokens only, with no literals. The canvas sits in a 1px `--jp-ink-secondary` 20% hairline frame with rounded corners. No shadow, gradient or animation.
+
+## 52.3 Responsive presentation
+
+- **From `lg`:** the canvas is shown, scaled to the content width. At `lg` and wider the scale keeps table text readable.
+- **Below `lg`:** the canvas is **not** shrunk. Instead, a simplified card of the selected product is shown in the same visual language: the product, status, the key fields, and Required On-Site emphasised. It makes no claim to be the mobile application.
+
+## 52.4 Accessibility and provenance
+
+- The scaled canvas is one labelled image (`role="img"`), as Section 46.8.1's frames are. Its interior is non-interactive and hidden from assistive technology, and the label states the selected product, its status, its fabrication duration and its Required On-Site date.
+- The small-screen card is real text.
+- A one-line provenance statement in the caption register follows the figure, because this curated screen is a new figure rather than one of the exempt representative screens (Section 48.10).
+
+---
+
+# 53. Homepage step stack: approved direction for Steps 02–04 (not implemented)
+
+Status: DIRECTION APPROVED for further design and development (2026-11-07, Decision Log). **Not a specification.** Nothing in this section authorizes code. Each step's composition, tokens and motion MUST be specified here (with motion under Section 46: one shared animation state, communicating rather than decorating, reduced motion presenting the final state) and recorded in the Decision Log before implementation.
+
+All four steps follow the one story of Section 52.1: Heritage Steel Windows and Doors, Oak Ridge Residence, Required On Site 30 November 2027, from the Procurement Chain scenario (Section 51.2).
+
+## 53.1 Step 02: schedule activities establish Required On-Site dates
+
+The planned presentation:
+1. A simplified construction schedule Gantt chart with several field activities.
+2. The dates when the field requires specific products and materials are highlighted.
+3. Those dates are identified as **Required On-Site Dates (RoSDs)**.
+4. The Gantt chart fades away while the RoSD markers stay.
+5. The dates are carried visually into the Product Register (Section 52).
+
+Open for specification: which field activities and dates, the marker treatment, the fade and carry motion and their reduced-motion state, and how the carried dates meet the Step 01 register.
+
+## 53.2 Step 03: backward planning from the Required On-Site date
+
+The Procurement Chain (Section 51) alone, planned backward from the fixed Required On-Site date. There is no comparison with a conventional construction schedule (Decision Log 2026-11-07). The existing Build-the-chain comparison stays live until the replacement is built, tested and visually approved. The backward-building animation of Section 51.12 remains documented and not authorized.
+
+## 53.3 Step 04: supporting commitments and issues
+
+The complete chain, progressively introducing the commitments above it and the issues below it (Section 51.10). Open for specification: the order and trigger of the progressive reveal.
