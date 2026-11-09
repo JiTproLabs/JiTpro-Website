@@ -42,6 +42,7 @@
 import { useEffect, useRef } from 'react';
 import BuildTheChainComparison from './BuildTheChainComparison';
 import HomeProductRegisterFigure from '../demo/screens/home-register/HomeProductRegisterFigure';
+import HomeRoSDFigure from '../demo/screens/home-schedule/HomeRoSDFigure';
 
 const STEPS = [
   {
@@ -159,7 +160,7 @@ export default function KnowWhatsComingSection() {
                 How we do it
               </p>
               <h3 className="mt-5 max-w-[18ch] font-heading text-[1.875rem] font-extrabold leading-[1.12] tracking-[-0.02em] text-balance text-jp-text-primary sm:mt-6 sm:text-[2.5rem] lg:text-[3rem]">
-                A level of procurement planning most projects never get.
+                The level of procurement planning every project needs, but few receive.
               </h3>
             </div>
 
@@ -216,8 +217,17 @@ export default function KnowWhatsComingSection() {
                     <HomeProductRegisterFigure />
                   </div>
                 )}
-                {/* Step 03 carries the Build-the-chain comparison (Decision
-                    Log 2026-11-06), unchanged. */}
+                {/* Step 02 shows the schedule establishing Required
+                    On-Site Dates and carries them into the register
+                    (Design System Section 53.1). */}
+                {i === 1 && (
+                  <div className="mt-10 lg:mt-12">
+                    <HomeRoSDFigure />
+                  </div>
+                )}
+                {/* Step 03 carries the JiTpro procurement schedule (Decision
+                    Log 2026-11-06; its typical-schedule comparison removed
+                    2026-11-08). */}
                 {i === 2 && (
                   <div className="mt-10 lg:mt-12">
                     <BuildTheChainComparison />

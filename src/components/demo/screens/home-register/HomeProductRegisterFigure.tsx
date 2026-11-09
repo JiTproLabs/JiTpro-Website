@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import DemoStatusBadge from '../../primitives/DemoStatusBadge';
 import HomeProductRegister from './HomeProductRegister';
-import { HOME_CANVAS, HOME_PAGE, SELECTED, workdaysLabel } from './homeRegisterData';
+import { HOME_CANVAS, HOME_PAGE, RoSD_NOT_ESTABLISHED, RoSD_PANEL_PLACEHOLDER, SELECTED, workdaysLabel } from './homeRegisterData';
 import '../../tokens.css';
 
 /**
@@ -22,8 +22,8 @@ import '../../tokens.css';
 
 const LABEL =
   `JiTpro Product Register for the ${HOME_PAGE.project}, showing six of the project's products. ` +
-  `Selected: ${SELECTED.name}, status Pending, ${workdaysLabel(SELECTED.fabricationWorkdays)} of fabrication, ` +
-  `required on site ${SELECTED.requiredOnSite}.`;
+  `Selected: ${SELECTED.name}, status Pending, ${workdaysLabel(SELECTED.fabricationWorkdays)} of fabrication. ` +
+  'Required On-Site dates are not yet established.';
 
 function ScaledRegister() {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -58,7 +58,7 @@ function ScaledRegister() {
           transformOrigin: 'top left',
         }}
       >
-        {scale > 0 && <HomeProductRegister />}
+        {scale > 0 && <HomeProductRegister rosd={RoSD_NOT_ESTABLISHED} />}
       </div>
     </div>
   );
@@ -103,7 +103,10 @@ function SelectedProductCard() {
         <p className="text-[0.75rem] font-semibold" style={{ color: 'var(--jpd-text-secondary)' }}>
           Required On-Site
         </p>
-        <p className="mt-0.5 text-[1.5rem] font-extrabold leading-tight tracking-[-0.02em]">{SELECTED.requiredOnSite}</p>
+        {/* Not yet established: Step 02 establishes it (Section 52.5). */}
+        <p className="mt-0.5 text-[0.9375rem]" style={{ color: 'var(--jpd-text-muted)' }}>
+          {RoSD_PANEL_PLACEHOLDER}
+        </p>
       </div>
     </div>
   );

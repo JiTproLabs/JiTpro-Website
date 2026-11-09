@@ -21,7 +21,18 @@ import {
 import JiTproWordmark from '../../../JiTproWordmark';
 import DemoStatusBadge from '../../primitives/DemoStatusBadge';
 import { USER } from '../../fixtures/project';
-import { HOME_CANVAS, HOME_KPIS, HOME_PAGE, HOME_ROWS, SELECTED, workdaysLabel } from './homeRegisterData';
+import {
+  HOME_CANVAS,
+  HOME_KPIS,
+  HOME_PAGE,
+  HOME_ROWS,
+  RoSD_NOT_ESTABLISHED,
+  RoSD_PANEL_PLACEHOLDER,
+  RoSD_PLACEHOLDER,
+  SELECTED,
+  workdaysLabel,
+  type RoSDPresentation,
+} from './homeRegisterData';
 import '../../tokens.css';
 
 /**
@@ -34,6 +45,13 @@ import '../../tokens.css';
  * simplified for a homepage reader: four cards, six products, six columns,
  * one selected product and a detail panel that ends on its Required On-Site
  * date - the hand-off to Step 02.
+ *
+ * ONE REGISTER, TWO STEPS (Section 52.5). Step 01 and Step 02 render this
+ * same component. `rosd` decides only whether each Required On-Site date is
+ * shown yet: Step 01 passes RoSD_NOT_ESTABLISHED (every cell and the panel
+ * show a neutral placeholder); Step 02 drives four rows and the panel to
+ * their dates as it establishes them. The data never changes. Each date cell
+ * carries `data-rosd-cell` so Step 02 can land its markers on it.
  *
  * Inert by design: nothing here is a control. Colours are `--jpd-*` tokens
  * only.
@@ -74,7 +92,7 @@ const COLUMNS = [
 const HEADER_H = 40;
 const ROW_H = 54;
 
-export default function HomeProductRegister() {
+export default function HomeProductRegister({ rosd = RoSD_NOT_ESTABLISHED }: { rosd?: RoSDPresentation }) {
   return (
     <div
       className="jpd"
@@ -92,8 +110,8 @@ export default function HomeProductRegister() {
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar />
         <div className="flex min-h-0 flex-1">
-          <Main />
-          <DetailPanel />
+          <Main rosd={rosd} />
+          <DetailPanel reveal={rosd.panel} />
         </div>
       </div>
     </div>
@@ -224,7 +242,7 @@ function TopBar() {
 
 /* -------------------------------------------------------------------- main */
 
-function Main() {
+function Main({ rosd }: { rosd: RoSDPresentation }) {
   return (
     <main className="shrink-0" style={{ width: MAIN_W, padding: `22px ${MAIN_PAD}px 0`, background: 'var(--jpd-surface)' }}>
       {/* Header */}
@@ -364,8 +382,13 @@ function Main() {
               <DemoStatusBadge status={row.status} />
             </Cell>
             <Cell w={COLUMNS[4].w}>{workdaysLabel(row.fabricationWorkdays)}</Cell>
-            <Cell w={COLUMNS[5].w - 2} strong={row.selected}>
-              {row.requiredOnSite}
+            <Cell w={COLUMNS[5].w - 2} strong={row.selected} rosdCell={row.id}>
+              <Reveal
+                t={rosd.reveal(row)}
+                pending={<span style={{ color: 'var(--jpd-text-muted)', fontWeight: 400 }}>{RoSD_PLACEHOLDER}</span>}
+              >
+                {row.requiredOnSite}
+              </Reveal>
             </Cell>
           </div>
         ))}
@@ -378,7 +401,7 @@ function Main() {
 
 /* ------------------------------------------------------------ detail panel */
 
-function DetailPanel() {
+function DetailPanel({ reveal }: { reveal: number }) {
   return (
     <aside
       className="shrink-0"
@@ -412,7 +435,14 @@ function DetailPanel() {
       {/* The panel's strongest value, and the hand-off to Step 02. */}
       <div style={{ marginTop: 16, fontSize: 12, fontWeight: 600, color: 'var(--jpd-text-secondary)' }}>Required On-Site</div>
       <div className="jpd-tight" style={{ marginTop: 4, fontSize: 24, fontWeight: 800, lineHeight: '28px', color: 'var(--jpd-text)' }}>
-        {SELECTED.requiredOnSite}
+        <Reveal
+          t={reveal}
+          pending={
+            <span style={{ fontSize: 14, fontWeight: 500, letterSpacing: 0, color: 'var(--jpd-text-muted)' }}>{RoSD_PANEL_PLACEHOLDER}</span>
+          }
+        >
+          {SELECTED.requiredOnSite}
+        </Reveal>
       </div>
     </aside>
   );
@@ -431,9 +461,43 @@ function Control({ w, children, between, center }: { w: number; children: ReactN
   );
 }
 
-function Cell({ w, children, first, strong }: { w: number; children: ReactNode; first?: boolean; strong?: boolean }) {
+/**
+ * A Required On-Site value and its not-yet-established placeholder, in one
+ * grid cell so the slot never changes size. t = 0 shows the placeholder,
+ * t = 1 the value; between, the placeholder clears before the value arrives,
+ * so the two are never read together (Section 46.3: t is the caller's one
+ * shared state).
+ */
+function Reveal({ t, pending, children }: { t: number; pending: ReactNode; children: ReactNode }) {
+  const clamp = (x: number) => Math.min(1, Math.max(0, x));
+  return (
+    <span style={{ display: 'grid', alignItems: 'center' }}>
+      <span style={{ gridArea: '1 / 1', opacity: clamp(1 - t * 2) }} aria-hidden={t >= 0.5 || undefined}>
+        {pending}
+      </span>
+      <span style={{ gridArea: '1 / 1', opacity: clamp(t * 2 - 1) }} aria-hidden={t < 0.5 || undefined}>
+        {children}
+      </span>
+    </span>
+  );
+}
+
+function Cell({
+  w,
+  children,
+  first,
+  strong,
+  rosdCell,
+}: {
+  w: number;
+  children: ReactNode;
+  first?: boolean;
+  strong?: boolean;
+  rosdCell?: string;
+}) {
   return (
     <div
+      data-rosd-cell={rosdCell}
       className="flex shrink-0 items-center"
       style={{
         width: w,

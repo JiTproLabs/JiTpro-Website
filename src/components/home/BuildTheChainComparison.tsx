@@ -1,24 +1,16 @@
 /**
- * Step 03 comparison — the dates fit, but does the work? (Decision Log
- * 2026-11-06).
+ * Step 03 — the JiTpro procurement schedule for one item (Decision Log
+ * 2026-11-06; the typical-schedule comparison removed 2026-11-08).
  *
- * One procurement item drawn twice on ONE calendar scale, both ending at ONE
- * Required On-Site date:
- *
- *   TYPICAL   an illustrative two-activity schedule (Buyout and Submittals,
- *             Fabrication and Delivery) at optimistic durations, run through
- *             the demo's own backward pass so it lands on the same field
- *             date by the same working-day calendar. Neutral, not inspectable.
  *   JITPRO    Heritage Steel Windows & Exterior Doors, read from
  *             SCHEDULE_ITEMS and drawn by ScheduleRowMarks, the code the full
  *             Procurement Schedule uses: every phase and milestone, commitment
  *             diamonds above the bar, the issue below it, inspected through
  *             the unchanged PhaseInspector.
  *
- * The comparison's whole argument is the difference in START dates, which
- * falls out of the durations; nothing is positioned by hand. No data-date
- * line: this is a planning view, not a status report, so completed work is
- * not dimmed here either (the full schedule keeps both).
+ * Nothing is positioned by hand. No data-date line: this is a planning view,
+ * not a status report, so completed work is not dimmed here either (the full
+ * schedule keeps both).
  *
  * WIDTH. Fitted to the container, floored at 2.5px per calendar day (just
  * under the full schedule's Months band) so narrow screens scroll the
@@ -30,33 +22,12 @@ import PhaseInspector from '../demo/screens/procurement-schedule/PhaseInspector'
 import ScheduleRowMarks from '../demo/screens/procurement-schedule/ScheduleRowMarks';
 import { useMarkInspection } from '../demo/screens/procurement-schedule/useMarkInspection';
 import { SCHEDULE_ITEMS } from '../demo/screens/procurement-schedule/scheduleFixture';
-import { buildItem, parse, type StepSpec } from '../demo/screens/procurement-schedule/scheduleModel';
+import { parse } from '../demo/screens/procurement-schedule/scheduleModel';
 import { InspectionContext } from '../demo/inspection';
 import '../demo/tokens.css';
 import '../demo/screens/procurement-schedule/scheduleTokens.css';
 
 const ITEM_ID = 'itm-heritage';
-
-/**
- * THE ILLUSTRATIVE TYPICAL SCHEDULE. Explicitly an assumption, not a record
- * or an industry average: procurement summarised as two activities with
- * optimistic durations (8 and 12 working weeks). It shares the real item's
- * name and Required On-Site date and nothing else.
- */
-const TYPICAL_SPECS: StepSpec[] = [
-  {
-    id: 'typ-1', name: 'Buyout and Submittals', family: 'buyout', kind: 'phase', days: 40,
-    org: 'gc', owner: 'AW', owed: 'Illustrative assumption.',
-  },
-  {
-    id: 'typ-2', name: 'Fabrication and Delivery', family: 'production', kind: 'phase', days: 60,
-    org: 'gc', owner: 'AW', owed: 'Illustrative assumption.',
-  },
-  {
-    id: 'typ-3', name: 'Required On-Site', family: 'required', kind: 'milestone',
-    org: 'gc', owner: 'MO', owed: 'Illustrative assumption.',
-  },
-];
 
 const MIN_PX_PER_DAY = 2.5;
 const ROW_H = 63; // the full schedule's authored row pitch
@@ -68,11 +39,6 @@ const fmt = (d: string) =>
 
 export default function BuildTheChainComparison() {
   const item = useMemo(() => SCHEDULE_ITEMS.find((i) => i.id === ITEM_ID)!, []);
-  const typical = useMemo(
-    () => buildItem('typ-heritage', item.name, item.category, item.requiredOnSiteDate, TYPICAL_SPECS),
-    [item],
-  );
-  const typicalBars = typical.steps.filter((s) => s.kind === 'phase');
 
   /* ------------------------------------------------ the shared calendar */
   const hostRef = useRef<HTMLDivElement>(null);
@@ -89,7 +55,7 @@ export default function BuildTheChainComparison() {
 
   // Padded to whole months, as the full schedule's domain is.
   const { domainStart, months, days } = useMemo(() => {
-    const ds = parse(item.startDate < typical.startDate ? item.startDate : typical.startDate);
+    const ds = parse(item.startDate);
     ds.setUTCDate(1);
     const de = parse(item.requiredOnSiteDate);
     de.setUTCMonth(de.getUTCMonth() + 1, 1);
@@ -113,7 +79,7 @@ export default function BuildTheChainComparison() {
       c.setUTCMonth(c.getUTCMonth() + 1);
     }
     return { domainStart: ds, months: ms, days: dayDiff(ds, de) };
-  }, [item, typical]);
+  }, [item]);
 
   const pxPerDay = Math.max(MIN_PX_PER_DAY, hostW / days || MIN_PX_PER_DAY);
   const trackW = days * pxPerDay;
@@ -174,7 +140,7 @@ export default function BuildTheChainComparison() {
             onScroll={() => clearHover()}
           >
             <div className="relative" style={{ width: trackW }}>
-              {/* Month scale, shared by both schedules. */}
+              {/* Month scale. */}
               <div aria-hidden="true" className="relative h-6 border-b border-[var(--jpd-grid-strong)]">
                 {months.map((m) => (
                   <span
@@ -187,7 +153,7 @@ export default function BuildTheChainComparison() {
                 ))}
               </div>
 
-              {/* One Required On-Site, one right-hand target, through both rows. */}
+              {/* The Required On-Site date: the right-hand target. */}
               <span
                 aria-hidden="true"
                 className="pointer-events-none absolute bottom-0 top-6 border-l border-dashed border-[var(--jpd-phase-required)] opacity-40"
@@ -200,35 +166,6 @@ export default function BuildTheChainComparison() {
                 >
                   Required On-Site {fmt(item.requiredOnSiteDate)}
                 </span>
-              </div>
-
-              {/* ---------------------------------- the typical schedule */}
-              <div className="sticky left-0 w-fit pr-4">
-                <p className={labelCls}>Typical construction schedule</p>
-              </div>
-              <div className="relative mt-2 h-[4.5rem]">
-                {typicalBars.map((s) => {
-                  const left = x(s.startDate);
-                  const w = Math.max(2, x(s.endDate) + pxPerDay - left);
-                  return (
-                    <div key={s.id} className="absolute top-0" style={{ left }}>
-                      <p className="whitespace-nowrap text-[0.6875rem] font-semibold leading-[1.3] text-[var(--jpd-text-strong)]">
-                        {s.name}
-                      </p>
-                      <p className="whitespace-nowrap text-[0.6875rem] leading-[1.3] text-[var(--jpd-text-secondary)]">
-                        {s.durationWorkdays} working days
-                      </p>
-                      <span
-                        aria-hidden="true"
-                        className="mt-1.5 block h-[18px] rounded-[2px] bg-[var(--jpd-summary-bar)]"
-                        style={{ width: w }}
-                      />
-                    </div>
-                  );
-                })}
-                <p className={`absolute bottom-0 whitespace-nowrap ${metaCls}`} style={{ left: x(typical.startDate) }}>
-                  Starts {fmt(typical.startDate)}
-                </p>
               </div>
 
               {/* ----------------------------------- the JiTpro schedule */}
@@ -278,7 +215,7 @@ export default function BuildTheChainComparison() {
         Explore the segments and diamonds to see the work and commitments behind the dates.
       </p>
       <p className="mt-2 max-w-[72ch] text-[0.8125rem] leading-[1.55] text-jp-ink-secondary">
-        The typical schedule is an illustrative example, not a measured industry average. The JiTpro schedule uses representative demonstration data. Actual durations depend on the item, scope, project conditions, responsible parties, and available information.
+        The JiTpro schedule uses representative demonstration data. Actual durations depend on the item, scope, project conditions, responsible parties, and available information.
       </p>
     </div>
   );

@@ -50,6 +50,12 @@ TODO:
 
 | Date | Decision | Scope | Owner | Source/Rationale |
 | --- | --- | --- | --- | --- |
+| 2026-11-08 | **The typical construction schedule is removed from Step 03.** The illustrative two-activity *Typical construction schedule* row and its caption sentence leave the Build-the-chain figure. The JiTpro procurement schedule row, its month scale, Required On-Site target, key, inspection and provenance remain unchanged. This brings forward the comparison's withdrawal recorded in Section 53.2. The Procurement Chain replacement is still to be specified, so Step 03 shows the JiTpro schedule alone until then. The step's heading *The dates fit. But does the work?* and its comparison paragraph are left in place for a separate decision. | Homepage Step 03 only. | Jeff Kaufman | Founder direction, 2026-11-08. |
+| 2026-11-07 | **Step-stack intro panel heading revised.** The heading *A level of procurement planning most projects never get.* (Decision Log 2026-11-06) becomes *The level of procurement planning every project needs, but few receive.* Copy only: the register, colour, measure and composition are unchanged, and "procurement" stays within the 2026-11-06 scoped exception. | Homepage step-stack intro panel heading. | Jeff Kaufman | Founder direction, 2026-11-07. |
+| 2026-11-07 | **Hero message sequence (Section 20.1 hero copy revised).** Beneath the unchanged eyebrow and headline, one fixed message area shows *Late materials. Wrong products. Idle crews.* (ink), then *It doesn't have to be this way.* (Brand Amber), then *JiTpro helps get the field what it needs, when it needs it.* (Brand Amber), which stays. The sequence uses opacity fades only, runs once per page load and never loops, and reduced motion shows the final message immediately. The permanent amber turn line and the profit statement *Don't let preventable problems wipe out your profits.* are removed from the hero. Hero amber (Section 48.7) is now the eyebrow, the final message, the primary action and the lighting. *Revised the same day:* the area now waits 1.5 s, each of the first two messages holds 2 s, and only the final message is amber (*It doesn't have to be this way.* is now ink). | Homepage hero only. | Jeff Kaufman | Founder direction, 2026-11-07. |
+| 2026-11-07 | **One Product Register across Steps 01 and 02 (new Section 52.5; Section 53.1.2–53.1.3 revised; supersedes the same-day four-row register view).** Step 01 shows the register before any Required On-Site date is established: em-dash placeholders in the column, and *Not yet established* in the detail panel. Step 02 ends on the **same `HomeProductRegister` component**, not a second table. The four markers land on their products' cells, which then establish their own dates: Structural Steel 8 Mar 2027, Roofing Membrane 29 Sep 2027, Heritage Steel Windows and Doors 30 Nov 2027, Tile Package 22 Feb 2028. The panel then shows 30 Nov 2027. Exterior Stone Veneer and Custom HVAC Equipment stay not yet established. This is a presentation state (`RoSDPresentation`); the data keeps every date. Step 02's frame is the register canvas (1280 × 740), with the approved schedule as a card at its top. The `--jpd-rosd-column` wash is withdrawn. **Governing direction: one Product Register. Step 01 identifies the products. Step 02 establishes and populates their Required On-Site Dates.** | Homepage Steps 01 and 02. All data, dates, working-day calculations, the Gantt design and the Procurement Chain are unchanged. | Jeff Kaufman | Founder review of Steps 01 and 02, 2026-11-07. |
+| 2026-11-07 | **Step 02's register view is the Step 01 Product Register (Section 53.1.2 revised).** After visual review, the final four-row table read as a different interface. It is now built from Step 01's own register treatment, in HTML: page header, table frame, header row, 54px rows, cell padding and type, selected-row tint and bar, and the shared `DemoStatusBadge`. The Required On-Site column is the focus, with a green header and a faint derived wash (`--jpd-rosd-column`). The markers land in that column as its dates. **The principle: the homepage shows one consistent JiTpro software interface, not separate graphics that carry the same information.** The approved Gantt, markers, timing and data are unchanged. The markers now travel to their product's register row rather than along the schedule row, because the register uses Step 01's row metrics. | Homepage Step 02 register view only. Steps 01, 03 and 04, all data and the schedule view unchanged. | Jeff Kaufman | Founder visual review of 2026-11-07. |
+| 2026-11-07 | **Homepage Step 02 specified and approved for implementation (Section 53.1, now APPROVED).** A four-activity construction schedule Gantt (Structural Steel Erection 15 Mar 2027, Roofing Installation 4 Oct 2027, Steel Windows and Doors Installation 1 Dec 2027, Floor and Wall Tile Installation 6 Mar 2028) whose green Required On-Site markers (8 Mar 2027, 29 Sep 2027, 30 Nov 2027, 22 Feb 2028) are lifted out of the schedule and carried into a four-row Product Register excerpt, Heritage Steel Windows and Doors emphasised throughout. Each RoSD is set by that product's own receiving, staging and inspection needs; **there is no universal offset rule**. The windows date is the Procurement Chain scenario's fixed date, never a copy. One five-second pass on one shared progress value, played once when the figure is substantially visible, then held; a quiet *Replay*; reduced motion shows the completed state; below `lg` a static text presentation. Not scroll-linked: the Section 46.11 stack is unchanged. **Consequential amendments:** Section 52.1, the homepage register now takes the Structural Steel, Roofing Membrane and Tile Package dates from the Step 02 activities, and Structural Steel replaces Passenger Elevator so the register keeps six rows; Section 51.7, `chainTokens.css` may also be imported by the Step 02 figure so the homepage shares one green Required On-Site treatment. No new token. | Homepage Step 02; the homepage register's curated data (Section 52.1). The full Product Register screen, shared fixtures, scheduling engine and Procurement Chain are unchanged. | Jeff Kaufman | Founder approval of 2026-11-07: dates, products and the register change approved after Claude reported that the Step 01 roofing (17 May 2027) and tile (13 Sep 2027) dates would contradict the new schedule. Activity durations (40, 20, 30, 35 working days) are illustrative, authored with the implementation, for review. |
 | 2026-11-07 | **Homepage step direction recorded for Steps 02–04 (new Section 53). Not implemented.** **Step 02** will show how construction schedule activities establish Required On-Site dates: a simplified construction schedule Gantt of several field activities; the dates the field needs specific products and materials highlighted and identified as Required On-Site Dates; the Gantt fading away while the markers stay; the dates carried visually into the Product Register. **Step 03** will show backward procurement planning from the Required On-Site date with the Procurement Chain alone, with no comparison against a conventional construction schedule (restating the Step 03 entry above). **Step 04** will progressively introduce the chain's supporting commitments and issues. Each is approved for further design and development. Its visual and motion conventions (the fade, the carry into the register, the progressive reveal) are **not yet specified** and MUST be specified in this document, under Section 46, before code. | Homepage Steps 02–04 (direction only). No code changes. | Jeff Kaufman | Founder direction of 2026-11-07, recorded at the PC-to-MacBook handoff so the work resumes without reconstructing decisions. |
 | 2026-11-07 | **Procurement Chain scenario review and revision durations revised: 312 working days (Section 51.2 updated).** First Submittal Review 15, First Revision Cycle 12, Second Submittal Review 10, Second Revision Cycle 7, Third Submittal Review 5 working days, replacing 15/12 for every cycle. All other durations and the fixed Required On Site date (30 Nov 2027) are unchanged. The engine derives a Buyout start of 31 Aug 2026 (previously 3 Aug 2026). A total of 310 was stated with the direction; the approved individual durations sum to 312, which is the recorded total. **Open, unchanged:** a proposal to move the demonstration data date from Thu 26 Nov 2026 (Thanksgiving) to Mon 30 Nov 2026 has not been decided; `DATA_DATE` remains 26 Nov 2026. | Procurement Chain scenario (`chainScenario.ts`) and Section 51.2. Neither the engine nor the shared schedule fixture changes. | Jeff Kaufman | Founder direction of 2026-11-07. Section 51.2 is updated after implementation to match the approved scenario (not to match accidental code); the dates were re-verified against the engine and an independent working-day count. |
 | 2026-11-07 | **Homepage Step 01 shows a curated Product Register (new Section 52).** Beneath Step 01's unchanged title and description: a curated **Product Register** for the Oak Ridge Residence on a fixed 1280 × 740 application canvas. It has the sidebar with Products active, four summary cards, a simplified filter row, six products in six columns (Fabrication Duration replacing Lead Time), the **Heritage Steel Windows and Doors** row selected, and a simplified detail panel ending on Required On-Site. **One story, one source:** the selected item's Required On-Site (30 Nov 2027), fabrication duration (180 working days), supplier and category are derived from the Procurement Chain scenario that Steps 02–04 use. Its status is Pending. The older 7 Jun 2027 date and 14-week lead time are excluded. **Below `lg`** a simplified card of the selected product replaces the canvas, which is never shrunk past readability. This is the homepage's second approved product demonstration, alongside Step 03's (amending the *one approved homepage product demonstration* wording of 2026-11-06). The step stack, the full Product Register screen and its fixture are unchanged. | Homepage Step 01 only. | Jeff Kaufman | Founder-approved direction of 2026-11-07, following the Step 01 inspection report. Title kept as *Product Register* to match the JiTpro software demonstration. Status Pending so Step 01 agrees with the reviews still ahead in Step 03. |
@@ -2100,7 +2106,27 @@ When the homepage, `/learn-more`, or a dialog opened from either offers a JiTpro
 
 Status: APPROVED (2026-11-05). Direction supplied by Jeff Kaufman. Scope: the marketing homepage only (Phase 1 of the homepage messaging simplification). Every other rule in this section stands unless amended here.
 
-- **Hero copy (revised 2026-11-05).** The hero reads, in order: the eyebrow *Your project. Your team. Our expertise.*; one `h1` of three questions on separate lines, *Broken schedules? / Broken promises? / Broken profits?*, all in primary ink; the turn *It doesn't have to be this way.* in Brand Amber directly beneath the headline; then three statements in primary ink: *Late materials. Wrong products. Idle crews. No clear answers.*, *Don't let these problems become part of your next project.*, and *JiTpro helps get the field what it needs, when it needs it.* The copy is used exactly as approved, in sentence case (Section 7.7). The hero's amber is the eyebrow, the turn, the primary action and the lighting (Section 48.7). *Superseded:* the headline *Broken schedules lead to broken profits.*
+- **Hero copy (revised 2026-11-05).** The hero reads, in order: the eyebrow *Your project. Your team. Our expertise.*; one `h1` of three questions on separate lines, *Broken schedules? / Broken promises? / Broken profits?*, all in primary ink; then **one shared message area** beneath the headline (revised 2026-11-07, founder direction), showing three messages one at a time, in order:
+  1. *Late materials. Wrong products. Idle crews.* in primary ink
+  2. *It doesn't have to be this way.* in primary ink
+  3. *JiTpro helps get the field what it needs, when it needs it.* in `--jp-brand-amber`, the only amber message, which stays visible permanently.
+
+  (Message 2 was amber in the first version of the same day.)
+
+  **The message area:**
+  - **Type and layout.** All three messages share one type style: the heading face at 1.25 / 1.5 / 1.625rem, bold, below the headline's scale so the headline stays dominant. They are stacked in one grid cell, so the area is always as tall as its tallest message and nothing below it (the actions included) ever moves.
+  - **Motion.** Opacity only, on one clock (Section 46.3):
+    - The area is empty for the first 1.5 s, so the headline is read first.
+    - Each message fades in over 500 ms. The first two are fully visible for 2 s, then fade out over 500 ms.
+    - The messages fade in at 1.5 s, 4.5 s and 7.5 s; the third is fully in at 8 s and stays.
+    - Revised 2026-11-07: the first version started immediately and held each message for about 1.8 s, too short to read.
+    - The sequence runs once and never loops (Section 46.6). It is the hero's only animation.
+  - **Amber.** Message 3 is static Brand Amber, fading in by opacity alone. Its colour never animates, so the active amber of Section 8.1.1 does not apply. Brand Amber is about 8:1 on `--jp-background`.
+  - **Once per page load.** Returning to the homepage within the same load shows message 3 at once.
+  - **Reduced motion** (Section 46.5) shows message 3 immediately.
+  - **Assistive technology.** All three messages stay in the document in order.
+
+  *Superseded the same day:* the permanent amber turn line beneath the headline, followed by three static statements (the symptoms, *Don't let preventable problems wipe out your profits.*, and the value proposition). The profit statement is withdrawn from the hero. The copy is used exactly as approved, in sentence case (Section 7.7). The hero's amber is the eyebrow, the turn, the primary action and the lighting (Section 48.7). *Superseded:* the headline *Broken schedules lead to broken profits.*
 - **Profit protection is an approved business outcome.** "Profit" and "profits" MAY name what JiTpro helps the contractor protect, as well as what schedule failure costs them. They remain subject to every claim-strength rule in this section: no figures, no percentages, no recovery amounts, no guarantees, except for the illustrative figures permitted in the next bullet. The same latitude applies to "margin", which was released on 2026-08-27.
 - **Illustrative figures about the reader's own job.** A figure MAY appear when it plainly describes the contractor's own estimate or bid as an illustration (*You bid the job at 12% profit.*), never JiTpro's results, typical industry margins, savings, or recovered amounts. It MUST be phrased as the reader's example, MUST NOT be paired with any JiTpro outcome figure, and the question it raises MUST stay open (no implied answer about what JiTpro will return).
 - **The short operating promise.** *Get the field what it needs, when it needs it.* is approved as the homepage's short form of the two-part operating requirement. It MUST be framed as help JiTpro gives the contractor's team (*We help you get the field what it needs, when it needs it.*), never as a delivery guarantee. The full statement, coordination AND timing, continues to govern every surface that explains the method.
@@ -4120,7 +4146,7 @@ A segment's label content is chosen by measuring its inner width (visual span mi
 
 **Namespace and location.** The chain uses a dedicated sub-namespace, `--jpd-chain-*`, inside the approved product-demo namespace (Decision Log 2026-09-04 (d)). It follows the same precedent as the schedule's `--jpd-phase-*`. These tokens:
 - are declared once, in a new file, `src/components/demo/screens/procurement-chain/chainTokens.css`, scoped under `.jpd`
-- are imported only by the chain component
+- are imported only by the chain component, and by the homepage Step 02 figure (Section 53.1), which reads `--jpd-chain-ros` and `--jpd-chain-rule` so the homepage has one green Required On-Site treatment (amended 2026-11-07, Decision Log)
 - are the only place their values appear.
 
 Components reference `var(--jpd-chain-*)`, including in SVG `fill`, `stroke` and `stop-color`, and never a literal (Section 45). The existing `--jpd-phase-*` values are **not** changed. The full schedule and the homepage comparison keep their palette until a separate decision migrates them.
@@ -4368,7 +4394,13 @@ The four homepage steps follow one example:
 
 Authored on the homepage record: the product name, the description, the trade, and the register status (**Pending**, so the register agrees that the submittal reviews of Step 03 are still ahead). The older schedule package's Required On-Site date (7 June 2027) and its 14-week lead time MUST NOT appear in the homepage story.
 
-The other five rows (Exterior Stone Veneer, Custom HVAC Equipment, Tile Package, Passenger Elevator, Roofing Membrane) are read from the existing register fixture. Their fabrication durations come from their schedule packages' production activities in working days. The roofing membrane has no schedule package, so its authored 14-week lead time is stated in working days on the fixture's own 5-working-day week, exactly as the fixture defines its weeks.
+The other five rows are, in order, Exterior Stone Veneer, Custom HVAC Equipment, Tile Package, Structural Steel and Roofing Membrane (amended 2026-11-07, Decision Log):
+- **Exterior Stone Veneer and Custom HVAC Equipment** are read from the existing register fixture, Required On-Site date included.
+- **Tile Package and Roofing Membrane** take every field from the register fixture **except** their Required On-Site dates, which come from the Step 02 construction activities they serve (Section 53.1): 22 February 2028 and 29 September 2027.
+- **Structural Steel** replaces Passenger Elevator. It has no row in the full register fixture, so it is authored on the homepage record (name, description, trade, status **Approved**). Its category and supplier come from the shared schedule's structural steel package, and its Required On-Site date (8 March 2027) from Step 02.
+- Fabrication durations come from each row's schedule package production activities, in working days. The roofing membrane has no schedule package, so its authored 14-week lead time is stated in working days on the fixture's own 5-working-day week, exactly as the fixture defines its weeks.
+
+Every row carries its Required On-Site date as an ISO date, and the displayed date is formatted from it, so Steps 01 and 02 read one value and cannot disagree. The fixtures themselves are unchanged. *(Superseded: the earlier text read all five rows, Passenger Elevator included, from the register fixture. Their roofing date of 17 May 2027 and tile date of 13 September 2027 would have contradicted the Step 02 schedule.)*
 
 ## 52.2 Composition
 
@@ -4385,39 +4417,158 @@ A fixed **1280 × 740** application canvas, authored like the other representati
   - **Filter row:** search, Status and Category selects, and *Filters*.
   - **Table:** six rows and six columns (Product / Description, Category, Trade, Status, Fabrication Duration, Required On-Site), then *Showing 6 of 246 products*.
 - **Selected row:** Heritage Steel Windows and Doors, with the register's existing selected-row tint and left bar.
-- **Detail panel:** product name, status, project, category, trade, supplier, fabrication duration, and **Required On-Site last, as the panel's strongest value**. That is the hand-off to Step 02.
+- **Detail panel:** product name, status, project, category, trade, supplier, fabrication duration, and **Required On-Site last, as the panel's strongest value**. In Step 01 that value is not yet established (Section 52.5). Step 02 establishes it.
 
 No pagination, export, drawing references, contacts or related commitments: commitments belong to Step 04. Colors are `--jpd-*` tokens only, with no literals. The canvas sits in a 1px `--jp-ink-secondary` 20% hairline frame with rounded corners. No shadow, gradient or animation.
 
 ## 52.3 Responsive presentation
 
 - **From `lg`:** the canvas is shown, scaled to the content width. At `lg` and wider the scale keeps table text readable.
-- **Below `lg`:** the canvas is **not** shrunk. Instead, a simplified card of the selected product is shown in the same visual language: the product, status, the key fields, and Required On-Site emphasised. It makes no claim to be the mobile application.
+- **Below `lg`:** the canvas is **not** shrunk. Instead, a simplified card of the selected product is shown in the same visual language: the product, status, the key fields, and Required On-Site, shown as *Not yet established* (Section 52.5). It makes no claim to be the mobile application.
 
 ## 52.4 Accessibility and provenance
 
-- The scaled canvas is one labelled image (`role="img"`), as Section 46.8.1's frames are. Its interior is non-interactive and hidden from assistive technology, and the label states the selected product, its status, its fabrication duration and its Required On-Site date.
+- The scaled canvas is one labelled image (`role="img"`), as Section 46.8.1's frames are. Its interior is non-interactive and hidden from assistive technology, and the label states the selected product, its status and its fabrication duration, and that Required On-Site dates are not yet established.
 - The small-screen card is real text.
 - A one-line provenance statement in the caption register follows the figure, because this curated screen is a new figure rather than one of the exempt representative screens (Section 48.10).
+
+## 52.5 One register, two steps: the Required On-Site presentation state
+
+Status: APPROVED (2026-11-07, Decision Log).
+
+**One Product Register.** Step 01 identifies the products, and Step 02 establishes and populates their Required On-Site dates. Both steps render the **same component**, `HomeProductRegister`, with the same data. Step 02 never draws an approximation of the register.
+
+**A presentation state, not a data change.**
+- Every row keeps its Required On-Site date in the data (Section 52.1).
+- The component takes one presentation input, `rosd` (`RoSDPresentation` in `homeRegisterData.ts`):
+  - `reveal(row)`: 0 shows the not-yet-established placeholder, and 1 shows the row's own date
+  - `panel`: the same, for the detail panel.
+- Between 0 and 1 the placeholder clears before the date arrives, so the two are never read together.
+- The date slot never changes size.
+
+**Not yet established.**
+- **A table cell** shows a neutral em dash (`—`) in `--jpd-text-muted` at regular weight. The *Required On-Site* column is still present.
+- **The detail panel** keeps its *Required On-Site* label. Its value reads *Not yet established* at 14/500 in `--jpd-text-muted`, in the slot the date will occupy.
+- **Step 01** passes `RoSD_NOT_ESTABLISHED`: every cell and the panel are in this state.
+- **Step 02** establishes the four dates its construction activities set (Section 53.1) and the panel's date. *Exterior Stone Veneer* and *Custom HVAC Equipment* stay not yet established, because no Step 02 activity sets their dates.
+
+**Established.** The register's own date in its existing treatment: 12.5px body cell, 700 for the selected row, and 24/800 in the detail panel. Nothing is added to the register to mark a date as established.
 
 ---
 
 # 53. Homepage step stack: approved direction for Steps 02–04 (not implemented)
 
-Status: DIRECTION APPROVED for further design and development (2026-11-07, Decision Log). **Not a specification.** Nothing in this section authorizes code. Each step's composition, tokens and motion MUST be specified here (with motion under Section 46: one shared animation state, communicating rather than decorating, reduced motion presenting the final state) and recorded in the Decision Log before implementation.
+Status: DIRECTION APPROVED for further design and development (2026-11-07, Decision Log). **Section 53.1 is now a specification, APPROVED 2026-11-07; Sections 53.2 and 53.3 are not.** Nothing in 53.2 or 53.3 authorizes code. Each step's composition, tokens and motion MUST be specified here (with motion under Section 46: one shared animation state, communicating rather than decorating, reduced motion presenting the final state) and recorded in the Decision Log before implementation.
 
 All four steps follow the one story of Section 52.1: Heritage Steel Windows and Doors, Oak Ridge Residence, Required On Site 30 November 2027, from the Procurement Chain scenario (Section 51.2).
 
 ## 53.1 Step 02: schedule activities establish Required On-Site dates
 
-The planned presentation:
-1. A simplified construction schedule Gantt chart with several field activities.
-2. The dates when the field requires specific products and materials are highlighted.
-3. Those dates are identified as **Required On-Site Dates (RoSDs)**.
-4. The Gantt chart fades away while the RoSD markers stay.
-5. The dates are carried visually into the Product Register (Section 52).
+Status: APPROVED (2026-11-07, Decision Log). Component: `HomeRoSDFigure` (`src/components/demo/screens/home-schedule/`).
 
-Open for specification: which field activities and dates, the marker treatment, the fade and carry motion and their reduced-motion state, and how the carried dates meet the Step 01 register.
+**The one idea.** The construction schedule establishes when the field needs something. JiTpro lifts those dates out of the schedule and attaches them to the products, so procurement can be planned backward from them (Step 03).
+
+### 53.1.1 Data
+
+Four construction activities, in this order. Start dates and Required On-Site Dates (RoSDs) are approved representative demonstration data:
+
+| Activity | Starts | Product | RoSD |
+| --- | --- | --- | --- |
+| Structural Steel Erection | 15 Mar 2027 | Structural Steel | 8 Mar 2027 |
+| Roofing Installation | 4 Oct 2027 | Roofing Membrane | 29 Sep 2027 |
+| Steel Windows and Doors Installation | 1 Dec 2027 | Heritage Steel Windows and Doors | 30 Nov 2027 |
+| Floor and Wall Tile Installation | 6 Mar 2028 | Tile Package | 22 Feb 2028 |
+
+- **A RoSD is the date the product must be physically on site to support the work.** It is not derived from the start date. Each is set by that product's own needs, so the gaps differ, and there is **no universal offset rule**:
+  - steel, about a week, to shake out the first erection sequence by piece mark and stage it within crane reach
+  - roofing, three working days, because the materials must be crane-loaded and kept dry, and early delivery only adds weather and deck-load risk
+  - windows and doors, the Procurement Chain scenario's fixed date
+  - tile, nine working days, for lot and shade verification, conditioned storage and replacing short or damaged cartons. Monday 21 Feb 2028 is a holiday on the working-day calendar.
+- **The windows RoSD is not stored here.** It is `CHAIN_REQUIRED_ON_SITE` (Section 51.2), read by reference.
+- **Durations are illustrative**, in working days on the working-day calendar (`workCalendar.ts`): 40, 20, 30 and 35. The finish is the last working day of that count from the start, inclusive. Only the start dates and RoSDs are demonstration facts the homepage relies on.
+- **One source.** The activities live in one module (`homeScheduleData.ts`) that imports nothing from the register. The homepage register (Section 52.1) reads the Structural Steel, Roofing Membrane and Tile Package RoSDs from it, and the figure joins activities to register rows by product id. A test asserts that every RoSD the figure shows equals the register row's ISO date, and that the windows date equals the chain scenario's.
+
+### 53.1.2 Composition
+
+**One frame, the Step 01 register canvas: 1280 × 740** (revised 2026-11-07, Decision Log). Step 02 ends on that very canvas, so the figure reserves its size for the whole pass and the page never changes height. Three layers share the frame's coordinates:
+1. **The schedule card**, a 1280 × 388 SVG at the top of the frame. It has its own 1px `--jp-ink-secondary` 20% hairline frame, rounded 14px corners, no shadow, and the `.jpd` face (Inter Tight). The rest of the frame is empty while the schedule is shown.
+2. **The Product Register**: `HomeProductRegister` itself, in the same hairline frame and scaled by the same transform as Step 01. Its Required On-Site dates are driven by the Section 52.5 presentation state.
+3. **The markers**: one SVG above both layers, in the frame's `viewBox`.
+
+**Schedule card**, from top to bottom:
+1. **Title bar** (56): a `CalendarRange` icon, *Construction Schedule*, then *Oak Ridge Residence* in secondary ink. On the right, the legend: a green diamond and *Required On-Site Date (RoSD)*.
+2. **Header band** (44, `--jpd-surface-header`): *Activity*, *Start* and *Duration* columns, then a two-tier timescale (years above, three-letter months below) over the timeline.
+3. **Four rows** (72 each), separated by `--jpd-divider` hairlines. The windows row has the register's selected-row tint (`--jpd-row-tint`) and 4px bar (`--jpd-row-bar`).
+
+**Schedule content:**
+- **Columns:** *Activity* at x 24 (14/600), *Start* at x 348 (date register), *Duration* at x 468 ("N working days", 13/500). The timeline runs from x 600 to x 1256.
+- **Timeline scale:** one calendar-day scale, `x(date) = 600 + (date − 1 Feb 2027) in calendar days × 656 / 486`, over Feb 2027 to May 2028 inclusive. Month hairlines are `--jpd-grid`, year boundaries `--jpd-grid-strong`.
+- **Activity bars** (22 tall) run from the start of the start date to the end of the finish date. They are `--jpd-summary-bar`; the windows bar is `--jpd-text-strong`. There is no text on the bars.
+- **RoSD markers** are the Procurement Chain's Required On Site treatment (Section 51.5) at homepage scale:
+  - A `--jpd-chain-ros` diamond, 16px across (22px for windows, the chain's 1.35×), with a 2px `--jpd-surface` stroke, on the bar's centre line at the **end of the RoSD's date**, the Required On Site instant of Section 51.3. The windows marker therefore meets its bar's leading edge exactly.
+  - A dashed `--jpd-chain-rule` date rule (1.5px) runs through the marker's own row, behind its bar, and reads against the month hairlines. It stays within its row because a rule from the header would cross the date labels of the rows above.
+  - The date sits to the right of the diamond, above the bar, in strong ink at 13/700 (15/800 for windows).
+
+**Where the markers land.**
+- Each marker lands on its product's Required On-Site cell in the register, with its date text on the cell's own date text.
+- The landing points are **read from the rendered register** (its `data-rosd-cell` cells), never restated, so a marker cannot miss its cell if the register changes.
+- The register then shows its own date and the marker leaves (Section 53.1.3). The completed figure is therefore exactly the Step 01 register, with four dates established.
+
+**Emphasis.** Heritage Steel Windows and Doors is the item Step 03 carries forward.
+- In the schedule: its row tint and bar, its darker bar, and its larger marker and bolder date.
+- In the register: Step 01's selected row and its detail panel, whose Required On-Site value is the register's strongest (Section 52.2) and is established last.
+- Nothing else is emphasised.
+
+**Dates** use the register's date form everywhere in the figure (*Nov 30, 2027*, `formatRegisterDate`), because the figure ends in the register (one date register per figure, Section 51.8).
+
+**Tokens.** Existing tokens only, with no literals and no new value:
+- `--jpd-*` from `tokens.css`
+- `--jpd-grid`, `--jpd-grid-strong` and `--jpd-summary-bar` from `scheduleTokens.css`
+- `--jpd-chain-ros` and `--jpd-chain-rule` from `chainTokens.css` (Section 51.7, amended).
+
+*(Superseded the same day: a four-row register excerpt with its own columns, then a four-row table in Step 01's metrics with a green-washed Required On-Site column (`--jpd-rosd-column`, withdrawn). Both were still a second register. Decision Log 2026-11-07.)*
+
+### 53.1.3 Motion
+
+One pass of **5000 ms** on one progress value `p` from 0 to 1, from a single clock (Section 46.3). Every element's state is a pure function of `p`; nothing has its own timer or delay. Each window eases with smoothstep, and the moving markers ease in and out. There is no bounce, glow, scaling or loop (Section 46.4).
+
+| Stage | `p` | What changes |
+| --- | --- | --- |
+| 1 Construction schedule | 0 – 0.14 | Nothing. The complete schedule is the first frame. |
+| 2 Identify field demand | 0.14 – 0.30 | Markers, their dates, their date rules and the legend fade in. |
+| 3 Extract the dates | 0.40 – 0.56 | The schedule card fades out entirely. Only the markers and their dates stay. |
+| 4 The register | 0.56 – 0.70 | The Step 01 register fades in, exactly as Step 01 shows it: every Required On-Site date not yet established. |
+| 4 Transfer | 0.64 – 0.86 | The four markers, with their dates, travel together as one group from the timeline into their products' Required On-Site cells. |
+| 4 Hand-off | 0.86 – 0.94 | Each marker fades as the register establishes that cell's own date (`reveal` 0 → 1). |
+| 4 Detail panel | 0.90 – 0.98 | The selected product's panel establishes its Required On-Site date (`panel` 0 → 1). |
+| 5 Completed | 0.98 – 1 | Held: the Step 01 register with four dates established. |
+
+- The schedule card is gone before the register appears, so the two views are never readable at once (as Section 46.9).
+- The four markers move together, on one shared value, as one group. Moving them together is the single focal idea of that stage (Section 46.4). They pass over the register on their way to their cells.
+
+**Trigger.**
+- The pass plays automatically **once**, when at least 60% of the figure is in view (`IntersectionObserver`).
+- Until then the first frame is shown, which is the complete schedule, so nothing is withheld (Section 46.2).
+- The movement is **not** scroll-linked. Scrolling neither drives nor scrubs it, and the Section 46.11 stack is unchanged.
+- After the pass, the completed state holds.
+
+**Replay.** A quiet text control, *Replay* with the approved `RotateCcw` icon, beneath the figure on the right, in the light-surface treatment: `--jp-ink-secondary`, hover `--jp-background`, focus outline `--jp-background`, no amber (Section 46.10). It restarts the pass from `p = 0` (Section 46.6).
+
+**Reduced motion** (Section 46.5): the completed state (`p = 1`) is shown immediately and Replay is hidden. The image's label (Section 53.1.5) carries each activity, its start and the RoSD it sets.
+
+### 53.1.4 Responsive presentation
+
+- **From `lg`:** the animated figure.
+- **Below `lg`:** a static, real-text presentation, with no animation and no horizontal scrolling.
+  - Four entries in activity order. Each gives the activity and its start date, then the product it needs and the RoSD beside a green diamond.
+  - The windows entry has the selected-row tint and bar.
+
+### 53.1.5 Accessibility and provenance
+
+- The figure is one labelled image (`role="img"`), and its layers are hidden from assistive technology. Its label states every activity, its start date, the product it needs and that product's RoSD. It names Heritage Steel Windows and Doors as the selected item carried into Step 03, and names the products whose dates are not yet established.
+- Replay is a real button outside the image, with its own accessible name.
+- The small-screen presentation is real text.
+- A one-line provenance statement in the caption register follows the figure (Section 48.10).
 
 ## 53.2 Step 03: backward planning from the Required On-Site date
 
