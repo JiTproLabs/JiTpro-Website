@@ -69,7 +69,7 @@ export const HOME_AUDIENCES: readonly Audience[] = [
         label: 'Plan',
         headline: 'Build a procurement plan that supports your schedule.',
         description:
-          'Identify every product, material, and service the project requires. Pull backward from when the field needs each one, establishing the actual work and realistic timeline required to get it there.',
+          'Starting with when each product, material, and service is required in the field, pull backward through every procurement activity. Establish the work, sequence, and realistic durations needed to deliver everything on time.',
       },
       {
         id: 'gc-connect',

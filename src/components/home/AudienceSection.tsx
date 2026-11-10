@@ -62,8 +62,10 @@
  *
  * THE VISUAL COLUMN keeps the reserved placeholder (§46.8.1, §46.12) until
  * each visualization is specified (§54.4). It is deliberately plain. The
- * exception is general contractors → Identify, which shows the cropped
- * register preview (§54.4.1, IdentifyRegisterPreview.tsx).
+ * exceptions are general contractors → Identify, which shows the complete
+ * register under a camera (§54.4.1, IdentifyRegisterPreview.tsx), and
+ * general contractors → Plan, which builds a procurement chain backward and
+ * reveals the project schedule around it (§54.4.2, PlanChainPreview.tsx).
  */
 
 import {
@@ -88,6 +90,7 @@ import {
 } from './audienceSelection';
 import { STEP_OF_VIEW, progressForTab, regionDistance, tabForProgress } from './audienceScroll';
 import IdentifyRegisterPreview from './IdentifyRegisterPreview';
+import PlanChainPreview from './PlanChainPreview';
 
 /** The short cross-fade for the rails when the audience changes. */
 const FADE =
@@ -117,6 +120,27 @@ const CHECK_LINE_DELAY = ['delay-[400ms]', 'delay-[1075ms]', 'delay-[1750ms]'];
 const CHECK_MARK_DELAY = ['delay-[520ms]', 'delay-[1195ms]', 'delay-[1870ms]'];
 /* `translate`, not `transform`: Tailwind 4's translate-y-* sets that property. */
 const CHECK_MOTION = 'transition-[opacity,translate] ease-out motion-reduce:transition-none';
+
+/**
+ * Free room beside the visual (refined 2026-11-10, §54.4.2): the copy-column
+ * area beneath a tab's own copy, in the visual frame's coordinates. A visual
+ * may rest content there (the Plan tab's step list) without taking room from
+ * the frame. Null when the copy is not beside the visual (below lg).
+ */
+type SpareRect = { x: number; y: number; w: number; h: number };
+/** Clear space kept between a tab's copy and anything placed beneath it. */
+const SPARE_GAP = 20;
+
+/**
+ * An element's layout top within an ancestor, summed up the offsetParent
+ * chain. Layout px, so transforms are ignored; and the chain matters, because
+ * a transformed element (each copy panel) is its children's offsetParent.
+ */
+function offsetTopWithin(el: HTMLElement, ancestor: HTMLElement): number {
+  let y = 0;
+  for (let e: HTMLElement | null = el; e && e !== ancestor; e = e.offsetParent as HTMLElement | null) y += e.offsetTop;
+  return y;
+}
 
 /** Where pinning may apply at all; fitting the view is checked separately. */
 const PIN_QUERY = '(min-width: 64rem) and (prefers-reduced-motion: no-preference)';
@@ -208,6 +232,48 @@ export default function AudienceSection() {
     io.observe(el);
     return () => io.disconnect();
   }, [seen]);
+
+  /* THE SPARE ROOM beside the visual, per tab, measured in layout px (offsets
+     ignore the copy panels' entrance transforms). Re-measured on resize. */
+  const stageRef = useRef<HTMLDivElement>(null);
+  const copyColRef = useRef<HTMLDivElement>(null);
+  const visualRef = useRef<HTMLDivElement>(null);
+  const panelRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [spare, setSpare] = useState<Record<string, SpareRect | null>>({});
+  /* An unclipped layer the size of the frame's inner box, beside it. */
+  const [asideHost, setAsideHost] = useState<HTMLDivElement | null>(null);
+  useLayoutEffect(() => {
+    const stage = stageRef.current;
+    const copy = copyColRef.current;
+    const visual = visualRef.current;
+    if (!stage || !copy || !visual) return;
+    const measure = () => {
+      const beside = copy.offsetLeft + copy.offsetWidth <= visual.offsetLeft;
+      // The frame's inner box (inside its 1px border), relative to the stage.
+      const ox = visual.offsetLeft + 1;
+      const oy = visual.offsetTop + 1;
+      const next: Record<string, SpareRect | null> = {};
+      for (const [id, panel] of Object.entries(panelRefs.current)) {
+        if (!panel || !beside) {
+          next[id] = null;
+          continue;
+        }
+        const kids = [...panel.children] as HTMLElement[];
+        const top = Math.max(...kids.map((k) => offsetTopWithin(k, stage) + k.offsetHeight)) + SPARE_GAP;
+        const h = stage.offsetHeight - top;
+        next[id] = h > 0 ? { x: copy.offsetLeft - ox, y: top - oy, w: copy.offsetWidth, h } : null;
+      }
+      setSpare((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(stage);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
 
   /* Focus targets for arrow-key movement within the visible rail. */
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -411,17 +477,20 @@ export default function AudienceSection() {
 
           {/* THE STAGE, beneath the light-surface hairline: copy left, the
               sliding visual right, equal and top-aligned from lg. */}
-          <div className="mt-6 grid gap-8 border-t border-jp-ink-secondary/20 pt-8 sm:gap-10 lg:mt-8 lg:grid-cols-2 lg:items-start lg:gap-x-14 lg:pt-10 xl:gap-x-20">
+          <div ref={stageRef} className="relative mt-6 grid gap-8 border-t border-jp-ink-secondary/20 pt-8 sm:gap-10 lg:mt-8 lg:grid-cols-2 lg:items-start lg:gap-x-14 lg:pt-10 xl:gap-x-20">
             {/* The copy: every tab's panel in one grid cell, so the column is
                 the tallest panel's height for every selection. Each panel is
                 either shown or hidden, never in between at rest. */}
-            <div className="grid min-w-0">
+            <div ref={copyColRef} className="grid min-w-0">
               {HOME_AUDIENCES.flatMap((owner) =>
                 owner.tabs.map((tab, i) => {
                   const isOpen = owner.id === audience.id && i === selection.tabIndex;
                   return (
                     <div
                       key={tab.id}
+                      ref={(el) => {
+                        panelRefs.current[tab.id] = el;
+                      }}
                       role="tabpanel"
                       id={panelId(tab)}
                       aria-labelledby={tabId(tab)}
@@ -457,6 +526,7 @@ export default function AudienceSection() {
                 Hidden from assistive technology: the copy carries the
                 meaning (§46.2). `min-w-0` stops the 16:10 box taking a
                 minimum width from its content on narrow views. */}
+            <div ref={visualRef} className="relative min-w-0">
             <div
               aria-hidden="true"
               className="relative aspect-[16/10] w-full min-w-0 overflow-hidden border border-jp-ink-secondary/25 bg-jp-ink-secondary/[0.04]"
@@ -474,21 +544,29 @@ export default function AudienceSection() {
                     }}
                     className={`h-full ${SLIDE}`}
                   >
-                    {owner.tabs.map((tab, i) =>
-                      tab.id === 'gc-identify' ? (
-                        /* The one specified visual so far (§54.4.1). It
-                           shares the checklist's `played` state. */
-                        <IdentifyRegisterPreview
-                          key={tab.id}
-                          played={owner.id === audience.id && i === selection.tabIndex && seen}
-                        />
-                      ) : (
-                        <ReservedVisual key={tab.id} tab={tab} first={i === 0} />
-                      ),
-                    )}
+                    {owner.tabs.map((tab, i) => {
+                      /* The specified visuals (§54.4.1, §54.4.2) play on
+                         the same state the Identify checklist uses. */
+                      const played = owner.id === audience.id && i === selection.tabIndex && seen;
+                      if (tab.id === 'gc-identify') return <IdentifyRegisterPreview key={tab.id} played={played} />;
+                      if (tab.id === 'gc-plan')
+                        return (
+                          <PlanChainPreview
+                            key={tab.id}
+                            played={played}
+                            aside={{ host: asideHost, region: spare[tab.id] ?? null }}
+                          />
+                        );
+                      return <ReservedVisual key={tab.id} tab={tab} first={i === 0} />;
+                    })}
                   </div>
                 </div>
               ))}
+            </div>
+            {/* Beside the frame, unclipped and the size of its inner box: a
+                visual may rest content outside the frame, in the spare room
+                (§54.4.2). Never interactive; hidden from assistive technology. */}
+            <div ref={setAsideHost} aria-hidden="true" className="pointer-events-none absolute inset-px" />
             </div>
           </div>
         </div>

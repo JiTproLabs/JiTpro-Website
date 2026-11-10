@@ -11,7 +11,9 @@
  * COMPOSITION: the homepage's 5fr/7fr two-column grid on the shared left
  * edge (as Sections 3, 4 and 5); stacked below `lg`, heading first.
  *
- *   LEFT      the h2 at the homepage section-heading register
+ *   LEFT      the h2 at the homepage section-heading register, then the
+ *             supporting statement beneath it (2026-11-10): the semibold
+ *             heading-face statement register, in brand amber
  *   RIGHT     the opening paragraph and the six "must" sentences, each set on
  *             its own line so the sequence scans, at the secondary body
  *             register; then the key insight at the semibold heading-face
@@ -22,9 +24,20 @@
  *             and still a step below the h2
  *
  * The approved copy appears exactly once ("procurement" is a scoped exception
- * to §20.1's retired-language rule). No amber: the bands either side already
- * carry it (§48.7). No cards, icons or graphics (§48.2, §48.4).
+ * to §20.1's retired-language rule). One amber element only: the supporting
+ * statement, in --jp-brand-amber, the static brand color (§8.1.1, §48.7;
+ * Decision Log 2026-11-10, superseding this section's earlier "no amber").
+ * No cards, icons or graphics (§48.2, §48.4).
+ *
+ * THE STATEMENT'S REVEAL (§46; the homepage's own pattern, as AudienceSection
+ * uses: a one-shot IntersectionObserver setting a flag, and CSS transitions).
+ * Once it is comfortably in view, it fades in and rises 20px over 700 ms,
+ * ease-out, and stays: the observer disconnects, so scrolling back does not
+ * replay it. Transform and opacity only, so nothing around it moves. Reduced
+ * motion: shown at once, without movement (§46.5).
  */
+import { useEffect, useRef, useState } from 'react';
+
 const MUST_SENTENCES = [
   'Drawings must be complete.',
   'Decisions must be made.',
@@ -34,13 +47,46 @@ const MUST_SENTENCES = [
   'Materials must be ordered, built, and delivered.',
 ];
 
+/** Comfortably in view: at least half of it, above the bottom tenth of the view. */
+const REVEAL_AT = { threshold: 0.5, rootMargin: '0px 0px -10% 0px' } as const;
+
 export default function ProcurementSection() {
+  const statementRef = useRef<HTMLParagraphElement>(null);
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => {
+    const el = statementRef.current;
+    if (!el || revealed) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setRevealed(true);
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        setRevealed(true);
+        io.disconnect();
+      }
+    }, REVEAL_AT);
+    io.observe(el);
+    return () => io.disconnect();
+  }, [revealed]);
+
   return (
     <section className="bg-jp-background px-6 pt-16 sm:px-8 sm:pt-20 lg:px-10 lg:pt-24">
       <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-x-14 xl:gap-x-20">
-        <h2 className="max-w-[18ch] font-heading text-[1.875rem] font-extrabold leading-[1.12] tracking-[-0.02em] text-balance text-jp-text-primary sm:text-[2.5rem] lg:text-[3rem]">
-          Procurement is more than buying materials.
-        </h2>
+        <div>
+          <h2 className="max-w-[18ch] font-heading text-[1.875rem] font-extrabold leading-[1.12] tracking-[-0.02em] text-balance text-jp-text-primary sm:text-[2.5rem] lg:text-[3rem]">
+            Procurement is more than buying materials.
+          </h2>
+
+          <p
+            ref={statementRef}
+            className={`mt-5 max-w-[30ch] font-heading text-[1.25rem] font-semibold leading-[1.35] tracking-[-0.01em] text-balance text-jp-brand-amber transition-[opacity,translate] duration-700 ease-out motion-reduce:transition-none sm:mt-6 sm:text-[1.4375rem] lg:text-[1.5rem] ${
+              revealed ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0 motion-reduce:translate-y-0 motion-reduce:opacity-100'
+            }`}
+          >
+            It&apos;s a complex sequence of activities, each with real durations and dependencies.
+          </p>
+        </div>
 
         <div className="mt-8 max-w-[62ch] text-[1.0625rem] leading-[1.7] text-jp-text-secondary sm:text-[1.125rem] lg:mt-2 lg:text-[1.1875rem]">
           <p>

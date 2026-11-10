@@ -238,3 +238,32 @@ describe('milestones always follow the recalculated chain', () => {
     expect(ms('swd-13').x).toBeCloseTo(seg('swd-11').x1, 6);
   });
 });
+
+describe('a shared calendar domain (Section 54.4.2)', () => {
+  const domain = { start: '2026-03-01', end: '2028-01-01' };
+  const shared = buildChainLayout(item, { containerWidth: 0, measure, labels: CHAIN_LABELS, domain });
+
+  it('places every date on the shared axis, at the same scale', () => {
+    expect(shared.domainStart).toBe('2026-03-01');
+    expect(shared.pxPerDay).toBe(CHAIN.MIN_PX_PER_DAY);
+    const sx = (d: string) => CHAIN.PAD_L + calDays('2026-03-01', d) * shared.pxPerDay;
+    expect(shared.segments[0].x0).toBe(sx(item.startDate));
+    expect(shared.axis.months[0].label).toBe('Mar 2026');
+    expect(shared.axis.months).toHaveLength(22);
+  });
+
+  it('keeps every width: only the origin moves', () => {
+    const own = buildChainLayout(item, { containerWidth: 0, measure, labels: CHAIN_LABELS });
+    const shift = shared.segments[0].x0 - own.segments[0].x0;
+    shared.segments.forEach((s, i) => {
+      expect(s.x0 - shift).toBeCloseTo(own.segments[i].x0);
+      expect(s.x1 - shift).toBeCloseTo(own.segments[i].x1);
+      expect(s.tier).toBe(own.segments[i].tier);
+    });
+  });
+
+  it('refuses a domain that is not whole months or does not contain the item', () => {
+    expect(() => buildChainLayout(item, { containerWidth: 0, measure, domain: { start: '2026-03-02', end: '2028-01-01' } })).toThrow();
+    expect(() => buildChainLayout(item, { containerWidth: 0, measure, domain: { start: '2026-10-01', end: '2028-01-01' } })).toThrow();
+  });
+});

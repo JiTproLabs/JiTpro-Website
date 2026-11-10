@@ -169,6 +169,13 @@ export type LayoutOptions = {
   measure: Measure;
   /** Authored display labels by step id; the full name is the fallback. */
   labels?: Record<string, string>;
+  /**
+   * A shared calendar domain, for several chains drawn on one axis (the
+   * homepage Plan schedule, Design System Section 54.4.2). Both ends are the
+   * first day of a month; `end` is exclusive. It must contain the item's own
+   * domain. Omitted: the item's own whole-month domain (Section 51.3).
+   */
+  domain?: { start: string; end: string };
 };
 
 /* --------------------------------------------------------------- helpers */
@@ -251,6 +258,15 @@ export function buildChainLayout(item: ScheduleItem, opts: LayoutOptions): Chain
   ds.setUTCDate(1);
   const de = parse(dates[dates.length - 1] > item.requiredOnSiteDate ? dates[dates.length - 1] : item.requiredOnSiteDate);
   de.setUTCMonth(de.getUTCMonth() + 1, 1);
+  if (opts.domain) {
+    const shared = { start: parse(opts.domain.start), end: parse(opts.domain.end) };
+    if (shared.start.getUTCDate() !== 1 || shared.end.getUTCDate() !== 1)
+      throw new Error('chainLayout: a shared domain must run between month starts');
+    if (shared.start > ds || shared.end < de)
+      throw new Error(`chainLayout: the shared domain does not contain ${item.id}`);
+    ds.setTime(shared.start.getTime());
+    de.setTime(shared.end.getTime());
+  }
   const domainDays = dayDiff(ds, de);
   const pxPerDay = Math.max(C.MIN_PX_PER_DAY, (opts.containerWidth - C.PAD_L - C.PAD_R) / domainDays);
   const width = C.PAD_L + domainDays * pxPerDay + C.PAD_R;

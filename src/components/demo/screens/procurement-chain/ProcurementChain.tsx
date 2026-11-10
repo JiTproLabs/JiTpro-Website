@@ -17,66 +17,26 @@
  */
 
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { CalendarDays, Factory, FileText, Handshake, Network, RefreshCw, Search, Truck, type LucideIcon } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 import PhaseInspector, { targetId, type InspectTarget } from '../procurement-schedule/PhaseInspector';
 import { useMarkInspection } from '../procurement-schedule/useMarkInspection';
 import { InspectionContext } from '../../inspection';
-import type { PhaseFamily, ScheduleItem } from '../procurement-schedule/scheduleModel';
+import type { ScheduleItem } from '../procurement-schedule/scheduleModel';
 import {
   buildChainLayout,
   CHAIN,
   FONT,
   formatDate,
   type ChainCard,
-  type Measure,
-  type TextBlock,
-  type TextLine,
 } from './chainLayout';
+import ChainText from './ChainText';
+import { FAMILY_ICON, FAMILY_LEGEND, diamond, gradientBottom, tokenFor, v } from './chainVocabulary';
+import { useChainMeasure } from './useChainMeasure';
 import '../../tokens.css';
 import '../procurement-schedule/scheduleTokens.css';
 import './chainTokens.css';
 
 /* ---------------------------------------------------------- vocabulary */
-
-const FAMILY_TOKEN: Partial<Record<PhaseFamily, string>> = {
-  buyout: '--jpd-chain-buyout',
-  coordination: '--jpd-chain-coordination',
-  preparation: '--jpd-chain-preparation',
-  review: '--jpd-chain-review',
-  revision: '--jpd-chain-revision',
-  production: '--jpd-chain-production',
-  logistics: '--jpd-chain-logistics',
-};
-const tokenFor = (f: PhaseFamily) => FAMILY_TOKEN[f] ?? '--jpd-chain-milestone';
-
-/** One lucide icon per activity family (Section 51.6). */
-const FAMILY_ICON: Partial<Record<PhaseFamily, LucideIcon>> = {
-  buyout: Handshake,
-  coordination: Network,
-  preparation: FileText,
-  review: Search,
-  revision: RefreshCw,
-  production: Factory,
-  logistics: Truck,
-};
-
-/** Legend copy, per family, for this chain. */
-const FAMILY_LEGEND: Partial<Record<PhaseFamily, { title: string; body: string }>> = {
-  buyout: { title: 'Buyout', body: 'Contracting and award' },
-  coordination: { title: 'Submittal Coordination', body: 'Align scope, schedule and responsibilities' },
-  preparation: { title: 'Submittal Preparation', body: 'Build and compile the submittal package' },
-  review: { title: 'Review', body: 'Review the submittal and return comments' },
-  revision: { title: 'Revision', body: 'Revise and resubmit against comments' },
-  production: { title: 'Fabrication', body: 'Manufacture the custom units' },
-  logistics: { title: 'Shipping & Delivery', body: 'Transport and deliver to site' },
-};
-
-const v = (token: string) => `var(${token})`;
-const TONE: Record<NonNullable<TextLine['tone']>, string> = {
-  ink: v('--jpd-chain-ink'),
-  secondary: v('--jpd-chain-ink-secondary'),
-  late: v('--jpd-chain-commitment-late'),
-};
 
 /**
  * The dark-ground logo (`JiTpro_Amber_white_text.svg`, white wordmark with
@@ -86,66 +46,8 @@ const TONE: Record<NonNullable<TextLine['tone']>, string> = {
  */
 const LOGO = { viewW: 660, viewH: 320, displayH: 52 };
 
-/* ------------------------------------------------------------ measuring */
-
-/** Canvas text measurement, re-run once the chain's fonts have loaded. */
-function useMeasure(): Measure {
-  const [fontsLoaded, setFontsLoaded] = useState(0);
-  useEffect(() => {
-    let live = true;
-    const fonts = (document as Document & { fonts?: FontFaceSet }).fonts;
-    if (!fonts) return;
-    Promise.all(Object.values(FONT).map((f) => fonts.load(f)))
-      .catch(() => undefined)
-      .then(() => live && setFontsLoaded((n) => n + 1));
-    return () => {
-      live = false;
-    };
-  }, []);
-  return useMemo<Measure>(() => {
-    void fontsLoaded; // a new measurer once fonts arrive
-    const ctx = document.createElement('canvas').getContext('2d');
-    const cache = new Map<string, number>();
-    return (text, font) => {
-      const key = `${font}|${text}`;
-      let w = cache.get(key);
-      if (w === undefined) {
-        if (!ctx) return text.length * 7;
-        ctx.font = font;
-        w = ctx.measureText(text).width;
-        cache.set(key, w);
-      }
-      return w;
-    };
-  }, [fontsLoaded]);
-}
-
 /* -------------------------------------------------------------- drawing */
 
-function Text({ block, fill, halo }: { block: TextBlock; fill?: string; halo?: boolean }) {
-  const haloStyle: CSSProperties = halo
-    ? { paintOrder: 'stroke', stroke: v('--jpd-surface'), strokeWidth: 4, strokeLinejoin: 'round' }
-    : {};
-  return (
-    <text textAnchor={block.anchor} aria-hidden="true">
-      {block.lines.map((l, i) => (
-        <tspan
-          key={i}
-          x={block.x}
-          y={l.baseline}
-          style={{ font: FONT[l.font], fill: fill ?? TONE[l.tone ?? 'ink'], ...haloStyle }}
-        >
-          {l.text}
-        </tspan>
-      ))}
-    </text>
-  );
-}
-
-const diamond = (x: number, y: number, size: number) => {
-  const r = size / 2;
-  return `M${x} ${y - r} L${x + r} ${y} L${x} ${y + r} L${x - r} ${y} Z`;
-};
 const triangle = (x: number, y: number, size: number) => {
   const r = size / 2;
   return `M${x} ${y - r} L${x + r * 1.1} ${y + r * 0.8} L${x - r * 1.1} ${y + r * 0.8} Z`;
@@ -178,7 +80,7 @@ export default function ProcurementChain({
   subtitle = 'From buyout through submittals, reviews, fabrication and delivery, planned backward from the Required On Site date.',
 }: Props) {
   const uid = useId().replace(/:/g, '');
-  const measure = useMeasure();
+  const measure = useChainMeasure();
 
   /* ---- width ---- */
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -332,7 +234,7 @@ export default function ProcurementChain({
                 {families.map((f) => (
                   <linearGradient key={f} id={`${uid}-g-${f}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0" style={{ stopColor: v(tokenFor(f)) }} />
-                    <stop offset="1" style={{ stopColor: `color-mix(in srgb, ${v(tokenFor(f))} 88%, var(--jpd-text))` }} />
+                    <stop offset="1" style={{ stopColor: gradientBottom(f) }} />
                   </linearGradient>
                 ))}
                 <filter id={`${uid}-shadow`} x="-5%" y="-30%" width="110%" height="170%">
@@ -397,7 +299,7 @@ export default function ProcurementChain({
                     rx={10}
                     style={{ fill: v('--jpd-chain-commitment-fill'), stroke: commitStroke(c), strokeWidth: activeId === c.id ? 2.5 : 1.5 }}
                   />
-                  <Text block={c.text} />
+                  <ChainText block={c.text} />
                 </g>
               ))}
 
@@ -412,7 +314,7 @@ export default function ProcurementChain({
                     rx={10}
                     style={{ fill: issueFill(), stroke: issueTone(c), strokeWidth: activeId === c.id ? 2.5 : 1.5 }}
                   />
-                  <Text block={c.text} />
+                  <ChainText block={c.text} />
                 </g>
               ))}
 
@@ -460,7 +362,7 @@ export default function ProcurementChain({
                         style={{ color: v('--jpd-chain-on-fill') }}
                       />
                     )}
-                    {s.inner && <Text block={s.inner} fill={v('--jpd-chain-on-fill')} />}
+                    {s.inner && <ChainText block={s.inner} fill={v('--jpd-chain-on-fill')} />}
                   </g>
                 );
               })}
@@ -470,7 +372,7 @@ export default function ProcurementChain({
 
               {/* labels below the bar */}
               {L.labels.map((l) => (
-                <Text key={l.key} block={l.text} halo />
+                <ChainText key={l.key} block={l.text} halo />
               ))}
 
               {/* milestones: zero-duration events at their instant */}
@@ -491,7 +393,7 @@ export default function ProcurementChain({
                   </g>
                 );
               })}
-              {L.ros && <Text block={L.ros.text} />}
+              {L.ros && <ChainText block={L.ros.text} />}
 
               {/* commitment marks (above), issue marks (below) */}
               {L.commitments.map((c) => {
