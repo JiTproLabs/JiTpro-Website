@@ -50,6 +50,15 @@ TODO:
 
 | Date | Decision | Scope | Owner | Source/Rationale |
 | --- | --- | --- | --- | --- |
+| 2026-11-09 | **General contractors → *Identify* replaces its reserved placeholder with a cropped Procurement Register preview (new Section 54.4.1; Section 54.4 amended).** The frame crops a light register sheet on its right and bottom edges. It shows three columns, *Item / Description*, *Trade* and *Source*, with rows read from the existing register fixture. It uses the Product Register's own `--jpd-*` table treatment. The first row carries the register's selected-row tint and bar, as decoration. The rows fade in in order on the checklist's *played* state. The first row's emphasis arrives with the checklist's final line. Reduced motion shows everything at once. The frame, layout and fit are unchanged, and every other tab keeps its placeholder. | Marketing website (homepage) | Jeff Kaufman | Founder direction 2026-11-09. |
+| 2026-11-09 | **The general contractor *Identify* tab is revised (Sections 54.2, 54.2.1 and 54.3 amended).** New headline *Identify everything your project needs.* and description (founder-supplied). Between headline and description, a link to the existing `/roles/general-contractors` page: *Explore JiTpro for general contractors* with a right arrow. It is in `--jp-background` ink, with amber only as a decorative underline, because Section 8.8 prohibits amber text on `--jp-surface-light` (1.96:1). The founder chose this over amber text. Beneath the description, a three-line checklist whose lines fade in in order, each with a check. It plays when the tab becomes selected after the section is first seen, never restarts while the tab stays selected, and appears statically under reduced motion. No other tab, the scroll mechanics, the dropdown or the visual column changes. | Marketing website (homepage) | Jeff Kaufman | Founder request 2026-11-09; color by founder decision the same day. |
+| 2026-11-09 | **The *How we do it* band gains a closing text link (Section 54.1).** Beneath *Every product. Every required step. Every critical commitment.*: *One project at a time. Your team. Our expertise.* with a trailing right arrow, one Brand Amber link to the internal `/product` route. Its type sits below the closing statement. The hover gesture is a 4px rightward arrow movement only, with none under reduced motion. Focus uses the `--jp-text-primary` outline. It is the band's second amber element, and Section 8.1.1 assigns links to Brand Amber. The band's wording, layout and type are otherwise unchanged. | Marketing website (homepage) | Jeff Kaufman | Founder request 2026-11-09. |
+| 2026-11-09 | **The pinned audience section settles into complete states (Section 46.12 revised; Section 46.9's continuity rule amended for this pattern only).** Scroll position now **selects** a tab, with a small hysteresis band at each zone boundary. Copy and visual reach that tab's resting state through short, self-completing CSS transitions:<br>• copy fade out (~150 ms), then fade in with an 8 px rise (~200 ms);<br>• a one-panel visual slide (~450 ms).<br>The same transitions serve the unpinned form. A tab click goes straight to the chosen tab, without passing through the tabs between. **Cause:** the earlier presentation tied opacity and track position continuously to scroll, so stopping mid-change left half-faded copy and a visual between panels. Sticky mechanism, region lengths, release, reverse scrolling, tab clicks, audience switching, copy and layout are unchanged. No wheel interception or scroll snapping. | Homepage audience section only. | Jeff Kaufman | Founder review of 2026-11-09. |
+| 2026-11-09 | **The JetBrains Mono 700 face is loaded (implementation correction, no new convention).** Every bold data-face eyebrow (`font-mono font-bold`, Section 7.7) asked for weight 700, but the font import loaded only 400 and 500, so browsers synthesized the bold by thickening the 500 glyphs. That made small eyebrows soft, most visibly in dark ink on `--jp-surface-light`. Adding 700 to the existing import renders the specified weight as designed. The typeface, sizes, tracking, colors and markup are unchanged. | Every `font-mono font-bold` eyebrow site-wide. Nothing else uses a mono weight above 500. | Jeff Kaufman | Founder review of the audience-section eyebrow, 2026-11-09. Chrome confirmed only the 400 and 500 faces were available. |
+| 2026-11-09 | **The homepage audience section gains a pinned, scroll-driven presentation (Section 46.12 amended; Section 46.9 noted).** From `lg`, without reduced motion, and when the presentation fits the view, the section pins below the navigation and the reader's normal scrolling advances through the selected audience's tabs (4, 3 or 4) before releasing. Scrolling up reverses it. It is native `position: sticky` in a tall region, and scroll progress is the single source of truth: tab, copy fade and offset, and visual track. There is no wheel interception, snapping or scroll lock. Each tab holds for half a step before the next eases in. The visual column becomes a vertical sliding viewport whose incoming visual rises into place; this applies in every presentation. A tab click scrolls to that tab's hold point. An audience change resets to the region's start. Otherwise the section is the existing unpinned tabbed section. Section 46.9's *indicator must not become navigation* rule is amended for this pattern only. Copy, tabs, layout, the visual placeholders, the *How we do it* band and every other section are unchanged. | Homepage audience section only. | Jeff Kaufman | Founder direction of 2026-11-09. |
+| 2026-11-09 | **The audience section is made compact (Sections 46.12 and 54.2 revised).**<br>• **Heading.** The two-line display heading becomes the eyebrow *What JiTpro means for:*. It is founder-supplied and resolves open item 1.<br>• **Audience control.** It becomes a defined field beside the eyebrow: the heading face, semibold, at 1–1.25rem; a 1px `--jp-ink-secondary` border at 70%; `rounded-lg`; a trailing chevron. It is as wide as its longest name, which also removes the gap the previous size-to-name treatment left beside shorter names.<br>• **Spacing and tabs.** Section padding and inter-element spacing are reduced. The tabs become more compact, keeping their 44px height.<br>• **Content stage.** The columns are top-aligned. The visual moves from 4:3 to 16:10.<br>• **Fit.** The section aims to fit one desktop view at 1440 × 900 and 1920 × 1080, without a fixed height.<br>• **Unchanged:** labels stay in sentence case (*General contractors*), as Sections 7.7 and 48.1 require. Copy, selection logic, the visual placeholders and every other section are unchanged. | Homepage audience section only. | Jeff Kaufman | Founder layout review of 2026-11-09. |
+| 2026-11-09 | **The *How we do it* band is restored, immediately before the audience section (Sections 20.1 and 54.1 amended; Section 46.11 note).** The step stack's intro panel (Decision Log 2026-11-06, heading revised 2026-11-07) left the homepage with *Know what's coming* earlier the same day, which was not intended. It returns as its own section between *Fewer surprises* and the audience section, with its approved copy, layout, typography, colors and spacing unchanged: the *How we do it* eyebrow (its only amber), the heading *The level of procurement planning every project needs, but few receive.*, the two paragraphs, and the closing statement *Every product. Every required step. Every critical commitment.* It sits on `--jp-surface` with the 12% `--jp-border` top hairline, in the 5fr/7fr grid, at least one view tall from `lg`. **Only difference:** it no longer sticks. Section 46.11's sticky mechanism exists only inside a stack, and outside one it would pin the band while the rest of the page scrolled over it. Its heading becomes the section's `h2`, with its register unchanged. The intro panel's scoped "procurement" exception (Section 20.1) carries over to the band. | Homepage only: this one band. The audience section, every other section and the retained step-stack code are unchanged. | Jeff Kaufman | Founder direction of 2026-11-09. |
+| 2026-11-09 | **The homepage audience section replaces *Know what's coming* (new Sections 46.12 and 54; Section 20.1 amended; Sections 46.11, 52 and 53 lose their current production use).** Phase 1: the reader picks an audience from a native select set as the second line of the section heading, and a horizontal tab rail shows only that audience's tabs. **General contractors** (default) have four tabs: *Identify*, *Plan*, *Connect*, *Control*. **Architects and design teams** have three: *See what's coming*, *Plan your workload*, *Focus on priorities*. **Project owners** have four: *Reduce risk*, *Protect your investment*, *More predictability*, *Better decisions*. Each tab shows a headline and description beside a visual column about half the content width. Changing the audience selects its first tab. One state value drives everything (Section 46.3). Tabs follow the WAI-ARIA tabs pattern with manual activation, so hover and focus never commit (Section 46.8). Every rail and panel shares one grid cell, so selection never changes the section's height. The surface is `--jp-surface-light`, so the section opens the light act and section 4's hairline transition is unchanged. Selector state is in ink, and there is no amber. **Visual columns keep the reserved placeholder (Section 46.8.1).** The planned visualizations are recorded as direction only: simplified Product Register, Required On-Site and procurement schedule figures, and an animation of floating external dependencies becoming linked commitments. **Copy:** used as supplied. Labels are set in sentence case (Sections 7.7, 48.1). "Procurement" gains a scoped exception for this section's tab copy. Architects and owners are addressed in this section only; the engagement model is unchanged (Section 54.3). The heading line *What JiTpro means for* is **provisional**: it was authored with the implementation and awaits approval. `KnowWhatsComingSection` and its figures stay in the codebase, unrendered, preserved at tag `homepage-four-step-stack-2026-11-09`. | Homepage section 3 only. Every other homepage section, the Roles page, the shared demo modules and the retained step-stack code are unchanged. | Jeff Kaufman | Founder direction of 2026-11-09, inspired by an audience-based navigation pattern the founder supplied as a reference. Open items for founder review are listed in Section 54.5. |
 | 2026-11-08 | **The typical construction schedule is removed from Step 03.** The illustrative two-activity *Typical construction schedule* row and its caption sentence leave the Build-the-chain figure. The JiTpro procurement schedule row, its month scale, Required On-Site target, key, inspection and provenance remain unchanged. This brings forward the comparison's withdrawal recorded in Section 53.2. The Procurement Chain replacement is still to be specified, so Step 03 shows the JiTpro schedule alone until then. The step's heading *The dates fit. But does the work?* and its comparison paragraph are left in place for a separate decision. | Homepage Step 03 only. | Jeff Kaufman | Founder direction, 2026-11-08. |
 | 2026-11-07 | **Step-stack intro panel heading revised.** The heading *A level of procurement planning most projects never get.* (Decision Log 2026-11-06) becomes *The level of procurement planning every project needs, but few receive.* Copy only: the register, colour, measure and composition are unchanged, and "procurement" stays within the 2026-11-06 scoped exception. | Homepage step-stack intro panel heading. | Jeff Kaufman | Founder direction, 2026-11-07. |
 | 2026-11-07 | **Hero message sequence (Section 20.1 hero copy revised).** Beneath the unchanged eyebrow and headline, one fixed message area shows *Late materials. Wrong products. Idle crews.* (ink), then *It doesn't have to be this way.* (Brand Amber), then *JiTpro helps get the field what it needs, when it needs it.* (Brand Amber), which stays. The sequence uses opacity fades only, runs once per page load and never loops, and reduced motion shows the final message immediately. The permanent amber turn line and the profit statement *Don't let preventable problems wipe out your profits.* are removed from the hero. Hero amber (Section 48.7) is now the eyebrow, the final message, the primary action and the lighting. *Revised the same day:* the area now waits 1.5 s, each of the first two messages holds 2 s, and only the final message is amber (*It doesn't have to be this way.* is now ink). | Homepage hero only. | Jeff Kaufman | Founder direction, 2026-11-07. |
@@ -2130,11 +2139,12 @@ Status: APPROVED (2026-11-05). Direction supplied by Jeff Kaufman. Scope: the ma
 - **Profit protection is an approved business outcome.** "Profit" and "profits" MAY name what JiTpro helps the contractor protect, as well as what schedule failure costs them. They remain subject to every claim-strength rule in this section: no figures, no percentages, no recovery amounts, no guarantees, except for the illustrative figures permitted in the next bullet. The same latitude applies to "margin", which was released on 2026-08-27.
 - **Illustrative figures about the reader's own job.** A figure MAY appear when it plainly describes the contractor's own estimate or bid as an illustration (*You bid the job at 12% profit.*), never JiTpro's results, typical industry margins, savings, or recovered amounts. It MUST be phrased as the reader's example, MUST NOT be paired with any JiTpro outcome figure, and the question it raises MUST stay open (no implied answer about what JiTpro will return).
 - **The short operating promise.** *Get the field what it needs, when it needs it.* is approved as the homepage's short form of the two-part operating requirement. It MUST be framed as help JiTpro gives the contractor's team (*We help you get the field what it needs, when it needs it.*), never as a delivery guarantee. The full statement, coordination AND timing, continues to govern every surface that explains the method.
-- **Plain English on the homepage; operational detail elsewhere.** The homepage MAY teach the mechanism as a plain-English summary: what the project needs, when it needs it, who is responsible, and what is missing or putting the schedule at risk. The operational detail the retired-language rule requires is carried by the supporting surfaces, currently `/learn-more`. This is not permission to become abstract: every homepage section MUST still describe concrete work the contractor recognizes. "Procurement" stays retired from homepage copy (sole exceptions: the core-belief supporting paragraph, the *Procurement is more than buying materials* section, the *Fewer surprises* opening paragraph, the Step 03 Build-the-chain comparison, and the step-stack intro panel, 2026-11-06), and describing JiTpro as software stays retired.
+- **Plain English on the homepage; operational detail elsewhere.** The homepage MAY teach the mechanism as a plain-English summary: what the project needs, when it needs it, who is responsible, and what is missing or putting the schedule at risk. The operational detail the retired-language rule requires is carried by the supporting surfaces, currently `/learn-more`. This is not permission to become abstract: every homepage section MUST still describe concrete work the contractor recognizes. "Procurement" stays retired from homepage copy (sole exceptions: the core-belief supporting paragraph, the *Procurement is more than buying materials* section, the *Fewer surprises* opening paragraph, the Step 03 Build-the-chain comparison, and the step-stack intro panel, 2026-11-06, which continues as the *How we do it* band, 2026-11-09; and the audience section's tab copy, 2026-11-09, Section 54.3), and describing JiTpro as software stays retired.
 - **No absolute claims.** Phrasing of the form "no more guessing" reads as a promise that a problem disappears and MUST NOT be used. Use comparative language ("less guessing").
 - **The core belief (added 2026-11-05).** Directly beneath the hero and before *Fewer surprises*, a centered editorial statement (Section 7.7, with its eyebrow allowance) on the elevated band tone (Section 48.6): the eyebrow *What we believe*, the statement *Even the most robust construction schedule can't hold if the field doesn't have what it needs, when it needs it.*, the supporting paragraph *Early, accurate procurement planning is the first real opportunity general contractors have to make sure the construction schedule can hold.*, used exactly as approved (revised on 2026-11-06; the statement's quotation marks are dropped, and the closing statement *Broken schedules lead to broken profits.* is withdrawn because the hero carries it). The supporting paragraph is the one approved homepage use of "procurement" (scoped exception, Decision Log 2026-11-06). The paragraph takes the semibold heading-face statement register in `--jp-brand-amber`, prominent but secondary to the white statement (Section 7.7 supporting-copy allowance). Nothing else appears in the band. Its two ambers are the eyebrow and the supporting paragraph; nothing else in the band takes amber.
 - **Procurement is more than buying materials (added 2026-11-06).** Directly beneath the core belief and before *Fewer surprises*, on `--jp-background` and the shared left edge, in the 5fr/7fr two-column composition from `lg`: the `h2` *Procurement is more than buying materials.*, the opening paragraph, the six "must" sentences each on their own line, the key insight *And much of that work depends on people outside your company.* at the semibold statement register in primary ink, the closing paragraph, and the consequence *Those delays spread. Costs grow. Profits shrink.* at the bold statement register in primary ink, used exactly as approved (Decision Log 2026-11-06). No amber. Its use of "procurement" is a scoped exception to the retired-language rule.
 - **The engagement model is unchanged.** Copy describing the weekly cadence MUST keep the GC's team responsible for running the work (*Your PMs still run the job.*).
+- **Section 3 becomes the audience section (amended 2026-11-09).** *Know what's coming* and its four-step stack leave the homepage. In their place, between *Fewer surprises* and *We're with you throughout the project*, are the *How we do it* band (the step stack's former intro panel, restored the same day as its own section, Section 54.1) and then the audience section of Section 54 (pattern: Section 46.12). It addresses general contractors (the default and the primary audience, unchanged), architects and design teams, and project owners. Architects and owners are addressed **in that section only**. Every other homepage section still speaks to the general contractor, and the audience definition above is not changed. The engagement model above applies to that section in full (Section 54.3). The retired section is preserved at tag `homepage-four-step-stack-2026-11-09`.
 
 ## 20.2 APPROVED - Lead-magnet offer band
 
@@ -3545,7 +3555,7 @@ Where a stage selector uses the divided content stage, the visual column MUST be
 
 Status: APPROVED (2026-08-20). REVISED the same day from the scroll-driven process accordion first recorded under this section — see the Decision Log; the accordion presentation is superseded, its interaction principles carried forward here. Does NOT supersede Section 46.8, which remains the approved pattern for stage selectors.
 
-**As of 2026-08-25 this section has no current production use.** The homepage five-stage JiTpro methodology — its only approved use — moved to the Section 46.8 stage selector with a Section 46.8.1 accumulating visual, because that section's buyer-journey job is establishing competence, and competence is read from the relationship *between* the stages: a presentation that shows exactly one stage at a time by design forecloses the comparison it depends on. **Section 46.9 is neither superseded nor retired.** It remains APPROVED and available for a surface whose content is genuinely a narrative the visitor moves through rather than a method they should be able to see whole. The 2026-08-20 "first approved use" designation is released; a future use requires a fresh Decision Log entry naming it.
+**Its mechanics are used by the pinned presentation of Section 46.12 (2026-11-09)**, which amends this section's indicator rule for that pattern only: there the tab rail is real navigation that moves the scroll position. **As of 2026-08-25 this section has no current production use of its own.** The homepage five-stage JiTpro methodology — its only approved use — moved to the Section 46.8 stage selector with a Section 46.8.1 accumulating visual, because that section's buyer-journey job is establishing competence, and competence is read from the relationship *between* the stages: a presentation that shows exactly one stage at a time by design forecloses the comparison it depends on. **Section 46.9 is neither superseded nor retired.** It remains APPROVED and available for a surface whose content is genuinely a narrative the visitor moves through rather than a method they should be able to see whole. The 2026-08-20 "first approved use" designation is released; a future use requires a fresh Decision Log entry naming it.
 
 A genuine ordered process MAY be presented as a pinned, scroll-driven sequential reveal: one stage presented at a time inside a spatially stable presentation, with the visitor's own scrolling moving the narrative from stage to stage. This is a sequential narrative, not a menu.
 
@@ -3618,6 +3628,8 @@ A short ordered process MAY be presented as a vertical list of steps whose title
 
 Status: APPROVED (2026-11-06, replacing the same-day step snap sequence). First approved use: the homepage *Know what's coming* four steps. Does NOT supersede Section 46.8, 46.9 or 46.10.
 
+**No current production use (2026-11-09).** The homepage section that used this pattern was replaced by the audience section (Section 54). Its implementation stays in the codebase, unrendered, and is preserved at tag `homepage-four-step-stack-2026-11-09` (`docs/archive/homepage-four-step-stack.md`). This pattern stays APPROVED. A future use starts from this section. The stack's intro panel continues on the homepage as the standalone *How we do it* band, which does not stick (Section 54.1).
+
 A short ordered process MAY be presented as a stack of full-width panels, one per step, that the reader's own scroll lays one over another: each panel holds still as it reaches the top of the view and the next rises from below to cover it. Scrolling up uncovers them in reverse. Before and after the stack the page scrolls normally.
 
 **Panels**
@@ -3631,6 +3643,76 @@ A short ordered process MAY be presented as a stack of full-width panels, one pe
 - Interactive content inside a panel keeps working, and any popover it opens mounts outside the stack so a rising panel cannot cover it. Keyboard, find-in-page, anchor links and history behave as on any other content; headings and reading order are the process order.
 - At most one such stack per page.
 - **An intro panel (amended 2026-11-06).** The stack MAY open with ONE unnumbered panel that sets up the process: same panel treatment and dimensions, no ordinal or count, outside the numbered list, covered by the first step as each step covers the one before. It carries only approved copy at existing registers, and MAY take the act's dark band tone so the first step reads rising over it (homepage: Decision Log 2026-11-06).
+
+## 46.12 Audience selector with tabbed content stage
+
+Status: APPROVED (2026-11-09). Direction supplied by Jeff Kaufman. First approved use: the homepage audience section (Section 54). Does NOT supersede Sections 46.8–46.11.
+
+A section MAY let the reader say who they are and then show tabs written for that reader. Two controls drive it: one **audience control** and one **tab rail**. Tabs are topics, not a progression, so they carry no ordinals (Section 48.9 does not apply). Where an audience's tabs read in an order, the copy carries that order.
+
+**State**
+- The whole presentation derives from one state value: the selected audience and the selected tab within it (Section 46.3). No other state exists.
+- The section opens on its default audience and that audience's first tab. Changing the audience selects the new audience's first tab at once. Tab selections are not remembered per audience.
+- Each audience shows only its own tabs. Audiences need not have the same number of tabs.
+- Nothing happens on entry: no autoplay, no guided progression, no timers (Section 46.8, entry). **Scroll listening is permitted only for the pinned presentation below (amended 2026-11-09)**, where the reader's own scroll position is the input.
+
+**The audience control**
+- A native `<select>`, so keyboard, touch and assistive technology get the platform's own behaviour. A custom listbox is not approved.
+- **It is introduced by a label, not set as display type (revised 2026-11-09).** The section heading is a small eyebrow: the data face, bold, uppercase via CSS with increased tracking (Section 7.7). The control sits beside the eyebrow from `sm`, vertically centred on it, and below it on narrower views. *Superseded the same day:* the control as the heading's second line at the heading's own register, which made the heading two lines of display type.
+- **It is a defined field at a moderate register.** The heading face, semibold, at 1rem (base), 1.125rem (`sm`) and 1.25rem (`lg`). A 1px border, `rounded-lg`, horizontal padding of about 1rem, and a trailing `ChevronDown` from the approved icon library, sized to the type and hidden from assistive technology (Section 48.4). The field and its chevron are the affordance.
+- It is as wide as its longest audience name (the native behaviour), so the field never changes size when the audience changes. It never truncates and never wraps.
+- **On a light surface:**
+  - The name is in the strongest ink (`var(--jp-background)`) over a transparent fill.
+  - The border is `--jp-ink-secondary` at 70%, which is about 3.4:1 on `--jp-surface-light`. That clears the 3:1 interface-component minimum (Section 8.8).
+  - On hover and keyboard focus the border moves to the strongest ink (moving up the existing scale, Section 8.8). Keyboard focus also takes the light-surface focus outline: `--jp-background`, offset clear of the border (Section 46.10).
+  - Amber is prohibited (Section 8.8).
+  - **The dark-surface treatment is not yet specified.**
+- The heading carries the selected audience's name for assistive technology, so the heading is complete when read alone. The control has its own accessible label.
+- Hit area at least 44 by 44 CSS pixels (Section 34.1).
+
+**The tab rail**
+- A horizontal rail of `rounded-full` pills: the Section 46.8 selector treatment, expressed in ink on light surfaces (Section 46.8, light amendment).
+  - **Active:** a 1px border in the strongest ink, a wash of the strongest ink at about 5%, and a semibold label in the strongest ink.
+  - **Inactive:** the same footprint through a transparent border, with the label in `--jp-ink-secondary`. On hover and focus it brightens to the strongest ink over a 7% `--jp-ink-secondary` wash.
+  - The active tab is carried by geometry (the enclosure), weight and ink contrast, never by hue.
+- Labels are in sentence case, in the body face (Sections 7.7, 48.1). Every label stays visible. Where one row cannot hold them all, the pills wrap to further rows. They never shrink, truncate or scroll horizontally (Section 46.8).
+- Hover and focus show availability only; they never select a tab, because each tab drives a full content stage (Section 46.8). Click, tap, Enter and Space select it.
+- **Semantics:** the WAI-ARIA tabs pattern with manual activation. `role="tablist"` with an accessible label; each tab is a `button` with `role="tab"`, `aria-selected` and `aria-controls`, using a roving tabindex. Left and Right arrows move focus and wrap around; Home and End go to the first and last tab. Enter and Space select. Tab leaves the rail for the active panel (`role="tabpanel"`, labelled by its tab).
+- Each pill is at least 44px tall (Section 34.1).
+
+**The content stage**
+- The divided form: the copy column on the left (the tab's headline as `h3`, then its description) and the visual column on the right. From `lg` the two columns are equal, so the visual is about half the content width, and they are **top-aligned**: the headline starts level with the visual's top edge (revised 2026-11-09, superseding vertical centring). Below `lg`, one column: copy, then visual.
+- **No reflow.** Every audience's rail shares one grid cell, and every tab's panel shares another. The section is always the height of the tallest rail and the tallest panel, and does not change when the tab or the audience changes (Section 46.8).
+  - Inactive rails and panels are `visibility: hidden`. They stay in the document, so search engines receive every audience's copy (Section 46.8), but they leave the accessibility tree and tab order, because the tabs pattern exposes each panel through its tab.
+- The visual column holds a fixed 16:10 aspect ratio (revised 2026-11-09 from 4:3, which made the stage taller than its copy needs). It is sized by the column width, never by a fixed height.
+- **Compact on desktop (2026-11-09).** At common desktop views (1440 × 900 and 1920 × 1080), the whole section aims to fit within one view below the sticky navigation: eyebrow and control, rail, hairline, copy and visual. This is achieved by spacing and proportion alone. A fixed or viewport-locked height is prohibited. On smaller views, or at increased text zoom, the section takes its natural height and clips nothing.
+- **Transition:** the copy fades out, then the incoming copy fades in, rising about 8 px (about 150 ms, then 200 ms; revised 2026-11-09 so two tabs' copy is never visible together). The visual column is a **vertical sliding viewport (amended 2026-11-09)**: the audience's visuals sit in one vertical track, and the incoming visual moves upward into place (about 450 ms, ease-out), so a later tab always arrives from below. Nothing scales, rotates or bounces (Section 46.4). Under reduced motion selection is instant, and the interaction is otherwise unchanged (Section 46.5).
+
+**The visual column**
+- Until a tab's visual is specified and approved, it keeps the **reserved placeholder** (Section 46.8.1). This is the methodology figure's frame:
+  - a 1px border in `--jp-ink-secondary` at 25%, over a `--jp-ink-secondary` fill at 4%;
+  - a data-face *Reserved* label;
+  - one line naming the visualization the area is held for.
+- No illustration, icon, imagery, sample data or ornament (Sections 47.4, 48.8). It is hidden from assistive technology, because the copy beside it carries the meaning (Section 46.2).
+- **The visuals are NOT yet specified.** Before any is built, this document MUST specify:
+  - what it shows;
+  - whether one audience's visuals accumulate as one system (Section 46.8.1);
+  - its motion (Sections 46.1–46.6);
+  - its provenance (Section 48.10).
+- The visual has no controls of its own (Section 46.8.1).
+
+**Pinned scroll-driven presentation (APPROVED 2026-11-09)**
+
+Where the view allows, the section MAY pin while the reader's normal scrolling advances through the selected audience's tabs. It adopts the mechanics of Section 46.9, with the amendments stated here.
+
+- **Mechanism.** A tall scroll region holds a `position: sticky` presentation (header, rail and stage) just below the sticky navigation. The region's extra height is the scroll distance the tabs consume. The presentation releases when the last tab has been held, and scrolling up reverses the sequence. **Prohibited:** wheel, key or touch interception, scroll snapping, scroll locks, and scroll-jacking libraries (Sections 46.9, 46.11). The movement IS the reader's scroll.
+- **One source of truth: scroll selects, transitions complete (revised 2026-11-09).** Section-relative scroll progress selects the tab, and nothing else (Section 46.3). Copy and visual then move to that tab's **complete resting state** through short, self-completing CSS transitions, the same ones the unpinned section uses. **No partial state can persist when scrolling stops:** the copy is always fully opaque and the visual always shows exactly one whole panel. This amends Section 46.9's *continuous scroll-linked animation* rule for this pattern only. *Superseded the same day:* opacity, offset and track position tied continuously to scroll, which left half-faded copy and a visual caught between panels wherever the reader stopped.
+- **Zones and switching.** Each tab owns one step of scroll (the first and last own three-quarters of a step), and the tab changes when the reader crosses the boundary between zones. A small hysteresis band (about 6% of a step) around each boundary stops a reader resting on it from flickering between tabs. A fast scroll that crosses several zones selects the zone it lands in, and the transition goes straight there. The last tab's zone ends at the region's end, where the section releases.
+- **The transition.** The outgoing copy fades out (about 150 ms). The incoming copy fades in and rises about 8 px (about 200 ms, starting as the outgoing copy finishes), so two tabs' copy is never readable at once (Section 46.9). The visual track slides one whole panel per tab (about 450 ms, ease-out), the incoming visual rising into place. A transition interrupted by a further change retargets smoothly and still finishes at a resting state.
+- **The rail is real navigation (amending Section 46.9's indicator rule for this pattern only).** Clicking or tapping a tab, or selecting it with Enter or Space, selects it at once and scrolls the page smoothly into that tab's zone. While that scroll is under way, the tabs it passes are not selected, so the transition goes straight to the chosen tab. Scroll position and selection therefore always agree, and continued scrolling resumes from the chosen tab. The rail and the audience control stay stationary while pinned.
+- **Audience change while pinned.** The new audience opens on its first tab: the page moves instantly to the start of the region. The region's height follows the new audience's tab count, so three tabs consume less scroll than four.
+- **When it applies.** All three must hold: from `lg`; when `prefers-reduced-motion` is not `reduce`; and when the presentation's measured height fits the view below the sticky navigation. That last condition is re-measured on resize and zoom. Otherwise the section is the ordinary, unpinned tabbed section above, in normal document flow, with no scroll-driven behaviour and no artificial height. At increased zoom the presentation therefore never pins with clipped content.
+- **Accessibility.** Unchanged from above: WAI-ARIA tabs, keyboard selection, visible focus, and every panel reachable through its tab. Keyboard scrolling (arrows, Page Up/Down, Space) drives the same progression as the wheel.
 
 ## 46.6 User control
 
@@ -4376,6 +4458,8 @@ Status: APPROVED (2026-11-07, Decision Log *scheduling correction*). Direction s
 
 Status: APPROVED (2026-11-07). Direction supplied by Jeff Kaufman (Decision Log 2026-11-07). Scope: Step 01 of the homepage *Know what's coming* step stack (Section 46.11). The full Product Register screen (`ProductRegisterScreen`), the application shell (`JiTproShell`) and the register fixture are not changed by this section.
 
+**No current homepage use (2026-11-09).** Section 3 of the homepage is now the audience section (Section 54), so this register is no longer rendered. `HomeProductRegister` and `HomeProductRegisterFigure` stay in the codebase unchanged, preserved at tag `homepage-four-step-stack-2026-11-09`. A simplified version is planned for the audience section's visual column (Section 54.4). That use MUST be specified there before code. This section still governs the figure wherever it appears.
+
 **Purpose.** Step 01 asks *What does the project need?* It shows a curated, credible view of the JiTpro **Product Register** and introduces the one item the homepage then follows through every step: **Heritage Steel Windows and Doors** on the Oak Ridge Residence. It is a website demonstration of the product, not a claim about a mobile interface.
 
 ## 52.1 One story, one source
@@ -4459,6 +4543,8 @@ Status: APPROVED (2026-11-07, Decision Log).
 # 53. Homepage step stack: approved direction for Steps 02–04 (not implemented)
 
 Status: DIRECTION APPROVED for further design and development (2026-11-07, Decision Log). **Section 53.1 is now a specification, APPROVED 2026-11-07; Sections 53.2 and 53.3 are not.** Nothing in 53.2 or 53.3 authorizes code. Each step's composition, tokens and motion MUST be specified here (with motion under Section 46: one shared animation state, communicating rather than decorating, reduced motion presenting the final state) and recorded in the Decision Log before implementation.
+
+**No current homepage use (2026-11-09).** The step stack these steps belonged to has left the homepage (Section 54). The Step 02 Required On-Site figure and the Step 03 procurement schedule stay in the codebase unchanged, preserved at tag `homepage-four-step-stack-2026-11-09`. Simplified versions are planned for the audience section (Section 54.4).
 
 All four steps follow the one story of Section 52.1: Heritage Steel Windows and Doors, Oak Ridge Residence, Required On Site 30 November 2027, from the Procurement Chain scenario (Section 51.2).
 
@@ -4577,3 +4663,134 @@ The Procurement Chain (Section 51) alone, planned backward from the fixed Requir
 ## 53.3 Step 04: supporting commitments and issues
 
 The complete chain, progressively introducing the commitments above it and the issues below it (Section 51.10). Open for specification: the order and trigger of the progressive reveal.
+
+# 54. Homepage audience section (Phase 1)
+
+Status: APPROVED (2026-11-09) for Phase 1. Direction supplied by Jeff Kaufman (Decision Log 2026-11-09). Pattern: Section 46.12. Implementation: `src/components/home/AudienceSection.tsx`, with the copy in `src/content/homeAudiences.ts`.
+
+## 54.1 Placement and surface
+
+- Homepage section 3. It follows the *How we do it* band and precedes *We're with you throughout the project*, replacing *Know what's coming* (Section 20.1, amended 2026-11-09).
+- **The *How we do it* band (restored 2026-11-09).** Directly before this section: the step stack's former intro panel, as its own section. Its copy, composition and registers are exactly as approved (Decision Log 2026-11-06, heading 2026-11-07):
+  - `--jp-surface` with the 12% `--jp-border` top hairline;
+  - the *How we do it* eyebrow in `--jp-brand-amber`;
+  - the heading at the homepage section-heading register;
+  - the two paragraphs, then the semibold closing statement;
+  - the 5fr/7fr grid from `lg`, at least one view tall.
+
+  **Closing text link (added 2026-11-09).** Beneath the closing statement, the band's second and last amber element. It is a link, which Section 8.1.1 assigns to Brand Amber, so Section 48.7's scarcity holds:
+  - copy, verbatim: *One project at a time. Your team. Our expertise.*, then a trailing right arrow (lucide `ArrowRight`, `aria-hidden`); destination the internal `/product` route (React Router `Link`, so it follows the deployment's base path), same tab;
+  - text and arrow are one link in `--jp-brand-amber`: `font-heading`, semibold, `1rem` / `1.0625rem` from `sm`, below the closing statement's register; no underline;
+  - spacing: a visible gap of 24px (32px from `sm`) below the closing statement. Its 12px vertical padding counts toward that gap and brings the link to the 44px minimum (Section 34.1) without enlarging its type;
+  - it wraps as ordinary text, and the last word and the arrow never separate;
+  - **hover**: the single gesture is the arrow moving 4px right over 200 ms ease-out. The text stays Brand Amber. This is a text link, not a Section 48.1 button, so the button rule against nested icon movement does not apply. Under reduced motion the arrow does not move;
+  - **focus**: a 2px `--jp-text-primary` outline, offset 2px (the dark-surface focus rule of Section 48.1).
+
+  It no longer sticks (Section 46.11 applies only inside a stack). The dark band followed by the light audience section is an intended change of surface, not a seam (Section 48.6). Implementation: `src/components/home/HowWeDoItSection.tsx`.
+- **Surface:** `--jp-surface-light` for the whole section. It opens the light act, so section 4's in-container hairline still reads as a boundary inside one surface (Section 48.6).
+- **Shared left edge:** the `max-w-7xl` container used by every homepage section.
+- **Amber:** none. Every control and all hierarchy here is in ink (Section 8.8, amber on light surfaces).
+- **Hairline:** one, between the tab rail and the content stage (`--jp-ink-secondary` at 20%, the approved light-surface hairline).
+- The retired section's code (`KnowWhatsComingSection` and its figures) stays in the codebase, unrendered. It is preserved at tag `homepage-four-step-stack-2026-11-09` and documented in `docs/archive/homepage-four-step-stack.md`.
+
+## 54.2 Copy
+
+**Heading (revised 2026-11-09).** The eyebrow *What JiTpro means for:* (founder-supplied, uppercase via CSS), followed by the audience control (Section 46.12). For assistive technology, the `h2` is the eyebrow plus the selected audience's name. The earlier provisional two-line display heading is withdrawn.
+
+**Audiences, tabs and tab copy.** Copy is used exactly as supplied. Option and tab labels are set in sentence case (Sections 7.7, 48.1). The supplied labels were in title case.
+
+| Audience | Tab | Headline | Description |
+| --- | --- | --- | --- |
+| **General contractors** (default) | Identify | Identify everything your project needs. | Review the project scope, drawings, specifications, and schedules to identify every product, material, and service required for construction. Organize these requirements into a comprehensive Procurement Register. |
+| | Plan | Build a procurement plan that supports your schedule. | Identify every product, material, and service the project requires. Pull backward from when the field needs each one, establishing the actual work and realistic timeline required to get it there. |
+| | Connect | Turn loose dependencies into managed commitments. | Connect outside decisions, information, and approvals to the procurement activities they support. Establish who owes what, when it's required, and what depends on it. |
+| | Control | Know what needs your attention today, and what's coming tomorrow. | Track commitments, identify emerging risks, and distinguish what requires action today from what can wait. Stay ahead of problems before they disrupt field execution or erode margins. |
+| **Architects & design teams** | See what's coming | Know what's coming before it becomes urgent. | See upcoming design questions, selections, and approvals early enough to prepare your team and coordinate its workload. |
+| | Plan your workload | Fewer surprises. More predictable review schedules. | Understand when submittals, design clarifications, and consultant input will be needed, instead of constantly reacting to unexpected requests. |
+| | Focus on priorities | Know which decisions really matter right now. | See how requested information affects downstream procurement and field work, so your team can focus its limited time on the right issues. |
+| **Project owners** | Reduce risk | Find potential problems before they become expensive. | Early procurement planning exposes unresolved decisions, design gaps, and long-lead requirements before they create costly surprises. |
+| | Protect your investment | Pay for good planning, not expensive recovery. | The work required to prepare a project must happen somewhere. Doing it early can cost far less than recovering from late decisions, delays, and rework. |
+| | More predictability | A construction schedule backed by a real plan. | Understand how your contractor intends to deliver the products, materials, approvals, and services needed to support the promised schedule. |
+| | Better decisions | Know when decisions are needed, and why. | Receive advance notice of selections and approvals, with a clear understanding of what depends on them and the consequences of waiting. |
+
+The copy MUST NOT be reworded as a side effect of layout or visualization work. A copy change is its own decision.
+
+The general contractor *Identify* copy was revised on 2026-11-09 (founder-supplied). It replaces *Find the problems before they reach the field.* and its description. The tab now states the first step of the method: identify and organize everything the project must procure.
+
+### 54.2.1 Identify tab: role link and checklist (2026-11-09)
+
+The general contractor *Identify* panel carries two additions. No other tab has them.
+
+**Role link.** Between the headline and the description:
+- copy *Explore JiTpro for general contractors*, then a trailing right arrow (lucide `ArrowRight`, `aria-hidden`). Founder-supplied in title case; set in sentence case (Sections 7.7, 48.1);
+- destination: the existing role page, the internal `/roles/general-contractors` route, through React Router `Link`;
+- **color (Section 8.8, amber on light surfaces):** the text and arrow are `--jp-background`, the strongest light-surface ink. Amber appears only as a 2px `--jp-brand-amber` underline under the text, offset 5px. The underline is decoration: the text, the arrow and the position carry the link. Amber MUST NOT carry the text or the arrow here;
+- `font-heading` semibold, `1rem` (`1.0625rem` from `sm`), below the headline and description registers;
+- hover: the arrow moves 4px right over 200 ms ease-out, the same single gesture as the *How we do it* link (Section 54.1). None under reduced motion;
+- focus: a 2px `--jp-background` outline, offset 2px (Section 46.10, light surface);
+- vertical padding brings the target to 44px (Section 34.1).
+
+**Checklist.** Beneath the description, three lines:
+1. *Review project scope*
+2. *Identify products, materials, and services*
+3. *Build the Procurement Register*
+
+- It is a statement of the method's steps, not a record of work done. No boxes, borders, fills, numbers or controls. Nothing may suggest a form, or that a real project's items are complete.
+- Each line is a `lucide` `Check` (`aria-hidden`, `--jp-ink-secondary`) beside the text. Lines one and two are `--jp-ink-secondary`, normal weight. The final line is `--jp-background` and semibold: the outcome, slightly emphasised. No amber.
+- **Motion (Section 46).** One state drives it: *played*, true once the section has been in view and while *Identify* is selected. On *played*, the lines fade in and rise 4px in order (300 ms each, starting 400 ms after selection so the panel's own fade completes first, then 675 ms apart: 400, 1075 and 1750 ms; revised twice on 2026-11-09, from 180 ms to 450 ms to 675 ms). Each line's check fades in 120 ms after its text. Leaving the tab resets the lines at once, with no exit animation, because the whole panel is already fading out. Returning to the tab plays the sequence again. While the tab stays selected nothing restarts, since scroll within the tab's zone does not change the state (Section 46.12 hysteresis).
+- **Reduced motion:** the lines appear at once with no transition.
+- The panel, with the link and the checklist, MUST keep the pinned presentation within the view at 1280×800, 1440×900 and 1920×1080, as before the addition (Section 46.12 fit rule). Spacing is tight for that reason: headline to link 4px plus the link's 12px padding, link to description 4px (6px from `sm`), description to checklist 16px (20px from `sm`), 8px between lines.
+
+## 54.3 Copy governance
+
+- **"Procurement" (scoped exception, 2026-11-09).** The word appears in the general contractor *Identify* description and checklist (*Procurement Register*, added 2026-11-09), the general contractor *Plan* headline, the *Connect* description, the architect *Focus on priorities* description, and the owner *Reduce risk* description. This is a scoped exception to Section 20.1's retired-language rule, limited to this section's tab copy.
+- **Audience.** The general contractor is the default and remains the homepage's primary audience (Section 20.1, Audience). Architects and design teams, and project owners, are addressed in this section only, as other parties to the projects the general contractor's plan supports.
+- **The engagement model is unchanged** (Section 20.1). JiTpro works with the general contractor's team. The architect and owner tabs describe what those parties gain from the plan the general contractor's team runs. This section, and anything added to it, MUST NOT state or imply that JiTpro coordinates architects or owners directly, or becomes another project-team participant.
+- **"Margin."** The general contractor *Control* description names margin as what schedule disruption costs. This is permitted (released 2026-08-27), and it is attached to no promise or figure.
+- **Em dashes.** The supplied copy contains none (Section 7.7).
+
+## 54.4 Visualizations: Phase 2 direction (not specified)
+
+Every tab's visual column shows the reserved placeholder (Section 46.12), except general contractors → *Identify*, which shows the cropped register preview of Section 54.4.1. The founder's recorded direction for Phase 2 includes:
+
+- simplified versions of the homepage Product Register (Section 52), the Required On-Site figure (Section 53.1) and the procurement schedule;
+- new animations, including floating external dependencies transforming into structured, linked commitments.
+
+None of these is specified. Nothing in this subsection authorizes code. Each visual MUST be specified under Section 46.12 and recorded in the Decision Log before implementation.
+
+### 54.4.1 Identify: the cropped Procurement Register preview (2026-11-09)
+
+Status: APPROVED (founder direction, 2026-11-09). Scope: the general contractor *Identify* visual only. Every other tab keeps the reserved placeholder.
+
+**What it is.** A cropped part of a larger JiTpro register, as if the frame were a window onto the working deliverable. It is not a whole table, an application screen, or a software UI. Implementation: `src/components/home/IdentifyRegisterPreview.tsx`.
+
+**Built from the existing register, not redesigned.**
+- **Tokens:** the representative screens' `--jpd-*` tokens (`src/components/demo/tokens.css`), under the `.jpd` scope and its typeface. No literals.
+- **Table treatment:** the Product Register table's own (Section 52.2, `ProductTable`, `HomeProductRegister`): the `--jpd-surface-header` header row at 11.5/600; a two-line item cell, name 13/700 in `--jpd-text-strong` over the description 12/400 in `--jpd-text-secondary`; body cells 12.5/400 in `--jpd-text-body`; `--jpd-border` column rules and `--jpd-divider` row rules.
+- **Selected first row:** the register's selected-row treatment, a `--jpd-row-tint` fill with the 4px `--jpd-row-bar` left bar. On `--jp-surface-light` this amber is decoration, not information, which Section 8.8 permits. The row's text stays in ink.
+- **Rows:** read from the register fixture (`ROWS` in `src/components/demo/fixtures/productRegister.ts`), never restated: Heritage Steel Windows (Glazing, A5.11), Exterior Stone Veneer (Masonry, A4.20), Custom HVAC Equipment (HVAC, M1.02), Custom Interior Doors (Carpentry, A6.01), Tile Package (Tile, A1.12) and Roofing Membrane (Roofing, R1.01). Each keeps its fixture description. The list is in `src/components/home/identifyRegisterPreviewData.ts`, and a test pins it to the fixture.
+
+**Crop and composition.**
+- A light sheet (`--jpd-surface`, a 1px `--jp-ink-secondary` 20% hairline, 8px top-left radius) is set into the existing 16:10 frame. Its left edge is inset 24px (32px from `lg`) and its top edge 24px (28px from `lg`). Its right and bottom edges run past the frame, so the frame crops it on two sides.
+- **Title strip:** *Procurement Register* (14/800) and *Oak Ridge Residence* (12/400 secondary), with a `--jpd-divider` rule below. *Procurement Register* follows the *Identify* copy (open item 5, Section 54.5).
+- **Three columns:** *Item / Description*, *Trade*, *Source*. The Source column runs on past the frame's right edge, so the register reads as continuing. Supplier / Manufacturer, Status, Lead Time, Required On-Site and Action are not shown: they belong to later stages.
+- More rows than fit, so the lowest visible row is cut by the frame's bottom edge at every width. The crop does the cropping: nothing is scaled, and the frame's size is unchanged, so the section's fit (Section 54.2.1) is unaffected.
+- Real text, reflowed, never a scaled canvas, so it stays legible at every width. Narrower views simply show fewer rows. The item name truncates with an ellipsis, as the register's does.
+
+**Motion (Section 46).** It shares the checklist's single *played* state (Section 54.2.1):
+- the sheet, title and column headers are always present;
+- on *played*, the rows fade in and rise 4px in order (300 ms each, starting at 500 ms, then 200 ms apart), after the 450 ms visual slide;
+- the first row's tint and bar fade in over 400 ms at 1870 ms, together with the checklist's final check (*Build the Procurement Register*), so the emphasis lands as the register is named;
+- leaving the tab resets everything at once; returning plays it again; nothing loops or moves at rest;
+- under reduced motion, everything appears at once.
+
+**Accessibility.** The visual column stays `aria-hidden` (Section 46.12): the copy carries the meaning, and the preview is illustration.
+
+## 54.5 Open items for founder review
+
+1. ~~The provisional heading line.~~ **Resolved 2026-11-09:** the founder supplied *What JiTpro means for:* as an eyebrow (Section 54.2).
+2. **The engagement-model channel.** The owner *Better decisions* tab (*Receive advance notice of selections and approvals*) and the architect tabs (*See upcoming design questions…*) do not say who provides the notice or visibility. A reader could infer that JiTpro contacts them directly, which Section 20.1 prohibits. Decide whether the wording needs to name the general contractor's team as the channel.
+3. **Long-lead.** The owner *Reduce risk* description names *long-lead requirements* as one of three things early planning exposes. Recorded for review against the Section 20.1 long-lead review test.
+4. **The commercial model.** The owner *Protect your investment* headline (*Pay for good planning, not expensive recovery.*) could be read as the owner paying JiTpro. Confirm this matches the intended commercial model.
+5. **Procurement Register and Product Register (2026-11-09).** The *Identify* copy names a *Procurement Register*; the homepage figure and Section 52 name the *Product Register*. Confirm whether they are the same artifact and which name the site uses.
+6. **Identify and Plan overlap (2026-11-09).** The revised *Identify* description and the existing *Plan* description both say the method identifies every product, material and service. Consider whether *Plan* should drop that opening sentence.
