@@ -545,7 +545,7 @@ export default function AudienceSection() {
                     className={`h-full ${SLIDE}`}
                   >
                     {owner.tabs.map((tab, i) => {
-                      /* The specified visuals (§54.4.1, §54.4.2) play on
+                      /* The specified visuals (§54.4.1, §54.4.2, §54.4.3) play on
                          the same state the Identify checklist uses. */
                       const played = owner.id === audience.id && i === selection.tabIndex && seen;
                       if (tab.id === 'gc-identify') return <IdentifyRegisterPreview key={tab.id} played={played} />;
@@ -557,6 +557,7 @@ export default function AudienceSection() {
                             aside={{ host: asideHost, region: spare[tab.id] ?? null }}
                           />
                         );
+                      if (tab.id === 'gc-connect') return <PlanChainPreview key={tab.id} played={played} variant="connect" />;
                       return <ReservedVisual key={tab.id} tab={tab} first={i === 0} />;
                     })}
                   </div>

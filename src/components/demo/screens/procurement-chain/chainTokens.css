@@ -32,6 +32,13 @@
   --jpd-chain-ink: var(--jpd-text-strong);
   --jpd-chain-ink-secondary: var(--jpd-text-secondary);
   --jpd-chain-on-fill: var(--jpd-surface);
+  /* The calendar grid behind the homepage Plan chain (Section 54.4.2):
+     day lines on the Schedule's grid-strong hairline, week lines a step
+     darker, non-working days at about half the Schedule's shading so the
+     bands never outweigh the lines or the labels drawn over them. */
+  --jpd-chain-grid-day: var(--jpd-grid-strong);
+  --jpd-chain-grid-week: color-mix(in srgb, var(--jpd-text-strong) 16%, var(--jpd-surface));
+  --jpd-chain-nonworking: color-mix(in srgb, var(--jpd-text-strong) 3%, transparent);
 
   /* Derived, never authored. */
   --jpd-chain-shadow: color-mix(in srgb, var(--jpd-text) 18%, transparent);

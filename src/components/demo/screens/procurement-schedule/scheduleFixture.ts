@@ -622,7 +622,7 @@ const heritageC: CommitmentSpec[] = [
     // and again when milestones stopped consuming a working day (2026-11-07:
     // every date moved +6 working days, 23 Oct -> 2 Nov and 2 Nov -> 10 Nov).
     { baselineRequiredBy: '2026-11-02', committedFor: '2026-11-02', completedOn: '2026-11-10' }),
-  C('heritage-c3', 'Final Glazing Selection', 'selection', 'Architect', 'JS', 'architect',
+  C('heritage-c3', 'Final Glazing Specification', 'selection', 'Architect', 'JS', 'architect',
     'hw-4', 'Confirm the glazing make-up, coating and performance for every opening type.'),
 ];
 

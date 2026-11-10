@@ -38,7 +38,7 @@ import { buildChainLayout, CHAIN, FONT, type ChainLayout, type Measure } from '.
 import { buildSteelWindowsChain, CHAIN_LABELS } from '../demo/screens/procurement-chain/chainScenario';
 import { SCHEDULE_ITEMS } from '../demo/screens/procurement-schedule/scheduleFixture';
 import { buildItem, type PhaseFamily, type ScheduleItem, type StepSpec } from '../demo/screens/procurement-schedule/scheduleModel';
-import { iso, parse, workdaysBetween } from '../demo/screens/procurement-schedule/workCalendar';
+import { iso, nonWorkingRuns, parse, workdaysBetween } from '../demo/screens/procurement-schedule/workCalendar';
 
 /* ------------------------------------------------------------ the items */
 
@@ -179,6 +179,13 @@ export type PlanScene = {
   place: Placement;
   /** The step list's six groups, with their place on the one clock. */
   list: ListEntry[];
+  /** The timescale header's periods, on the chain's calendar (refined 2026-11-10). */
+  timescale: Timescale;
+  /**
+   * Long activities' in-bar labels (refined 2026-11-10): the bar's span, the
+   * label's own centre and half-width, in canvas px. See labelShiftsAt.
+   */
+  longLabels: { id: string; x0: number; x1: number; c0: number; half: number }[];
 };
 
 /* ---------------------------------------------------------- the step list */
@@ -303,18 +310,30 @@ export const TIMING = {
   ROS_IN: 500,
   ROS_IN_DURATION: 400,
   BUILD_START: 1500,
-  /** Per activity: a base plus a little for its length, so long work reads as long. */
-  STEP_BASE: 420,
-  STEP_PER_PX: 0.25,
-  STEP_MIN: 520,
-  STEP_MAX: 1100,
   /**
-   * The rest after each activity, so each one registers before the next
-   * begins (founder direction 2026-11-10: about 250 to 350 ms), and a little
-   * longer where the activity's start is a milestone.
+   * Per activity: a base plus a share of its length, so long work reads as
+   * long (refined 2026-11-10: Fabrication's pan had been too fast to follow;
+   * it now takes about 3.2 s).
    */
-  STEP_DWELL: 300,
-  MILESTONE_DWELL: 150,
+  STEP_BASE: 560,
+  STEP_PER_PX: 1.25,
+  STEP_MIN: 700,
+  STEP_MAX: 3400,
+  /**
+   * The rest after each activity, long enough to read its label before the
+   * next begins (founder direction 2026-11-10: about 600 to 800 ms, and 800
+   * to 1000 ms at a milestone), and longer where the activity's start is a
+   * milestone.
+   */
+  STEP_DWELL: 650,
+  MILESTONE_DWELL: 250,
+  /**
+   * A long activity (wider than LONG_SPAN canvas px, about 125 calendar days:
+   * Fabrication) rests a little longer, since the camera has just eased back
+   * in from its pull-back and the view needs a moment to settle.
+   */
+  LONG_SPAN: 1000,
+  LONG_SETTLE: 300,
   ZOOM_TO_CHAIN: 1400,
   /** The founder-directed pause on the whole chain (2026-11-10). */
   CHAIN_HOLD: 1500,
@@ -380,7 +399,7 @@ export function buildPlanScene(measure: Measure): PlanScene {
     const span = s.x1 - s.x0;
     const duration = Math.min(TIMING.STEP_MAX, Math.max(TIMING.STEP_MIN, TIMING.STEP_BASE + TIMING.STEP_PER_PX * span));
     const milestone = milestoneXs.some((x) => Math.abs(x - s.x0) < 1);
-    const dwell = TIMING.STEP_DWELL + (milestone ? TIMING.MILESTONE_DWELL : 0);
+    const dwell = TIMING.STEP_DWELL + (milestone ? TIMING.MILESTONE_DWELL : 0) + (span > TIMING.LONG_SPAN ? TIMING.LONG_SETTLE : 0);
     // The first step starts past the last chevron's point, so nothing shows before it.
     const step = { id: s.step.id, family: s.family, from: k === 0 ? s.x1 + CHAIN.D : s.x1, to: s.x0, span, start: clock, duration, dwell, milestone };
     clock += duration + dwell;
@@ -399,6 +418,15 @@ export function buildPlanScene(measure: Measure): PlanScene {
     return { id: g.id, label: g.label, ...totals[i], family: g.families[0], appearAt, activeUntil };
   });
 
+  const timescale = buildTimescale(focalLayout, measure);
+  const longLabels = segs
+    .filter((sg) => sg.x1 - sg.x0 > TIMING.LONG_SPAN && sg.icon)
+    .map((sg) => {
+      const textW = sg.inner ? Math.max(...sg.inner.lines.map((l) => measure(l.text, FONT.chevron))) : 0;
+      const w = CHAIN.ICON + (sg.inner ? CHAIN.ICON_GAP + textW : 0);
+      return { id: sg.step.id, x0: sg.x0, x1: sg.x1, c0: sg.icon!.x + w / 2, half: w / 2 };
+    });
+
   const chainArrive = buildEnd + TIMING.ZOOM_TO_CHAIN;
   const holdEnd = chainArrive + TIMING.CHAIN_HOLD;
 
@@ -413,6 +441,8 @@ export function buildPlanScene(measure: Measure): PlanScene {
     chainRight,
     steps,
     list,
+    timescale,
+    longLabels,
     place: {
       k,
       ox,
@@ -450,6 +480,11 @@ export type Frame = {
    * rests there and the application window keeps the whole frame.
    */
   aside?: Rect | null;
+  /**
+   * False where the visual has no step list (Connect, Section 54.4.3): the
+   * whole frame is the chain's area and the application window fills it.
+   */
+  list?: false;
 };
 /** The canvas point at the frame's centre, and the scale. */
 export type CameraView = { cx: number; cy: number; scale: number };
@@ -463,8 +498,14 @@ export type PlanState = {
   summary: number;
   /** The focal chain's own calendar axis, handed over to the schedule's. */
   focalAxis: number;
+  /** The timescale header at the top of the chart, placed through the camera. */
+  header: HeaderState;
+  /** Each long activity's in-bar label offset along its bar, canvas px, by step id. */
+  labelShift: Record<string, number>;
   /** The application screen around the finished schedule. */
   app: number;
+  /** The calendar grid's day lines (with non-working shading) and week lines, 0 to 1. */
+  grid: { day: number; week: number };
   /** The step list. */
   list: {
     /** Each entry's appearance, 0 to 1. */
@@ -485,7 +526,10 @@ export const SIDE_MIN_W = 460;
 /** The list's scale in its final two columns, inside the frame beside a window. */
 const LIST_FINAL_SCALE = 0.72;
 /** Its scale resting outside the frame, and the least that stays readable there. */
-const LIST_ASIDE_SCALE = 0.85;
+const LIST_ASIDE_SCALE = 1.04;
+/** Resting beside the frame: the widest gap between and around the two columns, and the most open row pitch (scale 1). */
+const ASIDE_COL_GAP_MAX = 72;
+const ASIDE_PITCH_MAX = 50;
 const LIST_MIN_SCALE = 0.7;
 const LIST_COL_GAP = 8;
 
@@ -498,7 +542,7 @@ export type ListLayout = {
    * side     no room outside: the list rests in the frame beside a window
    * stacked  narrow frames: a band beneath, the window above
    */
-  mode: 'aside' | 'side' | 'stacked';
+  mode: 'aside' | 'side' | 'stacked' | 'none';
   /** Where the chain is framed while it builds and holds. */
   area: Rect;
   /** The build panel: a side rail, or a band beneath. */
@@ -530,7 +574,30 @@ export type ListLayout = {
  * Every position is a transform of the same six entries, so the move from one
  * layout to the other is the same list travelling, never a second list.
  */
+/**
+ * The list at rest beneath the copy (refined 2026-11-10): two columns of
+ * three, centred as a group in the free area, with the gap between the
+ * columns equal to the margin either side (up to ASIDE_COL_GAP_MAX), and the
+ * rows opened to share the area's height (up to ASIDE_PITCH_MAX a row).
+ * Each entry stays left-aligned in itself.
+ */
+function asideColumns(a: Rect, s: number, rows: number): Placed[] {
+  const colW = LIST_ITEM.w * s;
+  const gap = Math.max(LIST_COL_GAP, Math.min(ASIDE_COL_GAP_MAX, (a.w - 2 * colW) / 3));
+  const x0 = a.x + (a.w - (2 * colW + gap)) / 2;
+  const pitch = Math.max(LIST_ITEM.pitch * s, Math.min(ASIDE_PITCH_MAX * s, (a.h - LIST_ITEM.h * s) / (rows - 1)));
+  return PLAN_STEP_GROUPS.map((_, i) => ({
+    x: x0 + (i >= rows ? colW + gap : 0),
+    y: a.y + (i % rows) * pitch,
+    s,
+  }));
+}
+
 export function listLayout(f: Frame): ListLayout {
+  if (f.list === false) {
+    const whole = { x: 0, y: 0, w: f.w, h: f.h };
+    return { mode: 'none', area: whole, panel: { x: 0, y: 0, w: 0, h: 0 }, start: [], end: [], window: { x: 0, y: 0, s: Math.max(f.w / APP.w, f.h / APP.h) } };
+  }
   const n = PLAN_STEP_GROUPS.length;
   const rows = Math.ceil(n / 2);
   const m = Math.round(Math.min(14, Math.max(8, f.w * 0.022)));
@@ -566,7 +633,7 @@ export function listLayout(f: Frame): ListLayout {
         panel: { x: 0, y: 0, w: railW, h: f.h },
         start,
         copyRight: a.x + a.w,
-        end: twoCols(a.x, a.y, sa),
+        end: asideColumns(a, sa, rows),
         window: { x: 0, y: 0, s: cover },
       };
     }
@@ -602,15 +669,15 @@ export function listLayout(f: Frame): ListLayout {
   };
 }
 
-const clamp01 = (u: number) => Math.min(1, Math.max(0, u));
+export const clamp01 = (u: number) => Math.min(1, Math.max(0, u));
 /** Gentle ease, no overshoot (§46.4). */
 export const ease = (u: number) => {
   const x = clamp01(u);
   return x * x * (3 - 2 * x);
 };
-const lerp = (a: number, b: number, u: number) => a + (b - a) * u;
+export const lerp = (a: number, b: number, u: number) => a + (b - a) * u;
 /** Scale interpolates geometrically, so a large zoom reads as even. */
-const lerpView = (a: CameraView, b: CameraView, u: number): CameraView =>
+export const lerpView = (a: CameraView, b: CameraView, u: number): CameraView =>
   u <= 0
     ? a
     : u >= 1
@@ -621,9 +688,17 @@ const lerpView = (a: CameraView, b: CameraView, u: number): CameraView =>
           scale: Math.exp(lerp(Math.log(a.scale), Math.log(b.scale), u)),
         };
 
-/** Where the planning edge sits across the frame: right for the anchor, then left of centre. */
-const EDGE_AT_ROS = 0.58;
-const EDGE_WHILE_BUILDING = 0.42;
+/**
+ * Where the planning edge sits across the chain's area: a little left of
+ * centre for the anchor, then about a fifth across while building (refined
+ * 2026-11-10, from 0.58 and 0.42). Left of the edge is unbuilt, so the old
+ * framing left two fifths of the area empty; now the built chain fills it.
+ * 0.22 rather than 0.18 so a milestone label, centred on its diamond, clears
+ * the step list as it appears. Camera framing only: no date, duration, scale
+ * or timing moves.
+ */
+const EDGE_AT_ROS = 0.42;
+const EDGE_WHILE_BUILDING = 0.22;
 /**
  * Scene px across the chain's area while building, so the chain's type stays
  * readable beside the list; never closer than 700 scene px across the whole
@@ -633,7 +708,9 @@ const EDGE_WHILE_BUILDING = 0.42;
 const BUILD_VIEW_W = 470;
 const BUILD_FRAME_VIEW_W = 700;
 /** The narrowest a long activity may pull the camera back to while it builds. */
-const BUILD_MIN_SCALE = 0.3;
+export const BUILD_MIN_SCALE = 0.3;
+/** The share of a long activity's move over which the camera eases back, and in again. */
+export const ZOOM_RAMP = 0.3;
 /** Below the bar, so its duration and milestone labels are in view. */
 const LABEL_ROOM = 44;
 
@@ -645,13 +722,33 @@ export const revealAt = (x: number, edgeX: number) => clamp01((x + REVEAL_RAMP -
  * The view that puts scene x at fraction `frac` across the chain's area and
  * scene y at the area's vertical centre.
  */
-const viewInArea = (f: Frame, x: number, frac: number, scale: number, y: number): CameraView => {
+/** The build scale for a frame (scene px to frame px). Shared with Connect. */
+export const buildScale = (f: Frame) => Math.min(listLayout(f).area.w / BUILD_VIEW_W, f.w / BUILD_FRAME_VIEW_W);
+
+export const viewInArea = (f: Frame, x: number, frac: number, scale: number, y: number): CameraView => {
   const a = listLayout(f).area;
   return {
     cx: x - (a.x + frac * a.w - f.w / 2) / scale,
-    cy: y - (a.y + a.h / 2 - f.h / 2) / scale,
+    // Centred in the chart beneath the timescale header (refined 2026-11-10).
+    cy: y - (a.y + HEADER.h + (a.h - HEADER.h) / 2 - f.h / 2) / scale,
     scale,
   };
+};
+
+/**
+ * As lerpView, but the screen point showing canvas x `anchorX` travels in a
+ * straight line between its two end positions (refined 2026-11-10). Plain
+ * interpolation, linear centre with geometric scale, swings a point far from
+ * the centre outward mid-zoom: on the pull-back to the whole chain it carried
+ * the chain's left end over the step list although both ends of the move are
+ * clear of it. Same endpoints, scale path and easing.
+ */
+const lerpViewAnchored = (a: CameraView, b: CameraView, u: number, f: Frame, anchorX: number): CameraView => {
+  if (u <= 0) return a;
+  if (u >= 1) return b;
+  const v = lerpView(a, b, u);
+  const at = (w: CameraView) => f.w / 2 + w.scale * (anchorX - w.cx);
+  return { ...v, cx: anchorX - (lerp(at(a), at(b), u) - f.w / 2) / v.scale };
 };
 
 /** The whole chain, Required On Site label included, across the chain's area. */
@@ -850,10 +947,234 @@ function listStateAt(scene: PlanScene, t: number): PlanState['list'] {
   };
 }
 
+/* -------------------------------------------------------- the calendar grid */
+
+/**
+ * THE CALENDAR GRID (refined 2026-11-10), in the chain's own coordinates.
+ * The chain's x scale is linear in calendar days (Section 51.3), so the
+ * boundary before day n of the domain is at PAD_L + n × pxPerDay, and every
+ * bar starts and ends on one. Weeks begin on Monday, as the Schedule's week
+ * ticks do. Non-working runs (weekends and observed holidays) come from the
+ * same working-day calendar the backward pass counts.
+ */
+export type CalendarGrid = {
+  days: number[];
+  weeks: number[];
+  nonWorking: { x: number; w: number }[];
+};
+
+export function calendarGrid(layout: ChainLayout): CalendarGrid {
+  const ppd = layout.pxPerDay;
+  const n = Math.round((layout.width - CHAIN.PAD_L - CHAIN.PAD_R) / ppd);
+  const start = parse(layout.domainStart);
+  const at = (d: number) => CHAIN.PAD_L + d * ppd;
+  const DAY = 86400000;
+  const days: number[] = [];
+  const weeks: number[] = [];
+  for (let d = 0; d <= n; d++) {
+    const date = new Date(start.getTime() + d * DAY);
+    (date.getUTCDay() === 1 ? weeks : days).push(at(d));
+  }
+  const end = new Date(start.getTime() + n * DAY);
+  const nonWorking = nonWorkingRuns(start, end).map((r) => ({
+    x: at(Math.round((r.start.getTime() - start.getTime()) / DAY)),
+    w: r.days * ppd,
+  }));
+  return { days, weeks, nonWorking };
+}
+
+/**
+ * The grid's density follows the camera, as a project tool's timescale does:
+ * a line shows only while its interval is wide enough on screen to read as a
+ * scale rather than a texture. Screen px per interval, faded between bounds.
+ */
+export const GRID_FADE = { day: [3, 5], week: [10, 18] } as const;
+const fadeBetween = (v: number, [a, b]: readonly [number, number]) => ease((v - a) / (b - a));
+
+/* --------------------------------------------------- the timescale header */
+
+/**
+ * THE TIMESCALE HEADER (refined 2026-11-10). As in Microsoft Project and
+ * Primavera P6, the time scale sits above the bars: two tiers pinned to the
+ * top of the chain's area, in frame px, so it never moves vertically and its
+ * type stays readable at any zoom. Horizontally, everything in it is placed
+ * through the same camera as the chain. Zoomed in: months over weeks; zoomed
+ * out: years over months, crossfading as a week narrows from 10 to 6 px.
+ */
+export const HEADER = {
+  /** Total height, and the upper tier's; the lower tier is the rest. */
+  h: 38,
+  top: 21,
+  /** Inset of a label from its period's edges and from the chart's left edge. */
+  pad: 6,
+  /** Week numbers show between these widths of a week on screen. */
+  weekLabel: [20, 28],
+  /**
+   * Months over weeks above this width of a week on screen, years over
+   * months below: low enough that Fabrication's pull-back (about 17 px a
+   * week) stays months over weeks, so the switch happens only on the move
+   * out to the whole chain.
+   */
+  zoomIn: [6, 10],
+} as const;
+const HEADER_FACE = '"Inter Tight", Inter, system-ui, sans-serif';
+export const HEADER_FONT = {
+  top: `700 12px ${HEADER_FACE}`,
+  bottom: `500 11px ${HEADER_FACE}`,
+} as const;
+
+/** One calendar period: where it spans on the chain, and its labels, longest first. */
+export type Period = { key: string; x0: number; x1: number; variants: { text: string; w: number }[] };
+export type Timescale = {
+  /** Upper tier zoomed in. */
+  months: Period[];
+  /** Upper tier zoomed out. */
+  years: Period[];
+  /** Lower tier zoomed out. */
+  monthsShort: Period[];
+  /** Lower tier zoomed in: each Monday, numbered with its day of the month. */
+  weeks: { key: string; x: number; text: string }[];
+};
+
+const MONTH_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+export function buildTimescale(layout: ChainLayout, measure: Measure): Timescale {
+  const DAY = 86400000;
+  const start = parse(layout.domainStart);
+  const n = Math.round((layout.width - CHAIN.PAD_L - CHAIN.PAD_R) / layout.pxPerDay);
+  const end = new Date(start.getTime() + n * DAY);
+  const X = (d: Date) => CHAIN.PAD_L + Math.round((d.getTime() - start.getTime()) / DAY) * layout.pxPerDay;
+  const variants = (texts: string[], font: string) => texts.map((text) => ({ text, w: measure(text, font) }));
+  const months: Period[] = [];
+  const monthsShort: Period[] = [];
+  const years: Period[] = [];
+  for (let d = new Date(start); d < end; ) {
+    const next = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1));
+    const m = d.getUTCMonth();
+    const y = d.getUTCFullYear();
+    const span = { key: `${y}-${m + 1}`, x0: X(d), x1: X(next < end ? next : end) };
+    const long = MONTH_LONG[m];
+    const short = long.slice(0, 3);
+    months.push({ ...span, variants: variants([`${long} ${y}`, `${short} ${y}`, short], HEADER_FONT.top) });
+    monthsShort.push({ ...span, variants: variants([short, short[0]], HEADER_FONT.bottom) });
+    if (m === 0 || years.length === 0) {
+      years.push({ key: `${y}`, x0: X(d), x1: X(end), variants: variants([`${y}`], HEADER_FONT.top) });
+      if (years.length > 1) years[years.length - 2].x1 = X(d);
+    }
+    d = next;
+  }
+  const weeks: Timescale['weeks'] = [];
+  for (let d = new Date(start); d <= end; d = new Date(d.getTime() + DAY)) {
+    if (d.getUTCDay() === 1) weeks.push({ key: iso(d), x: X(d), text: String(d.getUTCDate()) });
+  }
+  return { months, years, monthsShort, weeks };
+}
+
+/** A label placed in the header: its left edge in frame px, its text, and whether it shows. */
+export type HeaderLabel = { x: number; text: string; show: boolean };
+export type HeaderState = {
+  /** The header's box in the frame: the chain's area's top. */
+  box: Rect;
+  opacity: number;
+  /** Frame x = a + b × chain x: the camera's horizontal map, for the header's lines. */
+  a: number;
+  b: number;
+  /** Months over weeks (1) or years over months (0). */
+  zoomIn: number;
+  /** The week numbers' own fade, by how wide a week is on screen. */
+  weekLabels: number;
+  months: HeaderLabel[];
+  years: HeaderLabel[];
+  monthsShort: HeaderLabel[];
+  /** Week numbers: frame x of the Monday line. */
+  weeks: number[];
+};
+
+/**
+ * The longest label that fits its whole period, held at the chart's left
+ * edge while the period is in view and pushed out by the next period.
+ */
+function placePeriod(p: Period, a: number, b: number, left: number, right: number): HeaderLabel {
+  const sx0 = a + b * p.x0;
+  const sx1 = a + b * p.x1;
+  const v = p.variants.find((c) => c.w + 2 * HEADER.pad <= sx1 - sx0);
+  if (!v || sx1 <= left || sx0 >= right) return { x: sx0 + HEADER.pad, text: p.variants[0].text, show: false };
+  const x = Math.min(Math.max(sx0 + HEADER.pad, left + HEADER.pad), sx1 - HEADER.pad - v.w);
+  return { x, text: v.text, show: true };
+}
+
+export function headerAt(scene: PlanScene, f: Frame, view: CameraView, focalAxis: number): HeaderState {
+  const area = listLayout(f).area;
+  const { k, ox } = scene.place;
+  const b = view.scale * k;
+  const a = f.w / 2 + view.scale * (ox - view.cx);
+  const week = 7 * b * scene.focal.layout.pxPerDay;
+  const left = area.x;
+  const right = area.x + area.w;
+  const ts = scene.timescale;
+  return {
+    box: { x: area.x, y: area.y, w: area.w, h: HEADER.h },
+    opacity: focalAxis,
+    a,
+    b,
+    zoomIn: fadeBetween(week, HEADER.zoomIn),
+    weekLabels: fadeBetween(week, HEADER.weekLabel),
+    months: ts.months.map((p) => placePeriod(p, a, b, left, right)),
+    years: ts.years.map((p) => placePeriod(p, a, b, left, right)),
+    monthsShort: ts.monthsShort.map((p) => placePeriod(p, a, b, left, right)),
+    weeks: ts.weeks.map((w) => a + b * w.x),
+  };
+}
+
+/** The grid's opacities for a camera view, scaled by the focal axis's own fade. */
+export function gridAt(scene: PlanScene, view: CameraView, focalAxis: number) {
+  const pxPerDay = view.scale * scene.place.k * scene.focal.layout.pxPerDay;
+  return {
+    day: focalAxis * fadeBetween(pxPerDay, GRID_FADE.day),
+    week: focalAxis * fadeBetween(7 * pxPerDay, GRID_FADE.week),
+  };
+}
+
 export function planStateAt(scene: PlanScene, f: Frame, t: number): PlanState {
+  const s = planStateBase(scene, f, t);
+  return {
+    ...s,
+    grid: gridAt(scene, s.view, s.focalAxis),
+    header: headerAt(scene, f, s.view, s.focalAxis),
+    labelShift: labelShiftsAt(scene, f, s.view),
+  };
+}
+
+/** Clear of a long bar's ends: its start's milestones, its chevron point. */
+export const LONG_LABEL_INSET = 34;
+
+/**
+ * A long activity's in-bar label (refined 2026-11-10), centred within the part
+ * of its bar in view in the chain's area, kept LONG_LABEL_INSET clear of the
+ * bar's ends: its offset from where the layout drew it. Exactly zero wherever
+ * the whole bar is in view.
+ */
+export function labelShiftsAt(scene: PlanScene, f: Frame, view: CameraView): Record<string, number> {
+  const area = listLayout(f).area;
+  const { k, ox } = scene.place;
+  const sceneAt = (fx: number) => (view.cx + (fx - f.w / 2) / view.scale - ox) / k;
+  const left = sceneAt(area.x);
+  const right = sceneAt(area.x + area.w);
+  const out: Record<string, number> = {};
+  for (const l of scene.longLabels) {
+    const lo = l.x0 + LONG_LABEL_INSET + l.half;
+    const hi = l.x1 - LONG_LABEL_INSET - l.half;
+    const at = (x: number) => Math.min(hi, Math.max(lo, x));
+    const shown = (Math.max(l.x0, left) + Math.min(l.x1, right)) / 2;
+    out[l.id] = at(shown) - at((l.x0 + l.x1) / 2);
+  }
+  return out;
+}
+
+function planStateBase(scene: PlanScene, f: Frame, t: number): Omit<PlanState, 'grid' | 'header' | 'labelShift'> {
   const T = scene.times;
   const area = listLayout(f).area;
-  const sBuild = Math.min(area.w / BUILD_VIEW_W, f.w / BUILD_FRAME_VIEW_W);
+  const sBuild = buildScale(f);
   const cyBuild = scene.focalCy + LABEL_ROOM;
   const ros = ease((t - T.rosIn) / T.rosInDuration);
   const first = scene.steps[0];
@@ -883,8 +1204,15 @@ export function planStateAt(scene: PlanScene, f: Frame, t: number): PlanState {
     const edgeX = lerp(step.from, step.to, u);
     const frac = k === 0 ? lerp(EDGE_AT_ROS, EDGE_WHILE_BUILDING, u) : EDGE_WHILE_BUILDING;
     // A long activity eases the camera back to keep it in frame, and in again.
+    // The pull-back leads the edge (refined 2026-11-10): it is complete within
+    // the move's first ZOOM_RAMP of time, before the edge reaches speed, and
+    // the camera returns only in the last ZOOM_RAMP, as the edge slows. Timed
+    // on the edge's eased position it lagged, so content crossed the screen
+    // fastest while the view was still close.
     const fit = Math.min(sBuild, Math.max(BUILD_MIN_SCALE, (area.w * 0.85) / step.span));
-    const scale = sBuild - (sBuild - fit) * Math.sin(Math.PI * u);
+    const tau = clamp01((t - step.start) / step.duration);
+    const back = tau < 0.5 ? ease(tau / ZOOM_RAMP) : ease((1 - tau) / ZOOM_RAMP);
+    const scale = sBuild - (sBuild - fit) * back;
     return {
       view: toScreen(scene, viewInArea(f, Math.min(edgeX, scene.rosX), frac, scale, cyBuild)),
       edgeX,
@@ -904,7 +1232,9 @@ export function planStateAt(scene: PlanScene, f: Frame, t: number): PlanState {
   /* 3. Back to the whole chain, then hold. */
   if (t < T.holdEnd) {
     const u = ease((t - T.buildEnd) / (T.chainArrive - T.buildEnd));
-    return { view: lerpView(built, whole, u), edgeX, ros: 1, others: 0, summary: ease((u - 0.5) / 0.5), focalAxis: 1, app: 0, list };
+    // Anchored on the chain's left end, nearest the step list.
+    const anchorX = scene.place.ox + scene.place.k * scene.chainLeft;
+    return { view: lerpViewAnchored(built, whole, u, f, anchorX), edgeX, ros: 1, others: 0, summary: ease((u - 0.5) / 0.5), focalAxis: 1, app: 0, list };
   }
 
   /* 4. Back again, to the project's whole schedule in the application, and

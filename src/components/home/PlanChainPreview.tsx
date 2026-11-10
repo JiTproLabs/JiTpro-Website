@@ -1,6 +1,6 @@
 import { useId, useLayoutEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { CHAIN, FONT, formatDate } from '../demo/screens/procurement-chain/chainLayout';
+import { CHAIN, formatDate } from '../demo/screens/procurement-chain/chainLayout';
 import ChainText from '../demo/screens/procurement-chain/ChainText';
 import { FAMILY_ICON, FAMILY_LEGEND, diamond, gradientBottom, tokenFor, v } from '../demo/screens/procurement-chain/chainVocabulary';
 import { useChainMeasure } from '../demo/screens/procurement-chain/useChainMeasure';
@@ -15,6 +15,8 @@ import {
   LIST_ITEM,
   ROW_ITEMS,
   buildPlanScene,
+  HEADER,
+  calendarGrid,
   listCrossingFade,
   listItemAt,
   listLayout,
@@ -26,6 +28,7 @@ import {
   type PlanScene,
   type PlanState,
 } from './planChainScene';
+import { CONNECT_TIMING, buildConnectScene, connectFrame, connectStateAt, type ConnectState } from './connectChainScene';
 import '../demo/tokens.css';
 import '../demo/screens/procurement-schedule/scheduleTokens.css';
 import '../demo/screens/procurement-chain/chainTokens.css';
@@ -71,12 +74,24 @@ type Aside = {
   region: { x: number; y: number; w: number; h: number } | null;
 };
 
-export default function PlanChainPreview({ played, aside }: { played: boolean; aside?: Aside }) {
+export default function PlanChainPreview({
+  played,
+  aside,
+  variant = 'plan',
+}: {
+  played: boolean;
+  aside?: Aside;
+  /** Plan (Section 54.4.2), or Connect (Section 54.4.3): the same scene, a second timeline. */
+  variant?: 'plan' | 'connect';
+}) {
   const region = aside?.region ?? null;
   const host = aside?.host ?? null;
   const uid = useId().replace(/:/g, '');
   const measure = useChainMeasure();
   const scene = useMemo(() => buildPlanScene(measure), [measure]);
+  const connect = useMemo(() => (variant === 'connect' ? buildConnectScene(scene, measure) : null), [variant, scene, measure]);
+  const endAt = connect ? connect.times.end : scene.times.end;
+  const commitRefs = useRef<{ leader: SVGLineElement | null; mark: SVGPathElement | null; card: SVGGElement | null }[]>([]);
 
   const frameRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -85,7 +100,17 @@ export default function PlanChainPreview({ played, aside }: { played: boolean; a
   const rosRuleRef = useRef<SVGGElement>(null);
   const rosMarkRef = useRef<SVGGElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
-  const focalAxisRef = useRef<SVGGElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const headerLinesInRef = useRef<SVGGElement>(null);
+  const headerLinesOutRef = useRef<SVGGElement>(null);
+  const headerTiersRef = useRef<{ months: HTMLDivElement | null; weeks: HTMLDivElement | null; years: HTMLDivElement | null; monthsShort: HTMLDivElement | null }>({
+    months: null,
+    weeks: null,
+    years: null,
+    monthsShort: null,
+  });
+  const gridDayRef = useRef<SVGGElement>(null);
+  const gridWeekRef = useRef<SVGGElement>(null);
   const appRef = useRef<HTMLDivElement>(null);
   const windowRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -98,9 +123,14 @@ export default function PlanChainPreview({ played, aside }: { played: boolean; a
     const frameEl = frameRef.current;
     const canvas = canvasRef.current;
     if (!frameEl || !canvas) return;
+    const stateAt = (fr: Frame, at: number): PlanState => (connect ? connectStateAt(scene, connect, fr, at) : planStateAt(scene, fr, at));
     const reveals = [...canvas.querySelectorAll<SVGElement>('[data-reveal-x]')].map((el) => ({
       el,
       x: Number(el.dataset.revealX),
+    }));
+    const longLabels = [...canvas.querySelectorAll<SVGGElement>('[data-long-label]')].map((el) => ({
+      el,
+      id: el.dataset.longLabel!,
     }));
     let frame: Frame = { w: frameEl.clientWidth, h: frameEl.clientHeight, aside: region };
 
@@ -108,23 +138,83 @@ export default function PlanChainPreview({ played, aside }: { played: boolean; a
       canvas.style.transform = transformOf(s.view, frame);
       clipRef.current?.setAttribute('x', String(s.edgeX));
       for (const r of reveals) r.el.style.opacity = String(revealAt(r.x, s.edgeX));
+      // A long bar's label, in the part of the bar in view.
+      for (const l of longLabels) l.el.setAttribute('transform', `translate(${s.labelShift[l.id] ?? 0} 0)`);
       if (othersRef.current) othersRef.current.style.opacity = String(s.others);
       for (const g of [rosRuleRef.current, rosMarkRef.current]) if (g) g.style.opacity = String(s.ros);
       if (summaryRef.current) summaryRef.current.style.opacity = String(s.summary);
-      if (focalAxisRef.current) focalAxisRef.current.style.opacity = String(s.focalAxis);
+      // The timescale header: pinned to the chart's top, placed through the camera.
+      const h = s.header;
+      if (headerRef.current) {
+        Object.assign(headerRef.current.style, {
+          transform: `translate(${h.box.x}px, ${h.box.y}px)`,
+          width: `${h.box.w}px`,
+          opacity: String(h.opacity),
+          visibility: h.opacity > 0 ? 'visible' : 'hidden',
+        });
+        const lines = `translate(${h.a - h.box.x} 0) scale(${h.b} 1)`;
+        headerLinesInRef.current?.setAttribute('transform', lines);
+        headerLinesOutRef.current?.setAttribute('transform', lines);
+        headerLinesInRef.current?.style.setProperty('opacity', String(h.zoomIn));
+        headerLinesOutRef.current?.style.setProperty('opacity', String(1 - h.zoomIn));
+        const tiers = headerTiersRef.current;
+        const place = (el: HTMLDivElement | null, labels: { x: number; text: string; show: boolean }[], opacity: number) => {
+          if (!el) return;
+          el.style.opacity = String(opacity);
+          labels.forEach((l, i) => {
+            const span = el.children[i] as HTMLElement | undefined;
+            if (!span) return;
+            span.style.transform = `translateX(${l.x - h.box.x}px)`;
+            span.style.visibility = l.show ? 'visible' : 'hidden';
+            if (span.textContent !== l.text) span.textContent = l.text;
+          });
+        };
+        place(tiers.months, h.months, h.zoomIn);
+        place(tiers.years, h.years, 1 - h.zoomIn);
+        place(tiers.monthsShort, h.monthsShort, 1 - h.zoomIn);
+        if (tiers.weeks) {
+          tiers.weeks.style.opacity = String(h.zoomIn * h.weekLabels);
+          h.weeks.forEach((x, i) => {
+            const span = tiers.weeks!.children[i] as HTMLElement | undefined;
+            if (span) span.style.transform = `translateX(${x - h.box.x + 4}px)`;
+          });
+        }
+      }
+      if (gridDayRef.current) gridDayRef.current.style.opacity = String(s.grid.day);
+      if (gridWeekRef.current) gridWeekRef.current.style.opacity = String(s.grid.week);
       if (appRef.current) {
         appRef.current.style.opacity = String(s.app);
         // Nothing to paint while it is invisible.
         appRef.current.style.visibility = s.app > 0 ? 'visible' : 'hidden';
       }
 
-      const lay = listLayout(frame);
+      const lay = listLayout(connect ? connectFrame(frame) : frame);
+      // Connect: each dependency's diamond, connector and card (Section 54.4.3).
+      if (connect) {
+        (s as ConnectState).cards.forEach((c, i) => {
+          const r = commitRefs.current[i];
+          const card = connect.cards[i];
+          if (!r) return;
+          if (r.leader) {
+            r.leader.style.strokeDashoffset = String(1 - c.leader);
+            r.leader.style.opacity = c.leader > 0 ? '1' : '0';
+          }
+          if (r.mark) {
+            r.mark.style.opacity = String(c.mark);
+            r.mark.setAttribute('transform', `translate(${card.markX} ${card.markY}) scale(${0.4 + 0.6 * c.mark}) translate(${-card.markX} ${-card.markY})`);
+          }
+          if (r.card) {
+            r.card.style.opacity = String(c.card);
+            r.card.setAttribute('transform', `translate(0 ${(1 - c.card) * CONNECT_TIMING.CARD_RISE})`);
+          }
+        });
+      }
       // The application window, on the frame's own ground.
       const win = windowRef.current;
       if (win) {
         Object.assign(win.style, {
           // Only when the window shares the frame with the list.
-          opacity: String(lay.mode === 'aside' ? 0 : s.app),
+          opacity: String(lay.mode === 'aside' || lay.mode === 'none' ? 0 : s.app),
           transform: `translate(${lay.window.x}px, ${lay.window.y}px)`,
           width: `${APP.w * lay.window.s}px`,
           height: `${APP.h * lay.window.s}px`,
@@ -143,7 +233,7 @@ export default function PlanChainPreview({ played, aside }: { played: boolean; a
         });
       }
       // The same six entries, travelling from the panel to their final place.
-      const placed = scene.list.map((_, i) => listItemAt(lay, i, s.list.morph));
+      const placed = connect ? [] : scene.list.map((_, i) => listItemAt(lay, i, s.list.morph));
       // Where the columns cross on the way out, the second fades back.
       const fade = listCrossingFade(lay, s.list.morph);
       itemRefs.current.forEach((el, i) => {
@@ -174,33 +264,60 @@ export default function PlanChainPreview({ played, aside }: { played: boolean; a
       startedAt.current = null;
       t = 0;
     } else if (reduced) {
-      t = scene.times.end;
+      t = endAt;
     } else {
       startedAt.current ??= performance.now();
       const tick = () => {
-        t = Math.min(scene.times.end, performance.now() - startedAt.current!);
-        apply(planStateAt(scene, frame, t));
-        if (t < scene.times.end) raf = requestAnimationFrame(tick);
+        t = Math.min(endAt, performance.now() - startedAt.current!);
+        apply(stateAt(frame, t));
+        if (t < endAt) raf = requestAnimationFrame(tick);
       };
       raf = requestAnimationFrame(tick);
     }
-    apply(planStateAt(scene, frame, played && !reduced ? Math.min(scene.times.end, performance.now() - startedAt.current!) : t));
+    apply(stateAt(frame, played && !reduced ? Math.min(endAt, performance.now() - startedAt.current!) : t));
 
     /* A resize re-frames the same moment: every view is computed from the frame. */
     const ro = new ResizeObserver(() => {
       frame = { w: frameEl.clientWidth, h: frameEl.clientHeight, aside: region };
-      apply(planStateAt(scene, frame, t));
+      apply(stateAt(frame, t));
     });
     ro.observe(frameEl);
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [played, scene, region, host]);
+  }, [played, scene, connect, endAt, region, host]);
 
-  const { focal, others, place: P } = scene;
+  const { others, place: P } = scene;
+  /* Connect draws the same chain with its commitments, its bar where Plan's is. */
+  const focal = connect ? connect.focal : scene.focal;
   const L = focal.layout;
   const families = [...new Set([focal, ...others].flatMap((r) => r.layout.segments.map((s) => s.family)))];
+  /* The calendar grid's paths, from the top of the scene down to the focal axis. */
+  const grid = useMemo(() => {
+    const g = calendarGrid(scene.focal.layout);
+    // From the top of the scene down through the whole chart beneath the
+    // chain; the timescale header covers the lines' top.
+    const y2 = scene.focal.dy + scene.focal.layout.height + 2000;
+    const lines = (xs: number[]) => xs.map((x) => `M${x} 0V${y2}`).join('');
+    return {
+      days: lines(g.days),
+      weeks: lines(g.weeks),
+      nonWorking: g.nonWorking.map((r) => `M${r.x} 0h${r.w}V${y2}h${-r.w}Z`).join(''),
+    };
+  }, [scene.focal]);
+  /* The header's lines, in chain x; the camera's map is applied as a transform. */
+  const headerPaths = useMemo(() => {
+    const ts = scene.timescale;
+    const full = (xs: number[]) => xs.map((x) => `M${x} 0V${HEADER.h}`).join('');
+    const lower = (xs: number[]) => xs.map((x) => `M${x} ${HEADER.top}V${HEADER.h}`).join('');
+    return {
+      monthsFull: full(ts.months.map((p) => p.x0)),
+      weekTicks: lower(ts.weeks.map((w) => w.x)),
+      yearsFull: full(ts.years.map((p) => p.x0)),
+      monthTicks: lower(ts.monthsShort.map((p) => p.x0)),
+    };
+  }, [scene]);
 
   /* The six entries, each placed by the state every frame. */
   const stepList = (
@@ -270,6 +387,16 @@ export default function PlanChainPreview({ played, aside }: { played: boolean; a
           </defs>
 
           <g transform={`translate(${P.ox} ${P.oy}) scale(${P.k})`}>
+          {/* The calendar grid, behind everything (§54.4.2): days and their
+              non-working shading, then weeks. Not clipped by the edge. */}
+          <g ref={gridDayRef} style={{ opacity: 0 }}>
+            <path d={grid.nonWorking} style={{ fill: v('--jpd-chain-nonworking') }} />
+            <path d={grid.days} style={{ fill: 'none', stroke: v('--jpd-chain-grid-day'), strokeWidth: 1.25 }} />
+          </g>
+          <g ref={gridWeekRef} style={{ opacity: 0 }}>
+            <path d={grid.weeks} style={{ fill: 'none', stroke: v('--jpd-chain-grid-week'), strokeWidth: 1.25 }} />
+          </g>
+
           {/* The project's other procurement items: bars and milestones only. */}
           <g ref={othersRef} style={{ opacity: 0 }}>
             {others.map((row) => (
@@ -279,17 +406,39 @@ export default function PlanChainPreview({ played, aside }: { played: boolean; a
 
           {/* THE FOCAL CHAIN */}
           <g transform={`translate(0 ${focal.dy})`}>
-            {/* its own calendar axis, handed over to the schedule's on the pull-back */}
-            <g ref={focalAxisRef}>
-              <Axis layout={L} y={L.axis.y} />
-            </g>
-
             {/* Required On Site's date rule, behind everything */}
             <g ref={rosRuleRef} style={{ opacity: 0 }}>
               {L.ros && (
                 <line x1={L.ros.x} x2={L.ros.x} y1={L.ros.ruleTop} y2={L.ros.ruleBottom} style={{ stroke: v('--jpd-chain-rule'), strokeWidth: 1.5, strokeDasharray: '6 6' }} />
               )}
             </g>
+
+            {/* Connect: the commitments' connectors and cards, above the chain
+                (Section 51.10's design, on-plan colours only, Section 54.4.3). */}
+            {connect?.cards.map((c, i) => (
+              <g key={`commit-${c.id}`}>
+                <line
+                  ref={(el) => {
+                    commitRefs.current[i] = { ...commitRefs.current[i], leader: el };
+                  }}
+                  x1={c.leader.x2}
+                  y1={c.leader.y2}
+                  x2={c.leader.x1}
+                  y2={c.leader.y1}
+                  pathLength={1}
+                  style={{ stroke: v('--jpd-chain-commitment'), strokeWidth: 1.5, strokeDasharray: '1 1', strokeDashoffset: 1, opacity: 0 }}
+                />
+                <g
+                  ref={(el) => {
+                    commitRefs.current[i] = { ...commitRefs.current[i], card: el };
+                  }}
+                  style={{ opacity: 0 }}
+                >
+                  <rect x={c.x} y={c.y} width={c.w} height={c.h} rx={10} style={{ fill: v('--jpd-chain-commitment-fill'), stroke: v('--jpd-chain-commitment'), strokeWidth: 1.5 }} />
+                  <ChainText block={c.text} />
+                </g>
+              </g>
+            ))}
 
             {/* milestone stems, revealed with their milestone */}
             {L.labels.map(
@@ -321,6 +470,7 @@ export default function PlanChainPreview({ played, aside }: { played: boolean; a
               const Icon = FAMILY_ICON[s.family as PhaseFamily];
               return (
                 <g key={`content-${s.step.id}`} data-reveal-x={s.x0} style={{ opacity: 0 }}>
+                  <g data-long-label={scene.longLabels.some((l) => l.id === s.step.id) ? s.step.id : undefined}>
                   {s.icon && Icon && (
                     <Icon
                       x={s.icon.x}
@@ -334,6 +484,7 @@ export default function PlanChainPreview({ played, aside }: { played: boolean; a
                     />
                   )}
                   {s.inner && <ChainText block={s.inner} fill={v('--jpd-chain-on-fill')} />}
+                  </g>
                 </g>
               );
             })}
@@ -359,6 +510,17 @@ export default function PlanChainPreview({ played, aside }: { played: boolean; a
                 />
               ),
             )}
+            {/* Connect: the commitments' diamonds, at their required-by dates, over the bar's edge */}
+            {connect?.cards.map((c, i) => (
+              <path
+                key={`commit-mark-${c.id}`}
+                ref={(el) => {
+                  commitRefs.current[i] = { ...commitRefs.current[i], mark: el };
+                }}
+                d={diamond(c.markX, c.markY, CHAIN.COMMIT_MARK)}
+                style={{ fill: v('--jpd-chain-commitment'), stroke: v('--jpd-chain-commitment'), strokeWidth: 2, strokeLinejoin: 'round', opacity: 0 }}
+              />
+            ))}
             {/* Required On Site: the anchor, first and alone; drawn last so nothing covers it */}
             <g ref={rosMarkRef} style={{ opacity: 0 }}>
               <RosMark row={focal} />
@@ -366,6 +528,79 @@ export default function PlanChainPreview({ played, aside }: { played: boolean; a
           </g>
           </g>
         </svg>
+      </div>
+
+      {/* THE TIMESCALE HEADER (§54.4.2): pinned to the top of the chain's
+          area, above the bars, as in a scheduling tool. Months over weeks,
+          or years over months zoomed out; placed through the one camera. */}
+      <div
+        ref={headerRef}
+        className="pointer-events-none absolute top-0 left-0 overflow-hidden"
+        style={{
+          height: HEADER.h,
+          opacity: 0,
+          visibility: 'hidden',
+          background: v('--jpd-surface'),
+          borderBottom: `1px solid ${v('--jpd-chain-grid-week')}`,
+          fontFamily: '"Inter Tight", Inter, system-ui, sans-serif',
+        }}
+      >
+        <svg className="absolute inset-0 h-full w-full" style={{ overflow: 'hidden' }}>
+          <line x1="0" x2="100%" y1={HEADER.top + 0.5} y2={HEADER.top + 0.5} style={{ stroke: v('--jpd-chain-grid-day'), strokeWidth: 1 }} />
+          <g ref={headerLinesInRef}>
+            <path d={headerPaths.monthsFull} style={{ fill: 'none', stroke: v('--jpd-chain-grid-week'), strokeWidth: 1, vectorEffect: 'non-scaling-stroke' }} />
+            <path d={headerPaths.weekTicks} style={{ fill: 'none', stroke: v('--jpd-chain-grid-week'), strokeWidth: 1, vectorEffect: 'non-scaling-stroke' }} />
+          </g>
+          <g ref={headerLinesOutRef} style={{ opacity: 0 }}>
+            <path d={headerPaths.yearsFull} style={{ fill: 'none', stroke: v('--jpd-chain-grid-week'), strokeWidth: 1, vectorEffect: 'non-scaling-stroke' }} />
+            <path d={headerPaths.monthTicks} style={{ fill: 'none', stroke: v('--jpd-chain-grid-week'), strokeWidth: 1, vectorEffect: 'non-scaling-stroke' }} />
+          </g>
+        </svg>
+        {(
+          [
+            ['months', scene.timescale.months, 'top'],
+            ['years', scene.timescale.years, 'top'],
+            ['monthsShort', scene.timescale.monthsShort, 'bottom'],
+          ] as const
+        ).map(([key, periods, tier]) => (
+          <div
+            key={key}
+            ref={(el) => {
+              headerTiersRef.current[key] = el;
+            }}
+            className="absolute inset-0"
+          >
+            {periods.map((p) => (
+              <span
+                key={p.key}
+                className="absolute left-0 whitespace-nowrap"
+                style={
+                  tier === 'top'
+                    ? { top: 0, lineHeight: `${HEADER.top}px`, fontSize: 12, fontWeight: 700, color: v('--jpd-chain-ink') }
+                    : { top: HEADER.top, lineHeight: `${HEADER.h - HEADER.top}px`, fontSize: 11, fontWeight: 500, color: v('--jpd-chain-ink-secondary') }
+                }
+              >
+                {p.variants[0].text}
+              </span>
+            ))}
+          </div>
+        ))}
+        <div
+          ref={(el) => {
+            headerTiersRef.current.weeks = el;
+          }}
+          className="absolute inset-0"
+        >
+          {scene.timescale.weeks.map((w) => (
+            <span
+              key={w.key}
+              className="absolute left-0 whitespace-nowrap"
+              style={{ top: HEADER.top, lineHeight: `${HEADER.h - HEADER.top}px`, fontSize: 11, fontWeight: 500, color: v('--jpd-chain-ink-secondary') }}
+            >
+              {w.text}
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* The application window's edge, on the frame's own ground. */}
@@ -380,11 +615,11 @@ export default function PlanChainPreview({ played, aside }: { played: boolean; a
       />
 
       {/* The build panel: the application's own side-panel surface. */}
-      <div ref={panelRef} className="pointer-events-none absolute top-0 left-0" style={{ background: v('--jpd-surface-sunken') }} />
+      {!connect && <div ref={panelRef} className="pointer-events-none absolute top-0 left-0" style={{ background: v('--jpd-surface-sunken') }} />}
 
       {/* THE STEP LIST: rendered beside the frame when the section offers an
           unclipped layer, so it can rest outside the frame; else in it. */}
-      {host ? createPortal(<div className="jpd absolute inset-0">{stepList}</div>, host) : stepList}
+      {connect ? null : host ? createPortal(<div className="jpd absolute inset-0">{stepList}</div>, host) : stepList}
 
       {/* The chain's own summary row (Section 51.9), while the whole chain is in view. */}
       <div
@@ -499,23 +734,6 @@ function PlanScheduleScreen({ scene }: { scene: PlanScene }) {
         </div>
       </main>
     </JiTproShell>
-  );
-}
-
-/** A month band across the shared domain (Section 51.3). */
-function Axis({ layout: L, y }: { layout: PlanRow['layout']; y: number }) {
-  return (
-    <>
-      <line x1={CHAIN.PAD_L} x2={L.width - CHAIN.PAD_R} y1={y} y2={y} style={{ stroke: v('--jpd-chain-axis'), strokeWidth: 1 }} />
-      {L.axis.months.map((m) => (
-        <g key={m.x}>
-          <line x1={m.x} x2={m.x} y1={y} y2={y + (m.major ? 10 : 6)} style={{ stroke: v('--jpd-chain-axis'), strokeWidth: 1 }} />
-          <text x={m.x + 5} y={y + 22} style={{ font: FONT.axis, fill: v(m.major ? '--jpd-chain-ink' : '--jpd-chain-ink-secondary') }}>
-            {m.label}
-          </text>
-        </g>
-      ))}
-    </>
   );
 }
 

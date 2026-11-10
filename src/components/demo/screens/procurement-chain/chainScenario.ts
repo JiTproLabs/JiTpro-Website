@@ -128,7 +128,7 @@ const BASE_COMMITMENTS: CommitmentSpec[] = [
   {
     // 'design', not 'selection': the model labels every selection an "Owner
     // Selection", and this one is owed by the Architect.
-    id: 'swd-c3', name: 'Final Glazing Selection', type: 'design',
+    id: 'swd-c3', name: 'Final Glazing Specification', type: 'design',
     ownerRole: 'Architect', owner: 'JS', org: 'architect', requiredForStepId: 'swd-6',
     description: 'Confirm the glazing make-up, coating and performance so the first revision cycle can incorporate it.',
   },
@@ -143,6 +143,17 @@ const BASE_COMMITMENTS: CommitmentSpec[] = [
  */
 const FINISH_SELECTION_DAYS_LATE = 6;
 const GLAZING_COMMITTED_DAYS_LATE = 4;
+
+/**
+ * The chain as planned (2026-11-10, the homepage Connect visual, Design System
+ * Section 54.4.3): the same steps and the same three commitments, each
+ * required on the first day of the activity it supports, with no agreed or
+ * provided dates and no issues. What is needed, who owes it, when, and for
+ * what; never whether it was late, which belongs to Control.
+ */
+export function buildSteelWindowsPlannedChain(requiredOnSiteDate: string = CHAIN_REQUIRED_ON_SITE): ScheduleItem {
+  return buildItem(CHAIN_ITEM_ID, CHAIN_ITEM_NAME, 'Exterior Enclosure', requiredOnSiteDate, CHAIN_STEPS, BASE_COMMITMENTS);
+}
 
 /**
  * Build the demonstration for any Required On Site date. The default is the
