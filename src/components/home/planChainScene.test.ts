@@ -16,6 +16,7 @@ import {
   PLAN_STEP_GROUPS,
   SIDE_MIN_W,
   chainView,
+  listCrossingFade,
   listItemAt,
   listLayout,
   lengthened,
@@ -392,7 +393,8 @@ describe('Plan timeline (Section 54.4.2)', () => {
 
 describe('Plan step list resting beside the frame (refined 2026-11-10)', () => {
   /* The free copy-column area beneath the Plan copy, as the section measures
-     it at 1280×800 and 1440×900 (frame-inner coordinates). */
+     it at 1280×800 and at 1440×900 / 1920×1080 (the section's max-w-7xl
+     gives those two the same frame), in frame-inner coordinates. */
   const CASES: Frame[] = [
     { w: 558, h: 348, aside: { x: -641, y: 266, w: 560, h: 124 } },
     { w: 598, h: 373, aside: { x: -681, y: 267, w: 600, h: 123 } },
@@ -423,24 +425,111 @@ describe('Plan step list resting beside the frame (refined 2026-11-10)', () => {
         expect(new Set(lay.end.map((p) => Math.round(p.x))).size).toBe(2);
       });
 
-      it('moves the list without overlaps, and never through the copy above the free area', () => {
-        const a = f.aside!;
-        for (let m = 0; m <= 1.0001; m += 0.01) {
-          const boxes = PLAN_STEP_GROUPS.map((_, i) => {
-            const p = listItemAt(lay, i, Math.min(1, m));
-            return { l: p.x, t: p.y, r: p.x + LIST_ITEM.w * p.s, b: p.y + LIST_ITEM.h * p.s };
+      /* The list's screen-space boxes at every 60 fps frame of the pull-back,
+         through the real clock (planStateAt → listItemAt). The aside layer
+         is the frame's inner box, untransformed, so these are screen px
+         offset by the frame's own position. */
+      const FRAME_MS = 1000 / 60;
+      const frames = (() => {
+        const out: { t: number; boxes: { l: number; t: number; r: number; b: number; cx: number; cy: number }[]; fade: number[] }[] = [];
+        for (let t = T.holdEnd; t <= T.end + 1e-6; t += FRAME_MS) {
+          const morph = planStateAt(scene, f, t).list.morph;
+          const placed = PLAN_STEP_GROUPS.map((_, i) => listItemAt(lay, i, morph));
+          const boxes = placed.map((p) => {
+            const w = LIST_ITEM.w * p.s;
+            const h = LIST_ITEM.h * p.s;
+            return { l: p.x, t: p.y, r: p.x + w, b: p.y + h, cx: p.x + w / 2, cy: p.y + h / 2 };
           });
-          for (let i = 0; i < boxes.length; i++) {
-            // Over the copy column, only below its copy.
-            if (boxes[i].l < a.x + a.w) expect(boxes[i].t, `entry ${i} at ${m.toFixed(2)}`).toBeGreaterThanOrEqual(a.y - 0.5);
-            for (let j = i + 1; j < boxes.length; j++) {
-              const A = boxes[i];
-              const B = boxes[j];
-              expect(A.l < B.r - 0.5 && B.l < A.r - 0.5 && A.t < B.b - 0.5 && B.t < A.b - 0.5, `entries ${i}/${j} at ${m.toFixed(2)}`).toBe(false);
-            }
-          }
+          out.push({ t, boxes, fade: listCrossingFade(lay, morph) });
         }
-        PLAN_STEP_GROUPS.forEach((_, i) => expect(listItemAt(lay, i, 1)).toEqual(lay.end[i]));
+        return out;
+      })();
+      const overlap = (A: { l: number; t: number; r: number; b: number }, B: typeof A) =>
+        Math.max(0, Math.min(A.r, B.r) - Math.max(A.l, B.l)) * Math.max(0, Math.min(A.b, B.b) - Math.max(A.t, B.t));
+
+      it('starts on the rail and ends in the final two columns, exactly', () => {
+        PLAN_STEP_GROUPS.forEach((_, i) => {
+          expect(listItemAt(lay, i, planStateAt(scene, f, T.holdEnd).list.morph)).toEqual(lay.start[i]);
+          expect(listItemAt(lay, i, planStateAt(scene, f, T.end).list.morph)).toEqual(lay.end[i]);
+        });
+      });
+
+      it('moves every entry, and the list as a whole, left and down only: no bounce', () => {
+        const EPS = 1e-6;
+        for (let k = 1; k < frames.length; k++) {
+          const [prev, cur] = [frames[k - 1].boxes, frames[k].boxes];
+          cur.forEach((c, i) => {
+            const p = prev[i];
+            const at = `entry ${i} at ${(frames[k].t - T.holdEnd).toFixed(0)} ms`;
+            expect(c.l, at).toBeLessThanOrEqual(p.l + EPS);
+            expect(c.cx, at).toBeLessThanOrEqual(p.cx + EPS);
+            expect(c.r, at).toBeLessThanOrEqual(p.r + EPS);
+            expect(c.t, at).toBeGreaterThanOrEqual(p.t - EPS);
+            expect(c.cy, at).toBeGreaterThanOrEqual(p.cy - EPS);
+          });
+          // The list's bounding box and centroid.
+          const bb = (bs: typeof cur) => ({
+            l: Math.min(...bs.map((b) => b.l)),
+            r: Math.max(...bs.map((b) => b.r)),
+            t: Math.min(...bs.map((b) => b.t)),
+            b: Math.max(...bs.map((b) => b.b)),
+            cx: bs.reduce((n, b) => n + b.cx, 0) / bs.length,
+            cy: bs.reduce((n, b) => n + b.cy, 0) / bs.length,
+          });
+          const [P, C] = [bb(prev), bb(cur)];
+          expect(C.l).toBeLessThanOrEqual(P.l + EPS);
+          expect(C.r).toBeLessThanOrEqual(P.r + EPS);
+          expect(C.cx).toBeLessThanOrEqual(P.cx + EPS);
+          expect(C.t).toBeGreaterThanOrEqual(P.t - EPS);
+          expect(C.b).toBeGreaterThanOrEqual(P.b - EPS);
+          expect(C.cy).toBeGreaterThanOrEqual(P.cy - EPS);
+        }
+        // It sets off left at once: moving within the first tenth of the pull-back.
+        const early = frames[Math.round(frames.length * 0.1)].boxes;
+        early.forEach((b, i) => expect(b.l).toBeLessThan(frames[0].boxes[i].l - 5));
+      });
+
+      it('never passes through the copy above the free area', () => {
+        const a = f.aside!;
+        for (const fr of frames)
+          fr.boxes.forEach((b, i) => {
+            if (b.l < a.x + a.w) expect(b.t, `entry ${i} at ${(fr.t - T.holdEnd).toFixed(0)} ms`).toBeGreaterThanOrEqual(a.y - 0.5);
+          });
+      });
+
+      it('crosses its columns once, briefly, with the second faded back', () => {
+        let crossing = 0;
+        let runs = 0;
+        let was = false;
+        for (const fr of frames) {
+          const B = fr.boxes;
+          let any = false;
+          for (let i = 0; i < 6; i++)
+            for (let j = i + 1; j < 6; j++) {
+              const o = overlap(B[i], B[j]);
+              if (o <= 0.5) continue;
+              // Only a first-column entry over a second-column one.
+              expect(i < 3 && j >= 3, `entries ${i}/${j}`).toBe(true);
+              any = true;
+              // A substantial overlap is always faded well back.
+              const area = (B[j].r - B[j].l) * (B[j].b - B[j].t);
+              if (o / area > 0.1) expect(fr.fade[j]).toBeLessThan(0.75);
+            }
+          if (any) crossing += FRAME_MS;
+          if (any && !was) runs++;
+          was = any;
+        }
+        expect(runs).toBe(1);
+        expect(crossing).toBeLessThan(400);
+        // The first column is never faded, and nothing is faded at rest.
+        for (const fr of frames) fr.fade.slice(0, 3).forEach((o) => expect(o).toBe(1));
+        expect(frames[frames.length - 1].fade.every((o) => o === 1)).toBe(true);
+        // The fade never flickers: small steps between frames, never below 40%.
+        for (let k = 1; k < frames.length; k++)
+          frames[k].fade.forEach((o, i) => {
+            expect(o).toBeGreaterThanOrEqual(0.4 - 1e-9);
+            expect(Math.abs(o - frames[k - 1].fade[i])).toBeLessThan(0.12);
+          });
       });
 
       it('falls back to resting inside the frame when there is no free area', () => {

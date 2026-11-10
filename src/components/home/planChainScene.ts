@@ -506,8 +506,11 @@ export type ListLayout = {
   /** Each entry's place in the build panel, and in the final layout. */
   start: Placed[];
   end: Placed[];
-  /** Aside only: the two columns, at final size, inside the frame before they leave it. */
-  staging?: Placed[];
+  /**
+   * Aside only: the copy column's right edge, in the frame's coordinates. Left
+   * of it the list may pass only below the copy (the free area's top).
+   */
+  copyRight?: number;
   /** The finished application window: its top-left and its canvas scale. */
   window: Placed;
 };
@@ -554,15 +557,15 @@ export function listLayout(f: Frame): ListLayout {
     const fullW = 2 * LIST_ITEM.w + LIST_COL_GAP;
     const fullH = (rows - 1) * LIST_ITEM.pitch + LIST_ITEM.h;
     const sa = a ? Math.min(LIST_ASIDE_SCALE, a.w / fullW, a.h / fullH) : 0;
-    if (a && sa >= LIST_MIN_SCALE) {
-      const blockH = (rows - 1) * LIST_ITEM.pitch * sa + LIST_ITEM.h * sa;
+    // The free area lies left of the frame, so the list's whole journey is leftward.
+    if (a && sa >= LIST_MIN_SCALE && a.x + a.w <= start[0].x) {
       const cover = Math.max(f.w / APP.w, f.h / APP.h);
       return {
         mode: 'aside',
         area: { x: railW, y: 0, w: f.w - railW, h: f.h },
         panel: { x: 0, y: 0, w: railW, h: f.h },
         start,
-        staging: twoCols(12, Math.min(f.h - 10 - blockH, a.y), sa),
+        copyRight: a.x + a.w,
         end: twoCols(a.x, a.y, sa),
         window: { x: 0, y: 0, s: cover },
       };
@@ -678,34 +681,135 @@ export function scheduleView(_scene: PlanScene, f: Frame): CameraView {
 }
 
 /**
- * One entry's place part-way through the move to two columns (0 to 1).
+ * One entry's place part-way through the move to its final layout (0 to 1).
+ * Shared by the renderer and the tests.
  *
- * The first column's three entries shrink and move straight to their places.
- * The second column's three travel as the rest of the same list: they stay
- * directly beneath the first column, shrinking with it, while they move
- * across; they rise into their own column only once the first column has
- * narrowed clear of it. No entry ever passes over another. Shared by the
- * renderer and the tests.
+ * Side: the first column's three entries shrink and move straight to their
+ * places; the second column's three stay directly beneath the first while they
+ * move across, and rise into their own column only once it has narrowed clear
+ * of them. No entry ever passes over another.
+ *
+ * Aside: one continuous path per entry (see asideAt).
  */
 export function listItemAt(lay: ListLayout, i: number, morph: number): Placed {
   if (lay.mode === 'stacked') return lay.end[i];
   if (lay.mode === 'side') return reflowAt(lay.start, lay.end, i, morph);
-
-  /* Aside: reflow into two columns inside the frame over the first half, then
-     leave it. The block drops to its resting height early in the second
-     half, while still inside the frame, so it passes beneath the copy, never
-     across it; then it slides out to rest beside the frame. */
-  const staging = lay.staging!;
-  if (morph <= ASIDE_REFLOW) return reflowAt(lay.start, staging, i, morph / ASIDE_REFLOW);
-  const u = (morph - ASIDE_REFLOW) / (1 - ASIDE_REFLOW);
-  const a = staging[i];
-  const b = lay.end[i];
-  return { x: lerp(a.x, b.x, ease(u)), y: lerp(a.y, b.y, ease(u / ASIDE_DROP)), s: b.s };
+  return asideAt(lay, i, morph);
 }
 
-/** The part of the move spent reflowing inside the frame, and the drop's share of the rest. */
-const ASIDE_REFLOW = 0.5;
-const ASIDE_DROP = 0.2;
+/**
+ * THE ASIDE PATH (amended 2026-11-10). The list leaves the frame for the free
+ * area beneath the copy, left of the frame, on one path per entry: every
+ * entry's x only ever decreases and its y only ever increases, so nothing
+ * bounces. (The earlier move reflowed into two columns inside the frame
+ * first, which carried the second column about 150 px right before the whole
+ * list reversed and slid left.)
+ *
+ * Everything runs on one progress, `p`, the first column's share of its
+ * leftward travel: eased out of the pull-back's own eased progress, so the
+ * list sets off left at once and decelerates into place, on the same clock
+ * as the camera.
+ *
+ *   The second column drops to its resting height early, while it is still
+ *   inside the frame; the first column drops with it, as one block, then on
+ *   by the three rows that separate them. Both drops finish before the first
+ *   column reaches the copy column, so the list passes beneath the copy,
+ *   never across it.
+ *
+ *   The first column leads left; the second trails it by the gap that opens
+ *   into its own column, opening as fast as the second column can, still
+ *   moving left, allow.
+ *
+ * The first column starts above the second and finishes left of it, and the
+ * copy leaves no room to go around, so the two columns cross once, briefly
+ * (listCrossingFade dims the second column while they do). Every entry
+ * shares one scale progress, so the list shrinks as one.
+ */
+function asideAt(lay: ListLayout, i: number, morph: number): Placed {
+  if (morph >= 1) return lay.end[i];
+  const S = lay.start;
+  const E = lay.end;
+  const j = i % LIST_ROWS;
+  const k = asidePath(lay);
+  const p = asideProgress(morph);
+  const drop2 = ease(p / k.secondDropEnds);
+  const drop1 = ease((p - k.firstDropStarts) / ASIDE.FIRST_DROP_SPAN);
+  // One scale for the whole list, settled with the second column's drop.
+  const s = lerp(S[i].s, E[i].s, drop2);
+  const x = lerp(S[j].x, E[j].x, p);
+
+  if (i >= LIST_ROWS) return { x: x + k.beside * ease(p / k.openSpan), y: lerp(S[i].y, E[i].y, drop2), s };
+  // With the second column first (one block), then on alone.
+  const r = (E[i + LIST_ROWS].y - S[i + LIST_ROWS].y) / (E[i].y - S[i].y);
+  return { x, y: lerp(S[i].y, E[i].y, r * drop2 + (1 - r) * drop1), s };
+}
+
+const LIST_ROWS = Math.ceil(PLAN_STEP_GROUPS.length / 2);
+
+/** The first column's share of its leftward travel: off at once, slowing into place. */
+const asideProgress = (morph: number) => {
+  const m = clamp01(morph);
+  return 1 - (1 - m) * (1 - m);
+};
+
+/**
+ * The aside path's shape, in shares of `p` (see asideAt). OPEN_SLOWEST: the
+ * gap's opening span, as a multiple of the shortest a smooth opening can take
+ * while the second column still moves left (1.5); just above it, so the
+ * crossing is as brief as the geometry allows (about a third of a second).
+ */
+const ASIDE = {
+  SECOND_DROP_ENDS: 0.7,
+  FIRST_DROP_ENDS: 0.97,
+  FIRST_DROP_SPAN: 0.07,
+  OPEN_SLOWEST: 1.55,
+  /** The second column's deepest fade while the columns cross. */
+  CROSSING_FADE: 0.6,
+  /** The fade's ease in, ending just after the first column starts down past the second, and its ease out. */
+  FADE_IN: 0.11,
+  FADE_IN_LEAD: 0.02,
+  FADE_OUT: 0.11,
+} as const;
+
+/** The aside path's landmarks, from the layout: all in shares of `p`. */
+function asidePath(lay: ListLayout) {
+  const S = lay.start;
+  const E = lay.end;
+  /* The first column's travel left, the second column's offset beside it, and
+     how far along the first column reaches the copy column. */
+  const travel = S[0].x - E[0].x;
+  const beside = E[LIST_ROWS].x - E[0].x;
+  const atCopy = (S[0].x - lay.copyRight!) / travel;
+  // The gap opens at most this fast, so the second column never stops moving left.
+  const openSpan = (ASIDE.OPEN_SLOWEST * beside) / travel;
+  // Where the gap has opened to a first-column entry's width: the crossing is over.
+  const clear = Math.min(1, (LIST_ITEM.w * E[0].s) / beside);
+  const crossEnds = openSpan * (0.5 - Math.sin(Math.asin(1 - 2 * clear) / 3));
+  return {
+    beside,
+    openSpan,
+    secondDropEnds: ASIDE.SECOND_DROP_ENDS * atCopy,
+    firstDropStarts: ASIDE.FIRST_DROP_ENDS * atCopy - ASIDE.FIRST_DROP_SPAN,
+    crossEnds,
+  };
+}
+
+/**
+ * Each entry's opacity factor at this point of the move: 1, except in the
+ * aside move, where the second column fades back while the first passes down
+ * beside and across it, so the crossing reads as one column passing the
+ * other, not as text over text. The fade is a smooth envelope on the path's
+ * own progress, fully in just as the columns meet and easing out as they
+ * part, so it never flickers with the overlap's own quick changes.
+ */
+export function listCrossingFade(lay: ListLayout, morph: number): number[] {
+  if (lay.mode !== 'aside' || morph <= 0 || morph >= 1) return PLAN_STEP_GROUPS.map(() => 1);
+  const k = asidePath(lay);
+  const p = asideProgress(morph);
+  const inFrom = k.firstDropStarts + ASIDE.FADE_IN_LEAD - ASIDE.FADE_IN;
+  const envelope = ease((p - inFrom) / ASIDE.FADE_IN) * (1 - ease((p - k.crossEnds) / ASIDE.FADE_OUT));
+  return PLAN_STEP_GROUPS.map((_, i) => (i < LIST_ROWS ? 1 : 1 - ASIDE.CROSSING_FADE * envelope));
+}
 
 /** From one column to two (see listItemAt): no entry ever passes over another. */
 function reflowAt(starts: Placed[], ends: Placed[], i: number, morph: number): Placed {

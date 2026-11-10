@@ -15,6 +15,7 @@ import {
   LIST_ITEM,
   ROW_ITEMS,
   buildPlanScene,
+  listCrossingFade,
   listItemAt,
   listLayout,
   planStateAt,
@@ -44,9 +45,10 @@ import '../demo/screens/procurement-chain/chainTokens.css';
  * THE STEP LIST (refined 2026-11-10). Six consolidated steps, in backward
  * order, beside the chain: each appears as its part of the chain starts to
  * build, and the step being built carries the register's selected-row tint
- * and amber bar. On the pull-back the same six entries shrink, reflow into
- * two columns and move into the room left of the application window, which
- * comes to rest on the frame's own ground. One state drives it all.
+ * and amber bar. On the pull-back the same six entries shrink and travel, on
+ * one continuous path each, into two columns in the free area beside the
+ * frame (or, without one, into the room left of the application window).
+ * One state drives it all.
  *
  * Drawn in the procurement chain's own language (Section 51): its layout
  * engine, tokens, gradients, icons, milestone diamonds and type. It is an
@@ -141,13 +143,16 @@ export default function PlanChainPreview({ played, aside }: { played: boolean; a
         });
       }
       // The same six entries, travelling from the panel to their final place.
+      const placed = scene.list.map((_, i) => listItemAt(lay, i, s.list.morph));
+      // Where the columns cross on the way out, the second fades back.
+      const fade = listCrossingFade(lay, s.list.morph);
       itemRefs.current.forEach((el, i) => {
         if (!el) return;
-        const p = listItemAt(lay, i, s.list.morph);
+        const p = placed[i];
         const x = p.x;
         const y = p.y + (1 - s.list.appear[i]) * 6;
         const k = p.s;
-        el.style.opacity = String(s.list.appear[i]);
+        el.style.opacity = String(s.list.appear[i] * fade[i]);
         el.style.transform = `translate(${x}px, ${y}px) scale(${k})`;
         const hl = el.firstElementChild as HTMLElement | null;
         if (hl) hl.style.opacity = String(s.list.active[i]);
