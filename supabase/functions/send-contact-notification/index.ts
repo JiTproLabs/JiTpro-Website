@@ -71,6 +71,74 @@ async function secretsMatch(expectedSecret: string, presentedSecret: string): Pr
   return differences === 0;
 }
 
+const FAILURE_ALERT_TEXT = {
+  team: {
+    subject: "ALERT: a contact form message was not emailed to the team",
+    summary:
+      "Someone filled in the website contact form. Their message is saved, but the email that tells the team about it could not be sent.",
+    nextStep: "To follow up: open the leads table in Supabase and find this entry number.",
+  },
+  visitor: {
+    subject: "ALERT: a website visitor did not receive the thank-you email",
+    summary:
+      "Someone filled in the website contact form and the team was told, but the thank-you email to the visitor could not be sent. Their email address may be mistyped.",
+    nextStep:
+      "To follow up: open the leads table in Supabase, find this entry number, check the email address for typos, and reach out another way if you can.",
+  },
+};
+
+/**
+ * Emails the alert address when one of the two contact form emails could not
+ * be sent: the one telling the team, or the thank-you to the visitor.
+ *
+ * The message itself is already saved in the database before this runs, so
+ * nothing is lost.
+ *
+ * Never throws: if the alert also fails, the error is logged and the
+ * function carries on as before.
+ */
+async function sendFailureAlert(params: {
+  resendApiKey: string;
+  requestId: string;
+  leadId: number | string;
+  alertRecipient: string;
+  failedEmail: "team" | "visitor";
+  reason: string;
+}): Promise<void> {
+  const alertText = FAILURE_ALERT_TEXT[params.failedEmail];
+
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${params.resendApiKey}`,
+      },
+      body: JSON.stringify({
+        from: "JiTpro Alerts <info@jit-pro.com>",
+        to: [params.alertRecipient],
+        subject: alertText.subject,
+        text: [
+          alertText.summary,
+          `Contact form entry number: ${params.leadId}`,
+          `Reason: ${params.reason}`,
+          `Reference: ${params.requestId} (for whoever looks in the send-contact-notification logs)`,
+          alertText.nextStep,
+        ].join("\n"),
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("Failure alert email was rejected", {
+        requestId: params.requestId,
+        status: response.status,
+      });
+    }
+  } catch (error) {
+    console.error("Failure alert email could not be sent", { requestId: params.requestId, error });
+  }
+}
+
 Deno.serve(async (req: Request) => {
   const requestId = crypto.randomUUID();
   console.log("send-contact-notification: start", { requestId });
@@ -105,6 +173,10 @@ Deno.serve(async (req: Request) => {
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
+
+    // Where failure alerts go. The secret holds the distribution list; the
+    // fallback keeps alerts flowing if it is ever missing or empty.
+    const alertRecipient = Deno.env.get("ALERT_EMAIL_TO") || "info@jit-pro.com";
 
     const payload: WebhookPayload = await req.json();
     const lead = payload.record;
@@ -200,6 +272,8 @@ Deno.serve(async (req: Request) => {
       visitorEmailPromise,
     ]);
 
+    let internalFailureReason = "unknown";
+    let visitorFailureReason = "unknown";
     let internalEmailSucceeded = false;
     let visitorEmailSucceeded = false;
     let internalErrorDetails = "";
@@ -211,10 +285,12 @@ Deno.serve(async (req: Request) => {
       internalEmailSucceeded = response.ok;
       if (!response.ok) {
         internalErrorDetails = body;
+        internalFailureReason = `email service returned status ${response.status}`;
         console.error("Internal email failed at Resend API level", { requestId, body });
       }
     } else {
       internalErrorDetails = String(internalEmailOutcome.reason);
+      internalFailureReason = "could not connect to the email service";
       console.error("Internal email connection crashed", { requestId, error: internalEmailOutcome.reason });
     }
 
@@ -226,16 +302,40 @@ Deno.serve(async (req: Request) => {
       console.log("Visitor email status:", { requestId, status: res.status, body });
       visitorEmailSucceeded = res.ok;
       if (!res.ok) {
+        visitorFailureReason = `email service returned status ${res.status}`;
         console.warn("Visitor email failed at API level (likely bad email address)", { requestId, body });
       }
     } else if (visitorEmailOutcome.status === "rejected") {
       console.warn("Visitor email connection crashed", { requestId, error: visitorEmailOutcome.reason });
+      visitorFailureReason = "could not connect to the email service";
     } else {
       // Should be unreachable given the checks above — logged loudly so a
       // future change to this logic can't silently break this case.
       console.error("Unexpected visitor email outcome state — investigate", {
         requestId,
         status: visitorEmailOutcome.status,
+      });
+    }
+
+    if (!internalEmailSucceeded) {
+      await sendFailureAlert({
+        resendApiKey,
+        requestId,
+        leadId: lead.id,
+        alertRecipient,
+        failedEmail: "team",
+        reason: internalFailureReason,
+      });
+    }
+
+    if (trimmedEmail && !visitorEmailSucceeded) {
+      await sendFailureAlert({
+        resendApiKey,
+        requestId,
+        leadId: lead.id,
+        alertRecipient,
+        failedEmail: "visitor",
+        reason: visitorFailureReason,
       });
     }
 
