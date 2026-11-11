@@ -55,9 +55,22 @@ describe('HOME_AUDIENCES (Design System Section 54.2)', () => {
     expect(identify.closing).toBe('Know what you need. Know what’s missing.');
   });
 
-  it('gives only the Identify tab a second paragraph and closing statement, and no tab the withdrawn role link or checklist', () => {
+  it('carries the founder-supplied Plan copy (2026-11-11)', () => {
+    const plan = HOME_AUDIENCES.flatMap((a) => a.tabs).find((t) => t.id === 'gc-plan')!;
+    expect(plan.label).toBe('Plan');
+    expect(plan.headline).toBe('Know what needs to happen. Know when it needs to happen.');
+    expect(plan.description).toBe(
+      'Every product, material, and service follows its own procurement path, with activities that must happen in the right sequence and require real time to complete.',
+    );
+    expect(plan.descriptionMore).toBe(
+      'JiTpro starts with when the field needs each item, then works backward to establish the activities, durations, and dates required to deliver it on time.',
+    );
+    expect(plan.closing).toBe('The right work. In the right order. At the right time.');
+  });
+
+  it('gives only the Identify and Plan tabs a second paragraph and closing statement, and no tab the withdrawn role link or checklist', () => {
     const tabs = HOME_AUDIENCES.flatMap((a) => a.tabs);
-    expect(tabs.filter((t) => t.descriptionMore || t.closing).map((t) => t.id)).toEqual(['gc-identify']);
+    expect(tabs.filter((t) => t.descriptionMore || t.closing).map((t) => t.id)).toEqual(['gc-identify', 'gc-plan']);
     expect(tabs.filter((t) => t.roleLink || t.checklist)).toEqual([]);
   });
 

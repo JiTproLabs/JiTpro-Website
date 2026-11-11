@@ -15,6 +15,8 @@ import {
   buildPlanScene,
   APP,
   LIST_ITEM,
+  LIST_TITLE_H,
+  LIST_TOTAL,
   PLAN_STEP_GROUPS,
   SIDE_MIN_W,
   HEADER,
@@ -177,26 +179,102 @@ describe('Plan step list (refined 2026-11-10)', () => {
     for (const e of scene.list.slice(1)) expect(e.date).toBeNull();
   });
 
-  it('brings each entry in as its part of the chain starts to build', () => {
-    expect(scene.list[0].appearAt).toBe(T.rosIn);
-    expect(scene.list[0].activeUntil).toBe(T.buildStart);
+  it('names every entry before the build begins, one at a time, in backward order (redesigned 2026-11-11)', () => {
+    // The milestone is held alone first.
+    expect(TIMING.GROUPS_AT - (T.rosIn + T.rosInDuration)).toBeGreaterThanOrEqual(600);
+    const appear = scene.list.map((e) => e.appearAt);
+    for (let i = 1; i < appear.length; i++) expect(appear[i]).toBeGreaterThan(appear[i - 1]);
+    scene.list.forEach((e, i) => expect(e.appearAt).toBe(TIMING.GROUPS_AT + TIMING.LIST_LEAD + i * TIMING.GROUP_STAGGER));
+    // One at a time: each has appeared before the next begins.
+    expect(TIMING.GROUP_STAGGER).toBeGreaterThanOrEqual(300);
+    // Then the total, then time to read it, then the build.
+    const lastNamed = appear[appear.length - 1] + 300;
+    expect(TIMING.TOTAL_AT).toBeGreaterThanOrEqual(lastNamed);
+    expect(T.buildStart - (TIMING.TOTAL_AT + 300)).toBeGreaterThanOrEqual(600);
+    const f = { w: 558, h: 348 };
+    const before = planStateAt(scene, f, T.buildStart - 1);
+    expect(before.list.appear.every((a) => a === 1)).toBe(true);
+    expect(before.list.total).toBe(1);
+    // And nothing of the chain is drawn until then.
+    expect(before.edgeX).toBe(scene.steps[0].from);
+  });
+
+  it('opens clean and in order: an empty calendar, then the statement, then the milestone, then the list (corrected 2026-11-11)', () => {
+    for (const f of FRAMES) {
+      // Through the panel's slide, nothing but the calendar.
+      for (let t = 0; t <= TIMING.CARD_IN; t += 20) {
+        const s = planStateAt(scene, f, t);
+        expect(s.ros).toBe(0);
+        expect(s.list.card).toBe(0);
+        expect(s.list.title).toBe(0);
+        expect(s.list.total).toBe(0);
+        expect(s.list.appear.every((a) => a === 0)).toBe(true);
+        expect(s.list.active.every((a) => a === 0)).toBe(true);
+        expect(s.edgeX).toBe(scene.steps[0].from);
+        expect(s.others).toBe(0);
+        expect(s.app).toBe(0);
+      }
+      // The statement is fully shown before the milestone begins.
+      expect(TIMING.CARD_IN).toBeGreaterThanOrEqual(450);
+      expect(TIMING.ROS_IN).toBeGreaterThanOrEqual(TIMING.CARD_IN + T.rosInDuration);
+      const atRos = planStateAt(scene, f, TIMING.ROS_IN);
+      expect(atRos.list.card).toBe(1);
+      expect(atRos.ros).toBe(0);
+      // No list entry, not even Required On Site, before the list has its heading.
+      for (let t = 0; t <= TIMING.GROUPS_AT; t += 20) expect(planStateAt(scene, f, t).list.appear.every((a) => a === 0)).toBe(true);
+      for (let t = 0; t < T.buildStart; t += 20) {
+        const { appear, title } = planStateAt(scene, f, t).list;
+        if (appear[0] > 0) expect(title).toBeGreaterThan(0);
+      }
+      expect(scene.list[0].appearAt).toBeGreaterThanOrEqual(TIMING.GROUPS_AT);
+    }
+  });
+
+  it('marks each group as the one being built while its own activities build, and Required On Site never', () => {
+    const f = { w: 558, h: 348 };
+    for (let t = 0; t <= T.end; t += 50) expect(planStateAt(scene, f, t).list.active[0]).toBe(0);
     const startsOf = (fams: readonly string[]) => scene.steps.filter((st) => fams.includes(st.family)).map((st) => st.start);
     scene.list.slice(1).forEach((e, i) => {
-      expect(e.appearAt).toBe(Math.min(...startsOf(PLAN_STEP_GROUPS[i + 1].families)));
+      expect(e.activeFrom).toBe(Math.min(...startsOf(PLAN_STEP_GROUPS[i + 1].families)));
     });
+    expect(scene.list[1].activeFrom).toBe(T.buildStart);
     // Each takes over as the step being built exactly where the last one ends.
-    for (let i = 1; i < scene.list.length; i++) expect(scene.list[i].appearAt).toBe(scene.list[i - 1].activeUntil);
+    for (let i = 2; i < scene.list.length; i++) expect(scene.list[i].activeFrom).toBe(scene.list[i - 1].activeUntil);
     expect(scene.list[scene.list.length - 1].activeUntil).toBe(T.buildEnd);
   });
 
-  it('marks one step at a time as the one being built, and none once the build is done', () => {
+  it('states the requirement first, then hands the item name to the list heading as the work is named', () => {
     const f = { w: 558, h: 348 };
-    for (let t = T.rosIn + 200; t < T.buildEnd - 50; t += 40) {
+    const at = (t: number) => planStateAt(scene, f, t).list;
+    expect(at(0).card).toBe(0);
+    expect(at(TIMING.CARD_IN + T.rosInDuration).card).toBe(1);
+    expect(at(TIMING.GROUPS_AT).card).toBe(1);
+    expect(at(TIMING.GROUPS_AT).title).toBe(0);
+    expect(at(TIMING.GROUPS_AT + 300).card).toBe(0);
+    expect(at(TIMING.GROUPS_AT + 300).title).toBe(1);
+    // The two are never both fully shown.
+    for (let t = 0; t < T.buildStart; t += 25) expect((at(t).card ?? 0) + (at(t).title ?? 0)).toBeLessThanOrEqual(1.0001);
+    expect(scene.itemTitle).toBe('Custom Steel Windows & Doors');
+  });
+
+  it('weighs each group by its working days, and totals them from the chain', () => {
+    expect(scene.totalWorkdays).toBe(FOCAL_ITEM.steps.reduce((n, st) => n + (st.kind === 'phase' ? st.durationWorkdays : 0), 0));
+    expect(scene.totalWorkdays).toBe(scene.list.reduce((n, e) => n + (e.workdays ?? 0), 0));
+    const longest = Math.max(...scene.list.map((e) => e.workdays ?? 0));
+    for (const e of scene.list) expect(e.weight).toBeCloseTo((e.workdays ?? 0) / longest);
+    expect(scene.list.find((e) => e.id === 'fabrication')!.weight).toBe(1);
+  });
+
+  it('marks one step at a time as the one being built, none before the build, and none once it is done', () => {
+    const f = { w: 558, h: 348 };
+    const count = (t: number) => {
       const { active } = planStateAt(scene, f, t).list;
-      const full = active.filter((a) => a > 0.99).length;
-      const partial = active.filter((a) => a > 0.01 && a <= 0.99).length;
-      expect(full + partial).toBeGreaterThanOrEqual(1);
-      expect(full).toBeLessThanOrEqual(1);
+      return { full: active.filter((a) => a > 0.99).length, any: active.filter((a) => a > 0.01).length };
+    };
+    for (let t = 0; t < T.buildStart; t += 40) expect(count(t).any).toBe(0);
+    for (let t = T.buildStart + 200; t < T.buildEnd - 50; t += 40) {
+      expect(count(t).any).toBeGreaterThanOrEqual(1);
+      expect(count(t).full).toBeLessThanOrEqual(1);
     }
     expect(planStateAt(scene, f, T.buildEnd + 300).list.active.every((a) => a === 0)).toBe(true);
   });
@@ -320,7 +398,7 @@ describe('Plan timeline (Section 54.4.2)', () => {
         expect(planStateAt(scene, f, T.chainArrive).view).toEqual(toScreen(scene, chainView(scene, f)));
       });
 
-      it('rests on the whole application window beside the list, and stays there', () => {
+      it('rests on the whole application window, and stays there', () => {
         const end = planStateAt(scene, f, T.end);
         expect(end.view).toEqual(scheduleView(scene, f));
         expect(end.others).toBe(1);
@@ -330,38 +408,50 @@ describe('Plan timeline (Section 54.4.2)', () => {
         expect(end.list.morph).toBe(1);
         expect(end.list.appear.every((a) => a === 1)).toBe(true);
         expect(end.list.active.every((a) => a === 0)).toBe(true);
+        expect(end.list.rail).toBe(0);
         expect(planStateAt(scene, f, T.end + 10000)).toEqual(end);
-        // The whole application screen is in the frame, at the window's place.
+        // The application screen is at the window's place in the frame.
         const lay = listLayout(f);
         const { cx, cy, scale } = end.view;
         expect(f.w / 2 - scale * cx).toBeCloseTo(lay.window.x);
         expect(f.h / 2 - scale * cy).toBeCloseTo(lay.window.y);
-        expect(lay.window.x).toBeGreaterThanOrEqual(0);
-        expect(lay.window.y).toBeGreaterThanOrEqual(0);
-        expect(lay.window.x + APP.w * lay.window.s).toBeLessThanOrEqual(f.w + 1e-6);
-        expect(lay.window.y + APP.h * lay.window.s).toBeLessThanOrEqual(f.h + 1e-6);
+        if (lay.mode === 'side') {
+          // The software is never shrunk for the list: its whole width, from its top (redesigned 2026-11-11).
+          expect(lay.window).toEqual({ x: 0, y: 0, s: Math.max(f.w / APP.w, f.h / APP.h) });
+          expect(APP.w * lay.window.s).toBeCloseTo(f.w);
+        } else {
+          expect(lay.window.x + APP.w * lay.window.s).toBeLessThanOrEqual(f.w + 1e-6);
+          expect(lay.window.y + APP.h * lay.window.s).toBeLessThanOrEqual(f.h + 1e-6);
+        }
       });
 
-      it('sets the finished list in two columns of three, clear of the window, inside the frame', () => {
+      it('keeps the list where it is when it has nowhere to rest: on its rail, fading with it; in two columns beneath on a phone', () => {
         const lay = listLayout(f);
-        const win = { x: lay.window.x, y: lay.window.y, r: lay.window.x + APP.w * lay.window.s, b: lay.window.y + APP.h * lay.window.s };
-        const xs = [...new Set(lay.end.map((p) => Math.round(p.x)))];
-        expect(xs).toHaveLength(2);
-        for (const p of lay.end) {
-          const r = p.x + LIST_ITEM.w * p.s;
-          const b = p.y + LIST_ITEM.h * p.s;
-          expect(p.x).toBeGreaterThanOrEqual(0);
-          expect(r).toBeLessThanOrEqual(f.w);
-          expect(b).toBeLessThanOrEqual(f.h);
-          // Beside the window (side) or beneath it (stacked): never over it.
-          if (lay.mode === 'side') expect(r).toBeLessThanOrEqual(win.x);
-          else expect(p.y).toBeGreaterThanOrEqual(win.b);
-        }
         expect(lay.mode).toBe(f.w >= SIDE_MIN_W ? 'side' : 'stacked');
-        // Reading order: down the first column, then down the second.
-        expect(lay.end[0].x).toBeLessThan(lay.end[3].x);
-        expect(lay.end[0].y).toBeLessThan(lay.end[1].y);
-        if (lay.mode === 'side') expect(lay.end[0].s).toBeLessThan(lay.start[0].s);
+        for (const p of [...lay.start, ...lay.end]) {
+          expect(p.x).toBeGreaterThanOrEqual(0);
+          expect(p.x + LIST_ITEM.w * p.s).toBeLessThanOrEqual(f.w);
+          expect(p.y + LIST_ITEM.h * p.s).toBeLessThanOrEqual(f.h);
+        }
+        if (lay.mode === 'side') {
+          expect(lay.end).toEqual(lay.start);
+          // One column, inside the rail, with room beneath for the total.
+          for (const p of lay.start) expect(p.x + LIST_ITEM.w * p.s).toBeLessThanOrEqual(lay.panel.w);
+          const last = lay.start[lay.start.length - 1];
+          expect(last.y + (LIST_ITEM.h + LIST_TOTAL.gap + LIST_TOTAL.h) * last.s).toBeLessThanOrEqual(f.h);
+          // And room above for the heading.
+          expect(lay.start[0].y).toBeGreaterThanOrEqual(14 + LIST_TITLE_H * lay.start[0].s - 1e-6);
+          // The entries do not move; the rail's contents fade early in the pull-back.
+          for (const m of [0, 0.3, 0.7, 1]) PLAN_STEP_GROUPS.forEach((_, i) => expect(listItemAt(lay, i, m)).toEqual(lay.start[i]));
+          const mid = planStateAt(scene, f, T.holdEnd + (T.end - T.holdEnd) * 0.6);
+          expect(mid.list.rail).toBe(0);
+          expect(planStateAt(scene, f, T.holdEnd).list.rail).toBe(1);
+        } else {
+          const winBottom = lay.window.y + APP.h * lay.window.s;
+          for (const p of lay.end) expect(p.y).toBeGreaterThanOrEqual(winBottom);
+          expect(lay.end[0].x).toBeLessThan(lay.end[3].x);
+          expect(lay.end[0].y).toBeLessThan(lay.end[1].y);
+        }
       });
 
       it('moves the list without any entry passing over another', () => {
@@ -579,7 +669,7 @@ describe('Plan step list resting beside the frame (refined 2026-11-10)', () => {
           });
       });
 
-      it('falls back to resting inside the frame when there is no free area', () => {
+      it('falls back to staying on the rail when there is no free area', () => {
         expect(listLayout({ w: f.w, h: f.h }).mode).toBe('side');
         expect(listLayout({ w: f.w, h: f.h, aside: { ...f.aside!, h: 40 } }).mode).toBe('side');
       });
@@ -689,8 +779,50 @@ describe('Plan pacing (refined 2026-11-10)', () => {
     for (const [i, e] of scene.list.entries()) {
       if (i === 0) continue;
       const own = scene.steps.filter((s) => PLAN_STEP_GROUPS[i].families.includes(s.family));
-      expect(e.appearAt).toBe(Math.min(...own.map((s) => s.start)));
+      expect(e.activeFrom).toBe(Math.min(...own.map((s) => s.start)));
       expect(e.activeUntil).toBe(Math.max(...own.map((s) => s.start + s.duration + s.dwell)));
+    }
+  });
+
+  it('keeps the whole pass under half a minute', () => {
+    expect(T.end).toBeLessThanOrEqual(30000);
+  });
+
+  it('opens with the rail in its navy state carrying the founder-supplied statement, and returns it to the list (redesigned 2026-11-11)', () => {
+    expect(scene.lead).toBe('Start with when the field needs it.');
+    const f = { w: 558, h: 348 };
+    const at = (t: number) => planStateAt(scene, f, t).list;
+    const L = TIMING;
+    // Nothing through the panel's 450 ms slide.
+    for (let t = 0; t <= 450; t += 25) {
+      expect(at(t).leadBg).toBe(0);
+      expect(at(t).leadRule).toBe(0);
+      expect(at(t).lead).toBe(0);
+    }
+    // In order: the navy ground, then the rule, then the statement.
+    expect(L.LEAD_BG_AT).toBeLessThan(L.LEAD_RULE_AT);
+    expect(L.LEAD_RULE_AT).toBeLessThan(L.LEAD_TEXT_AT);
+    const mid = L.LEAD_TEXT_AT + 50;
+    expect(at(mid).leadBg!).toBeGreaterThan(at(mid).leadRule!);
+    expect(at(mid).leadRule!).toBeGreaterThan(at(mid).lead!);
+    // Held: everything fully shown for about a second.
+    const fullFrom = L.LEAD_TEXT_AT + L.LEAD_TEXT;
+    const fullUntil = L.GROUPS_AT - L.LEAD_CONTENT_OUT_BEFORE;
+    for (const t of [fullFrom, (fullFrom + fullUntil) / 2, fullUntil]) expect(at(t)).toMatchObject({ leadBg: 1, leadRule: 1, lead: 1, leadIn: 1 });
+    expect(fullUntil - fullFrom).toBeGreaterThanOrEqual(1000);
+    // Out: the statement and rule first, then the ground, complete exactly as the list begins.
+    const contentGone = fullUntil + L.LEAD_CONTENT_OUT;
+    expect(at(contentGone).lead).toBe(0);
+    expect(at(contentGone).leadRule).toBe(0);
+    expect(at(contentGone).leadBg!).toBeGreaterThan(0);
+    for (let t = L.GROUPS_AT; t <= T.end; t += 100) expect(at(t)).toMatchObject({ leadBg: 0, leadRule: 0, lead: 0 });
+    // The statement rises on the way in only.
+    expect(at(L.GROUPS_AT - 100).leadIn).toBe(1);
+    // And the list does not begin until the rail is light again.
+    for (let t = 0; t < L.GROUPS_AT; t += 20) {
+      const { title, appear } = at(t);
+      expect(title).toBe(0);
+      expect(appear.every((a) => a === 0)).toBe(true);
     }
   });
 });

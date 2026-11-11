@@ -13,6 +13,7 @@ import {
   APP,
   FOCAL_ROW,
   LIST_ITEM,
+  LIST_TOTAL,
   ROW_ITEMS,
   buildPlanScene,
   HEADER,
@@ -68,6 +69,8 @@ import '../demo/screens/procurement-chain/chainTokens.css';
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 /** The dependency summary's rise as it fades in, px (the step list's, Section 54.4.2). */
 const SUMMARY_RISE = 6;
+/** The opening panel's rise as it fades in, px (Section 54.4.2). */
+const LEAD_RISE = 8;
 
 type Aside = {
   /** An unclipped layer the size of the frame's inner box, beside it. */
@@ -124,6 +127,13 @@ export default function PlanChainPreview({
   const windowRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const titleRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const leadRef = useRef<HTMLDivElement>(null);
+  const leadBgRef = useRef<HTMLDivElement>(null);
+  const leadRuleRef = useRef<HTMLSpanElement>(null);
+  const leadTextRef = useRef<HTMLParagraphElement>(null);
+  const totalRef = useRef<HTMLDivElement>(null);
 
   /* When this pass began; survives a scene rebuild (fonts arriving) mid-pass. */
   const startedAt = useRef<number | null>(null);
@@ -231,7 +241,7 @@ export default function PlanChainPreview({
       if (win) {
         Object.assign(win.style, {
           // Only when the window shares the frame with the list.
-          opacity: String(lay.mode === 'aside' || lay.mode === 'none' ? 0 : s.app),
+          opacity: String(lay.mode === 'stacked' ? s.app : 0),
           transform: `translate(${lay.window.x}px, ${lay.window.y}px)`,
           width: `${APP.w * lay.window.s}px`,
           height: `${APP.h * lay.window.s}px`,
@@ -259,11 +269,60 @@ export default function PlanChainPreview({
         const x = p.x;
         const y = p.y + (1 - s.list.appear[i]) * 6;
         const k = p.s;
-        el.style.opacity = String(s.list.appear[i] * fade[i]);
+        // With nowhere to rest outside the frame, the entries fade with the rail.
+        el.style.opacity = String(s.list.appear[i] * fade[i] * (lay.mode === 'side' ? (s.list.rail ?? 1) : 1));
         el.style.transform = `translate(${x}px, ${y}px) scale(${k})`;
         const hl = el.firstElementChild as HTMLElement | null;
         if (hl) hl.style.opacity = String(s.list.active[i]);
       });
+      // The rail's heading and total: on the rail only, and gone as the schedule is revealed.
+      const onRail = lay.mode === 'aside' || lay.mode === 'side';
+      const rail = s.list.rail ?? 1;
+      const first = lay.start[0];
+      const last = lay.start[lay.start.length - 1];
+      if (titleRef.current && first) {
+        titleRef.current.style.opacity = String(onRail ? (s.list.title ?? 0) * rail : 0);
+        titleRef.current.style.transform = `translate(${first.x}px, 14px) scale(${first.s})`;
+      }
+      if (totalRef.current && last) {
+        const o = onRail ? (s.list.total ?? 0) * rail : 0;
+        totalRef.current.style.opacity = String(o);
+        totalRef.current.style.transform = `translate(${last.x}px, ${last.y + (LIST_ITEM.h + LIST_TOTAL.gap) * last.s + (1 - (s.list.total ?? 0)) * 6}px) scale(${last.s})`;
+      }
+      // The rail's opening state: the rail's own box, in navy, with its rule and statement.
+      if (leadRef.current) {
+        const bg = s.list.leadBg ?? 0;
+        const rule = s.list.leadRule ?? 0;
+        const text = s.list.lead ?? 0;
+        Object.assign(leadRef.current.style, {
+          visibility: bg > 0 || rule > 0 || text > 0 ? 'visible' : 'hidden',
+          transform: `translate(${lay.panel.x}px, ${lay.panel.y}px)`,
+          width: `${lay.panel.w}px`,
+          height: `${lay.panel.h}px`,
+        });
+        if (leadBgRef.current) leadBgRef.current.style.opacity = String(bg);
+        if (leadRuleRef.current) {
+          leadRuleRef.current.style.opacity = String(rule);
+          // Drawn out from its left end as it appears.
+          leadRuleRef.current.style.transform = `scaleX(${0.4 + 0.6 * (s.list.leadRuleIn ?? 1)})`;
+        }
+        if (leadTextRef.current) {
+          leadTextRef.current.style.opacity = String(text);
+          // A small rise on the way in only; it leaves by fading, without moving.
+          leadTextRef.current.style.transform = `translateY(${(1 - (s.list.leadIn ?? 1)) * LEAD_RISE}px)`;
+        }
+      }
+      // The field's requirement, stated at the chart's top left, clear of the milestone's rule.
+      if (cardRef.current) {
+        const o = s.list.card ?? 0;
+        Object.assign(cardRef.current.style, {
+          opacity: String(o),
+          visibility: o > 0 ? 'visible' : 'hidden',
+          left: `${lay.area.x + 14}px`,
+          top: `${lay.area.y + HEADER.h + 12}px`,
+          maxWidth: `${lay.area.w - 28}px`,
+        });
+      }
       // The summary row sits under the chain's own area.
       if (summaryRef.current) {
         Object.assign(summaryRef.current.style, {
@@ -367,8 +426,39 @@ export default function PlanChainPreview({
               </div>
             </div>
           </div>
+          {/* Its working days, to the longest group's scale: the weight of the work. */}
+          {e.workdays !== null && (
+            <span
+              className="absolute bottom-0 left-[29px] h-[2.5px] rounded-full"
+              style={{ width: Math.max(4, e.weight * (LIST_ITEM.w - 37)), background: v(tokenFor(e.family)) }}
+            />
+          )}
         </div>
       ))}
+      {/* The rail's heading: the item whose plan this is. */}
+      <div
+        ref={titleRef}
+        className="pointer-events-none absolute top-0 left-0 origin-top-left"
+        style={{ width: LIST_ITEM.w, opacity: 0, fontFamily: '"Inter Tight", Inter, system-ui, sans-serif' }}
+      >
+        <div style={{ paddingLeft: 10, paddingRight: 4, fontSize: 13.5, fontWeight: 700, lineHeight: '17px', letterSpacing: '-0.01em', color: v('--jpd-text-strong') }}>
+          {scene.itemTitle}
+        </div>
+      </div>
+      {/* The total beneath the list. */}
+      <div
+        ref={totalRef}
+        className="pointer-events-none absolute top-0 left-0 origin-top-left"
+        style={{ width: LIST_ITEM.w, height: LIST_TOTAL.h, opacity: 0, fontFamily: '"Inter Tight", Inter, system-ui, sans-serif' }}
+      >
+        <div
+          className="flex items-baseline justify-between"
+          style={{ marginLeft: 10, marginRight: 6, paddingTop: 5, borderTop: `1px solid ${v('--jpd-border')}`, fontSize: 11, lineHeight: '13px', color: v('--jpd-text-secondary') }}
+        >
+          <span>Total</span>
+          <span style={{ fontWeight: 700, color: v('--jpd-text-strong') }}>{`${scene.totalWorkdays} working days`}</span>
+        </div>
+      </div>
 
     </>
   );
@@ -636,6 +726,53 @@ export default function PlanChainPreview({
 
       {/* THE STEP LIST: rendered beside the frame when the section offers an
           unclipped layer, so it can rest outside the frame; else in it. */}
+      {/* Stage 1: THE RAIL'S OPENING STATE (Section 54.4.2). The rail itself,
+          edge to edge, turns to the application's navy and carries the
+          statement; then it returns to its light surface and the list
+          begins. Nothing floats and nothing moves but the statement's small
+          rise. The application's own navy, amber and light text tokens. */}
+      {!connect && (
+        <div ref={leadRef} className="pointer-events-none absolute top-0 left-0 flex items-center" style={{ visibility: 'hidden' }}>
+          <div ref={leadBgRef} className="absolute inset-0" style={{ opacity: 0, background: v('--jpd-nav-bg-start') }} />
+          <div className="relative" style={{ padding: '0 22px', fontFamily: '"Inter Tight", Inter, system-ui, sans-serif' }}>
+            <span
+              ref={leadRuleRef}
+              className="block origin-left"
+              style={{ opacity: 0, width: 28, height: 3, marginBottom: 14, background: v('--jpd-accent') }}
+            />
+            <p
+              ref={leadTextRef}
+              className="text-balance"
+              style={{
+                opacity: 0,
+                margin: 0,
+                fontSize: 21,
+                fontWeight: 600,
+                lineHeight: '26px',
+                letterSpacing: '-0.02em',
+                color: v('--jpd-nav-text'),
+              }}
+            >
+              {scene.lead}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Stage 1: the field's requirement, stated plainly (Section 54.4.2). */}
+      {!connect && (
+        <div
+          ref={cardRef}
+          className="pointer-events-none absolute"
+          style={{ opacity: 0, fontFamily: '"Inter Tight", Inter, system-ui, sans-serif' }}
+        >
+          <div style={{ fontSize: 16, fontWeight: 700, lineHeight: '20px', letterSpacing: '-0.015em', color: v('--jpd-text-strong') }}>{scene.itemTitle}</div>
+          <div style={{ marginTop: 3, fontSize: 12.5, lineHeight: '17px', color: v('--jpd-text-secondary') }}>
+            Required On Site: <span style={{ fontWeight: 700, color: v('--jpd-text-strong') }}>{formatDate(scene.focal.item.requiredOnSiteDate)}</span>
+          </div>
+        </div>
+      )}
+
       {connect ? null : host ? createPortal(<div className="jpd absolute inset-0">{stepList}</div>, host) : stepList}
 
       {/* The chain's own summary row (Section 51.9), while the whole chain is in view. */}
