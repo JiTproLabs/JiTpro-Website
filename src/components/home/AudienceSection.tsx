@@ -53,12 +53,15 @@
  * SURFACE: --jp-surface-light, opening the light act (§54.1). No amber: on
  * this ground the amber tokens fail the contrast minimum (§8.8).
  *
- * THE IDENTIFY ADDITIONS (§54.2.1): a tab may carry a role link (between
- * headline and description) and a method checklist (beneath the
- * description). Today only general contractors → Identify does. The
- * checklist's lines fade in in order once the section has been seen and
- * while the tab is selected; they reset instantly when it is left, so each
- * return plays them again, and nothing restarts while it stays selected.
+ * THE IDENTIFY ADDITIONS (§54.2.1, revised 2026-11-11): a tab may carry a
+ * second description paragraph and a closing statement. Today only general
+ * contractors → Identify does. Both are plain copy, always shown.
+ *
+ * A tab may also carry a role link (between headline and description) and a
+ * method checklist (beneath the description), the 2026-11-09 Identify
+ * additions. No tab carries them since 2026-11-11; the support is kept.
+ * The checklist's lines fade in in order once the section has been seen and
+ * while the tab is selected; they reset instantly when it is left.
  *
  * THE CONNECT ADDITION (§54.2.2): a tab may carry a dependency summary
  * beneath the description, six categories in two columns. Today only general
@@ -68,8 +71,9 @@
  *
  * THE VISUAL COLUMN keeps the reserved placeholder (§46.8.1, §46.12) until
  * each visualization is specified (§54.4). It is deliberately plain. The
- * exceptions are general contractors → Identify, which shows the complete
- * register under a camera (§54.4.1, IdentifyRegisterPreview.tsx), and
+ * exceptions are general contractors → Identify, which turns scattered
+ * project documents into a procurement inventory with its scope gaps, then
+ * the register (§54.4.1, IdentifyRegisterPreview.tsx), and
  * general contractors → Plan, which builds a procurement chain backward and
  * reveals the project schedule around it (§54.4.2, PlanChainPreview.tsx).
  */
@@ -529,6 +533,16 @@ export default function AudienceSection() {
                       >
                         {tab.description}
                       </p>
+                      {tab.descriptionMore && (
+                        <p className="mt-3 max-w-[58ch] text-[1.0625rem] leading-[1.7] text-jp-ink-secondary sm:text-[1.125rem] lg:text-[1.1875rem]">
+                          {tab.descriptionMore}
+                        </p>
+                      )}
+                      {tab.closing && (
+                        <p className="mt-4 max-w-[58ch] font-heading text-[1.0625rem] font-semibold leading-snug text-jp-background sm:text-[1.125rem] lg:text-[1.1875rem]">
+                          {tab.closing}
+                        </p>
+                      )}
                       {tab.checklist && <MethodChecklist lines={tab.checklist} played={isOpen && seen} />}
                       {tab.dependencyCategories && (
                         <DependencySummary listRef={categoriesRef} categories={tab.dependencyCategories} />
@@ -568,7 +582,7 @@ export default function AudienceSection() {
                   >
                     {owner.tabs.map((tab, i) => {
                       /* The specified visuals (§54.4.1, §54.4.2, §54.4.3) play on
-                         the same state the Identify checklist uses. */
+                         one state: the tab is selected and the section seen. */
                       const played = owner.id === audience.id && i === selection.tabIndex && seen;
                       if (tab.id === 'gc-identify') return <IdentifyRegisterPreview key={tab.id} played={played} />;
                       if (tab.id === 'gc-plan')

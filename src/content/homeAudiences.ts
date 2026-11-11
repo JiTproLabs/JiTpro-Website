@@ -2,7 +2,8 @@
  * The homepage audience section's copy (Design System Section 54.2).
  *
  * The copy is used exactly as supplied by the founder (2026-11-09; the Plan
- * description revised 2026-11-10, the Connect copy 2026-11-11). Only the
+ * description revised 2026-11-10, the Connect and Identify copy 2026-11-11).
+ * Only the
  * option and tab labels differ from the supplied text: they are set in
  * sentence case, as Sections 7.7 and 48.1 require of headings and controls.
  * Headlines and descriptions MUST NOT be reworded as a side effect of layout
@@ -25,6 +26,13 @@ export type AudienceTab = {
   label: string;
   headline: string;
   description: string;
+  /** Optional second paragraph of the description (Section 54.2.1). */
+  descriptionMore?: string;
+  /**
+   * Optional closing statement beneath the description (Section 54.2.1): one
+   * short line, in the strongest ink.
+   */
+  closing?: string;
   /**
    * Optional link to a role page, shown between the headline and the
    * description (Section 54.2.1). `to` is an internal route.
@@ -85,15 +93,12 @@ export const HOME_AUDIENCES: readonly Audience[] = [
       {
         id: 'gc-identify',
         label: 'Identify',
-        headline: 'Identify everything your project needs.',
+        headline: 'You can’t manage what you haven’t identified.',
         description:
-          'Review the project scope, drawings, specifications, and schedules to identify every product, material, and service required for construction. Organize these requirements into a comprehensive Procurement Register.',
-        roleLink: { label: 'Explore JiTpro for general contractors', to: '/roles/general-contractors' },
-        checklist: [
-          'Review project scope',
-          'Identify products, materials, and services',
-          'Build the Procurement Register',
-        ],
+          'Every construction project contains hundreds of products, materials, and services scattered across drawings, specifications, and schedules.',
+        descriptionMore:
+          'JiTpro brings these requirements together into a comprehensive procurement inventory, identifies missing or undefined scope, and helps establish what the project actually needs.',
+        closing: 'Know what you need. Know what’s missing.',
       },
       {
         id: 'gc-plan',

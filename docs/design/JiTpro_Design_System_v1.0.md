@@ -50,6 +50,7 @@ TODO:
 
 | Date | Decision | Scope | Owner | Source/Rationale |
 | --- | --- | --- | --- | --- |
+| 2026-11-11 | **General contractors → *Identify* is redesigned: new copy, and its visual becomes a four-stage story ending in the register (Sections 54.2, 54.2.1 and 54.4.1 rewritten; Sections 54.3 and 54.4 amended).** **Why.** The camera tour showed a sophisticated register. The tab should instead show what Identify does for a contractor: the project's unavoidable complexity is organized and managed for them (Tesler's law of the conservation of complexity), so they can see what the project needs and what is missing. **Copy (founder-supplied).** Headline *You can't manage what you haven't identified.*; two description paragraphs; closing statement *Know what you need. Know what's missing.* The role link and the method checklist are withdrawn from the tab. **Visual.** One timeline of 13.0 s from the tab's *played* state: (1) four project documents, scattered; (2) the documents are gathered to one side and a six-row procurement inventory forms beside them, one requirement at a time; (3) each requirement is marked defined, missing information, or unresolved scope, in the application's existing status language; (4) the inventory cross-fades into the canonical register, which holds on its heading, makes one vertical pan to its rows, holds, and then pulls back once to the whole application and rests there, as *Plan* ends on the whole Schedule screen (the pull-back added the same day, founder direction). The six-stop pan-and-zoom tour is withdrawn; the camera now makes two moves. **Limits.** It illustrates the method: nothing depicts scanning, extraction or validation, the conditions are representative, and no dates, lateness or recovery appear (those belong to Plan, Connect and Control). **Unchanged.** The section's state, pinning, scroll zones, transitions, frame and height; the register screen; Plan, Connect and Control. The pass is 3.6 s longer than the original's 9.4 s: four stages each need reading time, and the closing pull-back takes 2.5 s with its hold. The original is archived: branch `archive/identify-original-visualization`, record `docs/design/archive/Identify_Original_Visualization.md`. | Marketing website (homepage) | Jeff Kaufman | Founder direction 2026-11-11. |
 | 2026-11-11 | **General contractors → *Connect*: new headline and description, and a six-category dependency summary beneath them (Section 54.2 revised; new Section 54.2.2; Sections 54.3 and 54.4.3 amended).** **Copy (founder-supplied).** The headline *Turn loose dependencies into managed commitments.* becomes *Make sure every procurement activity has what it needs to move forward, without interruption.* The description becomes *Identify the decisions, information, approvals, and other requirements that each activity depends on. Connect them to the procurement schedule, establish responsibility, and make clear when each is needed.* Typography and spacing are unchanged. **Summary.** Beneath the description, six categories in two columns of three, each a `lucide` icon beside its label: *Design & Engineering*, *Owner Decisions & Selections*, *External Inputs & Commitments*, *Scope & Trade Commitments*, *Permits & Agency Requirements*, *Field & Installation Requirements*. No cards, borders or fills; ink only. **The Plan/Connect distinction.** There is no *Reviews & Approvals* category. Reviews, revisions and approvals are scheduled procurement activities and belong to Plan; Connect names what those activities need from outside parties (an architect's required response, an owner's selection). The categories are the kinds of requirement JiTpro identifies across a project, not six dependencies shown in the animation, which keeps its three. **Reveal.** The summary is hidden while the animation plays and fades in with a 6 px rise, in reading order, on the Connect visual's own clock, finishing exactly as the camera comes to rest on the application screen; it then stays. The cards, camera, timing and final view are unchanged. **Fit.** At 1440 × 900 and 1920 × 1080 the section's height is unchanged. At 1280 × 800 the new headline wraps to a fourth line, so on short desktop views (from `lg`, at most 864 px tall) the summary is set a step smaller and tighter and the presentation's vertical padding is 48 px instead of 64 px, which keeps the section pinned. | Marketing website (homepage) | Jeff Kaufman | Founder direction 2026-11-11. |
 | 2026-11-10 | **General contractors → *Connect*: the plan's dependencies, revealed forward through Plan's chain (new Section 54.4.3; *Final Glazing Selection* renamed *Final Glazing Specification*).** Connect starts and ends on Plan's finished application screen, zooms into the featured chain at its start, travels forward through the completed chain (not rebuilding it), and reveals its three dependencies as their activities come into view: diamond, then connector, then the card fading in with an 8 px rise, each held 2.4 s to read. It then travels on to Required On Site and returns to the application. It reuses the chain's existing commitment cards, connectors and diamonds (Section 51.10) in their on-plan colours only: no committed, provided or late lines, no late colour, no issues. Those belong to *Control*. **One schedule:** Connect draws Plan's scene and chain unchanged; its dependency dates are derived from that chain (July 6, August 10 and October 14, 2026), per the founder's ruling that the current Plan schedule governs Connect. The timescale header, calendar grid, Plan, the copy and the pinned section are unchanged. | Marketing website (homepage) | Jeff Kaufman | Founder direction and ruling 2026-11-10. |
 | 2026-11-10 | **General contractors → *Plan*: a long activity's label stays inside the visible part of its bar (Section 54.4.2 amended).** Fabrication's in-bar label (its icon and *Fabrication*, white bold, the chain's existing chevron label) was centred on the whole 2104-canvas-px bar, so at the build scale it lay about 1000 px off-screen and was never seen while the chain built. For an activity longer than `LONG_SPAN` (1000 canvas px; in the approved scenario only Fabrication), the label is now centred within the part of the bar in view in the chain's area, as a scheduling tool keeps a long bar's label visible, and kept clear of its ends (the Final Approval and Release for Fabrication milestones at its start, the chevron point at its end). It is revealed as before, as the planning edge clears the bar's start, at the end of Fabrication's move, and stays centred in the visible part as the camera moves on, until the bar leaves the frame. Wherever the whole bar is in view (the whole-chain hold, the schedule), the offset is exactly zero, so the label is at the bar's true centre. The offset is derived from the camera in `planStateAt`, the one state. No change to the label's typography, the bar, its dates or duration, the milestones, the camera, the timing, the step list, the grid or the timescale header. | Marketing website (homepage) | Jeff Kaufman | Founder direction 2026-11-10: make the long Fabrication segment identifiable like the other activities. |
@@ -4727,7 +4728,7 @@ Status: APPROVED (2026-11-09) for Phase 1. Direction supplied by Jeff Kaufman (D
 
 | Audience | Tab | Headline | Description |
 | --- | --- | --- | --- |
-| **General contractors** (default) | Identify | Identify everything your project needs. | Review the project scope, drawings, specifications, and schedules to identify every product, material, and service required for construction. Organize these requirements into a comprehensive Procurement Register. |
+| **General contractors** (default) | Identify | You can't manage what you haven't identified. | Every construction project contains hundreds of products, materials, and services scattered across drawings, specifications, and schedules. *(second paragraph)* JiTpro brings these requirements together into a comprehensive procurement inventory, identifies missing or undefined scope, and helps establish what the project actually needs. *(closing statement)* Know what you need. Know what's missing. |
 | | Plan | Build a procurement plan that supports your schedule. | Starting with when each product, material, and service is required in the field, pull backward through every procurement activity. Establish the work, sequence, and realistic durations needed to deliver everything on time. |
 | | Connect | Make sure every procurement activity has what it needs to move forward, without interruption. | Identify the decisions, information, approvals, and other requirements that each activity depends on. Connect them to the procurement schedule, establish responsibility, and make clear when each is needed. |
 | | Control | Know what needs your attention today, and what's coming tomorrow. | Track commitments, identify emerging risks, and distinguish what requires action today from what can wait. Stay ahead of problems before they disrupt field execution or erode margins. |
@@ -4745,31 +4746,20 @@ The general contractor *Connect* headline and description were revised on 2026-1
 
 The general contractor *Plan* description was revised on 2026-11-10 (founder-supplied). It replaces *Identify every product, material, and service the project requires. Pull backward from when the field needs each one, establishing the actual work and realistic timeline required to get it there.* The new wording starts from the field requirement and works backward, which distinguishes Plan from Identify (open item 6, Section 54.5).
 
-The general contractor *Identify* copy was revised on 2026-11-09 (founder-supplied). It replaces *Find the problems before they reach the field.* and its description. The tab now states the first step of the method: identify and organize everything the project must procure.
+The general contractor *Identify* copy was replaced on 2026-11-11 (founder-supplied; Section 54.2.1). It replaces *Identify everything your project needs.*, its description, its role link and its checklist.
 
-### 54.2.1 Identify tab: role link and checklist (2026-11-09)
+The general contractor *Identify* copy was first revised on 2026-11-09 (founder-supplied). It replaces *Find the problems before they reach the field.* and its description. The tab now states the first step of the method: identify and organize everything the project must procure.
 
-The general contractor *Identify* panel carries two additions. No other tab has them.
+### 54.2.1 Identify tab: second paragraph and closing statement (rewritten 2026-11-11)
 
-**Role link.** Between the headline and the description:
-- copy *Explore JiTpro for general contractors*, then a trailing right arrow (lucide `ArrowRight`, `aria-hidden`). Founder-supplied in title case; set in sentence case (Sections 7.7, 48.1);
-- destination: the existing role page, the internal `/roles/general-contractors` route, through React Router `Link`;
-- **color (Section 8.8, amber on light surfaces):** the text and arrow are `--jp-background`, the strongest light-surface ink. Amber appears only as a 2px `--jp-brand-amber` underline under the text, offset 5px. The underline is decoration: the text, the arrow and the position carry the link. Amber MUST NOT carry the text or the arrow here;
-- `font-heading` semibold, `1rem` (`1.0625rem` from `sm`), below the headline and description registers;
-- hover: the arrow moves 4px right over 200 ms ease-out, the same single gesture as the *How we do it* link (Section 54.1). None under reduced motion;
-- focus: a 2px `--jp-background` outline, offset 2px (Section 46.10, light surface);
-- vertical padding brings the target to 44px (Section 34.1).
+Status: APPROVED (founder direction, 2026-11-11). The general contractor *Identify* panel carries two additions. No other tab has them. Implementation: `descriptionMore` and `closing` on the tab in `src/content/homeAudiences.ts`; rendered by `AudienceSection.tsx`.
 
-**Checklist.** Beneath the description, three lines:
-1. *Review project scope*
-2. *Identify products, materials, and services*
-3. *Build the Procurement Register*
+- **Second paragraph.** The description is two paragraphs. The second is set exactly as the first (Section 46.12), 12 px beneath it.
+- **Closing statement.** *Know what you need. Know what's missing.* One line beneath the description, 16 px below it: the heading face, semibold, at the description's size, in `--jp-background`, the strongest light-surface ink. No amber (Section 8.8). It is copy, not a control.
+- **No motion.** Both are plain copy, shown with the panel. Nothing in the copy animates; the visual carries the sequence (Section 54.4.1).
+- **Fit (Section 46.12 fit rule).** The panel is shorter than the tallest panel (*Connect*) at 1280 × 800, 1440 × 900 and 1920 × 1080, so the section's height and pinning are unchanged.
 
-- It is a statement of the method's steps, not a record of work done. No boxes, borders, fills, numbers or controls. Nothing may suggest a form, or that a real project's items are complete.
-- Each line is a `lucide` `Check` (`aria-hidden`, `--jp-ink-secondary`) beside the text. Lines one and two are `--jp-ink-secondary`, normal weight. The final line is `--jp-background` and semibold: the outcome, slightly emphasised. No amber.
-- **Motion (Section 46).** One state drives it: *played*, true once the section has been in view and while *Identify* is selected. On *played*, the lines fade in and rise 4px in order (300 ms each, starting 400 ms after selection so the panel's own fade completes first, then 675 ms apart: 400, 1075 and 1750 ms; revised twice on 2026-11-09, from 180 ms to 450 ms to 675 ms). Each line's check fades in 120 ms after its text. Leaving the tab resets the lines at once, with no exit animation, because the whole panel is already fading out. Returning to the tab plays the sequence again. While the tab stays selected nothing restarts, since scroll within the tab's zone does not change the state (Section 46.12 hysteresis).
-- **Reduced motion:** the lines appear at once with no transition.
-- The panel, with the link and the checklist, MUST keep the pinned presentation within the view at 1280×800, 1440×900 and 1920×1080, as before the addition (Section 46.12 fit rule). Spacing is tight for that reason: headline to link 4px plus the link's 12px padding, link to description 4px (6px from `sm`), description to checklist 16px (20px from `sm`), 8px between lines.
+**Withdrawn 2026-11-11.** The 2026-11-09 additions, a role link (*Explore JiTpro for general contractors*, to `/roles/general-contractors`) between headline and description and a three-line method checklist beneath the description, are no longer shown on this tab. Their specification and timing are preserved in `docs/design/archive/Identify_Original_Visualization.md`. `AudienceSection.tsx` still supports both for any tab; no tab uses them. Restoring either is a copy decision (Section 54.2).
 
 ### 54.2.2 Connect tab: dependency summary (2026-11-11)
 
@@ -4805,7 +4795,7 @@ Status: APPROVED (founder direction, 2026-11-11). The general contractor *Connec
 
 ## 54.3 Copy governance
 
-- **"Procurement" (scoped exception, 2026-11-09).** The word appears in the general contractor *Identify* description and checklist (*Procurement Register*, added 2026-11-09), the general contractor *Plan* headline and description (*procurement activity*, revised 2026-11-10), the *Connect* headline and description (revised 2026-11-11), the architect *Focus on priorities* description, and the owner *Reduce risk* description. This is a scoped exception to Section 20.1's retired-language rule, limited to this section's tab copy.
+- **"Procurement" (scoped exception, 2026-11-09).** The word appears in the general contractor *Identify* description (*procurement inventory*, revised 2026-11-11; previously *Procurement Register* in the description and checklist, added 2026-11-09), the general contractor *Plan* headline and description (*procurement activity*, revised 2026-11-10), the *Connect* headline and description (revised 2026-11-11), the architect *Focus on priorities* description, and the owner *Reduce risk* description. This is a scoped exception to Section 20.1's retired-language rule, limited to this section's tab copy.
 - **Audience.** The general contractor is the default and remains the homepage's primary audience (Section 20.1, Audience). Architects and design teams, and project owners, are addressed in this section only, as other parties to the projects the general contractor's plan supports.
 - **The engagement model is unchanged** (Section 20.1). JiTpro works with the general contractor's team. The architect and owner tabs describe what those parties gain from the plan the general contractor's team runs. This section, and anything added to it, MUST NOT state or imply that JiTpro coordinates architects or owners directly, or becomes another project-team participant.
 - **"Margin."** The general contractor *Control* description names margin as what schedule disruption costs. This is permitted (released 2026-08-27), and it is attached to no promise or figure.
@@ -4813,48 +4803,78 @@ Status: APPROVED (founder direction, 2026-11-11). The general contractor *Connec
 
 ## 54.4 Visualizations: Phase 2 direction (not specified)
 
-Every tab's visual column shows the reserved placeholder (Section 46.12), except general contractors → *Identify*, which shows the complete register under a camera (Section 54.4.1), and general contractors → *Plan*, which builds a procurement chain backward and reveals the project schedule around it (Section 54.4.2). The founder's recorded direction for Phase 2 includes:
+Every tab's visual column shows the reserved placeholder (Section 46.12), except general contractors → *Identify*, which turns scattered project documents into a procurement inventory with its scope gaps in view and then into the register (Section 54.4.1), and general contractors → *Plan*, which builds a procurement chain backward and reveals the project schedule around it (Section 54.4.2). The founder's recorded direction for Phase 2 includes:
 
 - simplified versions of the homepage Product Register (Section 52), the Required On-Site figure (Section 53.1) and the procurement schedule;
 - new animations, including floating external dependencies transforming into structured, linked commitments.
 
 None of these is specified. Nothing in this subsection authorizes code. Each visual MUST be specified under Section 46.12 and recorded in the Decision Log before implementation.
 
-### 54.4.1 Identify: the complete register under a camera (2026-11-09; rewritten 2026-11-10)
+### 54.4.1 Identify: from scattered documents to the register (rewritten 2026-11-11)
 
-Status: APPROVED (founder direction, 2026-11-09; rewritten 2026-11-10). Scope: the general contractor *Identify* visual only. Every other tab keeps the reserved placeholder.
+Status: APPROVED (founder direction, 2026-11-11). Scope: the general contractor *Identify* visual only.
 
-**What it is.** The complete JiTpro register interface, seen through the frame as if by a camera that guides the reader around a real working deliverable. The register is never simplified for the homepage: the camera, not the content, decides what is seen. Implementation: `src/components/home/IdentifyRegisterPreview.tsx`, with the camera in `identifyRegisterCamera.ts`.
+*Rewritten 2026-11-11.* The 2026-11-10 version was a six-stop pan-and-zoom tour of the complete register. It demonstrated the register rather than what Identify does. That version is withdrawn and archived: branch `archive/identify-original-visualization`, record `docs/design/archive/Identify_Original_Visualization.md`. Kept from it: the canonical register on its fixed canvas, the camera by `transform` only, the cover clamp, its overview of the whole application (now the resting view), the single *played* state, and the reduced-motion rule.
 
-*Rewritten 2026-11-10.* The 2026-11-09 version drew a separate three-column homepage sheet (*Item / Description*, *Trade*, *Source*). That simplified the register itself, which was the mistake this rewrite corrects. That sheet, its row fade-in and its first-row emphasis are withdrawn.
+**What it communicates.** Construction procurement has complexity that cannot be removed. Someone must hold it. JiTpro organizes and manages it so the contractor does not have to rebuild it from separate documents (Tesler's law of the conservation of complexity). The visual shows that as one transformation: scattered project information, then identified requirements, then visible scope gaps, then an organized inventory. The reader should conclude that JiTpro helps find everything the project needs and shows what is missing. It demonstrates a process and its outcome, not a feature list.
 
-**The register is the canonical screen.**
-- The preview renders `ProductRegisterScreen` (`src/components/demo/screens/ProductRegisterScreen.tsx`). It is the same component the Learn More page, the expanded view and the demo lab render, with its shell, table, fixture and `--jpd-*` tokens. It is not a homepage copy (the registry's one-implementation rule).
-- It is drawn on its fixed 1448 × 1086 canvas, never reflowed. The canvas holds the JiTpro sidebar, the project selector, the register heading, the five summary cards, search and filters, and the full table. The table's ten columns are *Product ID*, *Product / Description*, *Category*, *Trade*, *Supplier / Manufacturer*, *Status*, *Lead Time*, *Required On-Site*, *Source* and *Action*. The canvas also holds the Product Detail panel. The first row is the screen's own selected row.
-- **The one homepage difference is the heading.** It reads *Procurement Register*, following the *Identify* copy (open item 5, Section 54.5), through the screen's optional `title` prop. Every other surface omits the prop and keeps *Product Register*.
+**Implementation.** `src/components/home/IdentifyRegisterPreview.tsx` (the visual), `identifyStoryScene.ts` (content, timing and the state function) and `identifyRegisterCamera.ts` (the register's two views).
 
-**Frame.** The existing 16:10 visual frame (Section 46.12), unchanged in size, so the section's fit and pinning are unaffected. The canvas is scaled and clipped inside it. It is never fitted whole at a readable size, which a 16:10 frame cannot do for a 4:3 canvas.
+**Two layers in the existing 16:10 frame** (Section 46.12; the frame's size is unchanged, so fit and pinning are unaffected):
+- **The story.** One SVG on a 480 × 300 design canvas, scaled as a unit to the frame. Nothing in it reflows, so nothing can overlap or clip at any frame size.
+- **The register.** `ProductRegisterScreen` on its fixed 1448 × 1086 canvas, beneath the story until stage 4. It is the canonical screen the demo lab renders, never a homepage copy. The one homepage difference remains its heading, *Procurement Register* (open item 5, Section 54.5), through the screen's `title` prop.
 
-**The camera.** A restrained pan-and-zoom over the canvas, by `transform` only (translate and scale, from the canvas's top-left). Layout never changes. It is driven by the preview's single *played* state, the checklist's (Section 46.3), and every time is declared in `identifyRegisterCamera.ts`.
+**The four stages.** Times are milliseconds after *played*.
 
-| Arrives at | View |
-| --- | --- |
-| 0 ms, held to 2400 ms | **Overview.** The interface's full width, from its top, at the smallest scale that covers the frame. Sidebar, project selector, heading, cards, filters, the table's upper rows and the detail panel are all in view. The 4:3 canvas is taller than the 16:10 frame, so its lowest strip (the last rows and the pager) is below the frame. |
-| 3800 ms | **Items and categories.** Zoom to the tour scale, the table's left edge at the frame's left: *Product ID*, *Product / Description*, *Category*, *Trade* and *Supplier*. |
-| 5200 ms | **Trades, suppliers and statuses.** Pan right, centred on *Trade* through *Status*. |
-| 6400 ms | **Lead times and Required On-Site dates.** Pan right, centred on *Lead Time* and *Required On-Site*. |
-| 7800 ms | **Source.** Pan right and down to the canvas's right edge: the *Source* column and the detail panel's *Procurement* and *Source Information*. |
-| 9400 ms | **Rest.** The register heading, subtitle, summary cards, filters and the first rows, with the selected first row, at the rest scale. The camera stops here. |
+| Stage | Time | What is shown |
+| --- | --- | --- |
+| 1. Scattered project information | 0 – 1600 | Four documents, each turned a degree or two, with a caption: *Architectural drawings* (an elevation sheet, A5.11), *Specifications* (two project-manual sections), *Construction schedule* (a bar chart) and *Consultant drawings* (a mechanical plan, M1.02). Nothing moves. |
+| 2. Identified requirements | 1600 – 4800 | The documents square up, shrink to half size and move to a column at the left, in one move (800 ms). Their captions fade out. A panel headed *Procurement inventory*, with the project's name, fades in beside them (from 2000 ms). Six requirements then appear in it one at a time, 350 ms apart from 2400 ms, each fading in over 350 ms with a 4 px rise. Each shows its name and the document reference it came from. |
+| 3. Visible scope gaps | 4800 – 8200 | The three defined requirements are checked together, and a key to the three conditions appears. Then each requirement needing attention is marked in turn, 600 ms apart from 5300 ms: its mark, a short note, and a row tint. The last is complete by 6850 ms and is held until 8200 ms. |
+| 4. The register | 8200 – 13000 | The story cross-fades into the register (600 ms), which arrives on its heading, project name and summary cards. It holds there until 9500 ms. The camera makes one vertical pan (1100 ms) down to the table's header and first rows and holds them close up until 11300 ms. It then pulls back once (1700 ms) to the whole application, and rests. |
 
-- **The overview holds until the checklist has finished** (its final check completes by 2070 ms). The camera is therefore never a second focal motion beside it (Section 46.4).
-- **Scales.** The tour shows about 600 canvas px across the frame, about 1× at desktop frame widths and never below 0.85×. The rest view shows about 700 canvas px, about 0.8–0.85× at desktop and never below 0.75×. Each is chosen so the table text stays readable.
-- **No empty space, ever.** Every view is clamped so the canvas covers the frame. Between two covering views, translate and scale ease on one shared progress, so every in-between frame covers the frame too. Nothing outside the interface is ever shown.
-- Each move is gently eased (`ease-in-out`), with no overshoot and no hold between moves.
-- It runs once per entry to the tab, by scroll or by click, and never loops. Leaving the tab returns the camera to the overview at once, so returning plays it again. A resize while it plays ends it at rest.
-- **Reduced motion:** no camera. The rest view is shown at once, which is the resolved final state (Section 46.5). Nothing in the preview depends on the motion.
-- There is no replay control (Section 46.6): re-entering the tab replays it, and the visual has no controls of its own (Section 46.12).
+**The six requirements,** in order: *Windows & Doors*, *Exterior Cladding*, *HVAC Equipment*, *Roofing*, *Lighting*, *Plumbing Fixtures*.
+- *Windows & Doors* is first and is defined. It is the item *Plan* and *Connect* go on to follow (Sections 54.4.2, 54.4.3).
+- The project is the register's own, read from the fixture (*Oak Ridge Residence*).
+- Where a requirement is also one of the register's rows, its document reference is read from the register fixture, never restated.
 
-**Accessibility.** The visual column stays `aria-hidden` (Section 46.12): the copy carries the meaning, and the preview is illustration. The screen contains no focusable elements.
+**The three conditions.** Identifying an item is not the same as establishing that its scope is complete.
+
+| Condition | Mark | Used for |
+| --- | --- | --- |
+| Defined | a check, `--jpd-ok-fg` | *Windows & Doors*, *HVAC Equipment*, *Roofing* |
+| Missing information | the warn dot, `--jpd-warn-dot`; note in `--jpd-warn-fg`; row tint `--jpd-warn-bg` | *Exterior Cladding*: *Incomplete specification*. *Plumbing Fixtures*: *Undefined product selection* |
+| Unresolved scope | a ringed question mark, `--jpd-text-strong`; row tint `--jpd-neutral-bg` | *Lighting*: *Unassigned scope responsibility* |
+
+- The marks are the status badge's own vocabulary (`DemoStatusBadge`: the check of *Approved*, the dot of *Pending*, the question mark of *TBD*), so the register that follows reads in the same language. Shape carries each condition as well as hue (Section 8.8).
+- The inventory's conditions agree with the register where they overlap: the windows are *Approved* there, and the stone veneer cladding is *Pending*. A test holds this.
+
+**What it MUST NOT claim.**
+- It illustrates the JiTpro method. Nothing may depict document scanning, AI extraction or automatic validation.
+- The conditions are representative. They MUST NOT be presented as findings from a real project.
+- No late dates, missed commitments, schedule variance or recovery. Those belong to *Plan*, *Connect* and *Control*.
+
+**The camera.** Three views of the register and two moves: a vertical pan, then one pull-back.
+- **Heading and rows.** These two views share one scale and one left edge, so the move between them is a pan, never a zoom. The table from *Product ID* through *Status* fills the frame's width (about 0.87× to 0.93× on desktop frames), and never below 0.75×, where the table text stops being readable. The rows view shows the table header and the first rows, with the *Status* column in view on desktop frames. On a narrow frame the 0.75× minimum applies and the view keeps the table's left, so names stay in view and the right-hand columns are cropped.
+- **The pull-back (added 2026-11-11, founder direction).** After the rows are held close up, the camera pulls back once to the whole application and rests there. It starts from rest and spends longer slowing than starting, so the application settles into place; it never overshoots (Section 46.4).
+- **Rest: the whole application.** The interface's full width, from its top, at the smallest scale that covers the frame: the sidebar and its navigation, the project selector, the heading, the five summary cards, search and filters, the table and the Product Detail panel. This is the framing *Plan* rests on (Section 54.4.2) and the original visualization's overview. The 4:3 canvas is taller than the 16:10 frame, so its lowest strip (the last row's foot and the pager) is below the frame, as in *Plan*. The first row, *Heritage Steel Windows*, is the screen's own selected row and the Product Detail panel describes it, so the windows item stays identifiable.
+- **No empty space, ever.** Every view is clamped so the canvas covers the frame. Between two covering views, translate and scale ease on one shared progress, so every in-between frame covers the frame too.
+
+**Drawing.**
+- Documents: `--jp-surface-white` sheets with linework and lettering in `--jp-ink-secondary` and `--jp-background`. No amber (Section 8.8). They are recognizable as a drawing sheet, a project manual and a schedule, and no more detailed than that needs (Section 47.4).
+- Inventory: the application's `--jpd-*` tokens, as the register uses, in the heading face; document references in the data face.
+
+**Motion: one clock (Section 46.3).** One driver, milliseconds since *played* turned true, is mapped by one pure function, `identifyStateAt(t)`. It returns everything that moves: the documents' gathering, the panel, each row, each mark, the key, the cross-fade, the pan and the pull-back. The component only applies it.
+- Each stage finishes before the next begins. Only one thing changes at a time, except the three defined checks, which appear together because they say one thing.
+- Fades and one controlled move; nothing bounces, overshoots or loops (Section 46.4). Every element that moves carries part of the story (Section 46.1).
+- **Length.** 13.0 s, against the original's 9.4 s. Four stages each need time to be read; the last note is held for more than a second before the register replaces it; and the rows are held for 700 ms before the 1.7 s pull-back.
+- It runs once per entry to the tab, by scroll or by click. Leaving the tab returns it to the opening frame at once, so returning plays it again. A resize re-applies the current moment at the new size; nothing restarts.
+- **Reduced motion:** no sequence. The resting view, the whole register application, is shown at once (Section 46.5). The copy carries the meaning without the visual (Section 46.2).
+- There is no replay control (Section 46.6).
+
+**Scroll.** Unchanged, and MUST NOT be changed without founder authorization. Scroll selects the tab (Section 46.12); the visual then runs on its own clock and is never scrubbed by scroll position.
+
+**Accessibility.** The visual column stays `aria-hidden` (Section 46.12). Nothing in it is focusable.
 
 ### 54.4.2 Plan: the procurement chain, built backward, then the schedule (2026-11-10)
 

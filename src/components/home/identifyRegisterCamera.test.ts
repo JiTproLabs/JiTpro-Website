@@ -1,24 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import {
-  CAMERA_DURATION_MS,
-  CAMERA_HOLD_UNTIL_MS,
   CANVAS,
-  CHECKLIST_END_MS,
-  STOPS,
-  cameraKeyframes,
+  MIN_SCALE,
+  cameraAt,
   cameraView,
   coverScale,
+  viewScale,
   type CameraView,
   type Frame,
 } from './identifyRegisterCamera';
 
 /** The preview frame at 1280×800, 1440×900 / 1920×1080, and a phone. */
-const FRAMES: Frame[] = [
+const DESKTOP: Frame[] = [
   { w: 558, h: 348 },
   { w: 598, h: 373 },
-  { w: 340, h: 212 },
 ];
-const IDS = ['overview', ...STOPS.map((s) => s.id)] as const;
+const PHONE: Frame = { w: 340, h: 212 };
+const FRAMES: Frame[] = [...DESKTOP, PHONE];
 
 /** The part of the canvas a view shows, in canvas px. */
 function shown(f: Frame, v: CameraView) {
@@ -28,63 +26,67 @@ function covers(f: Frame, v: CameraView) {
   const r = shown(f, v);
   return r.left >= -1e-9 && r.top >= -1e-9 && r.right <= CANVAS.w + 1e-9 && r.bottom <= CANVAS.h + 1e-9;
 }
-function lerp(a: CameraView, b: CameraView, t: number): CameraView {
-  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, scale: a.scale + (b.scale - a.scale) * t };
-}
 
 describe('Identify register camera (Design System Section 54.4.1)', () => {
-  it('holds the overview until the checklist has finished', () => {
-    expect(CAMERA_HOLD_UNTIL_MS).toBeGreaterThan(CHECKLIST_END_MS);
-    expect(STOPS[0]).toEqual({ id: 'overview', at: CAMERA_HOLD_UNTIL_MS });
-  });
-
-  it('visits the stops in the approved order, once, and ends at rest', () => {
-    expect(STOPS.map((s) => s.id)).toEqual(['overview', 'items', 'trades', 'dates', 'source', 'rest']);
-    const times = STOPS.map((s) => s.at);
-    expect(times).toEqual([...times].sort((a, b) => a - b));
-    const frames = cameraKeyframes(FRAMES[0]);
-    expect(frames[0].offset).toBe(0);
-    expect(frames[frames.length - 1].offset).toBe(1);
-    expect(CAMERA_DURATION_MS).toBe(STOPS[STOPS.length - 1].at);
-  });
-
   for (const f of FRAMES) {
     describe(`${f.w}×${f.h} frame`, () => {
-      it('never shows anything outside the interface, at a stop or between stops', () => {
-        for (let i = 0; i < IDS.length; i++) {
-          const v = cameraView(f, IDS[i]);
-          expect(covers(f, v)).toBe(true);
-          if (i > 0) {
-            const prev = cameraView(f, IDS[i - 1]);
-            for (const t of [0.1, 0.25, 0.5, 0.75, 0.9]) expect(covers(f, lerp(prev, v, t))).toBe(true);
-          }
-        }
+      it('never shows anything outside the interface, at any view or between views', () => {
+        const steps = [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1];
+        for (const pan of steps) expect(covers(f, cameraAt(f, pan))).toBe(true);
+        for (const out of steps) expect(covers(f, cameraAt(f, 1, out))).toBe(true);
       });
 
-      it('opens on the full width of the interface, from its top', () => {
-        const r = shown(f, cameraView(f, 'overview'));
+      it('ends on the whole application: its full width, from its top', () => {
+        const v = cameraAt(f, 1, 1);
+        expect(v).toEqual(cameraView(f, 'overview'));
+        expect(v.scale).toBeCloseTo(coverScale(f));
+        const r = shown(f, v);
         expect(r.left).toBeCloseTo(0);
         expect(r.right).toBeCloseTo(CANVAS.w);
         expect(r.top).toBeCloseTo(0);
-        expect(cameraView(f, 'overview').scale).toBeCloseTo(coverScale(f));
+        /* The sidebar, the heading, the cards, the toolbar and the table's first six rows. */
+        expect(r.bottom).toBeGreaterThanOrEqual(832);
       });
 
-      it('tours at a readable scale and pans left to right', () => {
-        const tour = (['items', 'trades', 'dates', 'source'] as const).map((id) => cameraView(f, id));
-        for (const v of tour) expect(v.scale).toBeGreaterThanOrEqual(0.85);
-        const lefts = tour.map((v) => shown(f, v).left);
-        expect(lefts).toEqual([...lefts].sort((a, b) => a - b));
-        /* The items view starts at the table; the source view reaches the canvas's right edge. */
-        expect(shown(f, tour[0]).left).toBeLessThanOrEqual(227);
-        expect(shown(f, tour[3]).right).toBeCloseTo(CANVAS.w);
+      it('pulls back in one direction: the scale only falls', () => {
+        const scales = [0, 0.25, 0.5, 0.75, 1].map((out) => cameraAt(f, 1, out).scale);
+        for (let i = 1; i < scales.length; i++) expect(scales[i]).toBeLessThan(scales[i - 1]);
       });
 
-      it('rests readable, on the register heading and the top of the table', () => {
-        const v = cameraView(f, 'rest');
-        expect(v.scale).toBeGreaterThanOrEqual(0.75);
-        const r = shown(f, v);
+      it('moves by one vertical pan: the same scale and left edge, only lower', () => {
+        const a = cameraView(f, 'inventory');
+        const b = cameraView(f, 'items');
+        expect(cameraAt(f, 0)).toEqual(a);
+        expect(cameraAt(f, 1)).toEqual(b);
+        expect(b.scale).toBe(a.scale);
+        expect(b.x).toBe(a.x);
+        expect(shown(f, b).top).toBeGreaterThan(shown(f, a).top);
+        expect(cameraAt(f, 0.5).scale).toBeCloseTo(a.scale);
+      });
+
+      it('stays readable, and larger than merely covering the frame', () => {
+        expect(viewScale(f)).toBeGreaterThanOrEqual(MIN_SCALE);
+        expect(viewScale(f)).toBeGreaterThan(coverScale(f));
+      });
+
+      it('arrives on the register heading and its summary cards', () => {
+        const r = shown(f, cameraView(f, 'inventory'));
         expect(r.top).toBeLessThanOrEqual(91); // the page title's ink
+        expect(r.bottom).toBeGreaterThanOrEqual(347); // the foot of the cards
+        expect(r.left).toBeLessThanOrEqual(227); // the content's left edge
+      });
+
+      it('pans to the table: its header and at least three whole rows, from Product ID', () => {
+        const r = shown(f, cameraView(f, 'items'));
+        expect(r.top).toBeLessThanOrEqual(406); // the header's top
+        expect(r.bottom).toBeGreaterThanOrEqual(653); // the foot of the third row
+        expect(r.left).toBeLessThanOrEqual(227);
+        expect(r.right).toBeGreaterThanOrEqual(612); // through Trade, on any frame
       });
     });
   }
+
+  it('shows the Status column whole in the rows view on desktop frames', () => {
+    for (const f of DESKTOP) expect(shown(f, cameraView(f, 'items')).right).toBeGreaterThanOrEqual(842);
+  });
 });

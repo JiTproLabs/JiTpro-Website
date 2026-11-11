@@ -35,23 +35,30 @@ describe('HOME_AUDIENCES (Design System Section 54.2)', () => {
   });
 
   it('carries no em dashes in rendered copy (Section 7.7)', () => {
-    const copy = HOME_AUDIENCES.flatMap((a) => [a.label, ...a.tabs.flatMap((t) => [t.label, t.headline, t.description])]);
+    const copy = HOME_AUDIENCES.flatMap((a) => [
+      a.label,
+      ...a.tabs.flatMap((t) => [t.label, t.headline, t.description, t.descriptionMore ?? '', t.closing ?? '']),
+    ]);
     for (const text of copy) expect(text, text).not.toContain('—');
   });
 
-  it('gives only the general contractor Identify tab the role link and checklist (Section 54.2.1)', () => {
-    const extras = HOME_AUDIENCES.flatMap((a) => a.tabs).filter((t) => t.roleLink || t.checklist);
-    expect(extras.map((t) => t.id)).toEqual(['gc-identify']);
-    const [identify] = extras;
-    expect(identify.roleLink).toEqual({
-      label: 'Explore JiTpro for general contractors',
-      to: '/roles/general-contractors',
-    });
-    expect(identify.checklist).toEqual([
-      'Review project scope',
-      'Identify products, materials, and services',
-      'Build the Procurement Register',
-    ]);
+  it('carries the founder-supplied Identify copy (2026-11-11, Section 54.2.1)', () => {
+    const identify = HOME_AUDIENCES.flatMap((a) => a.tabs).find((t) => t.id === 'gc-identify')!;
+    expect(identify.label).toBe('Identify');
+    expect(identify.headline).toBe('You can’t manage what you haven’t identified.');
+    expect(identify.description).toBe(
+      'Every construction project contains hundreds of products, materials, and services scattered across drawings, specifications, and schedules.',
+    );
+    expect(identify.descriptionMore).toBe(
+      'JiTpro brings these requirements together into a comprehensive procurement inventory, identifies missing or undefined scope, and helps establish what the project actually needs.',
+    );
+    expect(identify.closing).toBe('Know what you need. Know what’s missing.');
+  });
+
+  it('gives only the Identify tab a second paragraph and closing statement, and no tab the withdrawn role link or checklist', () => {
+    const tabs = HOME_AUDIENCES.flatMap((a) => a.tabs);
+    expect(tabs.filter((t) => t.descriptionMore || t.closing).map((t) => t.id)).toEqual(['gc-identify']);
+    expect(tabs.filter((t) => t.roleLink || t.checklist)).toEqual([]);
   });
 
   it('gives only the general contractor Connect tab the six-category dependency summary (Section 54.2.2)', () => {
