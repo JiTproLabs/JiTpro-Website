@@ -53,17 +53,27 @@
  * SURFACE: --jp-surface-light, opening the light act (§54.1). No amber: on
  * this ground the amber tokens fail the contrast minimum (§8.8).
  *
- * THE IDENTIFY ADDITIONS (§54.2.1): a tab may carry a role link (between
- * headline and description) and a method checklist (beneath the
- * description). Today only general contractors → Identify does. The
- * checklist's lines fade in in order once the section has been seen and
- * while the tab is selected; they reset instantly when it is left, so each
- * return plays them again, and nothing restarts while it stays selected.
+ * THE IDENTIFY ADDITIONS (§54.2.1, revised 2026-11-11): a tab may carry a
+ * second description paragraph and a closing statement. Today only general
+ * contractors → Identify does. Both are plain copy, always shown.
+ *
+ * A tab may also carry a role link (between headline and description) and a
+ * method checklist (beneath the description), the 2026-11-09 Identify
+ * additions. No tab carries them since 2026-11-11; the support is kept.
+ * The checklist's lines fade in in order once the section has been seen and
+ * while the tab is selected; they reset instantly when it is left.
+ *
+ * THE CONNECT ADDITION (§54.2.2): a tab may carry a dependency summary
+ * beneath the description, six categories in two columns. Today only general
+ * contractors → Connect does. It is copy, in the document and exposed to
+ * assistive technology; only its reveal belongs to the Connect visual, which
+ * fades it in from its own clock as the animation comes to rest (§54.4.3).
  *
  * THE VISUAL COLUMN keeps the reserved placeholder (§46.8.1, §46.12) until
  * each visualization is specified (§54.4). It is deliberately plain. The
- * exceptions are general contractors → Identify, which shows the complete
- * register under a camera (§54.4.1, IdentifyRegisterPreview.tsx), and
+ * exceptions are general contractors → Identify, which turns scattered
+ * project documents into a procurement inventory with its scope gaps, then
+ * the register (§54.4.1, IdentifyRegisterPreview.tsx), and
  * general contractors → Plan, which builds a procurement chain backward and
  * reveals the project schedule around it (§54.4.2, PlanChainPreview.tsx).
  */
@@ -78,9 +88,20 @@ import {
   type KeyboardEvent,
   type RefObject,
 } from 'react';
-import { ArrowRight, Check, ChevronDown } from 'lucide-react';
+import {
+  ArrowRight,
+  Check,
+  ChevronDown,
+  DraftingCompass,
+  FileSignature,
+  Handshake,
+  HardHat,
+  Landmark,
+  UserCheck,
+  type LucideIcon,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { HOME_AUDIENCES, type Audience, type AudienceTab } from '../../content/homeAudiences';
+import { HOME_AUDIENCES, type Audience, type AudienceTab, type DependencyCategory } from '../../content/homeAudiences';
 import {
   INITIAL_SELECTION,
   audienceFor,
@@ -220,6 +241,8 @@ export default function AudienceSection() {
   /* Whether the section has been in view. The checklist waits for it, so
      its sequence plays where the reader can see it, not at page load. */
   const [seen, setSeen] = useState(false);
+  /* The Connect tab's dependency summary; its visual reveals it (§54.2.2). */
+  const categoriesRef = useRef<HTMLUListElement>(null);
   useEffect(() => {
     const el = stickyRef.current;
     if (!el || seen) return;
@@ -398,7 +421,7 @@ export default function AudienceSection() {
           navigation's height, so it holds just below it. */}
       <div
         ref={stickyRef}
-        className={`px-6 py-14 sm:px-8 sm:py-16 lg:px-10 ${pinned ? 'sticky' : ''}`}
+        className={`px-6 py-14 sm:px-8 sm:py-16 lg:px-10 [@media(min-width:64rem)_and_(max-height:54rem)]:py-12 ${pinned ? 'sticky' : ''}`}
         style={pinned ? { top: navH } : undefined}
       >
         <div className="mx-auto max-w-7xl">
@@ -510,7 +533,20 @@ export default function AudienceSection() {
                       >
                         {tab.description}
                       </p>
+                      {tab.descriptionMore && (
+                        <p className="mt-3 max-w-[58ch] text-[1.0625rem] leading-[1.7] text-jp-ink-secondary sm:text-[1.125rem] lg:text-[1.1875rem]">
+                          {tab.descriptionMore}
+                        </p>
+                      )}
+                      {tab.closing && (
+                        <p className="mt-4 max-w-[58ch] font-heading text-[1.0625rem] font-semibold leading-snug text-jp-background sm:text-[1.125rem] lg:text-[1.1875rem]">
+                          {tab.closing}
+                        </p>
+                      )}
                       {tab.checklist && <MethodChecklist lines={tab.checklist} played={isOpen && seen} />}
+                      {tab.dependencyCategories && (
+                        <DependencySummary listRef={categoriesRef} categories={tab.dependencyCategories} />
+                      )}
                     </div>
                   );
                 }),
@@ -546,7 +582,7 @@ export default function AudienceSection() {
                   >
                     {owner.tabs.map((tab, i) => {
                       /* The specified visuals (§54.4.1, §54.4.2, §54.4.3) play on
-                         the same state the Identify checklist uses. */
+                         one state: the tab is selected and the section seen. */
                       const played = owner.id === audience.id && i === selection.tabIndex && seen;
                       if (tab.id === 'gc-identify') return <IdentifyRegisterPreview key={tab.id} played={played} />;
                       if (tab.id === 'gc-plan')
@@ -557,7 +593,7 @@ export default function AudienceSection() {
                             aside={{ host: asideHost, region: spare[tab.id] ?? null }}
                           />
                         );
-                      if (tab.id === 'gc-connect') return <PlanChainPreview key={tab.id} played={played} variant="connect" />;
+                      if (tab.id === 'gc-connect') return <PlanChainPreview key={tab.id} played={played} variant="connect" categoriesRef={categoriesRef} />;
                       return <ReservedVisual key={tab.id} tab={tab} first={i === 0} />;
                     })}
                   </div>
@@ -673,6 +709,64 @@ function MethodChecklist({ lines, played }: { lines: readonly string[]; played: 
               }`}
             />
             <span>{line}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/** Each dependency category's icon (§54.2.2), keyed by the content's `id`. */
+const CATEGORY_ICON: Record<string, LucideIcon> = {
+  'design-engineering': DraftingCompass,
+  'owner-decisions': UserCheck,
+  'external-inputs': Handshake,
+  'scope-trade': FileSignature,
+  'permits-agency': Landmark,
+  'field-installation': HardHat,
+};
+
+/**
+ * The dependency summary (§54.2.2): the kinds of requirement JiTpro
+ * identifies across a project, as a plain two-column list of icon and label.
+ * No cards, borders, fills or controls. Icons are decoration beside their
+ * labels (§48.4), in --jp-ink-secondary; labels in the strongest ink. No
+ * amber (§8.8).
+ *
+ * FIT (§54.2.2). From lg the list's spacing is set so the Connect panel is
+ * no taller than the tallest panel already was, and the section's height is
+ * unchanged. On a short desktop view (from lg, at most 864px tall) the
+ * headline wraps to a fourth line, so the list is set a step smaller and
+ * tighter there, and the presentation's vertical padding gives up 16px top
+ * and bottom, which keeps the section pinned at 1280×800.
+ *
+ * Every item is always in the document. This component sets no opacity or
+ * transform of its own: the Connect visual writes them each frame from its
+ * one clock (§46.3, §54.4.3), so React never resets a reveal in progress.
+ */
+function DependencySummary({
+  listRef,
+  categories,
+}: {
+  listRef: RefObject<HTMLUListElement>;
+  categories: readonly DependencyCategory[];
+}) {
+  return (
+    <ul
+      ref={listRef}
+      className="mt-5 grid max-w-[58ch] grid-cols-2 gap-x-5 gap-y-2.5 sm:gap-x-8 [@media(min-width:64rem)_and_(max-height:54rem)]:mt-3.5 [@media(min-width:64rem)_and_(max-height:54rem)]:gap-y-1.5"
+    >
+      {categories.map((category) => {
+        const Icon = CATEGORY_ICON[category.id];
+        return (
+          <li
+            key={category.id}
+            className="flex min-w-0 items-start gap-2.5 text-[0.875rem] font-semibold leading-5 text-jp-background sm:text-[0.9375rem] [@media(min-width:64rem)_and_(max-height:54rem)]:text-[0.8125rem] [@media(min-width:64rem)_and_(max-height:54rem)]:leading-[1.125rem]"
+          >
+            {Icon && (
+              <Icon size={18} strokeWidth={2} aria-hidden="true" className="mt-[0.08em] shrink-0 text-jp-ink-secondary" />
+            )}
+            <span className="min-w-0">{category.label}</span>
           </li>
         );
       })}

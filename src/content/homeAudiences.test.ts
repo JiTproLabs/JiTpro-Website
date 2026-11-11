@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_AUDIENCE_ID, HOME_AUDIENCES } from './homeAudiences';
+import { CONNECT_DEPENDENCY_CATEGORIES, DEFAULT_AUDIENCE_ID, HOME_AUDIENCES } from './homeAudiences';
 
 describe('HOME_AUDIENCES (Design System Section 54.2)', () => {
   it('has the three approved audiences in order, with general contractors first and default', () => {
@@ -35,23 +35,57 @@ describe('HOME_AUDIENCES (Design System Section 54.2)', () => {
   });
 
   it('carries no em dashes in rendered copy (Section 7.7)', () => {
-    const copy = HOME_AUDIENCES.flatMap((a) => [a.label, ...a.tabs.flatMap((t) => [t.label, t.headline, t.description])]);
+    const copy = HOME_AUDIENCES.flatMap((a) => [
+      a.label,
+      ...a.tabs.flatMap((t) => [t.label, t.headline, t.description, t.descriptionMore ?? '', t.closing ?? '']),
+    ]);
     for (const text of copy) expect(text, text).not.toContain('—');
   });
 
-  it('gives only the general contractor Identify tab the role link and checklist (Section 54.2.1)', () => {
-    const extras = HOME_AUDIENCES.flatMap((a) => a.tabs).filter((t) => t.roleLink || t.checklist);
-    expect(extras.map((t) => t.id)).toEqual(['gc-identify']);
-    const [identify] = extras;
-    expect(identify.roleLink).toEqual({
-      label: 'Explore JiTpro for general contractors',
-      to: '/roles/general-contractors',
-    });
-    expect(identify.checklist).toEqual([
-      'Review project scope',
-      'Identify products, materials, and services',
-      'Build the Procurement Register',
+  it('carries the founder-supplied Identify copy (2026-11-11, Section 54.2.1)', () => {
+    const identify = HOME_AUDIENCES.flatMap((a) => a.tabs).find((t) => t.id === 'gc-identify')!;
+    expect(identify.label).toBe('Identify');
+    expect(identify.headline).toBe('You can’t manage what you haven’t identified.');
+    expect(identify.description).toBe(
+      'Every construction project contains hundreds of products, materials, and services scattered across drawings, specifications, and schedules.',
+    );
+    expect(identify.descriptionMore).toBe(
+      'JiTpro brings these requirements together into a comprehensive procurement inventory, identifies missing or undefined scope, and helps establish what the project actually needs.',
+    );
+    expect(identify.closing).toBe('Know what you need. Know what’s missing.');
+  });
+
+  it('gives only the Identify tab a second paragraph and closing statement, and no tab the withdrawn role link or checklist', () => {
+    const tabs = HOME_AUDIENCES.flatMap((a) => a.tabs);
+    expect(tabs.filter((t) => t.descriptionMore || t.closing).map((t) => t.id)).toEqual(['gc-identify']);
+    expect(tabs.filter((t) => t.roleLink || t.checklist)).toEqual([]);
+  });
+
+  it('gives only the general contractor Connect tab the six-category dependency summary (Section 54.2.2)', () => {
+    const withSummary = HOME_AUDIENCES.flatMap((a) => a.tabs).filter((t) => t.dependencyCategories);
+    expect(withSummary.map((t) => t.id)).toEqual(['gc-connect']);
+    expect(withSummary[0].dependencyCategories).toBe(CONNECT_DEPENDENCY_CATEGORIES);
+    expect(CONNECT_DEPENDENCY_CATEGORIES.map((c) => c.label)).toEqual([
+      'Design & Engineering',
+      'Owner Decisions & Selections',
+      'External Inputs & Commitments',
+      'Scope & Trade Commitments',
+      'Permits & Agency Requirements',
+      'Field & Installation Requirements',
     ]);
+    expect(new Set(CONNECT_DEPENDENCY_CATEGORIES.map((c) => c.id)).size).toBe(6);
+  });
+
+  it('keeps the scheduled activities of Plan out of the Connect summary: no reviews or approvals category', () => {
+    for (const { label } of CONNECT_DEPENDENCY_CATEGORIES) expect(label, label).not.toMatch(/review|approval|revision|submittal/i);
+  });
+
+  it('carries the founder-supplied Connect copy (2026-11-11)', () => {
+    const connect = HOME_AUDIENCES.flatMap((a) => a.tabs).find((t) => t.id === 'gc-connect')!;
+    expect(connect.headline).toBe('Make sure every procurement activity has what it needs to move forward, without interruption.');
+    expect(connect.description).toBe(
+      'Identify the decisions, information, approvals, and other requirements that each activity depends on. Connect them to the procurement schedule, establish responsibility, and make clear when each is needed.',
+    );
   });
 
   it('has a headline and description for every tab', () => {

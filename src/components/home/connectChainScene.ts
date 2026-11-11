@@ -17,11 +17,14 @@
  *   3. Forward           rest on Buyout, then travel forward, stopping at each
  *                        dependency in date order: diamond, connector, card,
  *                        then a hold to read it. On to Required On Site.
- *   4. The schedule      back to the application screen, and rest.
+ *   4. The schedule      back to the application screen, and rest. As the
+ *                        camera settles, the copy's dependency summary
+ *                        (Section 54.2.2) is revealed, and stays.
  */
 import { buildChainLayout, type ChainCard, type Measure } from '../demo/screens/procurement-chain/chainLayout';
 import { buildSteelWindowsPlannedChain, CHAIN_LABELS } from '../demo/screens/procurement-chain/chainScenario';
 import type { ScheduleItem } from '../demo/screens/procurement-schedule/scheduleModel';
+import { CONNECT_DEPENDENCY_CATEGORIES } from '../../content/homeAudiences';
 import {
   BUILD_MIN_SCALE,
   FOCAL_ITEM,
@@ -76,7 +79,17 @@ export const CONNECT_TIMING = {
   /** On Required On Site, before the return. */
   END_HOLD: 1200,
   ZOOM_OUT: 2400,
+  /**
+   * The copy's dependency summary (Section 54.2.2): each category's fade and
+   * rise, one after another in reading order, the last finishing exactly as
+   * the camera comes to rest.
+   */
+  SUMMARY: 300,
+  SUMMARY_STAGGER: 70,
 } as const;
+
+/** The summary's reveal, start to finish. */
+const SUMMARY_SPAN = CONNECT_TIMING.SUMMARY + (CONNECT_DEPENDENCY_CATEGORIES.length - 1) * CONNECT_TIMING.SUMMARY_STAGGER;
 
 /** Where the camera holds each station's point across the frame. */
 const FRAC = { start: 0.04, dependency: 0.4, end: 0.95 } as const;
@@ -99,7 +112,8 @@ export type ConnectScene = {
   moves: Move[];
   /** The canvas y the camera centres on in the chart. */
   cy: number;
-  times: { zoomIn: number; travel: number; travelEnd: number; end: number };
+  /** `summary`: when the copy's dependency summary starts to appear. */
+  times: { zoomIn: number; travel: number; travelEnd: number; summary: number; end: number };
 };
 
 export function buildConnectScene(scene: PlanScene, measure: Measure): ConnectScene {
@@ -140,14 +154,22 @@ export function buildConnectScene(scene: PlanScene, measure: Measure): ConnectSc
     stations,
     moves,
     cy: (top + bottom) / 2,
-    times: { zoomIn: T.START_HOLD, travel: first.arrive, travelEnd: clock, end: clock + T.ZOOM_OUT },
+    times: { zoomIn: T.START_HOLD, travel: first.arrive, travelEnd: clock, summary: clock + T.ZOOM_OUT - SUMMARY_SPAN, end: clock + T.ZOOM_OUT },
   };
 }
 
 /** A dependency's reveal, 0 to 1 each. */
 export type CardState = { mark: number; leader: number; card: number };
 
-export type ConnectState = PlanState & { cards: CardState[] };
+export type ConnectState = PlanState & {
+  cards: CardState[];
+  /**
+   * The copy's dependency summary (Section 54.2.2), one value per category in
+   * reading order, 0 to 1: hidden until the return to the schedule is nearly
+   * complete, then revealed, and kept.
+   */
+  categories: number[];
+};
 
 /**
  * As lerpView, but the screen point showing canvas point (ax, ay) travels in
@@ -244,5 +266,6 @@ export function connectStateAt(scene: PlanScene, c: ConnectScene, frame: Frame, 
     header: headerAt(scene, f, view, focalAxis),
     labelShift: labelShiftsAt(scene, f, view),
     cards,
+    categories: CONNECT_DEPENDENCY_CATEGORIES.map((_, i) => ease((t - c.times.summary - i * T.SUMMARY_STAGGER) / T.SUMMARY)),
   };
 }

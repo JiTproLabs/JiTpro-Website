@@ -201,3 +201,40 @@ describe('Connect marks', () => {
     }
   });
 });
+
+describe('Connect dependency summary (Section 54.2.2)', () => {
+  const c = CONNECT_TIMING;
+  const f = FRAMES[0];
+
+  it('stays hidden through the whole animation, until the return to the schedule is nearly complete', () => {
+    expect(T.summary).toBeGreaterThan(T.travelEnd + c.ZOOM_OUT / 2);
+    for (let t = 0; t <= T.summary; t += 50) expect(at(f, t).categories).toEqual([0, 0, 0, 0, 0, 0]);
+  });
+
+  it('reveals the six categories in reading order, the last exactly as the camera comes to rest', () => {
+    const mid = at(f, T.summary + c.SUMMARY).categories;
+    expect(mid[0]).toBe(1);
+    for (let i = 1; i < mid.length; i++) expect(mid[i]).toBeLessThanOrEqual(mid[i - 1]);
+    expect(mid[mid.length - 1]).toBeLessThan(1);
+    expect(at(f, T.end - 1).categories[5]).toBeLessThan(1);
+    expect(at(f, T.end).categories).toEqual([1, 1, 1, 1, 1, 1]);
+  });
+
+  it('only ever appears: no category fades back, and all stay once shown', () => {
+    let prev = [0, 0, 0, 0, 0, 0];
+    for (let t = T.summary; t <= T.end + 5000; t += 10) {
+      const now = at(f, t).categories;
+      now.forEach((o, i) => expect(o).toBeGreaterThanOrEqual(prev[i]));
+      prev = now;
+    }
+    expect(prev).toEqual([1, 1, 1, 1, 1, 1]);
+  });
+
+  it('leaves the cards, camera and application exactly as they were', () => {
+    // The summary is read from the same clock and changes nothing else in the state.
+    const end = at(f, T.end);
+    expect(end.view).toEqual(scheduleView(scene, connectFrame(f)));
+    expect(end.app).toBe(1);
+    expect(end.cards.every((cd) => cd.card === 0 && cd.mark === 0 && cd.leader === 0)).toBe(true);
+  });
+});
