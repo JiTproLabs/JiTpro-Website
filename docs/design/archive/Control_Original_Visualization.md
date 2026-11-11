@@ -146,7 +146,7 @@ this archive.
 
 | Item | What it is | Where it is used today |
 | --- | --- | --- |
-| `src/components/demo/screens/CommitmentRegisterScreen.tsx`, `CommitmentTable.tsx`, `fixtures/commitmentRegister.ts` | A representative Commitment Register application screen, with On Track, At Risk and Overdue statuses | The demo registry and the development-only demo lab |
+| `src/components/demo/screens/CommitmentRegisterScreen.tsx`, `src/components/demo/screens/CommitmentTable.tsx`, `src/components/demo/fixtures/commitmentRegister.ts` | A representative Commitment Register application screen, with On Track, At Risk and Overdue statuses | The demo registry and the development-only demo lab |
 | `src/components/demo/screens/procurement-schedule/ProcurementScheduleScreen.tsx` and its parts | The full interactive Procurement Schedule screen, including package health and issues | `/procurement-schedule` and the demo lab |
 | `src/components/demo/screens/procurement-schedule/scheduleModel.ts` | Types and derivations for commitment status, variance in working days, recorded issues, and package health (*healthy*, *at risk*, *impacted*) | The schedule screen. Plan and Connect strip these out before drawing. |
 | `src/components/demo/screens/procurement-schedule/scheduleFixture.ts` | Fixture items, two of which carry authored risk scenarios (a missed commitment that was absorbed; one that was not) | The schedule screen. Plan lengthens these items and removes their commitments and issues. |
