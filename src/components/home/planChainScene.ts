@@ -25,13 +25,20 @@
  * stages to everything that moves: the camera, the planning edge, and every
  * opacity. The renderer applies it and computes nothing.
  *
- *   1. Required On Site appears alone.
- *   2. The chain builds backward, one activity at a time: a planning edge
+ *   1. The field's requirement: the item's name and date are stated, then
+ *      its Required On Site milestone appears on the calendar, alone. It is
+ *      given time to register.
+ *   2. The work: the list begins, its heading and Required On Site first,
+ *      then the five groups of procurement activity that date depends on,
+ *      one at a time, each with its working days, then their total. Nothing
+ *      of the chain is drawn yet (redesigned 2026-11-11).
+ *   3. The chain builds backward, one activity at a time: a planning edge
  *      travels right to left, revealing each activity from its right end,
  *      and the camera follows it. It rests briefly on each completed
- *      activity, a little longer on a milestone, before the next.
- *   3. The camera pulls back to the whole chain, and holds.
- *   4. It pulls back again to the whole project schedule, and rests.
+ *      activity, a little longer on a milestone, before the next. The group
+ *      being built is marked in the list.
+ *   4. The camera pulls back to the whole chain, and holds.
+ *   5. It pulls back again to the whole project schedule, and rests.
  */
 
 import { buildChainLayout, CHAIN, FONT, type ChainLayout, type Measure } from '../demo/screens/procurement-chain/chainLayout';
@@ -179,6 +186,12 @@ export type PlanScene = {
   place: Placement;
   /** The step list's six groups, with their place on the one clock. */
   list: ListEntry[];
+  /** The featured item's name, as the list's heading (redesigned 2026-11-11). */
+  itemTitle: string;
+  /** Every activity's working days, summed from the chain. */
+  totalWorkdays: number;
+  /** The opening statement, shown on the rail before the list (founder-supplied 2026-11-11). */
+  lead: string;
   /** The timescale header's periods, on the chain's calendar (refined 2026-11-10). */
   timescale: Timescale;
   /**
@@ -217,9 +230,16 @@ export type ListEntry = {
   date: string | null;
   /** The family whose token marks the entry. */
   family: PhaseFamily;
-  /** When it appears, and until when it is the step being built (ms). */
+  /**
+   * When it appears; and from when, until when, it is the step being built
+   * (ms). Redesigned 2026-11-11: every group is named before the build
+   * begins, so appearing and being built are now separate moments.
+   */
   appearAt: number;
+  activeFrom: number;
   activeUntil: number;
+  /** Its working days as a share of the longest group's, 0 to 1 (0 for a milestone). */
+  weight: number;
 };
 
 const groupOf = (f: PhaseFamily) => {
@@ -306,10 +326,47 @@ type Times = {
 
 /** Stage timing (ms after `played`). The build's own steps are timed per activity. */
 export const TIMING = {
-  /** After the panel's 450 ms slide. */
-  ROS_IN: 500,
+  /**
+   * THE OPENING, IN ORDER (corrected 2026-11-11). After the panel's 450 ms
+   * slide the frame is empty but for the calendar. The requirement is stated
+   * first (CARD_IN); the Required On Site milestone then appears on the
+   * calendar (ROS_IN), and is held.
+   */
+  CARD_IN: 500,
+  ROS_IN: 900,
   ROS_IN_DURATION: 400,
-  BUILD_START: 1500,
+  /**
+   * THE WORK, NAMED (redesigned 2026-11-11). At GROUPS_AT the list begins:
+   * its heading, then, LIST_LEAD later, its six entries one at a time,
+   * GROUP_STAGGER apart, Required On Site first; then their total. The build
+   * begins once the total has been read.
+   *
+   * The list is whole or absent: no entry appears before its heading. The
+   * original visual opened on the Required On Site entry alone, on the
+   * rail; left in place, it appeared before the list it belongs to.
+   */
+  GROUPS_AT: 2700,
+  LIST_LEAD: 150,
+  GROUP_STAGGER: 330,
+  TOTAL_AT: 4800,
+  BUILD_START: 5700,
+  /**
+   * THE OPENING STATE OF THE RAIL (redesigned 2026-11-11). Before the list,
+   * the rail itself is the introduction: it turns navy, a short amber rule
+   * appears, then the statement, rising slightly. It holds; the rule and the
+   * statement fade; the rail returns to its light surface; and the list
+   * begins at GROUPS_AT. The rail never moves. Each `_AT` is ms after
+   * `played`; each `_OUT_BEFORE` is ms before GROUPS_AT.
+   */
+  LEAD_BG_AT: 450,
+  LEAD_BG: 300,
+  LEAD_RULE_AT: 600,
+  LEAD_RULE: 250,
+  LEAD_TEXT_AT: 700,
+  LEAD_TEXT: 400,
+  LEAD_CONTENT_OUT_BEFORE: 550,
+  LEAD_CONTENT_OUT: 250,
+  LEAD_BG_OUT_BEFORE: 350,
   /**
    * Per activity: a base plus a share of its length, so long work reads as
    * long (refined 2026-11-10: Fabrication's pan had been too fast to follow;
@@ -411,12 +468,19 @@ export function buildPlanScene(measure: Measure): PlanScene {
      is the step being built until its last activity's rest ends. Required On
      Site appears with the anchor and is current until the build begins. */
   const totals = stepGroupTotals(FOCAL_ITEM);
+  const longest = Math.max(...totals.map((x) => x.workdays ?? 0));
   const list: ListEntry[] = PLAN_STEP_GROUPS.map((g, i) => {
     const own = steps.filter((s) => groupOf(s.family) === i);
-    const appearAt = i === 0 ? TIMING.ROS_IN : Math.min(...own.map((s) => s.start));
-    const activeUntil = i === 0 ? TIMING.BUILD_START : Math.max(...own.map((s) => s.start + s.duration + s.dwell));
-    return { id: g.id, label: g.label, ...totals[i], family: g.families[0], appearAt, activeUntil };
+    /* Every entry is named in stage 2, beneath the list's heading, Required
+       On Site first. A group of work is the current entry while its own
+       activities build; Required On Site, a milestone with nothing to
+       build, never is. */
+    const appearAt = TIMING.GROUPS_AT + TIMING.LIST_LEAD + i * TIMING.GROUP_STAGGER;
+    const activeFrom = i === 0 ? Number.POSITIVE_INFINITY : Math.min(...own.map((s) => s.start));
+    const activeUntil = i === 0 ? 0 : Math.max(...own.map((s) => s.start + s.duration + s.dwell));
+    return { id: g.id, label: g.label, ...totals[i], family: g.families[0], appearAt, activeFrom, activeUntil, weight: (totals[i].workdays ?? 0) / longest };
   });
+  const totalWorkdays = FOCAL_ITEM.steps.reduce((n, s) => n + (s.kind === 'phase' ? s.durationWorkdays : 0), 0);
 
   const timescale = buildTimescale(focalLayout, measure);
   const longLabels = segs
@@ -441,6 +505,9 @@ export function buildPlanScene(measure: Measure): PlanScene {
     chainRight,
     steps,
     list,
+    itemTitle: FOCAL_ITEM.name.replace(' and ', ' & '),
+    lead: PLAN_LEAD,
+    totalWorkdays,
     timescale,
     longLabels,
     place: {
@@ -514,17 +581,51 @@ export type PlanState = {
     active: number[];
     /** From the build panel (0) to the final two columns (1). */
     morph: number;
+    /**
+     * The field's requirement, stated in the chart beside the milestone: the
+     * item's name and its Required On Site date. Shown alone, then handed to
+     * the list's heading as the work begins to be named (Plan only).
+     */
+    card?: number;
+    /**
+     * The rail's opening state, before the list (Plan only): its navy
+     * ground, its amber rule and its statement, 0 to 1 each.
+     */
+    leadBg?: number;
+    leadRule?: number;
+    /** The rule's entrance alone, 0 to 1: it is drawn out as it appears, and does not shrink as it leaves. */
+    leadRuleIn?: number;
+    lead?: number;
+    /** The statement's entrance alone, 0 to 1: it rises as it fades in, and does not move as it leaves. */
+    leadIn?: number;
+    /** The list's heading, the item's name (Plan only). */
+    title?: number;
+    /** The total beneath the list (Plan only). */
+    total?: number;
+    /**
+     * What stays on the rail through the reveal of the schedule fades with
+     * this, 1 to 0 (Plan only): the heading and total always, and the entries
+     * too where they have nowhere to rest outside the frame.
+     */
+    rail?: number;
   };
 };
 
 /* ------------------------------------------------------ the list's layouts */
 
+/** The Plan visual's opening statement, exactly as supplied by the founder (2026-11-11). */
+export const PLAN_LEAD = 'Start with when the field needs it.';
+
 /** One list entry's base box (screen px at scale 1), and the row pitch. */
 export const LIST_ITEM = { w: 170, h: 36, pitch: 40 } as const;
+/**
+ * The rail's heading (the item's name, up to two lines) above the entries,
+ * and the total beneath them, at scale 1 (redesigned 2026-11-11).
+ */
+export const LIST_TITLE_H = 42;
+export const LIST_TOTAL = { gap: 6, h: 18 } as const;
 /** Below this frame width the list cannot sit beside the chain: it goes beneath. */
 export const SIDE_MIN_W = 460;
-/** The list's scale in its final two columns, inside the frame beside a window. */
-const LIST_FINAL_SCALE = 0.72;
 /** Its scale resting outside the frame, and the least that stays readable there. */
 const LIST_ASIDE_SCALE = 1.04;
 /** Resting beside the frame: the widest gap between and around the two columns, and the most open row pitch (scale 1). */
@@ -539,7 +640,10 @@ export type ListLayout = {
   /**
    * aside    the list builds in the frame and rests outside it, beside it;
    *          the application window keeps the whole frame
-   * side     no room outside: the list rests in the frame beside a window
+   * side     no room outside: the list stays on its rail and fades as the
+   *          schedule is revealed; the application window keeps the whole
+   *          frame (redesigned 2026-11-11; it had rested in the frame beside
+   *          a smaller window)
    * stacked  narrow frames: a band beneath, the window above
    */
   mode: 'aside' | 'side' | 'stacked' | 'none';
@@ -563,11 +667,12 @@ export type ListLayout = {
  * THE LIST'S TWO LAYOUTS, and the frame they share with the chain (refined
  * 2026-11-10). Beside the chain (frames at least SIDE_MIN_W wide):
  *
- *   BUILD   a rail at the frame's left, one entry per row at full size; the
- *           chain is framed in the rest of the frame.
- *   FINAL   the application window at the frame's right, the whole screen
- *           at the largest scale the room allows; the same six entries
- *           smaller, in two columns of three, in the space to its left.
+ *   BUILD   a rail at the frame's left: the item's name, then one entry per
+ *           row at full size, then the total; the chain is framed in the
+ *           rest of the frame.
+ *   FINAL   the application window fills the frame. Where the copy leaves
+ *           free room beside the frame, the six entries rest there in two
+ *           columns of three (aside); otherwise they fade with the rail.
  *
  * Narrower frames (phones): the list is a band of two columns beneath the
  * chain throughout, and the application window sits above it at the end.
@@ -617,7 +722,7 @@ export function listLayout(f: Frame): ListLayout {
   if (f.w >= SIDE_MIN_W) {
     const railW = Math.round(Math.min(220, Math.max(176, f.w * 0.33)));
     const sr = Math.min(1, (railW - 24) / LIST_ITEM.w);
-    const start = PLAN_STEP_GROUPS.map((_, i) => ({ x: 12, y: 14 + i * LIST_ITEM.pitch * sr, s: sr }));
+    const start = PLAN_STEP_GROUPS.map((_, i) => ({ x: 12, y: 14 + (LIST_TITLE_H + i * LIST_ITEM.pitch) * sr, s: sr }));
 
     /* Room outside the frame: the window keeps the whole frame. */
     const a = f.aside;
@@ -638,19 +743,15 @@ export function listLayout(f: Frame): ListLayout {
       };
     }
 
-    const s1 = LIST_FINAL_SCALE;
-    const listW = 2 * LIST_ITEM.w * s1 + LIST_COL_GAP;
-    const listH = (rows - 1) * LIST_ITEM.pitch * s1 + LIST_ITEM.h * s1;
-    const window = fitWindow({ x: m + listW + m, y: m, w: f.w - (m + listW + m) - m, h: f.h - 2 * m }, 'right');
-    const windowH = APP.h * window.s;
-    const end = twoCols(m, window.y + (windowH - listH) / 2, s1);
+    /* No room outside: the software is not shrunk to make room for the list.
+       The window keeps the whole frame and the list stays where it is. */
     return {
       mode: 'side',
       area: { x: railW, y: 0, w: f.w - railW, h: f.h },
       panel: { x: 0, y: 0, w: railW, h: f.h },
       start,
-      end,
-      window,
+      end: start,
+      window: { x: 0, y: 0, s: Math.max(f.w / APP.w, f.h / APP.h) },
     };
   }
 
@@ -781,16 +882,14 @@ export function scheduleView(_scene: PlanScene, f: Frame): CameraView {
  * One entry's place part-way through the move to its final layout (0 to 1).
  * Shared by the renderer and the tests.
  *
- * Side: the first column's three entries shrink and move straight to their
- * places; the second column's three stay directly beneath the first while they
- * move across, and rise into their own column only once it has narrowed clear
- * of them. No entry ever passes over another.
+ * Side: the entries do not move; they stay on the rail and fade with it
+ * (redesigned 2026-11-11).
  *
  * Aside: one continuous path per entry (see asideAt).
  */
 export function listItemAt(lay: ListLayout, i: number, morph: number): Placed {
   if (lay.mode === 'stacked') return lay.end[i];
-  if (lay.mode === 'side') return reflowAt(lay.start, lay.end, i, morph);
+  if (lay.mode === 'side') return lay.start[i];
   return asideAt(lay, i, morph);
 }
 
@@ -908,42 +1007,44 @@ export function listCrossingFade(lay: ListLayout, morph: number): number[] {
   return PLAN_STEP_GROUPS.map((_, i) => (i < LIST_ROWS ? 1 : 1 - ASIDE.CROSSING_FADE * envelope));
 }
 
-/** From one column to two (see listItemAt): no entry ever passes over another. */
-function reflowAt(starts: Placed[], ends: Placed[], i: number, morph: number): Placed {
-  const a = starts[i];
-  const b = ends[i];
-  const rows = Math.ceil(PLAN_STEP_GROUPS.length / 2);
-  const s = lerp(a.s, b.s, morph);
-  if (i < rows) return { x: lerp(a.x, b.x, morph), y: lerp(a.y, b.y, morph), s };
-
-  // When the first column's right edge (linear in morph) clears this column.
-  const edge0 = starts[0].x + LIST_ITEM.w * starts[0].s;
-  const edge1 = ends[0].x + LIST_ITEM.w * ends[0].s;
-  const clearAt = Math.min(0.92, Math.max(0.5, (edge0 - (b.x - 2)) / (edge0 - edge1)));
-
-  // Beneath the first column's last entry, at the list's current scale.
-  const under = lerp(starts[rows - 1].y, ends[rows - 1].y, morph) + (i - rows + 1) * LIST_ITEM.pitch * s;
-  return {
-    x: lerp(a.x, b.x, ease(morph / clearAt)),
-    y: lerp(under, b.y, ease((morph - clearAt) / (1 - clearAt))),
-    s,
-  };
-}
-
 /** A list entry appears over this long (fade and a 6px rise, in the renderer). */
 export const LIST_APPEAR_MS = 300;
+/** The share of the pull-back's progress by which the rail's contents have faded. */
+export const RAIL_FADE_BY = 0.3;
 /** The current-step highlight fades in and out over these. */
 const ACTIVE_IN_MS = 150;
 const ACTIVE_OUT_MS = 250;
 
+/** The rail's opening state at t (see TIMING.LEAD_*). */
+function leadStateAt(t: number) {
+  const L = TIMING;
+  const contentOut = 1 - ease((t - (L.GROUPS_AT - L.LEAD_CONTENT_OUT_BEFORE)) / L.LEAD_CONTENT_OUT);
+  const leadIn = ease((t - L.LEAD_TEXT_AT) / L.LEAD_TEXT);
+  return {
+    // Navy, then back to the rail's own surface, complete exactly as the list begins.
+    leadBg: ease((t - L.LEAD_BG_AT) / L.LEAD_BG) * (1 - ease((t - (L.GROUPS_AT - L.LEAD_BG_OUT_BEFORE)) / L.LEAD_BG_OUT_BEFORE)),
+    leadRule: ease((t - L.LEAD_RULE_AT) / L.LEAD_RULE) * contentOut,
+    leadRuleIn: ease((t - L.LEAD_RULE_AT) / L.LEAD_RULE),
+    lead: leadIn * contentOut,
+    leadIn,
+  };
+}
+
 /** The list's state at t: appearance and highlight per entry, and the layout morph. */
 function listStateAt(scene: PlanScene, t: number): PlanState['list'] {
   const T = scene.times;
+  const morph = t <= T.holdEnd ? 0 : ease((t - T.holdEnd) / (T.end - T.holdEnd));
   return {
     appear: scene.list.map((e) => ease((t - e.appearAt) / LIST_APPEAR_MS)),
-    active: scene.list.map((e) => clamp01((t - e.appearAt) / ACTIVE_IN_MS) * (1 - clamp01((t - e.activeUntil) / ACTIVE_OUT_MS))),
+    active: scene.list.map((e) => clamp01((t - e.activeFrom) / ACTIVE_IN_MS) * (1 - clamp01((t - e.activeUntil) / ACTIVE_OUT_MS))),
     // On exactly the pull-back's own progress, so the list and the camera travel together.
-    morph: t <= T.holdEnd ? 0 : ease((t - T.holdEnd) / (T.end - T.holdEnd)),
+    morph,
+    card: ease((t - TIMING.CARD_IN) / TIMING.ROS_IN_DURATION) * (1 - ease((t - TIMING.GROUPS_AT) / LIST_APPEAR_MS)),
+    ...leadStateAt(t),
+    title: ease((t - TIMING.GROUPS_AT) / LIST_APPEAR_MS),
+    total: ease((t - TIMING.TOTAL_AT) / LIST_APPEAR_MS),
+    // Gone in the pull-back's first third, before the application fades in.
+    rail: 1 - ease(morph / RAIL_FADE_BY),
   };
 }
 

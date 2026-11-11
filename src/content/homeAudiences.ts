@@ -2,7 +2,7 @@
  * The homepage audience section's copy (Design System Section 54.2).
  *
  * The copy is used exactly as supplied by the founder (2026-11-09; the Plan
- * description revised 2026-11-10, the Connect and Identify copy 2026-11-11).
+ * description revised 2026-11-10; the Connect, Identify and Plan copy 2026-11-11).
  * Only the
  * option and tab labels differ from the supplied text: they are set in
  * sentence case, as Sections 7.7 and 48.1 require of headings and controls.
@@ -103,9 +103,12 @@ export const HOME_AUDIENCES: readonly Audience[] = [
       {
         id: 'gc-plan',
         label: 'Plan',
-        headline: 'Build a procurement plan that supports your schedule.',
+        headline: 'Know what needs to happen. Know when it needs to happen.',
         description:
-          'Starting with when each product, material, and service is required in the field, pull backward through every procurement activity. Establish the work, sequence, and realistic durations needed to deliver everything on time.',
+          'Every product, material, and service follows its own procurement path, with activities that must happen in the right sequence and require real time to complete.',
+        descriptionMore:
+          'JiTpro starts with when the field needs each item, then works backward to establish the activities, durations, and dates required to deliver it on time.',
+        closing: 'The right work. In the right order. At the right time.',
       },
       {
         id: 'gc-connect',
