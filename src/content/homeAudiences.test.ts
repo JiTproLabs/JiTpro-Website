@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_AUDIENCE_ID, HOME_AUDIENCES } from './homeAudiences';
+import { CONNECT_DEPENDENCY_CATEGORIES, DEFAULT_AUDIENCE_ID, HOME_AUDIENCES } from './homeAudiences';
 
 describe('HOME_AUDIENCES (Design System Section 54.2)', () => {
   it('has the three approved audiences in order, with general contractors first and default', () => {
@@ -52,6 +52,33 @@ describe('HOME_AUDIENCES (Design System Section 54.2)', () => {
       'Identify products, materials, and services',
       'Build the Procurement Register',
     ]);
+  });
+
+  it('gives only the general contractor Connect tab the six-category dependency summary (Section 54.2.2)', () => {
+    const withSummary = HOME_AUDIENCES.flatMap((a) => a.tabs).filter((t) => t.dependencyCategories);
+    expect(withSummary.map((t) => t.id)).toEqual(['gc-connect']);
+    expect(withSummary[0].dependencyCategories).toBe(CONNECT_DEPENDENCY_CATEGORIES);
+    expect(CONNECT_DEPENDENCY_CATEGORIES.map((c) => c.label)).toEqual([
+      'Design & Engineering',
+      'Owner Decisions & Selections',
+      'External Inputs & Commitments',
+      'Scope & Trade Commitments',
+      'Permits & Agency Requirements',
+      'Field & Installation Requirements',
+    ]);
+    expect(new Set(CONNECT_DEPENDENCY_CATEGORIES.map((c) => c.id)).size).toBe(6);
+  });
+
+  it('keeps the scheduled activities of Plan out of the Connect summary: no reviews or approvals category', () => {
+    for (const { label } of CONNECT_DEPENDENCY_CATEGORIES) expect(label, label).not.toMatch(/review|approval|revision|submittal/i);
+  });
+
+  it('carries the founder-supplied Connect copy (2026-11-11)', () => {
+    const connect = HOME_AUDIENCES.flatMap((a) => a.tabs).find((t) => t.id === 'gc-connect')!;
+    expect(connect.headline).toBe('Make sure every procurement activity has what it needs to move forward, without interruption.');
+    expect(connect.description).toBe(
+      'Identify the decisions, information, approvals, and other requirements that each activity depends on. Connect them to the procurement schedule, establish responsibility, and make clear when each is needed.',
+    );
   });
 
   it('has a headline and description for every tab', () => {

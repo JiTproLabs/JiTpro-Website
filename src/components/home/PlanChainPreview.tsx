@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useMemo, useRef } from 'react';
+import { useId, useLayoutEffect, useMemo, useRef, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { CHAIN, formatDate } from '../demo/screens/procurement-chain/chainLayout';
 import ChainText from '../demo/screens/procurement-chain/ChainText';
@@ -66,6 +66,8 @@ import '../demo/screens/procurement-chain/chainTokens.css';
  */
 
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
+/** The dependency summary's rise as it fades in, px (the step list's, Section 54.4.2). */
+const SUMMARY_RISE = 6;
 
 type Aside = {
   /** An unclipped layer the size of the frame's inner box, beside it. */
@@ -78,9 +80,16 @@ export default function PlanChainPreview({
   played,
   aside,
   variant = 'plan',
+  categoriesRef,
 }: {
   played: boolean;
   aside?: Aside;
+  /**
+   * Connect only: the copy's dependency summary (Section 54.2.2), a list whose
+   * items this visual reveals from its one clock as the animation comes to
+   * rest. The list belongs to the copy; only its reveal is driven from here.
+   */
+  categoriesRef?: RefObject<HTMLElement | null>;
   /** Plan (Section 54.4.2), or Connect (Section 54.4.3): the same scene, a second timeline. */
   variant?: 'plan' | 'connect';
 }) {
@@ -208,6 +217,14 @@ export default function PlanChainPreview({
             r.card.setAttribute('transform', `translate(0 ${(1 - c.card) * CONNECT_TIMING.CARD_RISE})`);
           }
         });
+        // The copy's dependency summary, revealed as the camera comes to rest.
+        const items = categoriesRef?.current?.children;
+        (s as ConnectState).categories.forEach((o, i) => {
+          const el = items?.[i] as HTMLElement | undefined;
+          if (!el) return;
+          el.style.opacity = String(o);
+          el.style.transform = o < 1 ? `translateY(${(1 - o) * SUMMARY_RISE}px)` : '';
+        });
       }
       // The application window, on the frame's own ground.
       const win = windowRef.current;
@@ -286,7 +303,7 @@ export default function PlanChainPreview({
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [played, scene, connect, endAt, region, host]);
+  }, [played, scene, connect, endAt, region, host, categoriesRef]);
 
   const { others, place: P } = scene;
   /* Connect draws the same chain with its commitments, its bar where Plan's is. */

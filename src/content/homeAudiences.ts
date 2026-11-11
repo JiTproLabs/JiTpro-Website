@@ -1,7 +1,8 @@
 /**
  * The homepage audience section's copy (Design System Section 54.2).
  *
- * The copy is used exactly as supplied by the founder on 2026-11-09. Only the
+ * The copy is used exactly as supplied by the founder (2026-11-09; the Plan
+ * description revised 2026-11-10, the Connect copy 2026-11-11). Only the
  * option and tab labels differ from the supplied text: they are set in
  * sentence case, as Sections 7.7 and 48.1 require of headings and controls.
  * Headlines and descriptions MUST NOT be reworded as a side effect of layout
@@ -35,7 +36,37 @@ export type AudienceTab = {
    * line is the outcome and takes slight emphasis.
    */
   checklist?: readonly string[];
+  /**
+   * Optional dependency summary beneath the description (Section 54.2.2): the
+   * kinds of requirement JiTpro identifies across a project. Labels only; the
+   * section pairs each `id` with its icon.
+   */
+  dependencyCategories?: readonly DependencyCategory[];
 };
+
+export type DependencyCategory = {
+  /** Stable key; the section keys the category's icon off it. */
+  id: string;
+  label: string;
+};
+
+/**
+ * The Connect tab's six dependency categories (Section 54.2.2), founder-
+ * supplied 2026-11-11, in reading order (two columns, three rows).
+ *
+ * They are what an activity needs FROM OUTSIDE it: information, decisions,
+ * authorizations and commitments. Reviews, revisions and approvals are
+ * scheduled procurement activities, which belong to Plan, so there is
+ * deliberately no "Reviews & Approvals" category here.
+ */
+export const CONNECT_DEPENDENCY_CATEGORIES: readonly DependencyCategory[] = [
+  { id: 'design-engineering', label: 'Design & Engineering' },
+  { id: 'owner-decisions', label: 'Owner Decisions & Selections' },
+  { id: 'external-inputs', label: 'External Inputs & Commitments' },
+  { id: 'scope-trade', label: 'Scope & Trade Commitments' },
+  { id: 'permits-agency', label: 'Permits & Agency Requirements' },
+  { id: 'field-installation', label: 'Field & Installation Requirements' },
+];
 
 export type Audience = {
   /** Stable key. */
@@ -74,9 +105,10 @@ export const HOME_AUDIENCES: readonly Audience[] = [
       {
         id: 'gc-connect',
         label: 'Connect',
-        headline: 'Turn loose dependencies into managed commitments.',
+        headline: 'Make sure every procurement activity has what it needs to move forward, without interruption.',
         description:
-          'Connect outside decisions, information, and approvals to the procurement activities they support. Establish who owes what, when it’s required, and what depends on it.',
+          'Identify the decisions, information, approvals, and other requirements that each activity depends on. Connect them to the procurement schedule, establish responsibility, and make clear when each is needed.',
+        dependencyCategories: CONNECT_DEPENDENCY_CATEGORIES,
       },
       {
         id: 'gc-control',
