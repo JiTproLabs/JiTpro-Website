@@ -68,10 +68,36 @@ describe('HOME_AUDIENCES (Design System Section 54.2)', () => {
     expect(plan.closing).toBe('The right work. In the right order. At the right time.');
   });
 
-  it('gives only the Identify and Plan tabs a second paragraph and closing statement, and no tab the withdrawn role link or checklist', () => {
+  it('gives only the Identify, Plan and Control tabs a second paragraph and closing statement, and no tab the withdrawn role link or checklist', () => {
     const tabs = HOME_AUDIENCES.flatMap((a) => a.tabs);
-    expect(tabs.filter((t) => t.descriptionMore || t.closing).map((t) => t.id)).toEqual(['gc-identify', 'gc-plan']);
+    expect(tabs.filter((t) => t.descriptionMore || t.closing).map((t) => t.id)).toEqual(['gc-identify', 'gc-plan', 'gc-control']);
     expect(tabs.filter((t) => t.roleLink || t.checklist)).toEqual([]);
+  });
+
+  it('carries the Project owners copy as supplied, naming the contractor as the one who uses JiTpro (Section 54.2.4)', () => {
+    const owners = HOME_AUDIENCES.find((a) => a.id === 'owners')!;
+    expect(owners.tabs.map((t) => [t.label, t.headline])).toEqual([
+      ['Reduce risk', 'Find potential problems before they become expensive.'],
+      ['Protect your investment', 'Keep preventable problems from becoming costly setbacks.'],
+      ['More predictability', 'Know what’s coming before it becomes urgent.'],
+      ['Better decisions', 'Know what needs your decision, and why it matters.'],
+    ]);
+    // One paragraph each; the takeaway is the visual's closing line, not copy.
+    for (const t of owners.tabs) expect(t.descriptionMore ?? t.closing ?? t.checklist ?? t.roleLink).toBeUndefined();
+    // Where JiTpro acts, it acts through the owner's contractor.
+    for (const t of owners.tabs.slice(1)) expect(t.description).toContain('JiTpro helps your contractor');
+    expect(owners.tabs.map((t) => t.description).join(' ')).not.toMatch(/guarantee|ROI|\d/i);
+  });
+
+  it('carries the Control copy exactly as supplied, its first two paragraphs set as one (Section 54.2.3)', () => {
+    const control = HOME_AUDIENCES[0].tabs.find((t) => t.id === 'gc-control')!;
+    expect(control.label).toBe('Control');
+    expect(control.headline).toBe('Replace constant urgency with deliberate timing.');
+    expect(control.description).toBe(
+      'JiTpro helps you establish clear priorities for your entire project team. Owners, architects, consultants, and vendors know what’s expected of them, when it’s needed, and what’s coming next.',
+    );
+    expect(control.descriptionMore).toBe('Instead of demanding everything at once, you can focus everyone on the right work at the right time.');
+    expect(control.closing).toBe('Less chasing. Clearer priorities. Better coordination.');
   });
 
   it('gives only the general contractor Connect tab the six-category dependency summary (Section 54.2.2)', () => {

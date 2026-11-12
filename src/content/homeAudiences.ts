@@ -121,9 +121,12 @@ export const HOME_AUDIENCES: readonly Audience[] = [
       {
         id: 'gc-control',
         label: 'Control',
-        headline: 'Know what needs your attention today, and what’s coming tomorrow.',
+        headline: 'Replace constant urgency with deliberate timing.',
+        // The founder's first two paragraphs, set as one so the panel keeps the section's height (Section 54.2.3).
         description:
-          'Track commitments, identify emerging risks, and distinguish what requires action today from what can wait. Stay ahead of problems before they disrupt field execution or erode margins.',
+          'JiTpro helps you establish clear priorities for your entire project team. Owners, architects, consultants, and vendors know what’s expected of them, when it’s needed, and what’s coming next.',
+        descriptionMore: 'Instead of demanding everything at once, you can focus everyone on the right work at the right time.',
+        closing: 'Less chasing. Clearer priorities. Better coordination.',
       },
     ],
   },
@@ -168,23 +171,23 @@ export const HOME_AUDIENCES: readonly Audience[] = [
       {
         id: 'owner-protect-investment',
         label: 'Protect your investment',
-        headline: 'Pay for good planning, not expensive recovery.',
+        headline: 'Keep preventable problems from becoming costly setbacks.',
         description:
-          'The work required to prepare a project must happen somewhere. Doing it early can cost far less than recovering from late decisions, delays, and rework.',
+          'Late decisions, incorrect products, and missed approvals can create delays, rework, and unexpected expenses. JiTpro helps your contractor address these risks before they reach the field.',
       },
       {
         id: 'owner-predictability',
         label: 'More predictability',
-        headline: 'A construction schedule backed by a real plan.',
+        headline: 'Know what’s coming before it becomes urgent.',
         description:
-          'Understand how your contractor intends to deliver the products, materials, approvals, and services needed to support the promised schedule.',
+          'JiTpro helps your contractor plan the decisions, approvals, and deliveries needed to keep construction moving, giving the entire team more time to prepare.',
       },
       {
         id: 'owner-better-decisions',
         label: 'Better decisions',
-        headline: 'Know when decisions are needed, and why.',
+        headline: 'Know what needs your decision, and why it matters.',
         description:
-          'Receive advance notice of selections and approvals, with a clear understanding of what depends on them and the consequences of waiting.',
+          'JiTpro helps your contractor communicate what decisions are needed, when they’re required, and how they affect upcoming work.',
       },
     ],
   },

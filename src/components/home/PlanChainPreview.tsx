@@ -29,7 +29,10 @@ import {
   type PlanScene,
   type PlanState,
 } from './planChainScene';
-import { CONNECT_TIMING, buildConnectScene, connectFrame, connectStateAt, type ConnectState } from './connectChainScene';
+import { CONNECT_TIMING, INPUT, RAIL, buildConnectScene, connectFrame, connectLayout, connectStateAt, type ConnectState } from './connectChainScene';
+import { buildControlScene, controlStateAt, type ControlState } from './controlChainScene';
+import ControlLayer from './ControlLayer';
+import { applyControl, emptyControlRefs } from './controlLayerApply';
 import '../demo/tokens.css';
 import '../demo/screens/procurement-schedule/scheduleTokens.css';
 import '../demo/screens/procurement-chain/chainTokens.css';
@@ -93,8 +96,11 @@ export default function PlanChainPreview({
    * rest. The list belongs to the copy; only its reveal is driven from here.
    */
   categoriesRef?: RefObject<HTMLElement | null>;
-  /** Plan (Section 54.4.2), or Connect (Section 54.4.3): the same scene, a second timeline. */
-  variant?: 'plan' | 'connect';
+  /**
+   * Plan (Section 54.4.2), Connect (Section 54.4.3) or Control (Section
+   * 54.4.4): the same scene, each with its own timeline.
+   */
+  variant?: 'plan' | 'connect' | 'control';
 }) {
   const region = aside?.region ?? null;
   const host = aside?.host ?? null;
@@ -102,8 +108,18 @@ export default function PlanChainPreview({
   const measure = useChainMeasure();
   const scene = useMemo(() => buildPlanScene(measure), [measure]);
   const connect = useMemo(() => (variant === 'connect' ? buildConnectScene(scene, measure) : null), [variant, scene, measure]);
-  const endAt = connect ? connect.times.end : scene.times.end;
+  /* Control: Plan's schedule against one date (Section 54.4.4). Its layer is drawn by ControlLayer. */
+  const control = useMemo(() => (variant === 'control' ? buildControlScene(scene) : null), [variant, scene]);
+  const controlRefs = useRef(emptyControlRefs());
+  /* Only Plan has the step list; Connect and Control give the chain the whole frame. */
+  const noList = variant !== 'plan';
+  const endAt = connect ? connect.times.end : control ? control.times.end : scene.times.end;
   const commitRefs = useRef<{ leader: SVGLineElement | null; mark: SVGPathElement | null; card: SVGGElement | null }[]>([]);
+  /* Connect: the loose inputs, and the rail they are captured into (Section 54.4.3). */
+  const inputRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const connectRailRef = useRef<HTMLDivElement>(null);
+  const connectRailTitleRef = useRef<HTMLDivElement>(null);
+  const connectRailRuleRef = useRef<HTMLDivElement>(null);
 
   const frameRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -142,7 +158,8 @@ export default function PlanChainPreview({
     const frameEl = frameRef.current;
     const canvas = canvasRef.current;
     if (!frameEl || !canvas) return;
-    const stateAt = (fr: Frame, at: number): PlanState => (connect ? connectStateAt(scene, connect, fr, at) : planStateAt(scene, fr, at));
+    const stateAt = (fr: Frame, at: number): PlanState =>
+      connect ? connectStateAt(scene, connect, fr, at) : control ? controlStateAt(scene, control, fr, at) : planStateAt(scene, fr, at);
     const reveals = [...canvas.querySelectorAll<SVGElement>('[data-reveal-x]')].map((el) => ({
       el,
       x: Number(el.dataset.revealX),
@@ -207,7 +224,13 @@ export default function PlanChainPreview({
         appRef.current.style.visibility = s.app > 0 ? 'visible' : 'hidden';
       }
 
-      const lay = listLayout(connect ? connectFrame(frame) : frame);
+      const lay = listLayout(noList ? connectFrame(frame) : frame);
+      // Control: the Today line, the wash, the marks, the annotations and the list (Section 54.4.4).
+      if (control) {
+        applyControl(controlRefs.current, s as ControlState, control.boards);
+        // The chain's own drawing gives way to the board (the frame's ground is the same surface).
+        canvas.style.opacity = String((s as ControlState).chain);
+      }
       // Connect: each dependency's diamond, connector and card (Section 54.4.3).
       if (connect) {
         (s as ConnectState).cards.forEach((c, i) => {
@@ -220,13 +243,56 @@ export default function PlanChainPreview({
           }
           if (r.mark) {
             r.mark.style.opacity = String(c.mark);
-            r.mark.setAttribute('transform', `translate(${card.markX} ${card.markY}) scale(${0.4 + 0.6 * c.mark}) translate(${-card.markX} ${-card.markY})`);
+            // Never smaller than a readable point on screen, however far the camera has eased back.
+            const size = (0.4 + 0.6 * c.mark) * ((s as ConnectState).markScale ?? 1);
+            r.mark.setAttribute('transform', `translate(${card.markX} ${card.markY}) scale(${size}) translate(${-card.markX} ${-card.markY})`);
           }
           if (r.card) {
             r.card.style.opacity = String(c.card);
             r.card.setAttribute('transform', `translate(0 ${(1 - c.card) * CONNECT_TIMING.CARD_RISE})`);
           }
         });
+        // The inputs, loose and then in their rows; the rail they are captured into.
+        const cs = s as ConnectState;
+        const cl = connectLayout(frame, connect.inputs.length);
+        cs.inputs.forEach((st, i) => {
+          const el = inputRefs.current[i];
+          if (!el) return;
+          const inp = connect.inputs[i];
+          el.style.opacity = String(st.o);
+          el.style.visibility = st.o > 0 ? 'visible' : 'hidden';
+          el.style.transform = `translate(${st.x}px, ${st.y}px) scale(${st.s})`;
+          // Loose, it is a small record with its own edge; in the rail, a row.
+          const box = el.querySelector<HTMLElement>('[data-part="box"]');
+          if (box) box.style.opacity = String(1 - st.row);
+          if (inp.featured !== null) {
+            const hl = el.querySelector<HTMLElement>('[data-part="focus"]');
+            if (hl) hl.style.opacity = String(cs.focus[inp.featured] * st.row);
+            const mark = el.querySelector<HTMLElement>('[data-part="linked"]');
+            if (mark) mark.style.opacity = String(cs.linked[inp.featured]);
+          }
+        });
+        if (connectRailRef.current) {
+          Object.assign(connectRailRef.current.style, {
+            opacity: String(cs.rail),
+            visibility: cs.rail > 0 ? 'visible' : 'hidden',
+            transform: `translate(${cl.rail.x}px, ${cl.rail.y}px)`,
+            width: `${cl.rail.w}px`,
+            height: `${cl.rail.h}px`,
+            borderRight: cl.mode === 'side' ? '1px solid var(--jpd-border-subtle)' : 'none',
+            borderTop: cl.mode === 'stacked' ? '1px solid var(--jpd-border-subtle)' : 'none',
+          });
+        }
+        if (connectRailTitleRef.current) {
+          connectRailTitleRef.current.style.opacity = String(cl.mode === 'side' ? cs.railTitle : 0);
+          connectRailTitleRef.current.style.transform = `translate(${RAIL.padX}px, ${RAIL.padY}px) scale(${cl.s})`;
+        }
+        if (connectRailRuleRef.current) {
+          const y = RAIL.padY + (RAIL.title + connect.cards.length * RAIL.featuredPitch + RAIL.gap / 2 - 3) * cl.s;
+          connectRailRuleRef.current.style.opacity = String(cl.mode === 'side' ? cs.railTitle : 0);
+          connectRailRuleRef.current.style.transform = `translate(${RAIL.padX}px, ${y}px)`;
+          connectRailRuleRef.current.style.width = `${cl.rail.w - 2 * RAIL.padX}px`;
+        }
         // The copy's dependency summary, revealed as the camera comes to rest.
         const items = categoriesRef?.current?.children;
         (s as ConnectState).categories.forEach((o, i) => {
@@ -260,7 +326,7 @@ export default function PlanChainPreview({
         });
       }
       // The same six entries, travelling from the panel to their final place.
-      const placed = connect ? [] : scene.list.map((_, i) => listItemAt(lay, i, s.list.morph));
+      const placed = noList ? [] : scene.list.map((_, i) => listItemAt(lay, i, s.list.morph));
       // Where the columns cross on the way out, the second fades back.
       const fade = listCrossingFade(lay, s.list.morph);
       itemRefs.current.forEach((el, i) => {
@@ -362,7 +428,7 @@ export default function PlanChainPreview({
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [played, scene, connect, endAt, region, host, categoriesRef]);
+  }, [played, scene, connect, control, noList, endAt, region, host, categoriesRef]);
 
   const { others, place: P } = scene;
   /* Connect draws the same chain with its commitments, its bar where Plan's is. */
@@ -528,10 +594,10 @@ export default function PlanChainPreview({
                   ref={(el) => {
                     commitRefs.current[i] = { ...commitRefs.current[i], leader: el };
                   }}
-                  x1={c.leader.x2}
-                  y1={c.leader.y2}
-                  x2={c.leader.x1}
-                  y2={c.leader.y1}
+                  x1={c.leader.x1}
+                  y1={c.leader.y1}
+                  x2={c.leader.x2}
+                  y2={c.leader.y2}
                   pathLength={1}
                   style={{ stroke: v('--jpd-chain-commitment'), strokeWidth: 1.5, strokeDasharray: '1 1', strokeDashoffset: 1, opacity: 0 }}
                 />
@@ -542,7 +608,9 @@ export default function PlanChainPreview({
                   style={{ opacity: 0 }}
                 >
                   <rect x={c.x} y={c.y} width={c.w} height={c.h} rx={10} style={{ fill: v('--jpd-chain-commitment-fill'), stroke: v('--jpd-chain-commitment'), strokeWidth: 1.5 }} />
-                  <ChainText block={c.text} />
+                  <g transform={`translate(0 ${c.textDy})`}>
+                    <ChainText block={c.text} />
+                  </g>
                 </g>
               </g>
             ))}
@@ -722,16 +790,98 @@ export default function PlanChainPreview({
       />
 
       {/* The build panel: the application's own side-panel surface. */}
-      {!connect && <div ref={panelRef} className="pointer-events-none absolute top-0 left-0" style={{ background: v('--jpd-surface-sunken') }} />}
+      {!noList && <div ref={panelRef} className="pointer-events-none absolute top-0 left-0" style={{ background: v('--jpd-surface-sunken') }} />}
+
+      {/* CONTROL (Section 54.4.4): the Today line, the wash, the marks, the
+          annotations and the list of priorities, in frame px over the schedule. */}
+      {control && <ControlLayer control={control} refs={controlRefs} uid={uid} />}
 
       {/* THE STEP LIST: rendered beside the frame when the section offers an
           unclipped layer, so it can rest outside the frame; else in it. */}
+      {/* CONNECT (Section 54.4.3, redesigned 2026-11-11): the rail the loose
+          inputs are captured into, and the inputs themselves. Frame px, placed
+          by the state every frame. The rail is the application's side-panel
+          surface, as Plan's is; it appears in place and never moves. */}
+      {connect && (
+        <>
+          <div ref={connectRailRef} className="pointer-events-none absolute top-0 left-0" style={{ visibility: 'hidden', opacity: 0, background: v('--jpd-surface-sunken') }} />
+          <div
+            ref={connectRailTitleRef}
+            className="pointer-events-none absolute top-0 left-0 origin-top-left"
+            style={{ opacity: 0, width: INPUT.w, fontFamily: '"Inter Tight", Inter, system-ui, sans-serif', fontSize: 13.5, fontWeight: 700, lineHeight: '17px', letterSpacing: '-0.01em', color: v('--jpd-text-strong') }}
+          >
+            Captured requirements
+          </div>
+          <div ref={connectRailRuleRef} className="pointer-events-none absolute top-0 left-0" style={{ opacity: 0, height: 1, background: v('--jpd-border') }} />
+          {connect.inputs.map((inp, i) => {
+            const featured = inp.featured !== null;
+            return (
+              <div
+                key={inp.id}
+                ref={(el) => {
+                  inputRefs.current[i] = el;
+                }}
+                className="pointer-events-none absolute top-0 left-0 origin-top-left"
+                style={{ visibility: 'hidden', opacity: 0, width: INPUT.w, height: featured ? INPUT.featuredH : INPUT.plainH, fontFamily: '"Inter Tight", Inter, system-ui, sans-serif' }}
+              >
+                {/* The row being connected: the register's selected-row treatment, as Plan's list uses. */}
+                {featured && (
+                  <span data-part="focus" className="absolute rounded-[4px]" style={{ inset: '-2px -6px', opacity: 0, background: v('--jpd-row-tint') }}>
+                    <span className="absolute inset-y-0 left-0 w-[3px] rounded-l-[4px]" style={{ background: v('--jpd-row-bar') }} />
+                  </span>
+                )}
+                <div className="relative inline-flex h-full max-w-full items-center" style={{ padding: featured ? '0 9px' : '0 7px', gap: 6 }}>
+                  {/* Loose, a small record with its own edge. */}
+                  <span
+                    data-part="box"
+                    className="absolute inset-0 rounded-[5px]"
+                    style={{
+                      background: featured ? v('--jpd-chain-commitment-fill') : v('--jpd-surface'),
+                      border: `1px solid ${featured ? v('--jpd-chain-commitment') : v('--jpd-border')}`,
+                    }}
+                  />
+                  {featured ? (
+                    /* A dependency: its name, on up to two lines. Its type, owner and date are on its card. */
+                    <span
+                      className="relative min-w-0"
+                      style={{ maxWidth: INPUT.w - 34, fontSize: 10.5, fontWeight: 600, lineHeight: '13px', letterSpacing: '-0.005em', color: v('--jpd-text-strong') }}
+                    >
+                      {inp.title}
+                    </span>
+                  ) : (
+                    <>
+                      <span
+                        className="relative shrink-0 rounded-[2px] font-mono uppercase"
+                        style={{ padding: '1px 3px', fontSize: 6.5, lineHeight: '9px', letterSpacing: '0.06em', color: v('--jpd-text-secondary'), border: `1px solid ${v('--jpd-border')}` }}
+                      >
+                        {inp.tag}
+                      </span>
+                      <span className="relative truncate" style={{ fontSize: 9.5, fontWeight: 500, lineHeight: '13px', color: v('--jpd-text-secondary') }}>
+                        {inp.title}
+                      </span>
+                    </>
+                  )}
+                </div>
+                {/* Connected: the same diamond as on the chain, at the row's right. */}
+                {featured && (
+                  <span
+                    data-part="linked"
+                    className="absolute rotate-45 rounded-[1px]"
+                    style={{ opacity: 0, right: 2, top: INPUT.featuredH / 2 - 4, width: 8, height: 8, background: v('--jpd-chain-commitment') }}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </>
+      )}
+
       {/* Stage 1: THE RAIL'S OPENING STATE (Section 54.4.2). The rail itself,
           edge to edge, turns to the application's navy and carries the
           statement; then it returns to its light surface and the list
           begins. Nothing floats and nothing moves but the statement's small
           rise. The application's own navy, amber and light text tokens. */}
-      {!connect && (
+      {!noList && (
         <div ref={leadRef} className="pointer-events-none absolute top-0 left-0 flex items-center" style={{ visibility: 'hidden' }}>
           <div ref={leadBgRef} className="absolute inset-0" style={{ opacity: 0, background: v('--jpd-nav-bg-start') }} />
           <div className="relative" style={{ padding: '0 22px', fontFamily: '"Inter Tight", Inter, system-ui, sans-serif' }}>
@@ -760,7 +910,7 @@ export default function PlanChainPreview({
       )}
 
       {/* Stage 1: the field's requirement, stated plainly (Section 54.4.2). */}
-      {!connect && (
+      {!noList && (
         <div
           ref={cardRef}
           className="pointer-events-none absolute"
@@ -773,7 +923,7 @@ export default function PlanChainPreview({
         </div>
       )}
 
-      {connect ? null : host ? createPortal(<div className="jpd absolute inset-0">{stepList}</div>, host) : stepList}
+      {noList ? null : host ? createPortal(<div className="jpd absolute inset-0">{stepList}</div>, host) : stepList}
 
       {/* The chain's own summary row (Section 51.9), while the whole chain is in view. */}
       <div

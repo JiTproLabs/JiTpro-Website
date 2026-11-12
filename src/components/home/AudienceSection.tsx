@@ -112,6 +112,8 @@ import {
 import { STEP_OF_VIEW, progressForTab, regionDistance, tabForProgress } from './audienceScroll';
 import IdentifyRegisterPreview from './IdentifyRegisterPreview';
 import PlanChainPreview from './PlanChainPreview';
+import OwnerVisual from './OwnerVisual';
+import { isOwnerTab } from './ownerScenes';
 
 /** The short cross-fade for the rails when the audience changes. */
 const FADE =
@@ -594,6 +596,8 @@ export default function AudienceSection() {
                           />
                         );
                       if (tab.id === 'gc-connect') return <PlanChainPreview key={tab.id} played={played} variant="connect" categoriesRef={categoriesRef} />;
+                      if (tab.id === 'gc-control') return <PlanChainPreview key={tab.id} played={played} variant="control" />;
+                      if (isOwnerTab(tab.id)) return <OwnerVisual key={tab.id} tab={tab.id} played={played} />;
                       return <ReservedVisual key={tab.id} tab={tab} first={i === 0} />;
                     })}
                   </div>

@@ -46,6 +46,17 @@
   --jpd-grid-strong: #e6e8ea;
   --jpd-today: #94a3b8;
 
+  /* ACTIVITY STATE, WITHOUT FAMILY (2026-11-11, Design System Section 54.4.4).
+     The homepage Control visual draws every activity by where it stands on
+     one date, not by its family, so that amber alone carries what needs
+     attention. Complete and under way are solid; scheduled is an outline, so
+     the three differ by form as well as tone. Each is at least 3:1 on
+     --jpd-surface. */
+  --jpd-state-complete: #8793a1;
+  --jpd-state-active: #3f4b5a;
+  --jpd-state-scheduled-fill: #eef1f4;
+  --jpd-state-scheduled-edge: #7f8b99;
+
   /* NON-WORKING DAYS. Weekends and observed U.S. federal holidays share one
      treatment: the question the shading answers is "is work expected on this
      day", and the answer is the same either way. Derived from the demo's own
