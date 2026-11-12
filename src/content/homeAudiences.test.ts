@@ -68,25 +68,47 @@ describe('HOME_AUDIENCES (Design System Section 54.2)', () => {
     expect(plan.closing).toBe('The right work. In the right order. At the right time.');
   });
 
-  it('gives only the Identify, Plan and Control tabs a second paragraph and closing statement, and no tab the withdrawn role link or checklist', () => {
+  it('gives only Identify, Plan and Control a second paragraph and closing statement, Reduce risk a second paragraph alone, and no tab the withdrawn role link or checklist', () => {
     const tabs = HOME_AUDIENCES.flatMap((a) => a.tabs);
-    expect(tabs.filter((t) => t.descriptionMore || t.closing).map((t) => t.id)).toEqual(['gc-identify', 'gc-plan', 'gc-control']);
+    expect(tabs.filter((t) => t.closing).map((t) => t.id)).toEqual(['gc-identify', 'gc-plan', 'gc-control']);
+    expect(tabs.filter((t) => t.descriptionMore).map((t) => t.id)).toEqual(['gc-identify', 'gc-plan', 'gc-control', 'owner-reduce-risk', 'owner-protect-investment']);
     expect(tabs.filter((t) => t.roleLink || t.checklist)).toEqual([]);
   });
 
   it('carries the Project owners copy as supplied, naming the contractor as the one who uses JiTpro (Section 54.2.4)', () => {
     const owners = HOME_AUDIENCES.find((a) => a.id === 'owners')!;
     expect(owners.tabs.map((t) => [t.label, t.headline])).toEqual([
-      ['Reduce risk', 'Find potential problems before they become expensive.'],
-      ['Protect your investment', 'Keep preventable problems from becoming costly setbacks.'],
+      ['Reduce risk', 'Your construction project shouldn’t have to feel like a gamble.'],
+      ['Protect your investment', 'Protect your investment with a contractor who plans beyond their own budget.'],
       ['More predictability', 'Know what’s coming before it becomes urgent.'],
       ['Better decisions', 'Know what needs your decision, and why it matters.'],
     ]);
-    // One paragraph each; the takeaway is the visual's closing line, not copy.
-    for (const t of owners.tabs) expect(t.descriptionMore ?? t.closing ?? t.checklist ?? t.roleLink).toBeUndefined();
+    // The takeaway is the visual's closing line, not copy. Reduce risk alone has a second paragraph (revised 2026-11-11; rewritten 2026-11-12).
+    for (const t of owners.tabs) expect(t.closing ?? t.checklist ?? t.roleLink).toBeUndefined();
+    for (const t of owners.tabs.slice(2)) expect(t.descriptionMore).toBeUndefined();
+    const risk = owners.tabs[0];
+    expect(risk.description).toBe(
+      'You’re trusting your general contractor with a substantial investment. You deserve confidence that they’re planning ahead, managing risks, and keeping you informed before problems threaten your budget or schedule.',
+    );
+    expect(risk.descriptionMore).toBe(
+      'You deserve a contractor with a plan, not just a promise. JiTpro helps them build and manage the procurement plan that supports that promise.',
+    );
     // Where JiTpro acts, it acts through the owner's contractor.
-    for (const t of owners.tabs.slice(1)) expect(t.description).toContain('JiTpro helps your contractor');
-    expect(owners.tabs.map((t) => t.description).join(' ')).not.toMatch(/guarantee|ROI|\d/i);
+    expect(risk.descriptionMore).toContain('a contractor with a plan');
+    expect(risk.descriptionMore).toContain('JiTpro helps them build and manage the procurement plan');
+    for (const t of owners.tabs.slice(1)) expect(`${t.description} ${t.descriptionMore ?? ''}`).toMatch(/JiTpro helps your (general )?contractor/);
+    // Protect your investment (rewritten 2026-11-12, twice): the owner's investment reaches beyond construction, and the contractor is the owner's partner in protecting it.
+    const protect = owners.tabs[1];
+    expect(protect.description).toBe(
+      'Your investment extends beyond what you pay your contractor. You’re also paying architects, engineers, designers, and consultants whose time and resources depend on how well the entire project is coordinated.',
+    );
+    expect(protect.descriptionMore).toBe(
+      'JiTpro helps your general contractor plan beyond their own work, coordinating information, decisions, and responsibilities across the project team to reduce unnecessary costs and protect your investment.',
+    );
+    expect(protect.descriptionMore).toMatch(/^JiTpro helps your general contractor plan beyond their own work/);
+    expect(`${protect.headline} ${protect.description} ${protect.descriptionMore}`).not.toMatch(/chaos/i);
+    expect(`${protect.description} ${protect.descriptionMore}`).not.toMatch(/change order|eliminate|always|never/i);
+    expect(owners.tabs.map((t) => `${t.description} ${t.descriptionMore ?? ''}`).join(' ')).not.toMatch(/guarantee|ROI|\d/i);
   });
 
   it('carries the Control copy exactly as supplied, its first two paragraphs set as one (Section 54.2.3)', () => {

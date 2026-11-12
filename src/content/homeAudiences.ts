@@ -164,16 +164,20 @@ export const HOME_AUDIENCES: readonly Audience[] = [
       {
         id: 'owner-reduce-risk',
         label: 'Reduce risk',
-        headline: 'Find potential problems before they become expensive.',
+        headline: 'Your construction project shouldn’t have to feel like a gamble.',
         description:
-          'Early procurement planning exposes unresolved decisions, design gaps, and long-lead requirements before they create costly surprises.',
+          'You’re trusting your general contractor with a substantial investment. You deserve confidence that they’re planning ahead, managing risks, and keeping you informed before problems threaten your budget or schedule.',
+        descriptionMore:
+          'You deserve a contractor with a plan, not just a promise. JiTpro helps them build and manage the procurement plan that supports that promise.',
       },
       {
         id: 'owner-protect-investment',
         label: 'Protect your investment',
-        headline: 'Keep preventable problems from becoming costly setbacks.',
+        headline: 'Protect your investment with a contractor who plans beyond their own budget.',
         description:
-          'Late decisions, incorrect products, and missed approvals can create delays, rework, and unexpected expenses. JiTpro helps your contractor address these risks before they reach the field.',
+          'Your investment extends beyond what you pay your contractor. You’re also paying architects, engineers, designers, and consultants whose time and resources depend on how well the entire project is coordinated.',
+        descriptionMore:
+          'JiTpro helps your general contractor plan beyond their own work, coordinating information, decisions, and responsibilities across the project team to reduce unnecessary costs and protect your investment.',
       },
       {
         id: 'owner-predictability',
