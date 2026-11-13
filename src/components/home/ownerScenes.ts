@@ -2,10 +2,9 @@
  * The Project Owners tabs' visuals, as pure data and state (Design System
  * Section 54.4.5, 2026-11-11). PURE: no DOM, no React.
  *
- * ONE PROJECT. More predictability reads the sample
- * project the general contractor tabs draw: the owner's decisions in its
- * schedule and in Connect's dependencies. No chain, activity, date or
- * dependency is changed or authored here; only short display names are.
+ * ILLUSTRATIONS. All four visuals are illustrations and read no project data
+ * (More predictability, which read the owner's decisions, was redrawn as an
+ * approach and landing, 2026-11-13).
  *
  * REDUCE RISK AND PROTECT YOUR INVESTMENT ARE ILLUSTRATIONS (redrawn
  * 2026-11-12): stories told with construction documents, in Identify's
@@ -26,9 +25,7 @@
  * length, travel and turn. The renderer applies it and decides nothing.
  */
 
-import { CONNECT_ITEM } from './connectChainScene';
-import { partyOf, shortDay, fullDay } from './controlChainScene';
-import { ROW_ITEMS, ease } from './planChainScene';
+import { ease } from './planChainScene';
 
 export type OwnerTabId = 'owner-reduce-risk' | 'owner-protect-investment' | 'owner-predictability' | 'owner-better-decisions';
 export const OWNER_TABS: readonly OwnerTabId[] = ['owner-reduce-risk', 'owner-protect-investment', 'owner-predictability', 'owner-better-decisions'];
@@ -38,56 +35,6 @@ export type OwnerMode = 'desktop' | 'phone';
 export const OWNER_CANVAS = { desktop: { w: 560, h: 350 }, phone: { w: 340, h: 212 } } as const;
 /** Below this frame width the narrow design is used (as the Control board's). */
 export const OWNER_NARROW_BELOW = 460;
-
-/* --------------------------------------------------------------- the data */
-
-/**
- * The owner's decisions in the sample project: every schedule activity the
- * owner is responsible for, and Connect's owner dependency. Read from the
- * data; only the short display wording is authored.
- */
-const DECISION_WORDS: Record<string, { title: string; request: string; item: string }> = {
-  'swd-c2': { title: 'Frame finish', request: 'Approve window frame finish', item: 'Windows' },
-  'itm-lighting': { title: 'Lighting selections', request: 'Select decorative lighting', item: 'Decorative lighting' },
-  'itm-tile': { title: 'Tile selections', request: 'Select tile', item: 'Tile' },
-  'itm-plumbing': { title: 'Fixture selections', request: 'Select plumbing fixtures', item: 'Plumbing fixtures' },
-};
-export type OwnerDecision = {
-  id: string;
-  title: string;
-  request: string;
-  item: string;
-  /** When the owner can begin preparing: the activity's own start, or the start of the activity a dependency is for. */
-  prepareFrom: string;
-  requiredBy: string;
-  /** The activity that cannot proceed without it. */
-  neededFor: string;
-  /** The item's Required On Site date, and its chain's start. */
-  onSite: string;
-  chainStart: string;
-};
-export const OWNER_DECISIONS: OwnerDecision[] = [
-  ...CONNECT_ITEM.commitments
-    .filter((c) => (c.ownerRole as string) === 'Owner')
-    .map((c): OwnerDecision => ({
-      id: c.id,
-      ...DECISION_WORDS[c.id],
-      prepareFrom: CONNECT_ITEM.steps.find((s) => s.id === c.requiredForStepId)!.startDate,
-      requiredBy: c.requiredBy,
-      neededFor: c.requiredForStepName,
-      onSite: CONNECT_ITEM.requiredOnSiteDate,
-      chainStart: CONNECT_ITEM.startDate,
-    })),
-  ...ROW_ITEMS.flatMap((item) =>
-    item.steps
-      .filter((s) => s.kind === 'phase' && partyOf(s.responsibleOrganizationId) === 'owner')
-      .map((s): OwnerDecision => {
-        const after = item.steps.slice(item.steps.indexOf(s) + 1).find((q) => q.kind === 'phase');
-        return { id: item.id, ...DECISION_WORDS[item.id], prepareFrom: s.startDate, requiredBy: s.endDate, neededFor: after ? after.name : 'Required On Site', onSite: item.requiredOnSiteDate, chainStart: item.startDate };
-      }),
-  ),
-].sort((a, b) => (a.requiredBy < b.requiredBy ? -1 : 1));
-for (const d of OWNER_DECISIONS) if (!d.title) throw new Error(`ownerScenes: no display wording for owner decision ${d.id}`);
 
 /* ------------------------------------------- Reduce risk (redrawn 2026-11-12) */
 
@@ -263,8 +210,7 @@ export const TEAM = [
 export type TeamId = (typeof TEAM)[number]['id'];
 /** The hero's name: on two lines in the middle of a desktop frame, shortened on a narrow one. */
 export const TEAM_CONTRACTOR = { lines: ['General', 'contractor'], short: 'Contractor' } as const;
-/** The two states, named above the picture (founder, 2026-11-12; they had been *Contractor out of control* and *Contractor in control*). Set in capitals by the renderer. */
-export const TEAM_STATES = { out: 'Weak procurement planning', in: 'Precise procurement planning' } as const;
+/* The two states are no longer named above the picture (founder, 2026-11-13): the foot's words name them. */
 /**
  * The requests in the order they are sent: who each goes to, and whether it
  * is that group's first or second. Everyone gets a second while still
@@ -343,69 +289,211 @@ export const TEAM_MARK = 'JiTpro';
  * second state's line is the visual's closing line, unchanged.
  */
 export const TEAM_FOOT = {
-  out: { head: 'Weak procurement planning puts your investment at risk.', support: 'Preventable delays. Rising costs. Eroding profits.' },
-  in: { head: 'A coordinated contractor protects your investment.', support: 'JiTpro gets the field what it needs, when it needs it.' },
+  out: { head: 'Weak procurement planning creates waste across the entire project.', support: 'More disruption. Higher costs. Greater risk to your investment.' },
+  in: { head: 'Early, precise procurement planning protects your investment.', support: 'Less disruption. Better coordination. Greater cost control.' },
 } as const;
 
-/* ------------------------------------------- Better decisions (redrawn 2026-11-12) */
+/* ------------------------------------------------ More predictability (redrawn 2026-11-13) */
 
 /**
- * BETTER DECISIONS is an ILLUSTRATION, as Reduce risk and Protect your
- * investment are, and reads no project data (founder briefs, 2026-11-12).
- * ONE CONE, AND IT DOES NOT MOVE: a corridor tapering from left to right,
- * wide where the project is early and narrow where it is late; time passes
- * along it, and its height is how much room for choice is left.
- * ONE GROUP, ONE STORY, NEVER RESET: six options in a column ride with a
- * dashed line that marks the time. They keep their places in the column; the
- * cone does not squeeze them together. The group stops a quarter of the way
- * in, while the cone still holds all six: the decision identified early. It
- * carries on from there; as the cone narrows, the options it no longer has
- * room for are left outside its walls and become unavailable, one at a time,
- * still seen, crossed out in red. It stops near the narrow end with two: the
- * decision identified late. Nothing falls, and nothing is set by hand: an
- * option is lost when the cone no longer holds it. Each option stands for an
- * alternative with its own lead time, so each has its own latest viable
- * moment; the column is set a little off the centre line so that no two are
- * lost at once. Identifying a decision early is not making it early: no
- * choice is shown being made. The owner decides; the contractor identifies
- * the decision and its timing. Nobody is drawn, and nobody is blamed.
- * The callouts and the feet are the founder's (brief, 2026-11-12).
- * THEN IT MOVES ON, ONCE (founder, 2026-11-12): it plays one time, never
- * loops; after a beat at the late stop the cone is faded away, and the
- * visual closes on correctly timed decisions: the six options again, all
- * open, a line on what JiTpro helps the contractor do, and the closing line
- * on the foot. Identified early; decided at the right time.
+ * MORE PREDICTABILITY: AN APPROACH AND LANDING (founder brief, 2026-11-13; Design System Section 54.4.5). An
+ * ILLUSTRATION; it reads no project data. One aircraft, one planned approach, one runway, one planned finish: one
+ * project, never a comparison. It drifts and is brought back by procurement planning; it shows loss of predictability,
+ * never disaster, and promises nothing.
  */
-export const CHOICE_FOOT = {
-  in: { head: 'Early planning preserves your choices.', support: 'More options. Better decisions.' },
-  out: { head: 'Late planning limits your choices.', support: 'Less time. Fewer options. More pressure.' },
+export const LANDING_FOOT = {
+  head: 'Better procurement planning helps your project stay on course.',
+  support: 'More predictable schedules. Better cost control. Greater confidence in the finish.',
 } as const;
-/** The close, the founder's words: the closing line, on the foot, and the line set above it, beneath the options. */
-export const CHOICE_TIMED = {
-  head: 'Correctly timed decisions protect your options.',
-  support: 'JiTpro helps your contractor identify what decisions are needed, when they are needed, and why the timing matters.',
+export const LANDING_WORDS = {
+  target: 'Planned completion zone',
+  delay: 'Added time · added cost',
+  /** The overrun's label, set on two lines in its shorter zone. */
+  delayLines: ['Added time', 'Added cost'],
+  forecast: 'Projected finish',
+  /** The three procurement-planning checkpoints, and their short forms on a narrow frame. */
+  gates: ['Requirements identified', 'Commitments scheduled', 'Deliveries coordinated'],
+  gatesShort: ['Identified', 'Scheduled', 'Coordinated'],
 } as const;
-/** The words on the picture: the founder's. The two callouts are shown at the stops, each with its foot. */
-export const CHOICE_WORDS = {
-  more: 'More options',
+
+/** The scene in desktop units (side elevation). The aircraft is placed by the point beneath its wheels. */
+export const LANDING_AT = {
+  ground: 252,
+  /** The runway, to the right of the frame, so the approach can use the width (refined 2026-11-13). */
+  runway: { x0: 232, x1: 548, top: 244, h: 8 },
+  /** The planned completion zone: long enough for touchdown, rollout and a controlled stop. Its end is the boundary. */
+  target: { x0: 268, x1: 442 },
+  /** The overrun: added time, added cost; it begins after the boundary and is never entered. */
+  delay: { x0: 446, x1: 540 },
+  /** A long, shallow final approach from the left. */
+  start: { x: 54, y: 142 },
+  /** The touchdown point, in the first third of the planned zone: where the main gear first meets the runway. */
+  touchdown: { x: 300, y: 244 },
+  /** Where it stops: the whole aircraft inside the planned zone, with runway left before the boundary. */
+  rollout: { x: 364, y: 244 },
+  /** The planned approach, which the aircraft flies: a curve, even at first, flattening a little into the flare. */
+  flare: { c1: { x: 136, y: 176 }, c2: { x: 222, y: 229 } },
+  /** The waypoints, on the planned approach (x). */
+  gates: [140, 178, 214],
+  /** The projected finish: its centre and width at the outset and after each waypoint, ending at the stopping point. */
+  forecast: [
+    { x: 492, w: 92 },
+    { x: 452, w: 76 },
+    { x: 410, w: 58 },
+    { x: 364, w: 44 },
+  ],
+} as const;
+
+export function landingGeometry(mode: OwnerMode) {
+  const d = mode === 'desktop';
+  const k = d ? 1 : 0.6;
+  const X = (x: number) => (d ? x : 2 + k * x);
+  const Y = (y: number) => (d ? y : k * y - 2.4);
+  const P = (p: { x: number; y: number }) => ({ x: X(p.x), y: Y(p.y) });
+  const L = LANDING_AT;
+  /** The planned approach's height at a point (desktop units): the curve the aircraft flies, solved for x. */
+  const bez = (a: number, b: number, c: number, e: number, p: number) => {
+    const u = 1 - p;
+    return u * u * u * a + 3 * u * u * p * b + 3 * u * p * p * c + p * p * p * e;
+  };
+  const glideY = (x: number) => {
+    let lo = 0;
+    let hi = 1;
+    for (let n = 0; n < 50; n++) {
+      const m = (lo + hi) / 2;
+      if (bez(L.start.x, L.flare.c1.x, L.flare.c2.x, L.touchdown.x, m) < x) lo = m;
+      else hi = m;
+    }
+    return bez(L.start.y, L.flare.c1.y, L.flare.c2.y, L.touchdown.y, lo);
+  };
+  const type = d ? { label: 7.5, zone: 8.5 } : { label: 6.5, zone: 6.5 };
+  return {
+    k,
+    type,
+    ground: { x0: X(12), x1: X(548), y: Y(L.ground) },
+    runway: { x0: X(L.runway.x0), x1: X(L.runway.x1), y: Y(L.runway.top), h: k * L.runway.h },
+    target: { x0: X(L.target.x0), x1: X(L.target.x1) },
+    delay: { x0: X(L.delay.x0), x1: X(L.delay.x1) },
+    /** The boundary post at the end of the planned zone: its x, and how far it stands above the runway. */
+    boundary: { x: X((L.target.x1 + L.delay.x0) / 2), h: k * 11 },
+    /** The zone labels, beneath the runway (the overrun's on two lines, this far apart). */
+    labelY: Y(L.ground + 16),
+    labelStep: d ? 10 : 7,
+    start: P(L.start),
+    touchdown: P(L.touchdown),
+    rollout: P(L.rollout),
+    flare: { c1: P(L.flare.c1), c2: P(L.flare.c2) },
+    /** The planned approach's height at a point (this design's units). */
+    approachY: (x: number) => Y(glideY((x - X(0)) / k)),
+    /** The projected finish at each stage: its centre x and width, in this design's units. */
+    forecast: L.forecast.map((f) => ({ x: X(f.x), w: k * f.w })),
+    forecastH: k * 5,
+    /** The projected finish's words, this far above the runway: clear of the boundary post as they pass it. */
+    forecastLabel: k * 19,
+    /** Each checkpoint, on the planned approach; its label beneath and to its left, ending this far left of it. */
+    gates: L.gates.map((x, i) => ({ x: X(x), y: Y(glideY(x)), label: (d ? LANDING_WORDS.gates : LANDING_WORDS.gatesShort)[i] })),
+    gateLabel: { dx: d ? 12 : 10, dy: d ? 20 : 12 },
+    /** The aircraft's scale: drawn at 1.15 of its unit size, and scaled with the design. Its length either side of the wheels, and its height. */
+    plane: k * 1.15,
+    planeSpan: { back: k * 1.15 * 40, front: k * 1.15 * 37, up: k * 1.15 * 31 },
+    band: teamGeometry(mode).band,
+  };
+}
+
+/**
+ * The foot's line size in Protect your investment: the band's own, unless a
+ * line would not fit the frame on one line, then a half-point step smaller so
+ * both of the visual's lines fit, at one size (2026-11-13: the founder's
+ * *Weak procurement planning creates waste across the entire project.* is
+ * longer than the band's 17 / 10 allow).
+ */
+export function teamFootHead(mode: OwnerMode): number {
+  const { w } = OWNER_CANVAS[mode];
+  const B = teamGeometry(mode).band;
+  const widest = Math.max(textWidth(TEAM_FOOT.out.head, 1), textWidth(TEAM_FOOT.in.head, 1));
+  return Math.min(B.head, Math.floor(((w - 16) / widest) * 2) / 2);
+}
+
+/* ---------------------------------- Better decisions (redrawn 2026-11-13) */
+
+/**
+ * BETTER DECISIONS: THE DECISION TIMING WINDOW (founder brief *Better
+ * Decisions Section Redesign*, 2026-11-13; Design System Section 54.4.5). An
+ * ILLUSTRATION; it reads no project data.
+ *
+ * JiTpro is not about deciding as early as possible. Too early, the project
+ * does not yet know enough to weigh the alternatives; too late, the time left
+ * no longer supports some of them. The right time is when the information is
+ * there and enough time remains for the procurement that follows.
+ *
+ * ONE CORRIDOR, shaped like an elongated lens: narrow at the left, widest a
+ * little before the middle, narrow at the right. Its height is how much room
+ * there is for a sound decision: left of the peak it is limited by what is
+ * known; right of it, by the time left. ONE GROUP, NEVER RESET: an amber NOW
+ * marker and six options travel left to right through three stages. ONE RULE
+ * decides each option's state: available while the whole card fits the
+ * corridor; otherwise provisional before the peak (not yet evaluable, never
+ * crossed out) and unavailable after it (the red X). The contractor
+ * identifies what is needed and when; the owner decides. Nobody is blamed.
+ */
+export type WindowStage = 'early' | 'right' | 'late';
+export const WINDOW_STAGES: Record<WindowStage, { heading: string; foot: { head: string; support: string } }> = {
+  early: {
+    heading: 'Information still developing',
+    foot: { head: 'Premature decisions can limit your choices.', support: 'Incomplete information. Unnecessary commitments.' },
+  },
+  right: {
+    heading: 'The right time to decide',
+    foot: { head: 'The right timing preserves your choices.', support: 'Enough information. Enough time. Better decisions.' },
+  },
+  late: {
+    heading: 'Options become limited',
+    foot: { head: 'Delayed decisions can eliminate your options.', support: 'Less time. Fewer choices. Greater pressure.' },
+  },
+};
+/** The closing line, on the foot, and the amber line beneath it (founder, 2026-11-13). */
+export const WINDOW_CLOSE = 'Correctly timed information and decisions protect your options.';
+export const WINDOW_CLOSE_SUPPORT = 'JiTpro helps your contractor plan early and communicate exactly when decisions are needed.';
+/** The closing amber line's size: the band's own, a half-point step smaller where it would not fit on one line. */
+export function windowCloseSupportSize(mode: OwnerMode): number {
+  const { w } = OWNER_CANVAS[mode];
+  const B = teamGeometry(mode).band;
+  return Math.min(B.support, Math.floor(((w - 16) / textWidth(WINDOW_CLOSE_SUPPORT, 1)) * 2) / 2);
+}
+/** The words on the picture besides the headings: the founder's. */
+export const WINDOW_WORDS = {
+  now: 'Now',
   time: 'Time passes',
-  early: 'Decision identified early',
-  late: 'Decision identified late',
-  option: 'Option',
+  zones: ['Too early', 'Right time', 'Too late'],
+  choice: 'Choice',
+  /** The group's status, above the stack, at the three stops (founder, 2026-11-13). */
+  known: 'Known options',
+  six: 'Six viable options',
+  two: 'Only two viable options remain',
+  /** The brief callout beside a card as it is discovered. */
+  found: 'New option discovered',
 } as const;
-/** How many options there are, and their letters (founder, 2026-11-12): each is named, *Option A* to *Option F*; any alternative, never a product. */
+/**
+ * Why each choice is no longer viable, in the order they are lost (founder, 2026-11-13): lead time, manufacturing
+ * capacity, cost and approvals. Illustrative: nonviable under the project's current requirements, not impossible.
+ */
+export const WINDOW_LOSS_REASONS = ['Lead time too long', 'Production slot lost', 'Price no longer viable', 'Approval time exhausted'] as const;
+/**
+ * How many choices there are (founder, 2026-11-13): *Choice 1* to *Choice 6*, numbered in the order they become known.
+ * Three are known from the start; three are discovered as information develops. Any alternative, never a product; the
+ * number is illustrative.
+ */
 export const CHOICE_COUNT = 6;
-export const CHOICE_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'] as const;
+export const CHOICE_KNOWN = 3;
+export type OptionState = 'undiscovered' | 'available' | 'unavailable';
 
 /** The closing line of each visual, exactly as supplied by the founder (2026-11-11; Reduce risk, 2026-11-12). */
 export const OWNER_TAKEAWAY: Record<OwnerTabId, string> = {
   'owner-reduce-risk': 'Confidence requires a plan.',
   'owner-protect-investment': TEAM_FOOT.in.head,
-  'owner-predictability': 'Fewer surprises. More time to prepare.',
-  'owner-better-decisions': CHOICE_TIMED.head,
+  'owner-predictability': 'Better procurement planning helps your project stay on course.',
+  'owner-better-decisions': WINDOW_CLOSE,
 };
-export const LOOKAHEAD_STEPS = ['Coming up', 'Prepare', 'Decision required'] as const;
-export { shortDay, fullDay };
 
 /* -------------------------------------------------------------- the clock */
 
@@ -428,7 +516,7 @@ export type Cue = {
    * points (a cubic Bezier, all as offsets), turning by `rot` degrees as it
    * goes. It sets off gently and gathers speed, as a thing that is falling does.
    */
-  arc?: { at: number; dur: number; c1: { dx: number; dy: number }; c2: { dx: number; dy: number }; to: { dx: number; dy: number }; rot?: number };
+  arc?: { at: number; dur: number; c1: { dx: number; dy: number }; c2: { dx: number; dy: number }; to: { dx: number; dy: number }; rot?: number; smooth?: boolean; even?: boolean };
   /**
    * Pushed along by something that sweeps `travel` in the direction
    * (`ux`, `uy`) over `dur`: it stays put until the sweeper, which sets out
@@ -437,8 +525,11 @@ export type Cue = {
    * has reach 0.
    */
   push?: { at: number; dur: number; travel: number; reach: number; ux: number; uy: number; spin?: number };
-  /** Travels by (dx, dy) from where it is drawn, turning by `rot` degrees and growing to `scale` as it goes. */
-  move?: { at: number; dur: number; dx: number; dy: number; rot?: number; scale?: number };
+  /**
+   * Travels by (dx, dy) from where it is drawn, turning by `rot` degrees and growing to `scale` (and, horizontally only,
+   * to `scaleX`) as it goes. Eased in and out; `ease: 'out'` sets off at speed and slows to rest (a rollout).
+   */
+  move?: { at: number; dur: number; dx: number; dy: number; rot?: number; scale?: number; scaleX?: number; ease?: 'out' };
   /** Arrives from this offset and turn, slowing as it lands where it is drawn. Over `dur`. */
   from?: { dx: number; dy: number; rot?: number };
   /**
@@ -449,23 +540,30 @@ export type Cue = {
 };
 /** A visual's cues and its length. A visual plays once and rests on its last frame, which reduced motion shows at once (Sections 46.5, 46.6). */
 export type OwnerScene = { tab: OwnerTabId; mode: OwnerMode; cues: Cue[]; end: number };
-export type CueState = { o: number; ty: number; draw: number; mx: number; my: number; rot: number; sc: number };
+export type CueState = { o: number; ty: number; draw: number; mx: number; my: number; rot: number; sc: number; sx: number };
 
 const IN = 350;
 const OUT = 350;
 
+/** How far through a span of `dur` from `at`, 0 to 1. A span of no length is complete from its first moment (2026-11-13). */
+const through = (t: number, at: number, dur: number) => (dur > 0 ? ease((t - at) / dur) : t >= at ? 1 : 0);
+
 export function cueStateAt(c: Cue, t: number): CueState {
-  const enter = ease((t - c.at) / (c.dur ?? IN));
-  const leave = c.out === undefined ? 0 : ease((t - c.out) / (c.outDur ?? OUT));
+  const enter = through(t, c.at, c.dur ?? IN);
+  const leave = c.out === undefined ? 0 : through(t, c.out, c.outDur ?? OUT);
   const stay = 1 - leave * (1 - (c.outTo ?? 0));
-  const m = c.move ? ease((t - c.move.at) / c.move.dur) : 0;
+  const mt = c.move ? Math.min(1, Math.max(0, (t - c.move.at) / c.move.dur)) : 0;
+  const m = c.move ? (c.move.ease === 'out' ? 1 - (1 - mt) * (1 - mt) : ease(mt)) : 0;
   /* What is left of an arrival: 1 as it sets out, 0 once landed. Both slow into rest and never pass it (Section 46.4). */
   const left = (dur: number, power: number) => (1 - Math.min(1, Math.max(0, (t - c.at) / dur))) ** power;
   const landing = c.from ? left(c.dur ?? IN, 3) : 0;
   const rolling = c.roll ? left(c.roll.dur, 2) : 0;
   const hop = c.roll ? c.roll.hop * rolling * Math.abs(Math.sin(Math.PI * c.roll.hops * Math.min(1, Math.max(0, (t - c.at) / c.roll.dur)))) : 0;
   /* Along a curve: how far, 0 to 1, gathering speed; and the cubic's weights there. */
-  const p = c.arc ? Math.min(1, Math.max(0, (t - c.arc.at) / c.arc.dur)) ** 1.5 : 0;
+  /* A smooth arc eases in and out (an aircraft on approach, 2026-11-13); otherwise it gathers speed, as a thing falling does. */
+  /* `even`: at a steady pace from start to end (an aircraft already flying, 2026-11-13). */
+  const ta = c.arc ? Math.min(1, Math.max(0, (t - c.arc.at) / c.arc.dur)) : 0;
+  const p = c.arc ? (c.arc.even ? ta : c.arc.smooth ? ease(ta) : ta ** 1.5) : 0;
   const w1 = 3 * (1 - p) * (1 - p) * p;
   const w2 = 3 * (1 - p) * p * p;
   const w3 = p * p * p;
@@ -481,6 +579,7 @@ export function cueStateAt(c: Cue, t: number): CueState {
     my: 0 + (c.move ? c.move.dy * m : 0) + (c.from ? c.from.dy * landing : 0) - hop + (c.arc ? w1 * c.arc.c1.dy + w2 * c.arc.c2.dy + w3 * c.arc.to.dy : 0) + (c.push ? carried * c.push.uy : 0),
     rot: 0 + (c.move?.rot ?? 0) * m + (c.from?.rot ?? 0) * landing + (c.roll ? c.roll.turns * 360 * rolling : 0) + (c.arc?.rot ?? 0) * p + (c.push?.spin ?? 0) * share,
     sc: 1 + ((c.move?.scale ?? 1) - 1) * m,
+    sx: 1 + ((c.move?.scaleX ?? 1) - 1) * m,
   };
 }
 export const ownerStateAt = (scene: OwnerScene, t: number): Record<string, CueState> => Object.fromEntries(scene.cues.map((c) => [c.k, cueStateAt(c, t)]));
@@ -815,119 +914,137 @@ export function shieldPath(s: { cx: number; cy: number; w: number; h: number }):
 }
 
 /**
- * Better decisions: the cone. Laid out once on the desktop canvas and set on
- * the narrow one at 0.6 of the size; only the type is set separately, so it
- * stays readable. Every word's and every option's place is here, so it can be
- * checked.
+ * Better decisions: the timing window. Laid out once on the desktop canvas and
+ * set on the narrow one at 0.6 of the size; only the type is set separately,
+ * so it stays readable. Every word's and every option's place is here, so it
+ * can be checked.
  *
- * THE CONE is symmetric about a level centre line, with straight walls.
- * THE GROUP is a dashed line across the cone and a column of six options
- * centred on it, which travel together. An option is open while the cone
- * holds it, measured at its leading edge, where the cone is lower; it is lost
- * from the point where it would cross a wall.
+ * THE CORRIDOR is symmetric about a level centre line. Each side of its peak
+ * is an eased curve, level where it meets the peak: rising sin² from the left
+ * end, falling cos² to the right end.
  */
-export const CHOICE_CONE = { x0: 40, x1: 520, cy: 150, h0: 104, h1: 16 } as const;
-/** Where the group sets out, and its two stops (desktop units): early, a quarter of the way along the cone, where it holds all six; late, 85% of the way, near the narrow end. */
-export const CHOICE_AT = { start: 76, early: 160, late: 448 } as const;
-export type ChoiceWhen = 'early' | 'late';
-export function choiceGeometry(mode: OwnerMode) {
+export const WINDOW_SHAPE = { x0: 40, x1: 520, cy: 146, hL: 40, hM: 92, hR: 12, peak: 0.48 } as const;
+/** Where the group stands at each stage (desktop units, the marker's x). */
+export const WINDOW_AT: Record<WindowStage, number> = { early: 96, right: 270, late: 416 };
+/** Where the group stops for each discovery, on the way into the window (desktop units): Choice 4, 5 and 6. */
+export const WINDOW_DISCOVER = [140, 185, 230] as const;
+
+export function windowGeometry(mode: OwnerMode) {
   const d = mode === 'desktop';
   const k = d ? 1 : 0.6;
   const X = (x: number) => (d ? x : 2 + k * x);
   const Y = (y: number) => (d ? y : k * y - 2.4);
-  const C = CHOICE_CONE;
-  /** The cone's half-height at a point along it (desktop units). */
-  const halfAt = (x: number) => C.h0 - (C.h0 - C.h1) * Math.min(1, Math.max(0, (x - C.x0) / (C.x1 - C.x0)));
-  /**
-   * An option card, in desktop units: half its height, the gap between cards, and how far its leading edge is ahead of
-   * the line (half its width). Its drawn size is set per frame below, so that its label is legible on both.
-   */
+  const S = WINDOW_SHAPE;
+  const xPeak = S.x0 + S.peak * (S.x1 - S.x0);
+  /** The corridor's half-height at a point along it (desktop units). */
+  const halfAt = (x: number) => {
+    const u = Math.min(1, Math.max(0, (x - S.x0) / (S.x1 - S.x0)));
+    if (u <= S.peak) return S.hL + (S.hM - S.hL) * Math.sin((Math.PI / 2) * (u / S.peak)) ** 2;
+    return S.hR + (S.hM - S.hR) * Math.cos((Math.PI / 2) * ((u - S.peak) / (1 - S.peak))) ** 2;
+  };
+  /** An option card (desktop units): half its height, the gap between cards, half its width. Its drawn size is set per design. */
   const HALF = 8;
   const GAP = 6;
   const LEAD = 30;
-  /* The column, set this far below the centre line so that no two options are lost at once. Its offsets never change. */
+  /*
+   * The stack, centred on the marker, set this far below the centre line so that no two choices are lost at once.
+   * Top to bottom it reads Choice 1, 2, 3...; each discovery adds a card beneath and the stack moves up half a step,
+   * so it stays centred. `offsets` are the places of all six, once all are known.
+   */
   const OFF = 3;
-  const offsets = Array.from({ length: CHOICE_COUNT }, (_, j) => OFF + (j - (CHOICE_COUNT - 1) / 2) * (2 * HALF + GAP));
-  /** Whether the cone holds option j with the group at x: its outer edge at the card's leading edge is inside the wall. */
-  const holds = (j: number, x: number) => Math.abs(offsets[j]) + HALF <= halfAt(x + LEAD);
-  /** The card as drawn: desktop, the layout's own size; narrow, wider than 0.6 of it, so that *OPTION A* stays legible. */
-  const card = d ? { w: 60, h: 16, round: 3, label: 8.5 } : { w: 42, h: 10, round: 2, label: 6.5 };
-  const type = d ? { label: 8.5, message: 10 } : { label: 7, message: 8 };
-  const AXIS_Y = Y(276);
-  /** The heavier, redder walls near the narrow end: as thick as this at the tip, in desktop units. */
-  const PRESS = 5;
-  const r1 = (n: number) => Math.round(n * 10) / 10;
-  const wallPoints = (side: -1 | 1, inset = 0) =>
-    Array.from({ length: 13 }, (_, n) => {
-      const x = C.x0 + ((C.x1 - C.x0) * n) / 12;
-      return `${r1(X(x))} ${r1(Y(C.cy + side * (halfAt(x) - inset)))}`;
-    });
-  /* Where each option is lost, as the group carries on from the early stop: the first point at which the cone no longer holds it. */
-  const lost: { option: number; x: number }[] = [];
+  const PITCH = 2 * HALF + GAP;
+  const offsets = Array.from({ length: CHOICE_COUNT }, (_, j) => OFF + (j - (CHOICE_COUNT - 1) / 2) * PITCH);
+  /** With n choices known, each card's offset: the six places, moved down half a step for each one still unknown. */
+  const stackOffset = (j: number, n: number) => offsets[j] + ((CHOICE_COUNT - n) * PITCH) / 2;
+  /** Whether the whole of choice j fits inside the corridor with the group at x and n choices known. */
+  const fits = (j: number, x: number, n = CHOICE_COUNT) => Math.abs(stackOffset(j, n)) + HALF <= Math.min(halfAt(x - LEAD), halfAt(x + LEAD));
+  /** How many choices are known with the group at x: three, then one more at each discovery. */
+  const knownAt = (x: number) => CHOICE_KNOWN + WINDOW_DISCOVER.filter((dx) => x >= dx).length;
+  /** A choice's state with the group at x: unknown until discovered; then available until the corridor, narrowing, no longer holds it. */
+  const stateAt = (j: number, x: number): OptionState => (j >= knownAt(x) ? 'undiscovered' : x > xPeak && !fits(j, x) ? 'unavailable' : 'available');
+  /* Where each choice is lost, on the way out: the first point at which the corridor no longer holds it. */
+  const changes: { option: number; x: number; to: OptionState }[] = [];
   offsets.forEach((_, j) => {
-    for (let x = CHOICE_AT.early; x <= CHOICE_AT.late; x += 0.5)
-      if (!holds(j, x)) {
-        lost.push({ option: j, x: X(x) });
-        break;
-      }
+    for (let x = WINDOW_AT.right; x <= WINDOW_AT.late; x += 0.5)
+      if (stateAt(j, x - 0.5) === 'available' && stateAt(j, x) === 'unavailable') changes.push({ option: j, x: X(x), to: 'unavailable' });
   });
-  lost.sort((a, b) => a.x - b.x || a.option - b.option);
-  /* A callout, at the top of the frame, in small capitals, on one line. */
-  const message = (words: string) => ({ x: X(280), lines: [{ line: words, y: d ? 26 : 14 }] });
-  /* The close: the six options in a level row across the middle of the frame, a little larger, all open; the line about
-     JiTpro beneath them, on two lines; the closing line on the foot. */
-  const band = teamGeometry(mode).band;
-  const timedGap = d ? 12 : 6;
-  const rowY = Math.round(band.y * 0.42);
-  const supportSize = d ? 12 : 8.5;
-  const supportLines = fitLines(CHOICE_TIMED.support, supportSize, (d ? 560 : 340) - (d ? 120 : 30));
-  const supportTop = rowY + card.h / 2 + (d ? 36 : 22);
-  const timed = {
-    y: rowY,
-    xs: Array.from({ length: CHOICE_COUNT }, (_, j) => X(280) + (j - (CHOICE_COUNT - 1) / 2) * (card.w + timedGap)),
-    support: { x: X(280), size: supportSize, lines: supportLines.map((line, i) => ({ line, y: supportTop + i * supportSize * 1.4 })) },
-  };
+  changes.sort((a, b) => a.x - b.x || a.option - b.option);
+  /* The decision window: where the corridor holds all six (the marker's x), widened by half a card each side to cover them. */
+  let wa = xPeak;
+  let wb = xPeak;
+  while (offsets.every((_, j) => fits(j, wa - 0.5))) wa -= 0.5;
+  while (offsets.every((_, j) => fits(j, wb + 0.5))) wb += 0.5;
+  const card = d ? { w: 60, h: 16, round: 3, label: 8.5 } : { w: 42, h: 10, round: 2, label: 6.5 };
+  const type = d ? { heading: 10, label: 8.5, zone: 7.5, tag: 7.5 } : { heading: 8, label: 7, zone: 7, tag: 6.5 };
+  const r1 = (n: number) => Math.round(n * 10) / 10;
+  const N = 48;
+  const wallPoints = (side: -1 | 1, inset = 0) =>
+    Array.from({ length: N + 1 }, (_, n) => {
+      const x = S.x0 + ((S.x1 - S.x0) * n) / N;
+      return `${r1(X(x))} ${r1(Y(S.cy + side * (halfAt(x) - inset)))}`;
+    });
+  const tag = d ? { w: 32, h: 13 } : { w: 26, h: 9.5 };
+  const tagY = Y(37);
+  const AXIS_Y = Y(266);
   return {
     k,
     type,
-    /** The cone in this design's units: its ends, its centre line, its half-height at a point, its walls, and the whole of it as one shape. */
-    cone: { x0: X(C.x0), x1: X(C.x1), cy: Y(C.cy) },
+    /** The corridor in this design's units: its ends, its centre line and peak, its half-height at a point, its walls, and the whole of it as one shape. */
+    shape: { x0: X(S.x0), x1: X(S.x1), cy: Y(S.cy), peak: X(xPeak) },
     half: (x: number) => k * halfAt((x - X(0)) / k),
     wall: (side: -1 | 1) => `M${wallPoints(side).join('L')}`,
-    /** A fine second line just inside each wall: the drawing's linework. */
     inner: (side: -1 | 1) => `M${wallPoints(side, 3.5).join('L')}`,
     outline: `M${[...wallPoints(-1), ...wallPoints(1).reverse()].join('L')}Z`,
-    /** The group where it sets out: the line (its full height, clipped to the cone) and the cards about it. */
-    start: { x: X(CHOICE_AT.start), y0: Y(C.cy - C.h0 - 6), y1: Y(C.cy + C.h0 + 6) },
-    cards: offsets.map((o) => ({ dx: 0, y: Y(C.cy + o) })),
     card,
-    /** Each option's name: *Option A* to *Option F*, from the top of the column. */
-    name: (j: number) => ({ word: CHOICE_WORDS.option, letter: CHOICE_LETTERS[j] }),
-    /** The two stops: where the group is, and how many options the cone holds there. */
-    stop: (when: ChoiceWhen) => ({ x: X(CHOICE_AT[when]), open: offsets.filter((_, j) => holds(j, CHOICE_AT[when])).length }),
-    /** Where each option is lost, in the order they go (pairs, top and bottom, go together). */
-    lost,
-    message,
-    /** The pressure near the narrow end: from a little before the late stop to the tip, the walls thicken to `thick` and redden. */
-    pressure: { from: X(CHOICE_AT.late - 60), thick: k * PRESS },
-    /** *More options*, above the mouth. */
-    more: { x: X(C.x0), y: Y(C.cy - C.h0) - (d ? 8 : 5) },
-    /**
-     * Time, beneath it all: one unbroken line with fine ticks rising from it and an arrowhead; *Time passes* above its
-     * start, under the mouth; and the marker's pointer, which travels beneath the line with the group, its tip on the line.
-     */
+    /** The stack's places about the marker, once all six are known: each choice's centre y. */
+    cards: offsets.map((o) => ({ y: Y(S.cy + o) })),
+    /** How far the stack sits below its final place with n choices known (this design's units), and how far it moves up at each discovery. */
+    stackDrop: (n: number) => (k * (CHOICE_COUNT - n) * PITCH) / 2,
+    stackStep: (k * PITCH) / 2,
+    /** Each choice's centre y with n known, and whether it fits the corridor with the group at x (this design's units). */
+    stackY: (j: number, n: number) => Y(S.cy + stackOffset(j, n)),
+    fits: (j: number, x: number, n: number) => fits(j, (x - X(0)) / k, n),
+    name: (j: number) => ({ word: WINDOW_WORDS.choice, letter: String(j + 1) }),
+    /** Where the group stops for each discovery. */
+    discover: WINDOW_DISCOVER.map((x) => X(x)),
+    /** The group's status label, above the stack: its baseline with n choices known. */
+    statusY: (n: number) => Y(S.cy + stackOffset(0, n) - HALF - (d ? 7 : 6)),
+    /** A callout beside a card: its left edge, from the marker. */
+    note: { dx: k * LEAD + (d ? 7 : 5), size: d ? 7 : 6, h: d ? 12 : 8.5, pad: d ? 5 : 3.5 },
+    /** Each stage: where the group stands, and each option's state there. */
+    stop: (when: WindowStage) => ({ x: X(WINDOW_AT[when]), states: offsets.map((_, j) => stateAt(j, WINDOW_AT[when])) }),
+    /** Where each option changes state on the way, in order. */
+    changes,
+    /** The decision window: the band's span (covering the cards), clipped to the corridor. */
+    window: { x0: X(wa - LEAD), x1: X(wb + LEAD), from: X(wa), to: X(wb) },
+    /** The haze over the left of the corridor: information still developing. */
+    haze: { x0: X(S.x0), x1: X(xPeak - 40) },
+    /** The risk near the narrow end: from a little before the late stop to the tip, the walls thicken to `thick` and redden. */
+    pressure: { from: X(WINDOW_AT.late - 60), thick: k * 3.5 },
+    /** The heading, centred at the top. */
+    heading: { x: X(280), y: d ? 27 : 14 },
+    /** The NOW tag above the corridor and the marker line beneath it, about the marker's x. */
+    tag: { ...tag, y: tagY },
+    line: { y0: tagY + tag.h, y1: Y(242) },
+    /** The stage names beneath the corridor. */
+    zones: [
+      { x: X(S.x0 + 0.13 * (S.x1 - S.x0)), word: WINDOW_WORDS.zones[0] },
+      { x: X(xPeak), word: WINDOW_WORDS.zones[1] },
+      { x: X(S.x0 + 0.88 * (S.x1 - S.x0)), word: WINDOW_WORDS.zones[2] },
+    ].map((z) => ({ ...z, y: Y(254) })),
     axis: {
-      x0: X(C.x0),
-      x1: X(C.x1),
+      x0: X(S.x0),
+      x1: X(S.x1),
       y: AXIS_Y,
-      label: { x: X(C.x0), y: AXIS_Y - (d ? 9 : 5) },
-      ticks: Array.from({ length: 11 }, (_, n) => X(C.x0 + 40 * (n + 1))),
+      /* *TIME PASSES* beneath the arrow's end, right-aligned, clear of the marker's pointer at every stop. */
+      label: { x: X(S.x1), y: Y(279) },
+      ticks: Array.from({ length: 11 }, (_, n) => X(S.x0 + 40 * (n + 1))),
       tick: d ? 3 : 2,
       pointer: d ? { w: 5, h: 6 } : { w: 3.5, h: 4.5 },
     },
-    band,
-    /** The close: the row of six options, all open, and the line beneath them. */
-    timed,
+    band: teamGeometry(mode).band,
+    /** The close: the six options, all available, in a column inside the decision window. */
+    close: { x: X(WINDOW_AT.right) },
   };
 }
 
@@ -1008,195 +1125,298 @@ function riskScene(mode: OwnerMode): OwnerScene {
 function investmentScene(mode: OwnerMode): OwnerScene {
   const g = teamGeometry(mode);
   /*
-   * PACE (slowed 2026-11-12, founder: calm, controlled, easy to read). Movements run about 40% longer than they did,
-   * steps within a state follow a little further apart, and the long pauses are where the story turns: the first state
-   * is held, complete, for four seconds before it is withdrawn; the frame is clear for a beat before the shield is drawn;
-   * the second state is held, complete; and the close rests.
-   * THE FOOT IS SCENERY (founder, 2026-11-12): the navy bar and its amber edge come in with the opening and stay to the
-   * end, never fading; only its words change. The first state's words come in once its friction is drawn and go with
-   * it; the second state's come in as that state is named, and stay.
+   * TWO SCENES, EACH LIKE A SHORT FILM (founder, 2026-11-13): message first, illustration second, hold the outcome,
+   * fade out, then the next scene. No heading names either scene; the foot's words do.
+   *
+   * THE FOOT: the navy bar and its amber edge are there from the first frame to the end and never fade. Only its words
+   * fade, in with each scene's opening and out with its close; they are blank only during the short beat between scenes.
+   *
+   * Within each scene the existing illustration plays at its existing pace (slowed 2026-11-12: calm, controlled, easy to
+   * read). Each scene, once complete, is held 3 s; the first then fades out as one, everything together.
    */
-  /** When the first state's foot words come in, once its friction is drawn. */
-  const FOOT = 3400;
-  /** When the first state is complete (its last request has landed); it is held this long before it is withdrawn. */
-  const FIRST_DONE = 8040;
-  const FIRST_HOLD = 3960;
-  const REWIND = FIRST_DONE + FIRST_HOLD;
-  /** The beat between the two states: the first withdrawn, the frame clear, then the shield begins. */
-  const GUARD = REWIND + 600;
-  /** When the second state is named, once the shield stands; its foot words follow. */
-  const STATE_IN = GUARD + 1700;
-  /** When the second state is complete (the last protected-value shield has settled); then it rests. */
-  const SECOND_DONE = GUARD + 5610;
-  /** The lag between a moment and the foot words that go with it: the same for both states. */
-  const WORDS_AFTER = 550;
-  const first = { out: REWIND, outDur: 500 };
+  /** A scene's words fade in over this long; the illustration begins this long after they are in. */
+  const WORDS = 700;
+  const PAUSE = 400;
+  /** A completed scene is held this long; the first then fades out as one over FADE, and the frame is clear for BEAT. */
+  const HOLD = 3000;
+  const FADE = 800;
+  const BEAT = 300;
   const n = TEAM.length;
   /** How long a bill takes from its card into the dumpster: slow enough to follow. */
   const BILL_FLIGHT = 1400;
   /** The contractor's own bills fall a short way, straight down. */
   const BILL_DROP = 1000;
+
+  /* Scene 1. The words, then the contractor, then the four groups; the disorder follows at its own pace, as before,
+     `LATER` ms after the moment it used to begin. */
+  const WORDS_1 = 400;
+  const CONTRACTOR = WORDS_1 + WORDS + PAUSE;
+  const GROUPS = CONTRACTOR + 800;
+  const LATER = GROUPS + (n - 1) * 250 + 600 + 350 - 2800;
+  const bills = Array.from({ length: TEAM_WASTE_ROUNDS }, (_, r) =>
+    TEAM_PARTIES.map((who, e) => {
+      const nth = r * TEAM_PARTIES.length + e;
+      const at = LATER + 5150 + nth * 255 - ((nth * (nth - 1)) / 2) * 6;
+      return { who, r, at, flight: who === 'gc' ? BILL_DROP : BILL_FLIGHT };
+    }),
+  ).flat();
+  /** Scene 1 is complete when its last request has landed and its last bill is in the dumpster. */
+  const FIRST_DONE = Math.max(LATER + 8040, ...bills.map((b) => b.at + 320 + b.flight + 160));
+  const OUT_1 = FIRST_DONE + HOLD;
+  const scene1 = { out: OUT_1, outDur: FADE };
+
+  /* Scene 2. The words, then the shield, then the four groups, then the lines, the calm words and the value kept. */
+  const WORDS_2 = OUT_1 + FADE + BEAT;
+  const GUARD = WORDS_2 + WORDS + PAUSE;
+  const GROUPS_2 = GUARD + 1700;
+  const LINKS = GROUPS_2 + (n - 1) * 200 + 600 + 250;
+  const KEEP = LINKS + (n - 1) * 220 + 500 + 300;
+  const SECOND_DONE = KEEP + n * 240 + 550;
+
   const cues: Cue[] = [
-    // The sheet the picture is drawn on: a faint grid and crop marks. It is there throughout.
-    { k: 'ground', at: 0, dur: 800 },
-    // The foot: the navy bar and its amber edge. Scenery: in with the opening, there to the end; only its words change.
-    { k: 'foot', at: 0, dur: 650 },
-    // 1. The contractor, in the middle, and the four groups around; the state is named.
-    { k: 'loose', at: 0, dur: 650, rise: 6, ...first },
-    { k: 'stateOut', at: 400, dur: 500, ...first },
-    ...TEAM.map((_, i): Cue => ({ k: `card-${i}`, at: 900 + i * 280, dur: 500, rise: 5 })),
+    // The frame: the sheet, and the foot's navy bar and amber edge. There from the first frame; they never fade.
+    { k: 'ground', at: 0, dur: 0 },
+    { k: 'foot', at: 0, dur: 0 },
+    // SCENE 1. The message first.
+    { k: 'footOutWords', at: WORDS_1, dur: WORDS, ...scene1 },
+    // Then the contractor, where it stands: opacity only.
+    { k: 'loose', at: CONTRACTOR, dur: 700, ...scene1 },
+    // Then the four groups around it, a little apart: opacity only.
+    ...TEAM.map((_, i): Cue => ({ k: `card-${i}`, at: GROUPS + i * 250, dur: 600, ...scene1 })),
     // Out of control: friction runs outward to each group, and rushed requests follow it.
-    ...TEAM.map((_, i): Cue => ({ k: `friction-${i}`, at: 2800 + i * 200, dur: 700, draw: true, ...first })),
-    ...TEAM_RUSH.map((r, i): Cue => ({ k: `rush-${i}`, at: (r.round === 0 ? 3400 : 6600) + r.to * 280, dur: 600, from: g.tagFrom(r.to, r.round), ...first })),
-    // The first state's foot words, on the bar. They go with the rest of the first state; the bar stays.
-    { k: 'footOutWords', at: FOOT + WORDS_AFTER, dur: 500, rise: 5, ...first },
+    ...TEAM.map((_, i): Cue => ({ k: `friction-${i}`, at: LATER + 2800 + i * 200, dur: 700, draw: true, ...scene1 })),
+    ...TEAM_RUSH.map((r, i): Cue => ({ k: `rush-${i}`, at: LATER + (r.round === 0 ? 3400 : 6600) + r.to * 280, dur: 600, from: g.tagFrom(r.to, r.round), ...scene1 })),
     // What it does to each of them, between the first requests and the second.
-    ...TEAM.map((_, i): Cue => ({ k: `effect-${i}`, at: 5000 + i * 300, dur: 500, rise: 3, ...first })),
-    // And money is wasted: a jobsite dumpster, and bills leaving the contractor and all four groups for it in turn. The flow builds: each
-    // bill follows the last a little sooner. No new bill is launched once the disorder is withdrawn; those in the air
-    // finish their fall; and the dumpster goes as the shield begins to be drawn.
-    ...(['binBack', 'bin'] as const).map((k): Cue => ({ k, at: 4950, dur: 500, rise: 4, out: GUARD, outDur: 550 })),
-    ...Array.from({ length: TEAM_WASTE_ROUNDS }, (_, r) =>
-      TEAM_PARTIES.map((who, e): Cue => {
-        const nth = r * TEAM_PARTIES.length + e;
-        const at = 5150 + nth * 255 - ((nth * (nth - 1)) / 2) * 6;
-        const path = g.billPath(who, r);
-        const by = (point: { x: number; y: number }) => ({ dx: point.x - path.from.x, dy: point.y - path.from.y });
-        // The contractor's bills have only a short way to fall; the groups' cross the frame.
-        const flight = who === 'gc' ? BILL_DROP : BILL_FLIGHT;
-        const turn = who === 'gc' ? (r - 1) * 14 : (g.onLeft(who) ? 1 : -1) * (24 + r * 10);
-        return { k: `bill-${who}-${r}`, at, dur: 320, arc: { at: at + 320, dur: flight, c1: by(path.c1), c2: by(path.c2), to: by(path.to), rot: turn }, out: at + 320 + flight, outDur: 160 };
-      }),
-    ).flat(),
-    // 2. In control: the shield is drawn around the contractor, calmly, then stands; the state is named again.
+    ...TEAM.map((_, i): Cue => ({ k: `effect-${i}`, at: LATER + 5000 + i * 300, dur: 500, rise: 3, ...scene1 })),
+    // And money is wasted: a jobsite dumpster, and bills leaving the contractor and all four groups for it in turn. The flow
+    // builds: each bill follows the last a little sooner. Every bill is in before the scene is complete.
+    ...(['binBack', 'bin'] as const).map((k): Cue => ({ k, at: LATER + 4950, dur: 500, rise: 4, ...scene1 })),
+    ...bills.map(({ who, r, at, flight }): Cue => {
+      const path = g.billPath(who, r);
+      const by = (point: { x: number; y: number }) => ({ dx: point.x - path.from.x, dy: point.y - path.from.y });
+      const turn = who === 'gc' ? (r - 1) * 14 : (g.onLeft(who) ? 1 : -1) * (24 + r * 10);
+      return { k: `bill-${who}-${r}`, at, dur: 320, arc: { at: at + 320, dur: flight, c1: by(path.c1), c2: by(path.c2), to: by(path.to), rot: turn }, out: at + 320 + flight, outDur: 160 };
+    }),
+    // Held, complete; then the whole scene fades out as one, its words with it. The bar stays.
+    // SCENE 2. The message first; it stays.
+    { k: 'takeaway', at: WORDS_2, dur: WORDS },
+    // Then the shield is drawn around the contractor, calmly, and stands.
     { k: 'guard', at: GUARD, dur: 1300, draw: true },
     { k: 'shield', at: GUARD + 1000, dur: 700 },
-    { k: 'stateIn', at: STATE_IN, dur: 500 },
-    // The second state's foot words, on the same bar, as the state is named: the closing line. They stay.
-    { k: 'takeaway', at: STATE_IN + WORDS_AFTER, dur: 500, rise: 5 },
-    // The same four, reached one after another by a level line, each settling as it is reached.
+    // Then the four groups, a little apart: opacity only.
+    ...TEAM.map((_, i): Cue => ({ k: `cardIn-${i}`, at: GROUPS_2 + i * 200, dur: 600 })),
+    // Then each is reached by a level line, in turn, and settles as it is reached.
     ...Array.from({ length: n }, (_, i): Cue[] => [
-      { k: `node-${i}`, at: GUARD + 2400 + i * 220, dur: 300 },
-      { k: `link-${i}`, at: GUARD + 2400 + i * 220, dur: 650, draw: true },
-      { k: `calm-${i}`, at: GUARD + 2900 + i * 220, dur: 500, rise: 3 },
+      { k: `node-${i}`, at: LINKS + i * 220, dur: 300 },
+      { k: `link-${i}`, at: LINKS + i * 220, dur: 650, draw: true },
+      { k: `calm-${i}`, at: LINKS + 500 + i * 220, dur: 500, rise: 3 },
     ]).flat(),
-    // Then value is protected: once the network is whole and calm, a small shield with a dollar sign settles beside each of the
-    // five, one by one, the groups first and the contractor last. Where money was leaving, it is now kept.
-    ...[...TEAM.map((_, i): TeamParty => i), 'gc' as TeamParty].map((who, j): Cue => ({ k: `keep-${who}`, at: GUARD + 4100 + j * 240, dur: 550, rise: 4 })),
-    // 3. The close: nothing is taken away. Once complete, it is held, and rests.
+    // Then value is protected: a small shield with a dollar sign settles beside each of the five, one by one, the groups
+    // first and the contractor last. Where money was leaving, it is now kept.
+    ...[...TEAM.map((_, i): TeamParty => i), 'gc' as TeamParty].map((who, j): Cue => ({ k: `keep-${who}`, at: KEEP + j * 240, dur: 550, rise: 4 })),
+    // Held, complete, and it rests there: the visual plays once and does not restart, so its outcome is its last frame
+    // (and the reduced-motion frame).
   ];
-  return { tab: 'owner-protect-investment', mode, cues, end: SECOND_DONE + 4590 };
+  return { tab: 'owner-protect-investment', mode, cues, end: SECOND_DONE + HOLD };
 }
 
 function predictabilityScene(mode: OwnerMode): OwnerScene {
-  const n = OWNER_DECISIONS.length;
-  const rows = (k: string, at: number, stagger: number, extra: Partial<Cue> = {}) => Array.from({ length: n }, (_, i): Cue => ({ k: `${k}-${i}`, at: at + i * stagger, ...extra }));
-  const cues: Cue[] = [
-    { k: 'axis', at: 0 },
-    // 1. What the field needs, and when.
-    ...rows('site', 400, 250),
-    // 2. Backward: the procurement each one depends on.
-    ...rows('chain', 2400, 200, { dur: 700, draw: true }),
-    // 3. The owner's part of each, on its own date.
-    ...rows('window', 4800, 450),
-    ...rows('decide', 5000, 450, { rise: 4 }),
-    // 4. Advance notice: coming up, prepare, decision required.
-    ...rows('notice', 7600, 150, { dur: 500, draw: true }),
-    { k: 'legend', at: 7800, rise: 5 },
-    // 5. The takeaway.
-    { k: 'takeaway', at: 10200, rise: 6 },
-  ];
-  return { tab: 'owner-predictability', mode, cues, end: 11600 };
-}
-
-function decisionsScene(mode: OwnerMode): OwnerScene {
-  const g = choiceGeometry(mode);
+  const g = landingGeometry(mode);
   /*
-   * ONE GROUP, ONE STORY, PLAYED ONCE (founder briefs 2026-11-12). The cone, the time axis and the words at its mouth
-   * are drawn, and the foot's bar with them. Then, without a reset: the line and its six options at the mouth; the group
-   * moves to the early stop, all six held, the first callout and foot words, held; the group carries on, and as the cone
-   * narrows it loses the options it no longer has room for; the late stop, two open, the second callout and foot words.
-   * A beat of about a second once the late stop is complete; then the whole illustration fades away together, the bar
-   * staying, and the visual closes on correctly timed decisions: the six options, all open, the line about JiTpro, and
-   * the closing line on the foot. Then it rests.
+   * ONE STABLE APPROACH, PLAYED ONCE (founder briefs, 2026-11-13). The aircraft flies one continuous approach at an even
+   * pace, flares a little, touches down inside the planned finish and rolls out to rest. What changes is the forecast:
+   * the projected finish opens wide and red in the added-cost zone; as each procurement-planning waypoint appears just
+   * ahead of the aircraft, it narrows and glides toward the planned finish, turning amber inside it with the third. The
+   * foot's words are there, unchanged, from the first frame.
    */
-  const DRAWN = 2400;
-  /** Each stop is held about five seconds from the moment the group arrives. */
-  const HOLD = 3300;
-  const early = g.stop('early');
-  const late = g.stop('late');
-  /* 1. The line and the six options, at the mouth. */
-  const SHOW = DRAWN + 100;
-  const shown = SHOW + 300 + (g.cards.length - 1) * 120 + 450;
-  /* 2. Time passes a little; the group stops early. */
-  const RUN1 = { at: shown + 300, dur: 1400 };
-  const EARLY = RUN1.at + RUN1.dur + 250;
-  /* 3. Held; then it carries on, to the late stop. */
-  const ON = EARLY + 400 + 550 + 500 + HOLD;
-  const RUN2 = { at: ON + 300, dur: 5600 };
-  const LATE = RUN2.at + RUN2.dur + 250;
-  /* 4. The late stop is complete once its foot words are in; held about a second; then the illustration fades away, together. */
-  const LATE_DONE = LATE + 550 + 600;
-  const PAUSE = 1000;
-  const FADE = LATE_DONE + PAUSE;
-  const FADE_MS = 900;
-  const story = { out: FADE, outDur: FADE_MS };
-  /* 5. The close, once the frame above the bar is clear: the six options, all open; the line about JiTpro; the closing line. */
-  const CLEAR = FADE + FADE_MS + 200;
-  const ROW_MS = 110;
-  const SUPPORT = CLEAR + (g.cards.length - 1) * ROW_MS + 550;
-  const CLOSE = SUPPORT + 900;
-  /* When the group, eased along its second run, reaches a point: the clock's own easing, inverted. */
-  const when = (x: number) => {
-    const share = (x - early.x) / (late.x - early.x);
+  const FLY = { at: 2400, dur: 9000 };
+  const TOUCH = FLY.at + FLY.dur;
+  const T = g.touchdown;
+  const S = g.start;
+  /* Rollout: sets off at the approach's own horizontal pace and slows to rest (an ease-out starts at twice its average). */
+  const pace = (T.x - S.x) / FLY.dur;
+  const ROLL = { at: TOUCH, dur: Math.round((2 * (g.rollout.x - T.x)) / pace) };
+  const LANDED = ROLL.at + ROLL.dur + 200;
+  /** After touchdown on the main gear, the nose settles onto the runway over this long. */
+  const SETTLE = 700;
+  /* When the aircraft, at its even pace along the curve, passes a point: the curve's own x, solved for its time. */
+  const curveX = (p: number) => {
+    const u = 1 - p;
+    return u * u * u * S.x + 3 * u * u * p * g.flare.c1.x + 3 * u * p * p * g.flare.c2.x + p * p * p * T.x;
+  };
+  const passAt = (x: number) => {
     let lo = 0;
     let hi = 1;
     for (let n = 0; n < 50; n++) {
       const m = (lo + hi) / 2;
-      if (ease(m) < share) lo = m;
+      if (curveX(m) < x) lo = m;
       else hi = m;
     }
-    return Math.round(RUN2.at + RUN2.dur * lo);
+    return Math.round(FLY.at + FLY.dur * lo);
   };
+  const by = (pt: { x: number; y: number }) => ({ dx: pt.x - S.x, dy: pt.y - S.y });
+  const AHEAD = 2200;
+  const MOVE = 1100;
+  const F = g.forecast;
+  const passes = g.gates.map((gate) => passAt(gate.x));
+  /** The forecast's words give way as the aircraft passes the last waypoint; its band stays on the runway until touchdown. */
+  const FORECAST_OUT = passes[passes.length - 1];
   const cues: Cue[] = [
-    // The sheet and the cone, and time. Drawn once; the sheet stays, the cone goes when the story is done.
+    // The frame: the sheet, and the foot with its words, from the first frame; they never change.
+    { k: 'ground', at: 0, dur: 0 },
+    { k: 'foot', at: 0, dur: 0 },
+    { k: 'takeaway', at: 0, dur: 0 },
+    // The runway: the touchdown point, the planned completion zone, the boundary, and the overrun beyond, never entered.
+    { k: 'runway', at: 200, dur: 700 },
+    { k: 'target', at: 700, dur: 500 },
+    { k: 'aim', at: 900, dur: 400 },
+    { k: 'targetLabel', at: 1000, dur: 500, rise: 3 },
+    { k: 'boundary', at: 1150, dur: 400 },
+    { k: 'delay', at: 1200, dur: 500 },
+    // The planned approach, and the projected finish: wide and red, in the added-cost zone.
+    { k: 'glide', at: 1800, dur: 800 },
+    // The forecast: its words give way as the aircraft passes the last waypoint, before it comes down over them; its band
+    // stays, amber, where the aircraft will stop, until it has rolled out onto it and stopped.
+    { k: 'forecast', at: 2100, dur: 600, out: ROLL.at + ROLL.dur, outDur: 600 },
+    { k: 'forecastLabel', at: 2100, dur: 600, out: FORECAST_OUT, outDur: 500 },
+    { k: 'forecastLate', at: 2100, dur: 600, out: passes[2] - AHEAD + 400, outDur: MOVE - 400 },
+    { k: 'forecastOn', at: passes[2] - AHEAD + 400, dur: MOVE - 400 },
+    // The aircraft: in flight from its first moment, one even approach, its nose lifting three degrees into the flare.
+    { k: 'plane', at: FLY.at, dur: 700 },
+    { k: 'fly', at: 0, dur: 1, arc: { at: FLY.at, dur: FLY.dur, even: true, c1: by(g.flare.c1), c2: by(g.flare.c2), to: by(T), rot: -3 } },
+    // Touchdown on the main gear (it turns about them); the nose settles onto the runway.
+    { k: 'settle', at: 0, dur: 1, move: { at: TOUCH, dur: SETTLE, dx: 0, dy: 0, rot: 3 } },
+    // Rollout: aligned with the runway, slowing smoothly to a complete stop inside the planned zone.
+    { k: 'roll', at: 0, dur: 1, move: { at: ROLL.at, dur: ROLL.dur, dx: g.rollout.x - T.x, dy: 0, ease: 'out' } },
+    // The stop: a small marker at the nose.
+    { k: 'stop', at: ROLL.at + ROLL.dur, dur: 500 },
+    // Procurement planning: each waypoint appears ahead of the aircraft, and the projected finish narrows and moves with
+    // it; each is checked as the aircraft passes.
+    ...g.gates.flatMap((_, i): Cue[] => [
+      { k: `gate-${i}`, at: passes[i] - AHEAD, dur: 500, rise: 3 },
+      { k: `pass-${i}`, at: passes[i], dur: 400 },
+      { k: `f-${i}`, at: 0, dur: 1, move: { at: passes[i] - AHEAD, dur: MOVE, dx: F[i + 1].x - F[i].x, dy: 0 } },
+      { k: `fw-${i}`, at: 0, dur: 1, move: { at: passes[i] - AHEAD, dur: MOVE, dx: 0, dy: 0, scaleX: F[i + 1].w / F[i].w } },
+    ]),
+    // Landed: the planned finish brightens and is checked.
+    { k: 'landed', at: LANDED, dur: 600, rise: 3 },
+  ];
+  return { tab: 'owner-predictability', mode, cues, end: LANDED + 2400 };
+}
+
+function decisionsScene(mode: OwnerMode): OwnerScene {
+  const g = windowGeometry(mode);
+  /*
+   * ONE GROUP, ONE STORY, PLAYED ONCE (founder brief *Option Discovery and Viability*, 2026-11-13).
+   *   3 known choices -> 3 newly discovered, one at a time -> 6 viable -> 4 become unavailable, one at a time -> 2 remain.
+   * The group (the marker and the stack) moves in legs and stops for each discovery and each loss: the new card arrives
+   * with an amber outline and *New option discovered*; the lost card takes a red outline and *No longer viable*, then its
+   * red X; each callout is read for about half a second, then goes, and the group moves on. Unknown choices are not drawn
+   * at all. Lost choices stay in place. Then the close: the six at rest in the decision window.
+   */
+  const early = g.stop('early');
+  const right = g.stop('right');
+  const late = g.stop('late');
+  const OPEN = 2000;
+  const H1 = 3000;
+  /** The legs' pace: a base, plus a share of their length, so a short step is not hurried and a long one not rushed. */
+  const leg = (from: number, to: number) => Math.round(Math.min(1300, Math.max(500, 380 + 4.2 * ((to - from) / g.k))));
+  /** A discovery: the card in, its amber outline and callout; read; the callout and outline go. */
+  const FIND = { card: 500, note: 150, read: 550, out: 300 };
+  const FOUND = FIND.note + 350 + FIND.read + FIND.out;
+  /** A loss: the red outline and its reason; read (longer than a discovery: the reasons are longer); the X; the reason and outline go. */
+  const LOSE = { note: 150, read: 750, x: 400, out: 300 };
+  const LOST = LOSE.note + 350 + LOSE.read + LOSE.x + LOSE.out;
+
+  type Leg = { k: string; at: number; dur: number; dx: number };
+  const legs: Leg[] = [];
+  let clock = 5900;
+  let x = early.x;
+  const go = (to: number) => {
+    const dur = leg(x, to);
+    legs.push({ k: `leg-${legs.length}`, at: clock, dur, dx: to - x });
+    clock += dur;
+    x = to;
+  };
+  /* Into the window: stop for each discovery, then on to the right time. */
+  const found: { j: number; at: number }[] = [];
+  g.discover.forEach((dx, n) => {
+    go(dx);
+    found.push({ j: CHOICE_KNOWN + n, at: clock });
+    clock += FOUND;
+  });
+  const RUN1_START = legs[0].at;
+  go(right.x);
+  const RIGHT = clock;
+  /* The right time: held. */
+  const HOLD_RIGHT = 4600;
+  clock = RIGHT + HOLD_RIGHT;
+  const RUN2_START = clock;
+  /* On toward the narrow end: stop for each loss, then on to the late stop. */
+  const lost: { j: number; at: number }[] = [];
+  for (const c of g.changes) {
+    go(c.x);
+    lost.push({ j: c.option, at: clock });
+    clock += LOST;
+  }
+  go(late.x);
+  const LATE = clock;
+  const FADE = LATE + 3800;
+  const FADE_MS = 900;
+  const story = { out: FADE, outDur: FADE_MS };
+  const CLEAR = FADE + FADE_MS + 200;
+  const CLOSE = CLEAR + (CHOICE_COUNT - 1) * 110 + 250;
+  const knownAt = (j: number) => OPEN + 300 + j * 110;
+  const cues: Cue[] = [
+    // The sheet, the corridor and its haze, time and the stage names. The corridor stays to the end.
     { k: 'ground', at: 0, dur: 800 },
-    { k: 'cone', at: 300, dur: 700, ...story },
-    { k: 'wall-top', at: 300, dur: 1200, draw: true, ...story },
-    { k: 'wall-bottom', at: 300, dur: 1200, draw: true, ...story },
-    { k: 'axis', at: 700, dur: 900, draw: true, ...story },
-    { k: 'time', at: 1100, dur: 500, ...story },
-    { k: 'more', at: 1300, dur: 500, rise: 3, ...story },
-    // The foot: the navy bar and its amber edge are scenery. They come in once and stay to the end; only the words on
-    // them change (founder, 2026-11-12).
+    { k: 'cone', at: 300, dur: 700 },
+    { k: 'haze', at: 300, dur: 700, out: RUN1_START, outDur: RIGHT - RUN1_START },
+    { k: 'wall-top', at: 300, dur: 1200, draw: true },
+    { k: 'wall-bottom', at: 300, dur: 1200, draw: true },
+    { k: 'axis', at: 700, dur: 900, draw: true },
+    { k: 'time', at: 1100, dur: 500 },
+    { k: 'zones', at: 1300, dur: 500, rise: 3 },
+    // The foot: the navy bar and its amber edge are scenery, there throughout; only the words change.
     { k: 'foot', at: 300, dur: 700 },
-    // 1. The group: the line marking the time, and six options on it, all open.
-    { k: 'line', at: SHOW, dur: 400, ...story },
-    ...g.cards.map((_, j): Cue => ({ k: `card-${j}`, at: SHOW + 300 + j * 120, dur: 450, rise: 4, ...story })),
-    // 2. Time passes a little, and the group stops while the cone still holds all six: timed properly, nothing is lost.
-    //    The line and the cards are moved as one (`now`, then `nowOn`, applied to both). The two only carry the group;
-    //    what is in them fades by its own cue.
-    { k: 'now', at: SHOW, dur: 1, move: { at: RUN1.at, dur: RUN1.dur, dx: early.x - g.start.x, dy: 0 } },
-    { k: 'msgEarly', at: EARLY, dur: 500, rise: 3, out: ON, outDur: 450 },
-    // Its words come in at the stop, and stay while the group carries on, until the late stop's words take their place.
-    { k: 'footInWords', at: EARLY + 400, dur: 600, rise: 3, out: LATE + 300, outDur: 500 },
-    // 3. Time carries on, and the group with it. As the cone narrows, the options it has no room for are left outside its
-    //    walls: crossed out, still seen. The walls near the narrow end take the strain.
-    { k: 'nowOn', at: SHOW, dur: 1, move: { at: RUN2.at, dur: RUN2.dur, dx: late.x - early.x, dy: 0 } },
-    ...g.lost.map((l): Cue => ({ k: `off-${l.option}`, at: when(l.x), dur: 500, ...story })),
-    { k: 'pressure', at: RUN2.at + RUN2.dur * 0.5, dur: RUN2.dur * 0.5 + 200, ...story },
-    // 4. Left too late: two open.
-    { k: 'msgLate', at: LATE, dur: 500, rise: 3, ...story },
-    // The foot's words cross from the first line to the second; the bar does not move. They stay while the cone fades,
-    // and go once it has.
-    { k: 'footOutWords', at: LATE + 550, dur: 600, rise: 3, out: FADE + 500, outDur: 500 },
-    // 5. Correctly timed decisions: the six options again, all open, in a calm row; the line about JiTpro beneath them;
-    //    and, last, the closing line on the foot. Then it rests. Reduced motion shows this frame.
-    ...g.cards.map((_, j): Cue => ({ k: `timed-${j}`, at: CLEAR + j * ROW_MS, dur: 500, rise: 4 })),
-    { k: 'timedWords', at: SUPPORT, dur: 600, rise: 3 },
+    // 1. Too early: the marker, and the three known choices; nothing else is drawn.
+    { k: 'marker', at: OPEN, dur: 400, ...story },
+    ...Array.from({ length: CHOICE_KNOWN }, (_, j): Cue => ({ k: `card-${j}`, at: knownAt(j), dur: 450, rise: 4, ...story })),
+    { k: 'statusKnown', at: knownAt(CHOICE_KNOWN - 1) + 450, dur: 450, rise: 3, out: found[0].at, outDur: 300 },
+    { k: 'headEarly', at: H1, dur: 500, rise: 3, out: RUN1_START, outDur: 450 },
+    { k: 'footEarly', at: H1 + 300, dur: 600, rise: 3, out: RIGHT - 100, outDur: 400 },
+    // The group's legs: each moves the marker and the stack together, then stops.
+    ...legs.map((l): Cue => ({ k: l.k, at: 0, dur: 1, move: { at: l.at, dur: l.dur, dx: l.dx, dy: 0 } })),
+    // 2. New options are discovered, one at a time: the stack moves up half a step as the card arrives beneath it, with an
+    //    amber outline and its callout; read; the callout and outline go, and the card stays as a normal choice.
+    ...found.flatMap(({ j, at }): Cue[] => [
+      { k: `shift-${j}`, at: 0, dur: 1, move: { at, dur: FIND.card, dx: 0, dy: -g.stackStep } },
+      { k: `card-${j}`, at, dur: FIND.card, ...story },
+      { k: `glow-${j}`, at, dur: FIND.card, out: at + FIND.note + 350 + FIND.read, outDur: FIND.out },
+      { k: `found-${j}`, at: at + FIND.note, dur: 350, out: at + FIND.note + 350 + FIND.read, outDur: FIND.out },
+    ]),
+    // 3. The right time: the amber window comes in as the group reaches it; all six viable; held longest.
+    { k: 'window', at: legs[legs.length - (g.changes.length + 2)].at, dur: 1400 },
+    { k: 'headRight', at: RIGHT + 100, dur: 500, rise: 3, out: RUN2_START, outDur: 450 },
+    { k: 'footRight', at: RIGHT + 150, dur: 600, rise: 3, out: LATE - 100, outDur: 400 },
+    { k: 'statusSix', at: RIGHT + 350, dur: 450, rise: 3, out: RUN2_START, outDur: 400 },
+    // 4. Options become unavailable, one at a time, as the group reaches the point where each no longer fits: a red
+    //    outline and its callout; read; the red X; the callout and outline go; the card stays, crossed out.
+    ...lost.flatMap(({ j, at }): Cue[] => [
+      { k: `warn-${j}`, at, dur: 250, out: at + LOSE.note + 350 + LOSE.read + LOSE.x, outDur: LOSE.out },
+      { k: `lost-${j}`, at: at + LOSE.note, dur: 350, out: at + LOSE.note + 350 + LOSE.read + LOSE.x, outDur: LOSE.out },
+      { k: `off-${j}`, at: at + LOSE.note + 350 + LOSE.read, dur: LOSE.x, ...story },
+    ]),
+    { k: 'pressure', at: RUN2_START + 800, dur: LATE - RUN2_START - 800, ...story },
+    // 5. Too late: two remain.
+    { k: 'headLate', at: LATE + 100, dur: 500, rise: 3, ...story },
+    { k: 'footLate', at: LATE + 150, dur: 600, rise: 3, out: FADE + 300, outDur: 500 },
+    { k: 'statusTwo', at: LATE + 350, dur: 450, rise: 3, ...story },
+    // 6. The close: the six at rest, all available, in the decision window; the closing line, on the foot.
+    ...Array.from({ length: CHOICE_COUNT }, (_, j): Cue => ({ k: `rest-${j}`, at: CLEAR + j * 110, dur: 500, rise: 4 })),
     { k: 'takeaway', at: CLOSE, dur: 600, rise: 3 },
   ];
-  return { tab: 'owner-better-decisions', mode, cues, end: CLOSE + 2200 };
+  return { tab: 'owner-better-decisions', mode, cues, end: CLOSE + 1600 };
 }
 
 export function buildOwnerScene(tab: OwnerTabId, mode: OwnerMode): OwnerScene {
@@ -1206,17 +1426,3 @@ export function buildOwnerScene(tab: OwnerTabId, mode: OwnerMode): OwnerScene {
   return decisionsScene(mode);
 }
 
-/** The calendar the look-ahead is drawn on: whole months from the earliest preparation to the latest on-site date. */
-export function lookaheadWindow() {
-  const first = OWNER_DECISIONS.map((d) => d.prepareFrom).sort()[0];
-  const last = OWNER_DECISIONS.map((d) => d.onSite).sort().pop()!;
-  const s = new Date(first + 'T00:00:00Z');
-  s.setUTCDate(1);
-  const e = new Date(last + 'T00:00:00Z');
-  e.setUTCMonth(e.getUTCMonth() + 1, 1);
-  const months: { t: number; label: string; year: number; first: boolean }[] = [];
-  const NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  for (let d = new Date(s); d < e; d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1)))
-    months.push({ t: d.getTime(), label: NAMES[d.getUTCMonth()], year: d.getUTCFullYear(), first: d.getUTCMonth() === 0 || months.length === 0 });
-  return { start: s.getTime(), end: e.getTime(), months };
-}

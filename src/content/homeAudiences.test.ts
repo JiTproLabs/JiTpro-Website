@@ -70,8 +70,8 @@ describe('HOME_AUDIENCES (Design System Section 54.2)', () => {
 
   it('gives only Identify, Plan and Control a second paragraph and closing statement, Reduce risk a second paragraph alone, and no tab the withdrawn role link or checklist', () => {
     const tabs = HOME_AUDIENCES.flatMap((a) => a.tabs);
-    expect(tabs.filter((t) => t.closing).map((t) => t.id)).toEqual(['gc-identify', 'gc-plan', 'gc-control', 'owner-better-decisions']);
-    expect(tabs.filter((t) => t.descriptionMore).map((t) => t.id)).toEqual(['gc-identify', 'gc-plan', 'gc-control', 'owner-reduce-risk', 'owner-protect-investment']);
+    expect(tabs.filter((t) => t.closing).map((t) => t.id)).toEqual(['gc-identify', 'gc-plan', 'gc-control', 'owner-predictability', 'owner-better-decisions']);
+    expect(tabs.filter((t) => t.descriptionMore).map((t) => t.id)).toEqual(['gc-identify', 'gc-plan', 'gc-control', 'owner-reduce-risk', 'owner-protect-investment', 'owner-better-decisions']);
     expect(tabs.filter((t) => t.roleLink || t.checklist)).toEqual([]);
   });
 
@@ -80,17 +80,31 @@ describe('HOME_AUDIENCES (Design System Section 54.2)', () => {
     expect(owners.tabs.map((t) => [t.label, t.headline])).toEqual([
       ['Reduce risk', 'Your construction project shouldn’t have to feel like a gamble.'],
       ['Protect your investment', 'Protect your investment with a contractor who plans beyond their own budget.'],
-      ['More predictability', 'Know what’s coming before it becomes urgent.'],
-      ['Better decisions', 'Stay in control of your project’s decisions.'],
+      ['More predictability', 'Stay on course for a more predictable finish.'],
+      ['Better decisions', 'The right information. The right decisions. At the right time.'],
     ]);
-    // Reduce risk alone has a second paragraph (revised 2026-11-11; rewritten 2026-11-12). Better decisions alone has a closing
-    // statement (founder, 2026-11-12); the others close on their visual's line.
+    // More predictability and Better decisions have a closing statement (founder, 2026-11-13); the others close on their visual's line.
     for (const t of owners.tabs) expect(t.checklist ?? t.roleLink).toBeUndefined();
-    expect(owners.tabs.filter((t) => t.closing).map((t) => [t.label, t.closing])).toEqual([['Better decisions', 'More time to consider your options. Fewer last-minute surprises. Better decisions.']]);
-    expect(owners.tabs[3].description).toBe(
-      'Your contractor manages hundreds of details, deadlines, and dependencies that affect your choices. JiTpro helps organize that complexity so your contractor can give you the information you need, when you need it.',
+    expect(owners.tabs.filter((t) => t.closing).map((t) => [t.label, t.closing])).toEqual([
+      ['More predictability', 'Better procurement planning. Fewer preventable delays. More confidence in where your project will land.'],
+      ['Better decisions', 'Not too early. Not too late. Just in time.\nProtecting your choices and your project.'],
+    ]);
+    // More predictability, rewritten 2026-11-13 (founder brief *More Predictability Section Redesign*), exactly as supplied.
+    expect(owners.tabs[2].description).toBe(
+      'Your completion date and budget are closely connected. When construction runs longer than planned, added time can bring added cost. JiTpro helps your contractor identify and manage procurement requirements early, giving the project team a clearer path to keep construction moving toward its planned completion.',
     );
-    for (const t of owners.tabs.slice(2)) expect(t.descriptionMore).toBeUndefined();
+    // Better decisions' closing statement (founder, 2026-11-13): two lines, *Just in time.* emphasised.
+    expect(owners.tabs[3].closingEmphasis).toBe('Just in time.');
+    expect(owners.tabs[3].closing!.split('\n')[0]).toContain(owners.tabs[3].closingEmphasis!);
+    expect(HOME_AUDIENCES.flatMap((a) => a.tabs).filter((t) => t.closingEmphasis).map((t) => t.id)).toEqual(['owner-better-decisions']);
+    // Better decisions, rewritten 2026-11-13 (founder brief *Better Decisions Section Redesign*), exactly as supplied.
+    expect(owners.tabs[3].description).toBe(
+      'Every construction project depends on a continuous flow of information, decisions, and approvals from owners, designers, consultants, and trade partners.',
+    );
+    expect(owners.tabs[3].descriptionMore).toBe(
+      'JiTpro helps your contractor identify what’s needed, who’s responsible, and when each action must be completed to keep procurement and construction moving as planned.',
+    );
+    expect(owners.tabs[2].descriptionMore).toBeUndefined();
     const risk = owners.tabs[0];
     expect(risk.description).toBe(
       'You’re trusting your general contractor with a substantial investment. You deserve confidence that they’re planning ahead, managing risks, and keeping you informed before problems threaten your budget or schedule.',

@@ -50,8 +50,10 @@
  * are visibility:hidden — in the document for search engines, out of the
  * accessibility tree and the tab order.
  *
- * SURFACE: --jp-surface-light, opening the light act (§54.1). No amber: on
- * this ground the amber tokens fail the contrast minimum (§8.8).
+ * SURFACE: --jp-surface-light, opening the light act (§54.1). No amber text:
+ * on this ground the amber tokens fail the contrast minimum (§8.8). The one
+ * amber in the copy is decorative: the underline beneath a closing statement's
+ * emphasised phrase, whose words stay in ink (§54.2.4).
  *
  * THE IDENTIFY ADDITIONS (§54.2.1, revised 2026-11-11): a tab may carry a
  * second description paragraph and a closing statement. Today only general
@@ -542,7 +544,7 @@ export default function AudienceSection() {
                       )}
                       {tab.closing && (
                         <p className="mt-4 max-w-[58ch] font-heading text-[1.0625rem] font-semibold leading-snug text-jp-background sm:text-[1.125rem] lg:text-[1.1875rem]">
-                          {tab.closing}
+                          <ClosingStatement text={tab.closing} emphasis={tab.closingEmphasis} />
                         </p>
                       )}
                       {tab.checklist && <MethodChecklist lines={tab.checklist} played={isOpen && seen} />}
@@ -800,5 +802,32 @@ function ReservedVisual({ tab, first }: { tab: AudienceTab; first: boolean }) {
         {`The visualization for “${tab.label}” is in development. This area is intentionally reserved.`}
       </p>
     </div>
+  );
+}
+
+/**
+ * A closing statement (§54.2.1, §54.2.4): each line of the text on its own line, and its emphasised phrase, if any,
+ * underlined in brand amber, the words staying in ink. The amber is decorative; amber text would fail contrast here (§8.8).
+ */
+function ClosingStatement({ text, emphasis }: { text: string; emphasis?: string }) {
+  return (
+    <>
+      {text.split('\n').map((line) => {
+        const at = emphasis ? line.indexOf(emphasis) : -1;
+        return (
+          <span key={line} className="block">
+            {at < 0 ? (
+              line
+            ) : (
+              <>
+                {line.slice(0, at)}
+                <span className="underline decoration-jp-brand-amber decoration-[3px] underline-offset-[5px] [text-decoration-skip-ink:none]">{emphasis}</span>
+                {line.slice(at + emphasis!.length)}
+              </>
+            )}
+          </span>
+        );
+      })}
+    </>
   );
 }

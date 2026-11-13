@@ -10,9 +10,7 @@ import {
   GAMBLE_TURN,
   GAMBLE_URGENT,
   HOUSE_RENDER,
-  LOOKAHEAD_STEPS,
   OWNER_CANVAS,
-  OWNER_DECISIONS,
   OWNER_NARROW_BELOW,
   OWNER_TAKEAWAY,
   TEAM,
@@ -21,22 +19,28 @@ import {
   TEAM_MARK,
   TEAM_PARTIES,
   TEAM_RUSH,
-  TEAM_STATES,
   TEAM_WASTE_ROUNDS,
-  CHOICE_FOOT,
-  CHOICE_TIMED,
-  CHOICE_WORDS,
+  CHOICE_COUNT,
+  CHOICE_KNOWN,
+  LANDING_FOOT,
+  LANDING_WORDS,
+  WINDOW_CLOSE,
+  WINDOW_CLOSE_SUPPORT,
+  WINDOW_LOSS_REASONS,
+  WINDOW_STAGES,
+  WINDOW_WORDS,
   buildOwnerScene,
-  choiceGeometry,
-  fullDay,
+  windowCloseSupportSize,
+  windowGeometry,
   gambleGeometry,
   houseBackdrop,
+  landingGeometry,
   requestLabel,
-  lookaheadWindow,
   ownerStateAt,
   shieldPath,
-  shortDay,
+  teamFootHead,
   teamGeometry,
+  textWidth,
   type OwnerMode,
   type OwnerTabId,
   type TeamId,
@@ -70,10 +74,8 @@ const ink = v('--jpd-text-strong');
 const sec = v('--jpd-text-secondary');
 const navy = v('--jpd-nav-bg-start');
 const amber = v('--jpd-accent');
-const edge = v('--jpd-grid-strong');
 const surface = v('--jpd-surface');
 
-const diamond = (x: number, y: number, r: number) => `M${x} ${y - r}L${x + r} ${y}L${x} ${y + r}L${x - r} ${y}Z`;
 
 /** An element the clock shows, moves or hides. */
 function K({ k, children }: { k: string; children: ReactNode }) {
@@ -89,19 +91,6 @@ function Drawn({ k, d, stroke, width, cap }: { k: string; d: string; stroke: str
 }
 const kicker = (size: number, fill: string) => ({ fontSize: size, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, fill });
 
-function Takeaway({ tab, mode }: { tab: OwnerTabId; mode: OwnerMode }) {
-  const d = mode === 'desktop';
-  const { w, h } = OWNER_CANVAS[mode];
-  const y = h - (d ? 26 : 11);
-  return (
-    <K k="takeaway">
-      <rect x={w / 2 - 12} y={y - (d ? 24 : 17)} width={24} height={3} rx={1.5} style={{ fill: amber }} />
-      <text x={w / 2} y={y} textAnchor="middle" style={{ fontSize: d ? 14.5 : 11, fontWeight: 700, letterSpacing: '-0.01em', fill: navy }}>
-        {OWNER_TAKEAWAY[tab]}
-      </text>
-    </K>
-  );
-}
 
 /* --------------------------------------------------------- 1. Reduce risk */
 
@@ -633,13 +622,6 @@ function InvestmentVisual({ mode }: { mode: OwnerMode }) {
   const nameY = hatY + (d ? 25 : 17);
   const nameStep = d ? 13 : 9;
   const ruleY = nameY + (name.length - 1) * nameStep + (d ? 11 : 8);
-  const state = (k: string, label: string, fill: string) => (
-    <K k={k}>
-      <text x={s.cx} y={g.stateY} textAnchor="middle" style={caps(f.state, fill, '0.12em')}>
-        {label}
-      </text>
-    </K>
-  );
   /* The background: the grid and crop marks of a drawing sheet, barely there. Nothing else: no decorative building or site imagery. */
   const G = g.ground;
   const crop = d ? 12 : 8;
@@ -657,9 +639,6 @@ function InvestmentVisual({ mode }: { mode: OwnerMode }) {
           style={docLine(0.28, 0.9)}
         />
       </K>
-
-      {state('stateOut', TEAM_STATES.out, late)}
-      {state('stateIn', TEAM_STATES.in, navy)}
 
       {/* The lines of both states, beneath everything they join: jagged in the first, level and round-cornered in the second. */}
       {TEAM.map((t, i) => (
@@ -684,9 +663,8 @@ function InvestmentVisual({ mode }: { mode: OwnerMode }) {
         const tick = d ? 9 : 7;
         const tickX = left ? edgeX : edgeX - tick;
         const end = g.linkEnd(i);
-        return (
-          <g key={t.id}>
-            <K k={`card-${i}`}>
+        const card = (
+          <>
               {/* Depth: two soft offsets beneath the card. Then the card, and a navy cap along its top. */}
               <rect x={x} y={y + (d ? 4 : 3)} width={g.card.w} height={g.card.h} rx={5} style={docWash(0.07)} />
               <rect x={x + 0.5} y={y + 1.5} width={g.card.w - 1} height={g.card.h} rx={5} style={docWash(0.09)} />
@@ -698,6 +676,16 @@ function InvestmentVisual({ mode }: { mode: OwnerMode }) {
                 {t.label}
               </text>
               <rect x={left ? edgeX : edgeX - (g.card.w - 2 * f.pad) * 0.5} y={y + g.card.h - (d ? 10 : 7)} width={(g.card.w - 2 * f.pad) * 0.5} height={d ? 2.2 : 1.8} style={docWash(0.2)} />
+          </>
+        );
+        return (
+          <g key={t.id}>
+            {/* The same card in each scene: it leaves with the first and comes in again with the second. */}
+            <K k={`card-${i}`}>
+              {card}
+            </K>
+            <K k={`cardIn-${i}`}>
+              {card}
             </K>
             {/* Out of control: what it costs this group. */}
             <K k={`effect-${i}`}>
@@ -818,8 +806,8 @@ function InvestmentVisual({ mode }: { mode: OwnerMode }) {
       {/* The foot of each state: one band, the same for both. The first state's goes when that state is withdrawn; the
           second's rises at the close, under the whole connected picture, and stays. */}
       {/* One bar, there throughout; only its words change. Both feet draw the same bar under the one key. */}
-      <TeamFoot mode={mode} band="foot" words="footOutWords" {...TEAM_FOOT.out} />
-      <TeamFoot mode={mode} band="foot" words="takeaway" {...TEAM_FOOT.in} />
+      <TeamFoot mode={mode} band="foot" words="footOutWords" {...TEAM_FOOT.out} headSize={teamFootHead(mode)} />
+      <TeamFoot mode={mode} words="takeaway" {...TEAM_FOOT.in} headSize={teamFootHead(mode)} />
     </>
   );
 }
@@ -831,7 +819,7 @@ function InvestmentVisual({ mode }: { mode: OwnerMode }) {
  * side but its top, so a frame of another shape is still closed by it.
  * `band` and `words` are the keys the clock shows them by.
  */
-function TeamFoot({ mode, band, words, head, support }: { mode: OwnerMode; band: string; words: string; head: string; support?: string }) {
+function TeamFoot({ mode, band, words, head, support, headSize, supportSize }: { mode: OwnerMode; band?: string; words: string; head: string; support?: string; headSize?: number; supportSize?: number }) {
   const d = mode === 'desktop';
   const { w, h } = OWNER_CANVAS[mode];
   const B = teamGeometry(mode).band;
@@ -839,16 +827,19 @@ function TeamFoot({ mode, band, words, head, support }: { mode: OwnerMode; band:
   const headY = support === undefined ? (B.headY + B.supportY) / 2 + (B.head - B.support) * 0.3 : B.headY;
   return (
     <>
-      <K k={band}>
-        <rect x={-w} y={B.y} width={w * 3} height={h * 2} style={{ fill: navy }} />
-        <rect x={-w} y={B.y} width={w * 3} height={d ? 2.5 : 2} style={{ fill: amber }} />
-      </K>
+      {/* The bar is drawn by the first foot only; a later foot's bar would cover the words before it. */}
+      {band !== undefined && (
+        <K k={band}>
+          <rect x={-w} y={B.y} width={w * 3} height={h * 2} style={{ fill: navy }} />
+          <rect x={-w} y={B.y} width={w * 3} height={d ? 2.5 : 2} style={{ fill: amber }} />
+        </K>
+      )}
       <K k={words}>
-        <text x={w / 2} y={headY} textAnchor="middle" style={{ fontSize: B.head, fontWeight: 700, letterSpacing: '-0.015em', fill: v('--jpd-nav-text') }}>
+        <text x={w / 2} y={headY} textAnchor="middle" style={{ fontSize: headSize ?? B.head, fontWeight: 700, letterSpacing: '-0.015em', fill: v('--jpd-nav-text') }}>
           {head}
         </text>
         {support !== undefined && (
-          <text x={w / 2} y={B.supportY} textAnchor="middle" style={{ fontSize: B.support, fontWeight: 700, fill: amber }}>
+          <text x={w / 2} y={B.supportY} textAnchor="middle" style={{ fontSize: supportSize ?? B.support, fontWeight: 700, fill: amber }}>
             {support}
           </text>
         )}
@@ -859,109 +850,191 @@ function TeamFoot({ mode, band, words, head, support }: { mode: OwnerMode; band:
 
 /* ----------------------------------------------------- 3. More predictability */
 
-function PredictabilityVisual({ mode }: { mode: OwnerMode }) {
-  const d = mode === 'desktop';
-  const { w } = OWNER_CANVAS[mode];
-  const pad = d ? 20 : 10;
-  const win = lookaheadWindow();
-  const x0 = d ? 214 : 104;
-  const x1 = w - pad - 6;
-  const X = (date: string) => x0 + ((Date.parse(date) - win.start) / (win.end - win.start)) * (x1 - x0);
-  const Xt = (t: number) => x0 + ((t - win.start) / (win.end - win.start)) * (x1 - x0);
-  const yearY = d ? 17 : 11;
-  const monthY = d ? 31 : 22;
-  const top = d ? 40 : 28;
-  const pitch = d ? 48 : 32;
-  const bottom = top + OWNER_DECISIONS.length * pitch;
-  const lead = 60 * 86400000;
-  const legendY = bottom + (d ? 26 : 17);
-  const L = d ? { x: 112, f: 10, gap: [0, 26, 86, 104, 130, 178, 196, 208] } : { x: 26, f: 8, gap: [0, 18, 62, 74, 94, 130, 142, 152] };
+/**
+ * The executive turboprop, in side profile, nose to the right, drawn about the point beneath its wheels (unit size).
+ * TBM-class in spirit, no actual aircraft or marking: slender fuselage and long tail cone, long cowled nose with its
+ * spinner and the faint disc of the propeller, raked windshield, cabin windows, low wing, swept fin, slim gear.
+ */
+function Turboprop() {
   return (
     <>
-      <K k="axis">
-        <rect x={0} y={0} width={w} height={top} style={{ fill: v('--jpd-surface-header') }} />
-        <path d={`M0 ${top + 0.5}H${w}`} style={{ stroke: edge, fill: 'none' }} />
-        {win.months.map((m, i) => {
-          const x = Math.round(Xt(m.t));
-          const show = d || i % 3 === 0;
-          return (
-            <g key={m.t}>
-              <path d={`M${x + 0.5} ${m.first ? 0 : top}V${bottom}`} style={{ stroke: m.first ? edge : v('--jpd-grid'), fill: 'none' }} />
-              {m.first && (
-                <text x={x + 4} y={yearY} style={{ fontSize: d ? 9 : 8, fontWeight: 700, letterSpacing: '0.04em', fill: ink }}>
-                  {m.year}
-                </text>
-              )}
-              {show && (
-                <text x={x + 3} y={monthY} style={{ fontSize: d ? 9.5 : 8, fontWeight: 500, fill: sec }}>
-                  {m.label}
-                </text>
-              )}
-            </g>
-          );
-        })}
-        {OWNER_DECISIONS.map((dec, i) => (
-          <path key={dec.id} d={`M0 ${top + (i + 1) * pitch + 0.5}H${w}`} style={{ stroke: v('--jpd-grid'), fill: 'none' }} />
-        ))}
+      {/* Fin and tailplane. */}
+      <path d="M-31 -17.2 C-33 -21 -35.6 -27 -37.6 -31 L-33.4 -31 C-30.2 -27.2 -26 -22 -22 -18.4 Z" style={{ fill: navy }} />
+      <path d="M-40.2 -15.6 L-29 -15.2 L-31.2 -13.9 L-38.6 -14.2 Z" style={{ fill: navy }} />
+      {/* Fuselage: tail cone, cabin, raked windshield, long cowled nose to the spinner. */}
+      <path
+        d="M-40.5 -16.4 C-34 -17.6 -24 -19.6 -11 -20.6 C-1 -21.3 5 -20.8 9.5 -18.7 L14.6 -15.3 C20 -14.7 27.5 -14.3 31.6 -12.9 C34.2 -12 35.8 -11.4 36.4 -10.9 C35.8 -10.1 34 -9.4 31.6 -9.2 C25.5 -8.3 15.5 -7.5 5.5 -7.5 C-6.5 -7.5 -18.5 -8.7 -28.5 -11.7 C-34.5 -13.5 -38.5 -15 -40.5 -16.4 Z"
+        style={{ fill: navy }}
+      />
+      {/* A faint highlight along the cabin roof; the amber cheat line; the windshield and windows. */}
+      <path d="M-30 -17.6 C-20 -19.4 -8 -20.2 4 -19.6" style={{ fill: 'none', stroke: PAPER, strokeOpacity: 0.22, strokeWidth: 0.9, strokeLinecap: 'round' }} />
+      <path d="M-37 -14.4 C-24 -12.6 -6 -11.6 12 -11.6 C20 -11.6 28 -11.5 33 -11.1" style={{ fill: 'none', stroke: amber, strokeWidth: 0.8 }} />
+      <path d="M9.3 -18.4 L13.9 -15.4 L9.6 -15.4 Z" style={{ fill: PAPER, fillOpacity: 0.85 }} />
+      {[-12.5, -7, -1.5, 4].map((x) => (
+        <ellipse key={x} cx={x} cy={-16.3} rx={1.7} ry={1.15} style={{ fill: PAPER, fillOpacity: 0.85 }} />
+      ))}
+      {/* The propeller's disc, barely there, and the exhaust stack. */}
+      <ellipse cx={37} cy={-10.9} rx={0.8} ry={9.4} style={{ fill: navy, fillOpacity: 0.12, stroke: navy, strokeOpacity: 0.3, strokeWidth: 0.4 }} />
+      <path d="M21.5 -12.8 l1.6 -0.4 v1.6 h-1.6 z" style={{ fill: PAPER, fillOpacity: 0.35 }} />
+      {/* The low wing, its trailing flap, and slim gear. */}
+      <path d="M-9 -8.6 C-3 -10.2 7 -10.3 12.5 -9 L12.2 -7.7 C4 -7.1 -3.5 -7.1 -9 -7.5 Z" style={{ fill: navy, stroke: PAPER, strokeOpacity: 0.55, strokeWidth: 0.45, strokeLinejoin: 'round' }} />
+      <path d="M2.2 -7.5 L1.2 -1.9 M26 -8.4 L26.5 -1.6" style={{ fill: 'none', stroke: navy, strokeWidth: 1, strokeLinecap: 'round' }} />
+      <circle cx={1.1} cy={-1.35} r={1.35} style={{ fill: navy }} />
+      <circle cx={26.6} cy={-1.05} r={1.05} style={{ fill: navy }} />
+    </>
+  );
+}
+
+function PredictabilityVisual({ mode }: { mode: OwnerMode }) {
+  const d = mode === 'desktop';
+  const g = landingGeometry(mode);
+  const { w } = OWNER_CANVAS[mode];
+  const late = v('--jpd-chain-commitment-late');
+  const T = g.type;
+  const caps = (size: number, fill: string, weight = 800) => ({ fontSize: size, fontWeight: weight, letterSpacing: '0.08em', textTransform: 'uppercase' as const, fill });
+  const R = g.runway;
+  const H = g.band.y;
+  const grid = d ? 28 : 21.2;
+  const S = g.start;
+  const Td = g.touchdown;
+  const F0 = g.forecast[0];
+  const zoneLabel = (x0: number, x1: number, words: string, fill: string) => (
+    <text x={(x0 + x1) / 2} y={g.labelY} textAnchor="middle" style={caps(T.zone, fill)}>
+      {words}
+    </text>
+  );
+  /** The projected finish's band, about its centre: lying on the runway, the full width at the outset. */
+  const band = (fill: string) => (
+    <>
+      <rect x={-F0.w / 2} y={-g.forecastH} width={F0.w} height={g.forecastH} rx={g.forecastH / 2} style={{ fill, fillOpacity: 0.32 }} />
+      <rect x={-F0.w / 2} y={-g.forecastH} width={F0.w} height={g.forecastH} rx={g.forecastH / 2} style={{ fill: 'none', stroke: fill, strokeWidth: d ? 1 : 0.8, vectorEffect: 'non-scaling-stroke' }} />
+    </>
+  );
+  /* The three moves of the projected finish compose: translations outside, horizontal scales inside, about its centre. */
+  const moved = (children: ReactNode) => [0, 1, 2].reduceRight<ReactNode>((inner, i) => <K k={`f-${i}`}>{inner}</K>, children);
+  const narrowed = (children: ReactNode) => [0, 1, 2].reduceRight<ReactNode>((inner, i) => <K k={`fw-${i}`}>{inner}</K>, children);
+  return (
+    <>
+      {/* The sheet: a faint grid, and the ground line. */}
+      <K k="ground">
+        <path d={[...Array.from({ length: Math.ceil(w / grid) - 1 }, (_, i) => `M${(i + 1) * grid} 0V${H}`), ...Array.from({ length: Math.ceil(H / grid) - 1 }, (_, i) => `M0 ${(i + 1) * grid}H${w}`)].join('')} style={docLine(0.05, 0.6)} />
+        <path d={`M${g.ground.x0} ${g.ground.y}H${g.ground.x1}`} style={docLine(0.35, d ? 0.9 : 0.7)} />
       </K>
-      {OWNER_DECISIONS.map((dec, i) => {
-        const cy = top + i * pitch + pitch / 2;
-        const a = Math.max(x0, X(dec.prepareFrom));
-        const b = X(dec.requiredBy);
-        const from = Math.max(x0, Xt(Date.parse(dec.prepareFrom) - lead));
-        return (
-          <g key={dec.id}>
-            {/* What the field needs, and when. */}
-            <K k={`site-${i}`}>
-              <text x={pad} y={d ? cy - 3 : cy + 3.5} style={{ fontSize: d ? 12 : 9.5, fontWeight: 700, letterSpacing: '-0.01em', fill: ink }}>
-                {dec.item}
+
+      {/* The runway: planned completion. A slender navy slab, its centre marking and threshold bars. */}
+      <K k="runway">
+        <rect x={R.x0} y={R.y} width={R.x1 - R.x0} height={R.h} rx={1} style={{ fill: navy }} />
+        <path d={`M${R.x0 + 22 * g.k} ${R.y + R.h / 2}H${R.x1 - 6 * g.k}`} style={{ fill: 'none', stroke: PAPER, strokeOpacity: 0.7, strokeWidth: d ? 1 : 0.7, strokeDasharray: d ? '9 7' : '6 4' }} />
+        <path d={Array.from({ length: 4 }, (_, i) => `M${R.x0 + (4 + i * 3.5) * g.k} ${R.y + 1.5 * g.k}v${R.h - 3 * g.k}`).join('')} style={{ fill: 'none', stroke: PAPER, strokeWidth: d ? 1.4 : 1 }} />
+      </K>
+      {/* Beyond the planned finish: added time, added cost. Visible throughout; unused at the end. */}
+      <K k="delay">
+        <rect x={g.delay.x0} y={R.y} width={g.delay.x1 - g.delay.x0} height={R.h} style={{ fill: late, fillOpacity: 0.32 }} />
+        <rect x={g.delay.x0} y={R.y - 22 * g.k} width={g.delay.x1 - g.delay.x0} height={22 * g.k} style={{ fill: late, fillOpacity: 0.045 }} />
+        <text x={(g.delay.x0 + g.delay.x1) / 2} y={g.labelY} textAnchor="middle" style={caps(T.zone, late)}>
+          {LANDING_WORDS.delayLines.map((line, i) => (
+            <tspan key={line} x={(g.delay.x0 + g.delay.x1) / 2} y={g.labelY + i * g.labelStep}>
+              {line}
+            </tspan>
+          ))}
+        </text>
+      </K>
+      {/* The planned finish: the target, on the runway. */}
+      <K k="target">
+        <rect x={g.target.x0} y={R.y} width={g.target.x1 - g.target.x0} height={R.h} style={{ fill: amber }} />
+        <path d={`M${g.target.x0} ${R.y - 5 * g.k}v${4 * g.k}M${g.target.x1} ${R.y - 5 * g.k}v${4 * g.k}`} style={{ fill: 'none', stroke: amber, strokeWidth: d ? 1.2 : 0.9 }} />
+      </K>
+      <K k="targetLabel">{zoneLabel(g.target.x0, g.target.x1, LANDING_WORDS.target, navy)}</K>
+      {/* The touchdown point: two short paper-white bars across the runway, where the main gear first meets it. */}
+      <K k="aim">
+        <path d={`M${Td.x - 4 * g.k} ${R.y + 1.4 * g.k}v${R.h - 2.8 * g.k}M${Td.x + 4 * g.k} ${R.y + 1.4 * g.k}v${R.h - 2.8 * g.k}`} style={{ fill: 'none', stroke: PAPER, strokeWidth: d ? 2.4 : 1.7 }} />
+      </K>
+      {/* The planned completion boundary: a clean navy post at the end of the planned zone. */}
+      <K k="boundary">
+        <path d={`M${g.boundary.x} ${R.y + R.h}V${R.y - g.boundary.h}`} style={{ fill: 'none', stroke: navy, strokeWidth: d ? 1.6 : 1.2 }} />
+        <rect x={g.boundary.x - 2.5 * g.k} y={R.y - g.boundary.h - 2.5 * g.k} width={5 * g.k} height={5 * g.k} rx={1} style={{ fill: navy }} />
+      </K>
+      {/* The stop: a small amber marker at the aircraft's nose, where it came to rest. */}
+      <K k="stop">
+        <path d={`M${g.rollout.x + g.planeSpan.front + 4 * g.k} ${R.y}v${-9 * g.k}`} style={{ fill: 'none', stroke: amber, strokeWidth: d ? 1.8 : 1.3, strokeLinecap: 'round' }} />
+        <circle cx={g.rollout.x + g.planeSpan.front + 4 * g.k} cy={R.y - 10.5 * g.k} r={d ? 2 : 1.5} style={{ fill: amber }} />
+      </K>
+      {/* Landed inside it: the planned finish brightens, and is checked. */}
+      <K k="landed">
+        <rect x={g.target.x0 - 1} y={R.y - 1} width={g.target.x1 - g.target.x0 + 2} height={R.h + 2} rx={1} style={{ fill: 'none', stroke: amber, strokeWidth: d ? 1.6 : 1.2 }} />
+        <path
+          d={(() => {
+            const half = textWidth(LANDING_WORDS.target, T.zone, { caps: true, tracking: 0.08 }) / 2;
+            const cx = (g.target.x0 + g.target.x1) / 2 - half - (d ? 11 : 8);
+            const cy = g.labelY - T.zone * 0.35;
+            const s2 = d ? 4 : 3;
+            return `M${cx - s2} ${cy}l${s2 * 0.7} ${s2 * 0.7}l${s2 * 1.3} ${-s2 * 1.4}`;
+          })()}
+          style={{ fill: 'none', stroke: v('--jpd-ok-fg'), strokeWidth: d ? 1.8 : 1.4, strokeLinecap: 'round', strokeLinejoin: 'round' }}
+        />
+      </K>
+
+      {/* The planned approach: one dashed curve, from the aircraft's start to the planned finish; the aircraft flies it. */}
+      <K k="glide">
+        <path d={`M${S.x} ${S.y}C${g.flare.c1.x} ${g.flare.c1.y} ${g.flare.c2.x} ${g.flare.c2.y} ${Td.x} ${Td.y}`} style={{ fill: 'none', stroke: navy, strokeOpacity: 0.4, strokeWidth: d ? 1 : 0.75, strokeDasharray: d ? '5 4' : '3.5 2.5' }} />
+      </K>
+
+      {/* The projected finish: where the project is forecast to land. Wide and red at first; narrower and nearer the planned
+          finish with each waypoint; amber inside it. */}
+      <K k="forecast">
+        {moved(
+          <g transform={`translate(${F0.x} ${R.y})`}>
+            <K k="forecastLabel">
+              <text x={0} y={-g.forecastLabel} textAnchor="middle" style={caps(T.label, navy, 700)}>
+                {LANDING_WORDS.forecast}
               </text>
-              {d && (
-                <text x={x0 - 10} y={cy - 3} textAnchor="end" style={{ fontSize: 9.5, fill: sec }}>
-                  {`On site ${shortDay(dec.onSite)}`}
-                </text>
-              )}
-              <path d={diamond(X(dec.onSite), cy, d ? 6.5 : 5)} style={{ fill: v('--jpd-chain-ros') }} />
+              <path d={`M0 ${-g.forecastLabel + (d ? 3 : 2)}V${-g.forecastH + 1}`} style={{ fill: 'none', stroke: navy, strokeWidth: d ? 1.2 : 0.9 }} />
             </K>
-            {/* Backward: the procurement it depends on. */}
-            <Drawn k={`chain-${i}`} d={`M${X(dec.onSite) - (d ? 8 : 6)} ${cy}H${Math.max(x0 + 3, X(dec.chainStart))}`} stroke={v('--jpd-state-scheduled-edge')} width={d ? 6 : 4.5} cap="round" />
-            {/* Advance notice, then time to prepare, then the decision. */}
-            <Drawn k={`notice-${i}`} d={`M${from} ${cy - (d ? 11 : 8)}H${a}`} stroke={amber} width={1.5} />
-            <K k={`window-${i}`}>
-              <rect x={a} y={cy - (d ? 7 : 5.5)} width={Math.max(6, b - a)} height={d ? 14 : 11} rx={3} style={{ fill: v('--jpd-row-tint'), stroke: amber, strokeWidth: 1.5 }} />
-            </K>
-            <K k={`decide-${i}`}>
-              <path d={diamond(b, cy, d ? 7 : 5.5)} style={{ fill: amber, stroke: surface, strokeWidth: 1.5 }} />
-              {d ? (
-                <text x={pad} y={cy + 12} style={{ fontSize: 10, fill: sec }}>
-                  <tspan style={{ fontWeight: 700, fill: ink }}>{dec.title}</tspan>
-                  {` by ${fullDay(dec.requiredBy)}`}
-                </text>
-              ) : (
-                <text x={b + 8} y={cy - 7} style={{ fontSize: 8.5, fontWeight: 700, fill: ink }}>
-                  {shortDay(dec.requiredBy)}
-                </text>
-              )}
-            </K>
-          </g>
-        );
-      })}
-      <K k="legend">
-        <path d={`M${L.x + L.gap[0]} ${legendY - 3}h${d ? 20 : 14}`} style={{ stroke: amber, strokeWidth: 1.5, fill: 'none' }} />
-        <rect x={L.x + L.gap[3]} y={legendY - (d ? 8 : 6.5)} width={d ? 20 : 14} height={d ? 10 : 8} rx={2.5} style={{ fill: v('--jpd-row-tint'), stroke: amber, strokeWidth: 1.5 }} />
-        <path d={diamond(L.x + L.gap[6], legendY - 3, d ? 5.5 : 4.5)} style={{ fill: amber }} />
-        {LOOKAHEAD_STEPS.map((label, i) => (
-          <text key={label} x={L.x + L.gap[[1, 4, 7][i]]} y={legendY} style={{ fontSize: L.f, fontWeight: 600, fill: ink }}>
-            {label}
-          </text>
-        ))}
-        {[2, 5].map((n) => (
-          <text key={n} x={L.x + L.gap[n]} y={legendY} style={{ fontSize: L.f, fill: sec }}>
-            →
-          </text>
-        ))}
+            {narrowed(
+              <>
+                <K k="forecastLate">{band(late)}</K>
+                <K k="forecastOn">{band(amber)}</K>
+              </>,
+            )}
+          </g>,
+        )}
       </K>
-      <Takeaway tab="owner-predictability" mode={mode} />
+
+      {/* Procurement planning: three waypoints on the planned approach, each appearing ahead of the aircraft and checked as it passes. */}
+      {g.gates.map((gate, i) => (
+        <g key={i}>
+          <K k={`gate-${i}`}>
+            <circle cx={gate.x} cy={gate.y} r={d ? 5.5 : 4} style={{ fill: amber, fillOpacity: 0.18 }} />
+            <circle cx={gate.x} cy={gate.y} r={d ? 3 : 2.2} style={{ fill: PAPER, stroke: amber, strokeWidth: d ? 1.4 : 1 }} />
+            <text x={gate.x - g.gateLabel.dx} y={gate.y + g.gateLabel.dy} textAnchor="end" style={caps(T.label, navy)}>
+              {gate.label}
+            </text>
+          </K>
+          <K k={`pass-${i}`}>
+            <circle cx={gate.x} cy={gate.y} r={d ? 4 : 3} style={{ fill: amber }} />
+            <path d={`M${gate.x - 1.8 * g.k} ${gate.y}l${1.2 * g.k} ${1.2 * g.k}l${2.4 * g.k} ${-2.6 * g.k}`} style={{ fill: 'none', stroke: navy, strokeWidth: d ? 1.3 : 1, strokeLinecap: 'round', strokeLinejoin: 'round' }} />
+          </K>
+        </g>
+      ))}
+
+      {/* The aircraft: one, on one stable approach, placed by the point beneath its wheels; then its rollout. */}
+      {/* Its start is set outside the moving wrappers, so its pitch turns it about its own wheels. */}
+      <g transform={`translate(${S.x} ${S.y})`}>
+        <K k="fly">
+          <K k="roll">
+            <K k="settle">
+              <K k="plane">
+                <g transform={`scale(${g.plane})`}>
+                  <Turboprop />
+                </g>
+              </K>
+            </K>
+          </K>
+        </K>
+      </g>
+
+      {/* One bar, there throughout, with its words from the first frame. */}
+      <TeamFoot mode={mode} band="foot" words="takeaway" {...LANDING_FOOT} />
     </>
   );
 }
@@ -969,31 +1042,24 @@ function PredictabilityVisual({ mode }: { mode: OwnerMode }) {
 /* -------------------------------------------------------- 4. Better decisions */
 
 /**
- * The cone (Design System Section 54.4.5; founder briefs 2026-11-12): one corridor tapering from left to right, wide
- * where the project is early and narrow where it is late. It does not move. One story, never reset: an amber line
- * marking the time, its pointer on the time axis, and a column of six named option cards on it travel together. The
- * group stops a quarter of the way in, all six held (decision identified early); carries on; as the cone narrows, the
- * options it has no room for are left outside its walls one at a time, washed out and crossed out in red but still
- * seen; and it stops near the narrow end with two (decision identified late). Played once: after a beat the cone fades
- * away and the visual closes on correctly timed decisions, the six options again, all open. Drawn as an architectural
- * sheet, in the family of Protect your investment: the faint grid behind, a finer grid within the corridor, double
- * linework and a centre line, paper cards, and the same foot. Nobody is drawn.
+ * The decision timing window (Design System Section 54.4.5; founder briefs 2026-11-13): a lens-shaped corridor, narrow,
+ * widest, narrow, behind which the house stands still. One story, never reset: the amber NOW marker and a stack of
+ * choices travel together; three known, three discovered one at a time, six viable in the decision window, four lost one
+ * at a time for a stated reason and crossed out in place, two remaining; then the six at rest in the window.
  */
 function DecisionsVisual({ mode }: { mode: OwnerMode }) {
   const d = mode === 'desktop';
-  const g = choiceGeometry(mode);
+  const g = windowGeometry(mode);
   const { w } = OWNER_CANVAS[mode];
   const T = g.type;
   const late = v('--jpd-chain-commitment-late');
-  const caps = (size: number, fill: string) => ({ fontSize: size, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' as const, fill });
+  const caps = (size: number, fill: string, weight = 800) => ({ fontSize: size, fontWeight: weight, letterSpacing: '0.08em', textTransform: 'uppercase' as const, fill });
   const W = g.card.w;
   const Hc = g.card.h;
-  const C = g.cone;
-  const clip = `choice-cone-${mode}`;
-  const press = `choice-press-${mode}`;
-  const wash = `choice-wash-${mode}`;
-  const warm = `choice-warm-${mode}`;
-  /* The pressure near the narrow end: from a little before the late stop to the tip, the walls thicken outward and redden. */
+  const C = g.shape;
+  const id = (name: string) => `window-${name}-${mode}`;
+  const early = g.stop('early');
+  /* The risk near the narrow end: from a little before the late stop to the tip, the walls thicken outward and redden. */
   const wedge = (side: -1 | 1) => {
     const n = 16;
     const at = (j: number) => g.pressure.from + ((C.x1 - g.pressure.from) * j) / n;
@@ -1002,163 +1068,237 @@ function DecisionsVisual({ mode }: { mode: OwnerMode }) {
     const outer = Array.from({ length: n + 1 }, (_, j) => `${at(j)} ${C.cy + side * (g.half(at(j)) + thick(j))}`).reverse();
     return `M${[...inner, ...outer].join('L')}Z`;
   };
-  const message = (k: string, words: string, fill: string) => {
-    const M = g.message(words);
-    return (
-      <K k={k}>
-        <text textAnchor="middle" style={{ ...caps(T.message, fill), letterSpacing: '0.1em' }}>
-          {M.lines.map((l) => (
-            <tspan key={l.line} x={M.x} y={l.y}>
-              {l.line}
-            </tspan>
-          ))}
-        </text>
-      </K>
-    );
-  };
-  /** An option, drawn about its middle: a paper card with a soft offset beneath it, and its name, *OPTION* and its letter. */
-  const option = (j: number) => {
+  const heading = (k: string, words: string, fill: string) => (
+    <K k={k}>
+      <text x={g.heading.x} y={g.heading.y} textAnchor="middle" style={{ ...caps(T.heading, fill), letterSpacing: '0.1em' }}>
+        {words}
+      </text>
+    </K>
+  );
+  /** The name on a card: *OPTION* and its letter. */
+  const label = (j: number, faded = false) => {
     const name = g.name(j);
     return (
+      <text x={0} y={g.card.label * 0.36} textAnchor="middle" style={{ ...caps(g.card.label, sec, 700), letterSpacing: '0.06em', opacity: faded ? 0.55 : 1 }}>
+        {name.word}
+        <tspan style={{ fill: navy, fontWeight: 800 }}>{` ${name.letter}`}</tspan>
+      </text>
+    );
+  };
+  /** Available: a clean white card with a crisp outline and a soft offset beneath it. */
+  const available = (j: number) => (
+    <>
+      <rect x={-W / 2 + 1.2 * g.k} y={-Hc / 2 + 2 * g.k} width={W} height={Hc} rx={g.card.round} style={docWash(0.12)} />
+      <rect x={-W / 2} y={-Hc / 2} width={W} height={Hc} rx={g.card.round} style={{ fill: PAPER, stroke: DOC_INK, strokeOpacity: 0.75, strokeWidth: d ? 0.9 : 0.7 }} />
+      {label(j)}
+    </>
+  );
+  /* The red X over an unavailable option: corner to corner, inside its edges. */
+  const ix = W / 2 - (d ? 5 : 3.5);
+  const iy = Hc / 2 - (d ? 3 : 2);
+  /** Unavailable: the card stays, desaturated under a pale wash, its outline solid and faint, with the red X. */
+  const unavailable = () => (
+    <>
+      <rect x={-W / 2 - 0.5} y={-Hc / 2 - 0.5} width={W + 1 + 2 * g.k} height={Hc + 1 + 3 * g.k} rx={g.card.round} style={{ fill: GROUND, fillOpacity: 0.62 }} />
+      <rect x={-W / 2} y={-Hc / 2} width={W} height={Hc} rx={g.card.round} style={{ fill: 'none', stroke: DOC_INK, strokeOpacity: 0.35, strokeWidth: d ? 0.9 : 0.7 }} />
+      <path d={`M${-ix} ${-iy}L${ix} ${iy}M${ix} ${-iy}L${-ix} ${iy}`} style={{ fill: 'none', stroke: late, strokeWidth: d ? 1.5 : 1, strokeLinecap: 'round' }} />
+    </>
+  );
+  /* The group moves as one, in legs: the marker, its tag, its pointer, the stack and its labels are each wrapped in
+     every leg, so they stop and go together. */
+  const legCount = g.discover.length + 1 + g.changes.length + 1;
+  const moving = (children: ReactNode) =>
+    Array.from({ length: legCount }, (_, n) => `leg-${n}`).reduceRight<ReactNode>((inner, key) => <K k={key}>{inner}</K>, children);
+  /* The stack moves up half a step at each discovery, so it stays centred: wrapped in one shift per discovered choice. */
+  const discovered = g.discover.map((_, n) => CHOICE_KNOWN + n);
+  const stacked = (children: ReactNode) => discovered.reduceRight<ReactNode>((inner, j) => <K k={`shift-${j}`}>{inner}</K>, children);
+  /**
+   * A brief callout beside a card: a discovery in amber, to the card's right; a loss's reason in the late colour, to its
+   * left, in the clear space toward the decision window.
+   */
+  const N = g.note;
+  const callout = (words: string, tone: 'found' | 'lost') => {
+    const tw = textWidth(words, N.size, { caps: true, tracking: 0.08 });
+    const found = tone === 'found';
+    const x0 = found ? N.dx : -N.dx - (tw + 2 * N.pad);
+    return (
       <>
-        <rect x={-W / 2 + 1.2 * g.k} y={-Hc / 2 + 2 * g.k} width={W} height={Hc} rx={g.card.round} style={docWash(0.12)} />
-        <rect x={-W / 2} y={-Hc / 2} width={W} height={Hc} rx={g.card.round} style={{ fill: PAPER, stroke: DOC_INK, strokeOpacity: 0.5, strokeWidth: d ? 0.9 : 0.7 }} />
-        <text x={0} y={g.card.label * 0.36} textAnchor="middle" style={{ ...caps(g.card.label, sec), fontWeight: 700, letterSpacing: '0.06em' }}>
-          {name.word}
-          <tspan style={{ fill: navy, fontWeight: 800 }}>{` ${name.letter}`}</tspan>
+        <rect x={x0} y={-N.h / 2} width={tw + 2 * N.pad} height={N.h} rx={N.h / 2} style={{ fill: found ? amber : PAPER, stroke: found ? amber : late, strokeWidth: d ? 1 : 0.8 }} />
+        <text x={x0 + N.pad} y={N.size * 0.36} style={{ ...caps(N.size, found ? navy : late), letterSpacing: '0.08em' }}>
+          {words}
         </text>
       </>
     );
   };
-  /* The red cross over a lost option: corner to corner, inside its edges. */
-  const ix = W / 2 - (d ? 5 : 3.5);
-  const iy = Hc / 2 - (d ? 3 : 2);
-  /* The group moves as one: the line, its pointer and the cards are each wrapped in `now` (to the early stop) and `nowOn` (on to the late one). */
-  const moving = (children: ReactNode) => (
-    <K k="now">
-      <K k="nowOn">{children}</K>
-    </K>
-  );
+  /** An outline just outside a card: amber as it is discovered, the late colour as it is lost. */
+  const ring = (stroke: string) => <rect x={-W / 2 - 2} y={-Hc / 2 - 2} width={W + 4} height={Hc + 4} rx={g.card.round + 1.5} style={{ fill: 'none', stroke, strokeWidth: d ? 1.6 : 1.2 }} />;
+  /* A status label sits on a thin strip of paper, so the marker's line passes behind its words rather than through them. */
+  const status = (k: string, words: string, n: number, fill: string) => {
+    const tw = textWidth(words, T.zone, { caps: true, tracking: 0.1 });
+    return (
+      <K k={k}>
+        <rect x={x - tw / 2 - 4 * g.k} y={g.statusY(n) - T.zone * 0.95} width={tw + 8 * g.k} height={T.zone * 1.35} rx={2} style={{ fill: PAPER }} />
+        <text x={x} y={g.statusY(n)} textAnchor="middle" style={{ ...caps(T.zone, fill), letterSpacing: '0.1em' }}>
+          {words}
+        </text>
+      </K>
+    );
+  };
   const grid = d ? 28 : 21.2;
   const fine = grid / 2;
   const H = g.band.y;
   const A = g.axis;
   const P = A.pointer;
+  const x = early.x;
+  const corridorTop = C.cy - g.half(C.peak);
+  const corridorBottom = C.cy + g.half(C.peak);
   return (
     <>
       <defs>
-        <clipPath id={clip}>
+        <clipPath id={id('clip')}>
           <path d={g.outline} />
         </clipPath>
-        <linearGradient id={press} gradientUnits="userSpaceOnUse" x1={g.pressure.from} y1={0} x2={C.x1} y2={0}>
-          <stop offset="0" style={{ stopColor: late, stopOpacity: 0 }} />
-          <stop offset="1" style={{ stopColor: late, stopOpacity: 1 }} />
+        {/* Inside the corridor, a quiet tone: neutral at the left, clear in the middle, a breath of the late colour at the right. */}
+        <linearGradient id={id('tone')} gradientUnits="userSpaceOnUse" x1={C.x0} y1={0} x2={C.x1} y2={0}>
+          <stop offset="0" style={{ stopColor: DOC_INK, stopOpacity: 0.05 }} />
+          <stop offset="0.3" style={{ stopColor: DOC_INK, stopOpacity: 0 }} />
+          <stop offset="0.72" style={{ stopColor: late, stopOpacity: 0 }} />
+          <stop offset="1" style={{ stopColor: late, stopOpacity: 0.08 }} />
         </linearGradient>
-        <linearGradient id={wash} gradientUnits="userSpaceOnUse" x1={g.pressure.from} y1={0} x2={C.x1} y2={0}>
+        <linearGradient id={id('haze')} gradientUnits="userSpaceOnUse" x1={g.haze.x0} y1={0} x2={g.haze.x1} y2={0}>
+          <stop offset="0" style={{ stopColor: DOC_INK, stopOpacity: 0.07 }} />
+          <stop offset="1" style={{ stopColor: DOC_INK, stopOpacity: 0 }} />
+        </linearGradient>
+        <linearGradient id={id('window')} gradientUnits="userSpaceOnUse" x1={g.window.x0} y1={0} x2={g.window.x1} y2={0}>
+          <stop offset="0" style={{ stopColor: amber, stopOpacity: 0 }} />
+          <stop offset="0.22" style={{ stopColor: amber, stopOpacity: 0.1 }} />
+          <stop offset="0.78" style={{ stopColor: amber, stopOpacity: 0.1 }} />
+          <stop offset="1" style={{ stopColor: amber, stopOpacity: 0 }} />
+        </linearGradient>
+        <linearGradient id={id('press')} gradientUnits="userSpaceOnUse" x1={g.pressure.from} y1={0} x2={C.x1} y2={0}>
+          <stop offset="0" style={{ stopColor: late, stopOpacity: 0 }} />
+          <stop offset="1" style={{ stopColor: late, stopOpacity: 0.75 }} />
+        </linearGradient>
+        <linearGradient id={id('wash')} gradientUnits="userSpaceOnUse" x1={g.pressure.from} y1={0} x2={C.x1} y2={0}>
           <stop offset="0" style={{ stopColor: late, stopOpacity: 0 }} />
           <stop offset="1" style={{ stopColor: late, stopOpacity: 0.12 }} />
         </linearGradient>
-        {/* The corridor warms toward its narrow end: clear at the mouth, a breath of amber past the middle, the late colour at the tip. */}
-        <linearGradient id={warm} gradientUnits="userSpaceOnUse" x1={C.x0} y1={0} x2={C.x1} y2={0}>
-          <stop offset="0.35" style={{ stopColor: amber, stopOpacity: 0 }} />
-          <stop offset="0.72" style={{ stopColor: amber, stopOpacity: 0.07 }} />
-          <stop offset="1" style={{ stopColor: late, stopOpacity: 0.1 }} />
-        </linearGradient>
       </defs>
-      {/* The sheet: a faint grid, as Protect your investment's. */}
+      {/* The sheet: a faint grid. */}
       <K k="ground">
         <path d={[...Array.from({ length: Math.ceil(w / grid) - 1 }, (_, i) => `M${(i + 1) * grid} 0V${H}`), ...Array.from({ length: Math.ceil(H / grid) - 1 }, (_, i) => `M0 ${(i + 1) * grid}H${w}`)].join('')} style={docLine(0.05, 0.6)} />
       </K>
 
-      {/* The corridor: a soft shadow beneath it, the paper, its warming, a finer grid within it, its centre line and the fine
-          line inside each wall. The walls themselves are drawn on, from the mouth. */}
+      {/* The corridor: a soft offset shadow, the paper, its tone, a finer grid within, the centre line and the fine line
+          inside each wall. The walls themselves are drawn on, from the left. */}
       <K k="cone">
         <path d={g.outline} transform={`translate(0 ${3 * g.k})`} style={docWash(0.07)} />
-        <path d={g.outline} style={{ fill: PAPER, fillOpacity: 0.94 }} />
-        <path d={g.outline} style={{ fill: `url(#${warm})` }} />
-        <g clipPath={`url(#${clip})`}>
-          <path d={[...Array.from({ length: Math.ceil(w / fine) }, (_, i) => `M${i * fine} 0V${H}`), ...Array.from({ length: Math.ceil(H / fine) }, (_, i) => `M0 ${i * fine}H${w}`)].join('')} style={docLine(0.07, 0.4)} />
+        <path d={g.outline} style={{ fill: PAPER, fillOpacity: 0.95 }} />
+        <path d={g.outline} style={{ fill: `url(#${id('tone')})` }} />
+        <g clipPath={`url(#${id('clip')})`}>
+          <path d={[...Array.from({ length: Math.ceil(w / fine) }, (_, i) => `M${i * fine} 0V${H}`), ...Array.from({ length: Math.ceil(H / fine) }, (_, i) => `M0 ${i * fine}H${w}`)].join('')} style={docLine(0.06, 0.4)} />
         </g>
-        <path d={`M${C.x0 + 6 * g.k} ${C.cy}H${C.x1 - 4 * g.k}`} style={{ ...docLine(0.32, d ? 0.6 : 0.45), strokeDasharray: d ? '12 3 2 3' : '8 2 1.5 2' }} />
-        <path d={g.inner(-1)} style={docLine(0.3, d ? 0.5 : 0.4)} />
-        <path d={g.inner(1)} style={docLine(0.3, d ? 0.5 : 0.4)} />
+        <path d={`M${C.x0 + 6 * g.k} ${C.cy}H${C.x1 - 4 * g.k}`} style={{ ...docLine(0.28, d ? 0.6 : 0.45), strokeDasharray: d ? '12 3 2 3' : '8 2 1.5 2' }} />
+        <path d={g.inner(-1)} style={docLine(0.28, d ? 0.5 : 0.4)} />
+        <path d={g.inner(1)} style={docLine(0.28, d ? 0.5 : 0.4)} />
+      </K>
+      {/* Information still developing: a pale haze over the left, which clears as the marker passes into the window. */}
+      <K k="haze">
+        <g clipPath={`url(#${id('clip')})`}>
+          <rect x={g.haze.x0} y={corridorTop} width={g.haze.x1 - g.haze.x0} height={corridorBottom - corridorTop} style={{ fill: `url(#${id('haze')})` }} />
+        </g>
+      </K>
+      {/* The decision window: where the corridor holds all six. Restrained amber, its two boundaries a fine amber line. */}
+      <K k="window">
+        <g clipPath={`url(#${id('clip')})`}>
+          <rect x={g.window.x0} y={corridorTop} width={g.window.x1 - g.window.x0} height={corridorBottom - corridorTop} style={{ fill: `url(#${id('window')})` }} />
+          <path d={`M${g.window.x0} ${corridorTop}V${corridorBottom}M${g.window.x1} ${corridorTop}V${corridorBottom}`} style={{ fill: 'none', stroke: amber, strokeOpacity: 0.45, strokeWidth: d ? 0.8 : 0.6, strokeDasharray: d ? '4 3' : '3 2' }} />
+        </g>
       </K>
       <K k="pressure">
-        <path d={g.outline} style={{ fill: `url(#${wash})` }} />
-        <path d={wedge(-1)} style={{ fill: `url(#${press})` }} />
-        <path d={wedge(1)} style={{ fill: `url(#${press})` }} />
+        <path d={g.outline} style={{ fill: `url(#${id('wash')})` }} />
+        <path d={wedge(-1)} style={{ fill: `url(#${id('press')})` }} />
+        <path d={wedge(1)} style={{ fill: `url(#${id('press')})` }} />
       </K>
       <Drawn k="wall-top" d={g.wall(-1)} stroke={DOC_INK} width={d ? 1.3 : 1} cap="round" />
       <Drawn k="wall-bottom" d={g.wall(1)} stroke={DOC_INK} width={d ? 1.3 : 1} cap="round" />
+
+      {/* The stage names beneath the corridor, and time beneath them. */}
+      <K k="zones">
+        {g.zones.map((z, i) => (
+          <text key={z.word} x={z.x} y={z.y} textAnchor="middle" style={caps(T.zone, [sec, navy, late][i], i === 1 ? 800 : 700)}>
+            {z.word}
+          </text>
+        ))}
+      </K>
       <Drawn k="axis" d={`M${A.x0} ${A.y}H${A.x1}`} stroke={DOC_INK} width={d ? 1.1 : 0.8} />
       <K k="time">
-        <path d={A.ticks.map((x) => `M${x} ${A.y}v${-A.tick}`).join('')} style={docLine(0.6, d ? 0.8 : 0.6)} />
+        <path d={A.ticks.map((tx) => `M${tx} ${A.y}v${-A.tick}`).join('')} style={docLine(0.6, d ? 0.8 : 0.6)} />
         <path d={`M${A.x1 + (d ? 6 : 4)} ${A.y}l${d ? -8 : -5.5} ${d ? -4 : -2.8}v${d ? 8 : 5.6}z`} style={{ fill: DOC_INK }} />
-        <text x={A.label.x} y={A.label.y} style={caps(T.label, DOC_INK)}>
-          {CHOICE_WORDS.time}
-        </text>
-      </K>
-      <K k="more">
-        <text x={g.more.x} y={g.more.y} style={{ fontSize: T.label, fontWeight: 700, fill: navy }}>
-          {CHOICE_WORDS.more}
+        <text x={A.label.x} y={A.label.y} textAnchor="end" style={caps(T.label, DOC_INK, 700)}>
+          {WINDOW_WORDS.time}
         </text>
       </K>
 
-      {/* The group. The line marks the present: amber, with a faint halo, clipped to the cone (the clip stays put; the line
-          moves within it), so its height is always the cone's where it stands. Its pointer rides beneath the time axis, its
-          tip on the line. The cards are not clipped: those the cone has no room for are left outside it. */}
-      <g clipPath={`url(#${clip})`}>
-        {moving(
-          <K k="line">
-            <path d={`M${g.start.x} ${g.start.y0}V${g.start.y1}`} style={{ fill: 'none', stroke: amber, strokeOpacity: 0.22, strokeWidth: d ? 5 : 3.5 }} />
-            <path d={`M${g.start.x} ${g.start.y0}V${g.start.y1}`} style={{ fill: 'none', stroke: amber, strokeWidth: d ? 1.6 : 1.1 }} />
-          </K>,
-        )}
-      </g>
+      {/* The three headings, at the top. */}
+      {heading('headEarly', WINDOW_STAGES.early.heading, sec)}
+      {heading('headRight', WINDOW_STAGES.right.heading, navy)}
+      {heading('headLate', WINDOW_STAGES.late.heading, late)}
+
+      {/* The group: the marker, a solid amber line with a faint halo under its NOW tag, its pointer on the time axis, and
+          the six options on it. All of it moves as one. */}
       {moving(
-        <K k="line">
-          <path d={`M${g.start.x} ${A.y + 0.5}l${P.w} ${P.h}h${-2 * P.w}z`} style={{ fill: amber, stroke: navy, strokeWidth: d ? 0.8 : 0.6, strokeLinejoin: 'round' }} />
+        <K k="marker">
+          <path d={`M${x} ${g.line.y0}V${g.line.y1}`} style={{ fill: 'none', stroke: amber, strokeOpacity: 0.22, strokeWidth: d ? 5 : 3.5 }} />
+          <path d={`M${x} ${g.line.y0}V${g.line.y1}`} style={{ fill: 'none', stroke: amber, strokeWidth: d ? 1.6 : 1.1 }} />
+          <rect x={x - g.tag.w / 2} y={g.tag.y} width={g.tag.w} height={g.tag.h} rx={d ? 3 : 2} style={{ fill: amber }} />
+          <text x={x} y={g.tag.y + g.tag.h / 2 + T.tag * 0.36} textAnchor="middle" style={{ ...caps(T.tag, navy), letterSpacing: '0.12em' }}>
+            {WINDOW_WORDS.now}
+          </text>
+          <path d={`M${x} ${A.y + 0.5}l${P.w} ${P.h}h${-2 * P.w}z`} style={{ fill: amber, stroke: navy, strokeWidth: d ? 0.8 : 0.6, strokeLinejoin: 'round' }} />
         </K>,
       )}
+      {/* The stack. Only known choices are drawn: an undiscovered one is not there at all until it is found. Each card
+          carries its own discovery or loss: an outline and a callout, then, if lost, its red X; it stays in place. */}
       {moving(
-        g.cards.map((c, j) => (
-          <g key={j} transform={`translate(${g.start.x} ${c.y})`}>
-            <K k={`card-${j}`}>{option(j)}</K>
-            {g.lost.some((l) => l.option === j) && (
-              <K k={`off-${j}`}>
-                <rect x={-W / 2 - 0.5} y={-Hc / 2 - 0.5} width={W + 1 + 2 * g.k} height={Hc + 1 + 3 * g.k} rx={g.card.round} style={{ fill: v('--jp-surface-light'), fillOpacity: 0.55 }} />
-                <rect x={-W / 2} y={-Hc / 2} width={W} height={Hc} rx={g.card.round} style={{ fill: 'none', stroke: DOC_INK, strokeOpacity: 0.45, strokeWidth: d ? 0.9 : 0.7, strokeDasharray: d ? '3 2' : '2 1.5' }} />
-                <path d={`M${-ix} ${-iy}L${ix} ${iy}M${ix} ${-iy}L${-ix} ${iy}`} style={{ fill: 'none', stroke: late, strokeWidth: d ? 1.5 : 1, strokeLinecap: 'round' }} />
-              </K>
-            )}
-          </g>
-        )),
+        stacked(
+          g.cards.map((c, j) => {
+            const isFound = discovered.includes(j);
+            const isLost = g.changes.some((ch) => ch.option === j);
+            return (
+              <g key={j} transform={`translate(${x} ${c.y + g.stackDrop(CHOICE_KNOWN)})`}>
+                {isFound && <K k={`glow-${j}`}>{ring(amber)}</K>}
+                {isLost && <K k={`warn-${j}`}>{ring(late)}</K>}
+                <K k={`card-${j}`}>{available(j)}</K>
+                {isLost && <K k={`off-${j}`}>{unavailable()}</K>}
+                {isFound && <K k={`found-${j}`}>{callout(WINDOW_WORDS.found, 'found')}</K>}
+                {isLost && <K k={`lost-${j}`}>{callout(WINDOW_LOSS_REASONS[g.changes.findIndex((ch) => ch.option === j)], 'lost')}</K>}
+              </g>
+            );
+          }),
+        ),
+      )}
+      {/* The group's status, above the stack: known options, then six viable, then two remain. */}
+      {moving(
+        <>
+          {status('statusKnown', WINDOW_WORDS.known, CHOICE_KNOWN, navy)}
+          {status('statusSix', WINDOW_WORDS.six, CHOICE_COUNT, navy)}
+          {status('statusTwo', WINDOW_WORDS.two, CHOICE_COUNT, late)}
+        </>,
       )}
 
-      {/* The two callouts, at the top of the frame. */}
-      {message('msgEarly', CHOICE_WORDS.early, navy)}
-      {message('msgLate', CHOICE_WORDS.late, late)}
-
-      {/* The close: correctly timed decisions. The six options again, all open, in a row; the line about JiTpro beneath. */}
-      {g.timed.xs.map((cx, j) => (
-        <K key={j} k={`timed-${j}`}>
-          <g transform={`translate(${cx} ${g.timed.y})`}>{option(j)}</g>
+      {/* The close: the six options at rest, all available, in the decision window. */}
+      {g.cards.map((c, j) => (
+        <K key={j} k={`rest-${j}`}>
+          <g transform={`translate(${g.close.x} ${c.y})`}>{available(j)}</g>
         </K>
       ))}
-      <K k="timedWords">
-        <text textAnchor="middle" style={{ fontSize: g.timed.support.size, fontWeight: 600, fill: ink }}>
-          {g.timed.support.lines.map((l) => (
-            <tspan key={l.line} x={g.timed.support.x} y={l.y}>
-              {l.line}
-            </tspan>
-          ))}
-        </text>
-      </K>
 
-      {/* One bar, there throughout; only its words change. The three feet draw the same bar under the one key. */}
-      <TeamFoot mode={mode} band="foot" words="footInWords" {...CHOICE_FOOT.in} />
-      <TeamFoot mode={mode} band="foot" words="footOutWords" {...CHOICE_FOOT.out} />
-      <TeamFoot mode={mode} band="foot" words="takeaway" head={CHOICE_TIMED.head} />
+      {/* One bar, there throughout; only its words change. The first foot draws the bar; the others only their words. */}
+      <TeamFoot mode={mode} band="foot" words="footEarly" {...WINDOW_STAGES.early.foot} />
+      <TeamFoot mode={mode} words="footRight" {...WINDOW_STAGES.right.foot} />
+      <TeamFoot mode={mode} words="footLate" {...WINDOW_STAGES.late.foot} />
+      <TeamFoot mode={mode} words="takeaway" head={WINDOW_CLOSE} support={WINDOW_CLOSE_SUPPORT} supportSize={windowCloseSupportSize(mode)} />
     </>
   );
 }
@@ -1195,19 +1335,25 @@ const VISUAL: Record<OwnerTabId, (p: { mode: OwnerMode }) => ReactNode> = {
 const HOUSE_SRC = `${import.meta.env.BASE_URL}assets/hero/house-render`;
 /** The resting strength of the house behind the picture: present, and well below the cards and the shield. */
 const HOUSE_OPACITY = 0.3;
+/**
+ * Behind Better decisions (2026-11-13): quieter, so the corridor, the options
+ * and the marker stay dominant; and still, with no reveal (Section 54.4.5).
+ */
+const HOUSE_OPACITY_STILL = 0.16;
 
-function HouseBackdrop({ played }: { played: boolean }) {
+function HouseBackdrop({ played, still = false }: { played: boolean; still?: boolean }) {
   const box = houseBackdrop();
   const fade = 'linear-gradient(180deg, transparent 0%, black 18%)';
   return (
     <div
       aria-hidden="true"
-      className={`pointer-events-none absolute inset-x-0 mx-auto mix-blend-multiply ${played ? 'hero-house-reveal' : ''}`}
+      className={`pointer-events-none absolute inset-x-0 mx-auto mix-blend-multiply ${played && !still ? 'hero-house-reveal' : ''}`}
       style={
         {
           width: `${box.width * 100}%`,
           bottom: `${box.bottom * 100}%`,
-          opacity: played ? HOUSE_OPACITY : 0,
+          // Still: there from the first frame, played or not, and never changes.
+          opacity: still ? HOUSE_OPACITY_STILL : played ? HOUSE_OPACITY : 0,
           filter: 'grayscale(1) invert(1)',
           maskImage: fade,
           WebkitMaskImage: fade,
@@ -1256,7 +1402,7 @@ export default function OwnerVisual({ tab, played }: { tab: OwnerTabId; played: 
           if (!s) continue;
           el.style.opacity = String(s.o);
           if (el.dataset.draw !== undefined) el.style.strokeDashoffset = String(1 - s.draw);
-          else el.setAttribute('transform', `translate(${s.mx} ${s.my + s.ty}) rotate(${s.rot}) scale(${s.sc})`);
+          else el.setAttribute('transform', `translate(${s.mx} ${s.my + s.ty}) rotate(${s.rot}) scale(${s.sc * s.sx} ${s.sc})`);
         }
       }
     };
@@ -1297,6 +1443,7 @@ export default function OwnerVisual({ tab, played }: { tab: OwnerTabId; played: 
   return (
     <div ref={frameRef} className="jpd relative isolate h-full overflow-hidden" style={{ background: surface }}>
       {tab === 'owner-protect-investment' && <HouseBackdrop played={played} />}
+      {(tab === 'owner-better-decisions' || tab === 'owner-predictability') && <HouseBackdrop played={played} still />}
       {MODES.map((mode) => (
         <svg
           key={mode}

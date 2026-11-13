@@ -29,10 +29,17 @@ export type AudienceTab = {
   /** Optional second paragraph of the description (Section 54.2.1). */
   descriptionMore?: string;
   /**
-   * Optional closing statement beneath the description (Section 54.2.1): one
-   * short line, in the strongest ink.
+   * Optional closing statement beneath the description (Section 54.2.1): a
+   * short line, in the strongest ink. A newline breaks it into lines
+   * (Section 54.2.4, 2026-11-13).
    */
   closing?: string;
+  /**
+   * Optional phrase of the closing statement to emphasise with a decorative
+   * brand-amber underline, the words staying in ink: amber text fails contrast
+   * on the light surface (Sections 8.8, 54.2.4).
+   */
+  closingEmphasis?: string;
   /**
    * Optional link to a role page, shown between the headline and the
    * description (Section 54.2.1). `to` is an internal route.
@@ -182,17 +189,21 @@ export const HOME_AUDIENCES: readonly Audience[] = [
       {
         id: 'owner-predictability',
         label: 'More predictability',
-        headline: 'Know what’s coming before it becomes urgent.',
+        headline: 'Stay on course for a more predictable finish.',
         description:
-          'JiTpro helps your contractor plan the decisions, approvals, and deliveries needed to keep construction moving, giving the entire team more time to prepare.',
+          'Your completion date and budget are closely connected. When construction runs longer than planned, added time can bring added cost. JiTpro helps your contractor identify and manage procurement requirements early, giving the project team a clearer path to keep construction moving toward its planned completion.',
+        closing: 'Better procurement planning. Fewer preventable delays. More confidence in where your project will land.',
       },
       {
         id: 'owner-better-decisions',
         label: 'Better decisions',
-        headline: 'Stay in control of your project’s decisions.',
+        headline: 'The right information. The right decisions. At the right time.',
         description:
-          'Your contractor manages hundreds of details, deadlines, and dependencies that affect your choices. JiTpro helps organize that complexity so your contractor can give you the information you need, when you need it.',
-        closing: 'More time to consider your options. Fewer last-minute surprises. Better decisions.',
+          'Every construction project depends on a continuous flow of information, decisions, and approvals from owners, designers, consultants, and trade partners.',
+        descriptionMore:
+          'JiTpro helps your contractor identify what’s needed, who’s responsible, and when each action must be completed to keep procurement and construction moving as planned.',
+        closing: 'Not too early. Not too late. Just in time.\nProtecting your choices and your project.',
+        closingEmphasis: 'Just in time.',
       },
     ],
   },

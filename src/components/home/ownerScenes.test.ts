@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { HOME_AUDIENCES } from '../../content/homeAudiences';
-import { CONNECT_ITEM } from './connectChainScene';
-import { partyOf } from './controlChainScene';
-import { FOCAL_ITEM, ROW_ITEMS } from './planChainScene';
 import {
   GAMBLE_CAPTION,
   GAMBLE_CONTRACT,
@@ -14,7 +11,6 @@ import {
   GAMBLE_URGENT,
   HOUSE_RENDER,
   OWNER_CANVAS,
-  OWNER_DECISIONS,
   OWNER_TABS,
   OWNER_TAKEAWAY,
   TEAM,
@@ -23,25 +19,32 @@ import {
   TEAM_MARK,
   TEAM_PARTIES,
   TEAM_RUSH,
-  TEAM_STATES,
   TEAM_WASTE_ROUNDS,
   SWEEP_HAND,
   boxCorners,
   CHOICE_COUNT,
-  CHOICE_FOOT,
-  CHOICE_TIMED,
-  CHOICE_WORDS,
+  CHOICE_KNOWN,
+  LANDING_FOOT,
+  LANDING_WORDS,
+  WINDOW_CLOSE,
+  WINDOW_CLOSE_SUPPORT,
+  WINDOW_LOSS_REASONS,
+  WINDOW_SHAPE,
+  WINDOW_STAGES,
+  WINDOW_WORDS,
   buildOwnerScene,
-  choiceGeometry,
+  windowCloseSupportSize,
+  windowGeometry,
   cueStateAt,
   gambleGeometry,
   houseBackdrop,
   isOwnerTab,
-  lookaheadWindow,
+  landingGeometry,
   ownerStateAt,
   requestLabel,
   textWidth,
   shieldPath,
+  teamFootHead,
   teamGeometry,
   travelInto,
   type OwnerMode,
@@ -63,19 +66,20 @@ describe('Project Owners visuals: one sample project (Section 54.4.5)', () => {
   it('Protect your investment: the general contractor in the middle, and the four groups the contractor\'s coordination reaches', () => {
     expect(TEAM.map((t) => t.label)).toEqual(['Owner', 'Design team', 'Consultants', 'Vendors']);
     expect([...TEAM_CONTRACTOR.lines, TEAM_CONTRACTOR.short]).toEqual(['General', 'contractor', 'Contractor']);
-    expect([TEAM_STATES.out, TEAM_STATES.in]).toEqual(['Weak procurement planning', 'Precise procurement planning']);
     // Weak planning costs each group something of its own: two requests, and what they add up to (founder, 2026-11-12).
     expect(TEAM.map((t) => [...t.requests])).toEqual([['Surprise', 'Rushed decision'], ['ASAP', 'No priority'], ['ASAP', 'No priority'], ['Rushed deadlines', 'Rescheduled']]);
     expect(TEAM.map((t) => t.effect)).toEqual(['Last-minute decisions', 'Competing urgent requests', 'Competing urgent requests', 'Stop-start work']);
     // And one calm word each once the contractor is in control. No two alike.
     expect(TEAM.map((t) => t.calm)).toEqual(['In control', 'Aligned', 'Coordinated', 'Ready']);
     expect(new Set(TEAM.map((t) => t.calm)).size).toBe(TEAM.length);
-    expect(OWNER_TAKEAWAY['owner-protect-investment']).toBe('A coordinated contractor protects your investment.');
+    expect(OWNER_TAKEAWAY['owner-protect-investment']).toBe('Early, precise procurement planning protects your investment.');
     expect(OWNER_TAKEAWAY['owner-protect-investment']).not.toBe(OWNER_TAKEAWAY['owner-reduce-risk']);
     expect(TEAM_MARK).toBe('JiTpro');
     // The foot of each state, in the founder's words: a line, and a phrase beneath it. The second state's line is the closing line.
-    expect(TEAM_FOOT.out).toEqual({ head: 'Weak procurement planning puts your investment at risk.', support: 'Preventable delays. Rising costs. Eroding profits.' });
-    expect(TEAM_FOOT.in).toEqual({ head: 'A coordinated contractor protects your investment.', support: 'JiTpro gets the field what it needs, when it needs it.' });
+    // The founder's words, exactly (2026-11-13): about the planning process, never the contractor as problem or hero.
+    expect(TEAM_FOOT.out).toEqual({ head: 'Weak procurement planning creates waste across the entire project.', support: 'More disruption. Higher costs. Greater risk to your investment.' });
+    expect(TEAM_FOOT.in).toEqual({ head: 'Early, precise procurement planning protects your investment.', support: 'Less disruption. Better coordination. Greater cost control.' });
+    expect(Object.values({ ...TEAM_FOOT.out, ...TEAM_FOOT.in }).join(' ')).not.toMatch(/contractor/i);
     expect(TEAM_FOOT.in.head).toBe(OWNER_TAKEAWAY['owner-protect-investment']);
   });
 
@@ -90,7 +94,7 @@ describe('Project Owners visuals: one sample project (Section 54.4.5)', () => {
   });
 
   it('Protect your investment: says coordination, never a timetable, an amount or a promise', () => {
-    const words = [...TEAM.flatMap((t) => [t.label, t.effect, t.calm, ...t.requests]), ...TEAM_CONTRACTOR.lines, TEAM_CONTRACTOR.short, TEAM_STATES.out, TEAM_STATES.in, ...Object.values(TEAM_FOOT.out), ...Object.values(TEAM_FOOT.in)].join(' | ');
+    const words = [...TEAM.flatMap((t) => [t.label, t.effect, t.calm, ...t.requests]), ...TEAM_CONTRACTOR.lines, TEAM_CONTRACTOR.short].join(' | ');
     // *Rescheduled* on a vendor's request is the founder's (2026-11-12): a disruption, not a timetable.
     expect(words.replace('Rescheduled', '')).not.toMatch(/\d|\$|%|guarantee|always|never|eliminate|save[sd]?\b|change order|waste|insur|schedul/i);
   });
@@ -124,43 +128,6 @@ describe('Project Owners visuals: one sample project (Section 54.4.5)', () => {
     expect(Object.values(OWNER_TAKEAWAY).join(' | ')).not.toMatch(/\d|\$|%|guarantee|always|never|eliminate|save[sd]?\b/i);
   });
 
-  it('finds the owner\'s decisions in the schedule itself: every owner activity, and Connect\'s owner dependency', () => {
-    const steps = ROW_ITEMS.flatMap((item) => item.steps.filter((s) => s.kind === 'phase' && partyOf(s.responsibleOrganizationId) === 'owner').map((s) => ({ item, s })));
-    const deps = CONNECT_ITEM.commitments.filter((c) => (c.ownerRole as string) === 'Owner');
-    expect(OWNER_DECISIONS).toHaveLength(steps.length + deps.length);
-    expect(OWNER_DECISIONS.length).toBeGreaterThanOrEqual(3);
-    for (const { item, s } of steps) {
-      const d = OWNER_DECISIONS.find((x) => x.id === item.id)!;
-      expect([d.prepareFrom, d.requiredBy, d.onSite, d.chainStart]).toEqual([s.startDate, s.endDate, item.requiredOnSiteDate, item.startDate]);
-      const after = item.steps.slice(item.steps.indexOf(s) + 1).find((q) => q.kind === 'phase')!;
-      expect(d.neededFor).toBe(after.name);
-    }
-    for (const c of deps) {
-      const d = OWNER_DECISIONS.find((x) => x.id === c.id)!;
-      expect([d.requiredBy, d.neededFor, d.onSite]).toEqual([c.requiredBy, c.requiredForStepName, FOCAL_ITEM.requiredOnSiteDate]);
-    }
-    // In date order, each on its own date: they are not all due at once.
-    const dates = OWNER_DECISIONS.map((d) => d.requiredBy);
-    expect(dates).toEqual([...dates].sort());
-    expect(new Set(dates).size).toBe(dates.length);
-    for (const d of OWNER_DECISIONS) {
-      expect(d.title && d.request && d.item).toBeTruthy();
-      expect(d.prepareFrom <= d.requiredBy).toBe(true);
-      expect(d.requiredBy < d.onSite).toBe(true);
-      expect(d.chainStart <= d.prepareFrom).toBe(true);
-    }
-  });
-
-  it('frames the look-ahead in whole months around every decision and on-site date', () => {
-    const w = lookaheadWindow();
-    for (const d of OWNER_DECISIONS) {
-      expect(Date.parse(d.prepareFrom)).toBeGreaterThanOrEqual(w.start);
-      expect(Date.parse(d.onSite)).toBeLessThan(w.end);
-    }
-    expect(w.months[0].first).toBe(true);
-    expect(w.months.filter((m) => m.first).map((m) => m.year)).toEqual([2026, 2027]);
-    expect(w.months.length).toBeGreaterThanOrEqual(12);
-  });
 });
 
 describe('Project Owners visuals: one clock each', () => {
@@ -183,17 +150,23 @@ describe('Project Owners visuals: one clock each', () => {
             if (c.roll) expect(c.at + c.roll.dur).toBeLessThanOrEqual(scene.end);
           }
           expect(scene.end).toBeGreaterThanOrEqual(10000);
-          expect(scene.end).toBeLessThanOrEqual(26000);
+          // Better decisions follows the founder's pacing: three discoveries and four losses, each paused on (2026-11-13).
+          expect(scene.end).toBeLessThanOrEqual(tab === 'owner-better-decisions' ? 35000 : 26000);
         });
 
         it('opens empty, ends on its takeaway, and rests', () => {
-          for (const s of Object.values(at(0))) expect(s.o).toBe(0);
+          // Nothing is shown at the start but what is meant to be there from the first frame: a cue with no duration at
+          // the start (Protect your investment's sheet, foot bar, foot words and state name, 2026-11-13).
+          const first = new Set(scene.cues.filter((c) => c.at === 0 && c.dur === 0).map((c) => c.k));
+          for (const [key, s] of Object.entries(at(0))) expect(s.o, key).toBe(first.has(key) ? 1 : 0);
           const end = at(scene.end);
-          expect(end.takeaway).toEqual({ o: 1, ty: 0, draw: 1, mx: 0, my: 0, rot: 0, sc: 1 });
+          expect(end.takeaway).toEqual({ o: 1, ty: 0, draw: 1, mx: 0, my: 0, rot: 0, sc: 1, sx: 1 });
           // The takeaway is the last thing to appear, and is given time to be read. In Protect your investment it is the
-          // second state's foot words, which come in as that state is named (founder, 2026-11-12), so the state completes after it.
+          // second scene's foot words, which open that scene before its illustration (founder, 2026-11-13).
           const takeaway = scene.cues.find((c) => c.k === 'takeaway')!;
-          if (tab === 'owner-protect-investment') expect(takeaway.at).toBeGreaterThan(scene.cues.find((c) => c.k === 'stateIn')!.at);
+          if (tab === 'owner-protect-investment') expect(takeaway.at).toBeLessThan(scene.cues.find((c) => c.k === 'guard')!.at);
+          // More predictability's foot words are there from the first frame (founder, 2026-11-13).
+          else if (tab === 'owner-predictability') expect([takeaway.at, takeaway.dur]).toEqual([0, 0]);
           else expect(Math.max(...scene.cues.map((c) => c.at))).toBe(takeaway.at);
           expect(scene.end - takeaway.at).toBeGreaterThanOrEqual(1300);
           expect(at(scene.end + 5000)).toEqual(end);
@@ -561,140 +534,118 @@ describe('Project Owners visuals: one clock each', () => {
     }
   });
 
-  it('Protect your investment: the contractor out of control, disorder spreading to all four; then the same contractor in control, and the same four calm', () => {
+  it('Protect your investment: two scenes, each message first, illustration second, held, and the first faded out as one', () => {
     const k = (key: string) => cueAt('owner-protect-investment', key);
+    const scene = buildOwnerScene('owner-protect-investment', 'desktop');
+    const at = (t: number) => ownerStateAt(scene, t);
     const idx = TEAM.map((_, i) => i);
     const n = idx.length;
     const rush = TEAM_RUSH.map((_, i) => k(`rush-${i}`));
     const friction = idx.map((i) => k(`friction-${i}`));
     const effects = idx.map((i) => k(`effect-${i}`));
-    // The sheet it is drawn on is there from the start and stays; it is background, and nothing waits for it.
-    expect([k('ground').at, k('ground').out]).toEqual([0, undefined]);
-    idx.forEach((i) => expect([k(`node-${i}`).at, k(`node-${i}`).out]).toEqual([k(`link-${i}`).at, undefined]));
-    // 1. The contractor first, in the middle; then the state is named and the four groups appear around.
-    expect(k('loose').at).toBe(0);
-    expect(k('stateOut').at).toBeLessThan(k('card-0').at);
-    const cards = idx.map((i) => k(`card-${i}`).at);
-    expect(cards).toEqual([...cards].sort((a, b) => a - b));
-    // Disorder starts at the contractor and travels outward: friction, then requests along it, then what it costs each group, then more requests.
+    const cards = idx.map((i) => k(`card-${i}`));
+    const cardsIn = idx.map((i) => k(`cardIn-${i}`));
+    const bills = scene.cues.filter((c) => c.k.startsWith('bill-'));
+    // No heading names either scene (founder, 2026-11-13).
+    expect(scene.cues.some((c) => /^state/.test(c.k))).toBe(false);
+    // THE FRAME: the sheet and the foot's bar are there from the first frame and never leave.
+    for (const key of ['ground', 'foot']) {
+      expect([k(key).at, k(key).dur, k(key).out]).toEqual([0, 0, undefined]);
+      for (let t = 0; t <= scene.end + 5000; t += 50) expect(at(t)[key].o).toBe(1);
+    }
+    expect(scene.cues.some((c) => c.k === 'footOut' || c.k === 'band')).toBe(false);
+
+    // SCENE 1. Message first: the words fade in (500 to 800 ms) on an otherwise empty frame; then, after a short pause,
+    // the contractor; then the four groups; then the disorder, at its own pace.
+    const words1 = k('footOutWords');
+    expect(words1.at).toBeGreaterThan(0);
+    expect(words1.dur).toBeGreaterThanOrEqual(500);
+    expect(words1.dur).toBeLessThanOrEqual(800);
+    const wordsIn = words1.at + words1.dur!;
+    expect(k('loose').at - wordsIn).toBeGreaterThanOrEqual(300);
+    expect(k('loose').at - wordsIn).toBeLessThanOrEqual(500);
+    for (const c of scene.cues) if (!['ground', 'foot', 'footOutWords'].includes(c.k)) expect(c.at, c.k).toBeGreaterThanOrEqual(k('loose').at);
+    expect(k('loose').rise ?? k('loose').from ?? k('loose').move).toBeUndefined();
+    expect(cards.map((c) => c.at)).toEqual([...cards.map((c) => c.at)].sort((a, b) => a - b));
+    expect(cards[0].at).toBeGreaterThanOrEqual(k('loose').at + k('loose').dur!);
+    for (const c of cards) expect(c.rise ?? c.from ?? c.move).toBeUndefined();
+    // The disorder keeps its order and pace: friction outward, requests along it, what each group pays, more requests;
+    // a dumpster, and bills from all five in turn, each a little sooner than the last.
     friction.forEach((c, i) => {
-      expect(c.at).toBeGreaterThanOrEqual(cards[n - 1] + 350);
+      expect(c.at).toBeGreaterThanOrEqual(cards[n - 1].at + cards[n - 1].dur!);
       expect(c.draw).toBe(true);
-      expect(k(`rush-${i}`).at).toBeGreaterThan(c.at);
+      expect(rush[i].at).toBeGreaterThan(c.at);
     });
     const firstRound = rush.slice(0, n);
     const secondRound = rush.slice(n);
     const landedOnce = Math.max(...firstRound.map((r) => r.at + r.dur!));
     for (const e of effects) expect(e.at).toBeGreaterThanOrEqual(landedOnce);
     for (const r of secondRound) expect(r.at).toBeGreaterThanOrEqual(Math.max(...effects.map((e) => e.at)) + 350);
-    for (const round of [firstRound, secondRound]) for (let i = 1; i < n; i++) expect(round[i].at - round[i - 1].at).toBeGreaterThanOrEqual(150);
-    // Money is wasted for as long as the disorder lasts: a jobsite dumpster, then bills from the contractor and all four groups in turn.
-    const bin = k('bin');
-    expect(bin.at).toBeGreaterThanOrEqual(landedOnce);
-    expect([k('binBack').at, k('binBack').out, k('binBack').outDur]).toEqual([bin.at, bin.out, bin.outDur]);
-    // Everyone loses, the contractor included, and the contractor first: five parties, in launch order, round after round.
     expect([...TEAM_PARTIES]).toEqual(['gc', 0, 1, 2, 3]);
-    const stream = Array.from({ length: TEAM_WASTE_ROUNDS }, (_, r) => TEAM_PARTIES.map((who) => k(`bill-${who}-${r}`))).flat();
-    expect(stream).toHaveLength(TEAM_WASTE_ROUNDS * (n + 1));
-    // One at a time, never together; and the flow builds: each follows the last a little sooner.
-    const gaps = stream.slice(1).map((b, j) => b.at - stream[j].at);
+    expect(bills).toHaveLength(TEAM_WASTE_ROUNDS * (n + 1));
+    const gaps = bills.slice(1).map((b, j) => b.at - bills[j].at);
     for (const gap of gaps) expect(gap).toBeGreaterThanOrEqual(90);
     expect(gaps).toEqual([...gaps].sort((a, b) => b - a));
-    expect(gaps[gaps.length - 1]).toBeLessThan(gaps[0]);
-    expect(stream[0].at).toBeGreaterThan(bin.at);
-    stream.forEach((b, j) => {
-      const own = TEAM_PARTIES[j % TEAM_PARTIES.length] === 'gc';
-      // Slow enough to follow, on a curve, never a straight dash: over a second across the frame, a little less for the
-      // contractor's short fall.
-      expect(b.move).toBeUndefined();
-      expect(b.arc!.dur).toBeGreaterThanOrEqual(own ? 700 : 1000);
-      expect(b.arc!.at).toBeGreaterThan(b.at);
-      // It is not faded away in the air: it goes only once it has arrived, inside.
-      expect(b.out).toBe(b.arc!.at + b.arc!.dur);
-    });
-    // A steady drain, kept in hand: never more than about two from each party in the air at once.
-    for (let t = stream[0].at; t <= bin.out!; t += 50) expect(stream.filter((b) => t >= b.at && t < b.out!).length).toBeLessThanOrEqual(11);
-    // It runs through the disorder, alongside the second requests.
-    expect(stream[0].at).toBeLessThan(secondRound[0].at);
-    expect(stream[stream.length - 1].at).toBeGreaterThan(secondRound[n - 1].at);
-    // No new bill once the disorder is withdrawn; those in the air finish; then the dumpster goes, as the shield begins.
-    const lastLaunch = stream[stream.length - 1].at;
-    const lastLanded = Math.max(...stream.map((b) => b.out!));
-    expect(lastLaunch).toBeLessThan(k('loose').out!);
-    expect(lastLanded).toBeLessThanOrEqual(bin.out!);
-    expect(bin.out).toBeGreaterThanOrEqual(k('loose').out!);
-    expect(bin.out).toBeLessThanOrEqual(k('guard').at);
-    expect(bin.out! + bin.outDur!).toBeLessThan(k('shield').at);
-    // It is held, then withdrawn all at once. The four groups stay.
-    const rewind = k('loose').out!;
-    // Held, complete, long enough to take in: four seconds from the last request landing.
-    expect(rewind - Math.max(...rush.map((r) => r.at + r.dur!))).toBeGreaterThanOrEqual(3900);
-    expect(rewind).toBe(k('loose').out);
-    for (const c of [...rush, ...friction, ...effects, k('stateOut')]) expect(c.out).toBe(rewind);
-    // THE FOOT IS SCENERY (founder, 2026-11-12): one navy bar, in with the opening and never fading; only its words change.
-    const scene = buildOwnerScene('owner-protect-investment', 'desktop');
-    expect(k('foot').at).toBe(0);
-    expect(k('foot').out).toBeUndefined();
-    expect(k('foot').move ?? k('foot').rise).toBeUndefined();
-    for (let t = k('foot').at + k('foot').dur!; t <= scene.end + 5000; t += 50) expect(ownerStateAt(scene, t).foot.o).toBe(1);
-    expect(scene.cues.some((c) => c.k === 'footOut' || c.k === 'band')).toBe(false);
-    // The first state's words come in once the friction has been drawn, are read for at least three seconds, and go with
-    // the state; the second state's come in the same way, as it is named, and stay. Never both at once.
-    expect(k('footOutWords').at).toBeGreaterThanOrEqual(friction[0].at);
-    expect(k('footOutWords').rise).toBe(k('takeaway').rise);
-    expect(k('footOutWords').dur).toBe(k('takeaway').dur);
-    expect(k('footOutWords').out).toBe(rewind);
-    expect(rewind - (k('footOutWords').at + 350)).toBeGreaterThanOrEqual(3000);
-    expect(k('takeaway').at).toBeGreaterThan(k('footOutWords').out! + k('footOutWords').outDur!);
-    expect(k('takeaway').at).toBeGreaterThan(k('stateIn').at);
-    expect(k('takeaway').at - k('stateIn').at).toBeLessThanOrEqual(800);
-    expect(k('takeaway').out).toBeUndefined();
-    for (const i of idx) expect(k(`card-${i}`).out).toBeUndefined();
-    // 2. The shield is drawn around the contractor, calmly, on a clear frame; then it stands and the state is named again.
+    expect(bills[0].at).toBeGreaterThan(k('bin').at);
+    for (const b of bills) expect(b.out).toBe(b.arc!.at + b.arc!.dur);
+    // Complete once the last request has landed and the last bill is in; HELD, with nothing moving, 3 to 4 s.
+    const done1 = Math.max(...rush.map((r) => r.at + r.dur!), ...bills.map((b) => b.out! + b.outDur!));
+    const out1 = words1.out!;
+    expect(out1 - done1).toBeGreaterThanOrEqual(3000);
+    expect(out1 - done1).toBeLessThanOrEqual(4000);
+    // THEN IT FADES OUT AS ONE: every element of the scene, its words included, leaves at the same moment over the same
+    // 600 to 900 ms. The bar stays.
+    const scene1 = [words1, k('loose'), ...cards, ...friction, ...rush, ...effects, k('bin'), k('binBack')];
+    for (const c of scene1) {
+      expect([c.out, c.outDur], c.k).toEqual([out1, words1.outDur]);
+      expect(c.outTo ?? 0).toBe(0);
+    }
+    expect(words1.outDur).toBeGreaterThanOrEqual(600);
+    expect(words1.outDur).toBeLessThanOrEqual(900);
+    const clear = out1 + words1.outDur!;
+    const live = (t: number) => Object.entries(at(t)).filter(([key, st]) => !['ground', 'foot'].includes(key) && st.o > 0).map(([key]) => key);
+    expect(live(clear)).toEqual([]);
+
+    // SCENE 2. After a short beat on the clear frame, the same way: the words fade in; after a short pause, the shield is
+    // drawn and stands; then the four groups; then a level line reaches each, it settles, and value is kept.
+    const words2 = k('takeaway');
+    expect(words2.at - clear).toBeGreaterThanOrEqual(200);
+    expect(words2.at - clear).toBeLessThanOrEqual(500);
+    expect(words2.dur).toBe(words1.dur);
+    expect(words2.out).toBeUndefined();
+    for (const c of scene.cues) if (c.at > clear && c.k !== 'takeaway') expect(c.at, c.k).toBeGreaterThanOrEqual(words2.at + words2.dur! + 300);
     const guard = k('guard');
-    expect(guard.at).toBeGreaterThanOrEqual(rewind + 350);
+    expect(guard.at - (words2.at + words2.dur!)).toBeLessThanOrEqual(500);
     expect(guard.draw).toBe(true);
-    expect(guard.dur).toBeGreaterThanOrEqual(700);
-    expect(guard.from ?? guard.roll ?? guard.move).toBeUndefined();
     expect(k('shield').at).toBeGreaterThan(guard.at);
-    expect(k('shield').at).toBeLessThanOrEqual(guard.at + guard.dur!);
-    expect(k('stateIn').at).toBeGreaterThanOrEqual(k('shield').at + k('shield').dur!);
-    expect(k('stateIn').at).toBeGreaterThanOrEqual(k('stateOut').out! + 350);
-    // The same four are reached in turn by a level line, at an even pace, and each settles as it is reached.
+    expect(cardsIn[0].at).toBeGreaterThanOrEqual(k('shield').at + k('shield').dur!);
+    cardsIn.forEach((c, i) => {
+      expect(c.out).toBeUndefined();
+      if (i) expect(c.at).toBeGreaterThan(cardsIn[i - 1].at);
+    });
     const links = idx.map((i) => k(`link-${i}`));
     links.forEach((link, i) => {
-      expect(link.at).toBeGreaterThanOrEqual(k('stateIn').at + 350);
+      expect(link.at).toBeGreaterThanOrEqual(cardsIn[n - 1].at + cardsIn[n - 1].dur!);
       expect(k(`calm-${i}`).at).toBeGreaterThan(link.at);
       expect(k(`calm-${i}`).at).toBeLessThanOrEqual(link.at + link.dur!);
       if (i > 0) expect(link.at - links[i - 1].at).toBe(links[1].at - links[0].at);
     });
-    // Then value is protected: once every group is connected and calm, a small shield with a dollar sign settles beside each of
-    // the five, one by one, the contractor last; all of it well after the last bill and the dumpster have gone, and before the close.
+    expect(TEAM.map((t) => t.calm)).toEqual(['In control', 'Aligned', 'Coordinated', 'Ready']);
     const keeps = [...idx.map((i) => k(`keep-${i}`)), k('keep-gc')];
-    expect(keeps).toHaveLength(TEAM_PARTIES.length);
     keeps.forEach((c, j) => {
-      expect(c.at).toBeGreaterThanOrEqual(k(`calm-${n - 1}`).at + 350);
-      expect(c.at).toBeGreaterThan(k('bin').out! + k('bin').outDur! + 1000);
-      expect(c.out).toBeUndefined();
-      expect(c.from ?? c.roll ?? c.move ?? c.arc).toBeUndefined();
-      if (j > 0) expect(c.at - keeps[j - 1].at).toBeGreaterThanOrEqual(150);
+      expect(c.at).toBeGreaterThanOrEqual(k(`calm-${n - 1}`).at);
+      if (j) expect(c.at - keeps[j - 1].at).toBeGreaterThanOrEqual(150);
     });
-    // 3. The close: nothing is taken away. The second state, once whole, is held at least three seconds before it rests.
-    expect(scene.end).toBeGreaterThanOrEqual(18000);
-    expect(scene.end).toBeLessThanOrEqual(23000);
-    expect(scene.end - (keeps[keeps.length - 1].at + keeps[keeps.length - 1].dur!)).toBeGreaterThanOrEqual(3000);
-    // The first is withdrawn in a beat before the shield is drawn.
-    expect(guard.at - rewind).toBeGreaterThanOrEqual(500);
-    // The calm state is given at least as long on screen as the disorder was.
-    expect(scene.end - guard.at).toBeGreaterThanOrEqual(rewind - friction[0].at);
-    // At rest: the contractor in the shield, the four groups connected and calm, and the closing line. Nothing of the first state.
-    // Nothing has moved from where it is drawn, and nothing is enlarged.
-    const end = ownerStateAt(scene, 1e9);
-    const gone = /^(rush|friction|effect|bill)-|^(loose|stateOut|footOutWords|bin|binBack)$/;
-    for (const c of scene.cues) {
-      expect(end[c.k].o, c.k).toBe(gone.test(c.k) ? 0 : 1);
-      if (!gone.test(c.k)) expect([end[c.k].mx, end[c.k].my, end[c.k].rot, end[c.k].sc], c.k).toEqual([0, 0, 0, 1]);
-    }
+    // Held, complete, at least 3 s, and it rests there: the visual plays once and does not restart, so the outcome is its
+    // last frame (and reduced motion's). Its words are on the bar throughout scene 2.
+    const done2 = Math.max(...scene.cues.map((c) => c.at + (c.dur ?? 350)));
+    expect(scene.end - done2).toBeGreaterThanOrEqual(3000);
+    for (let t = words2.at + words2.dur!; t <= scene.end + 5000; t += 50) expect(at(t).takeaway.o).toBe(1);
+    // The words are blank only at the very start (before the first fade) and in the short beat between scenes.
+    let blank = 0;
+    for (let t = wordsIn; t <= scene.end; t += 10) if (at(t).footOutWords.o + at(t).takeaway.o < 0.05) blank += 10;
+    expect(blank).toBeLessThanOrEqual(words1.outDur! / 2 + 500 + words2.dur! / 2);
+    expect(scene.end).toBeLessThanOrEqual(26000);
   });
 
   it('Protect your investment: the Hero\'s house render sits whole behind the picture, its foot on the closing band', () => {
@@ -860,147 +811,268 @@ describe('Project Owners visuals: one clock each', () => {
     }
   });
 
-  it('More predictability: field dates, then their procurement, then each owner decision on its own date, then the advance notice', () => {
+  it('More predictability: one aircraft on one stable approach; the projected finish narrows into the planned finish as each waypoint appears; it lands there', () => {
     const k = (key: string) => cueAt('owner-predictability', key);
-    const n = OWNER_DECISIONS.length;
-    for (let i = 0; i < n; i++) {
-      const order = [k(`site-${i}`).at, k(`chain-${i}`).at, k(`window-${i}`).at, k(`decide-${i}`).at, k(`notice-${i}`).at];
-      expect(order).toEqual([...order].sort((a, b) => a - b));
-      // The decisions are revealed one after another, not together.
-      if (i > 0) expect(k(`decide-${i}`).at - k(`decide-${i - 1}`).at).toBeGreaterThanOrEqual(400);
+    const scene = buildOwnerScene('owner-predictability', 'desktop');
+    const g = landingGeometry('desktop');
+    const at = (t: number) => ownerStateAt(scene, t);
+    // The founder's words, exactly (2026-11-13); no promise, no amount.
+    expect(LANDING_FOOT).toEqual({ head: 'Better procurement planning helps your project stay on course.', support: 'More predictable schedules. Better cost control. Greater confidence in the finish.' });
+    expect(OWNER_TAKEAWAY['owner-predictability']).toBe(LANDING_FOOT.head);
+    expect(LANDING_WORDS.gates).toEqual(['Requirements identified', 'Commitments scheduled', 'Deliveries coordinated']);
+    expect(LANDING_WORDS.forecast).toBe('Projected finish');
+    expect(LANDING_WORDS.target).toBe('Planned completion zone');
+    expect(LANDING_WORDS.delayLines.join(' · ').toLowerCase()).toBe(LANDING_WORDS.delay.toLowerCase());
+    const words = [...Object.values(LANDING_FOOT), LANDING_WORDS.target, LANDING_WORDS.delay, LANDING_WORDS.forecast, ...LANDING_WORDS.gates, ...LANDING_WORDS.gatesShort].join(' | ');
+    expect(words).not.toMatch(/\d|\$|%|guarantee|always|never|eliminate|crash/i);
+    // ONE of each: one aircraft, one approach, one runway, one planned finish.
+    for (const key of ['plane', 'glide', 'runway', 'target', 'delay']) expect(scene.cues.filter((c) => c.k === key)).toHaveLength(1);
+    // The foot and its words are there from the first frame and never change: never blank.
+    for (const key of ['foot', 'takeaway']) expect([k(key).at, k(key).dur, k(key).out]).toEqual([0, 0, undefined]);
+    for (let t = 0; t <= scene.end + 5000; t += 50) {
+      expect(at(t).foot.o).toBe(1);
+      expect(at(t).takeaway.o).toBe(1);
     }
-    expect(k(`site-${n - 1}`).at).toBeLessThan(k('chain-0').at);
-    expect(k(`chain-${n - 1}`).at).toBeLessThan(k('window-0').at);
-    expect(k('legend').at).toBeGreaterThan(k(`decide-${n - 1}`).at);
+    // A STABLE APPROACH: one even curve from the start to touchdown, along the planned approach; never above or below it.
+    const fly = k('fly').arc!;
+    expect(fly.even).toBe(true);
+    const pos = (t: number) => {
+      const st = at(t);
+      return { x: g.start.x + st.fly.mx + st.roll.mx + st.settle.mx, y: g.start.y + st.fly.my + st.roll.my + st.settle.my, rot: st.fly.rot + st.roll.rot + st.settle.rot };
+    };
+    let last = pos(fly.at);
+    let pace = 0;
+    for (let t = fly.at + 20; t <= fly.at + fly.dur; t += 20) {
+      const p = pos(t);
+      expect(Math.abs(p.y - g.approachY(p.x)), `on the approach at ${t}`).toBeLessThan(0.5);
+      // Forward and down, at a steady pace: no stops, no sudden changes.
+      expect(p.x).toBeGreaterThan(last.x);
+      expect(p.y).toBeGreaterThanOrEqual(last.y - 1e-9);
+      const v = p.x - last.x;
+      if (pace) expect(Math.abs(v - pace)).toBeLessThan(pace * 0.25);
+      pace = v;
+      last = p;
+    }
+    // A shallow approach: no steeper than about 25 degrees anywhere, and flatter at the flare than at the start.
+    const slope = (x: number) => (g.approachY(x + 1) - g.approachY(x - 1)) / 2;
+    for (let x = g.start.x + 2; x < g.touchdown.x - 2; x += 2) expect(Math.atan(slope(x)) * (180 / Math.PI)).toBeLessThanOrEqual(26);
+    expect(slope(g.touchdown.x - 4)).toBeLessThan(slope(g.start.x + 4));
+    // A gentle flare: the nose lifts three degrees by touchdown; on the main gear first, the nose settles within a second.
+    expect(pos(fly.at + fly.dur).rot).toBeCloseTo(-3, 6);
+    const settle = k('settle').move!;
+    expect(settle.at).toBe(fly.at + fly.dur);
+    expect(settle.dur).toBeLessThanOrEqual(1000);
+    expect(pos(settle.at + settle.dur).rot).toBeCloseTo(0, 6);
+    expect(pos(scene.end).rot).toBeCloseTo(0, 6);
+    // Wheels stay on the runway from touchdown to the stop.
+    for (let t = fly.at + fly.dur; t <= scene.end; t += 25) expect(pos(t).y).toBeCloseTo(g.runway.y, 6);
+    // The rollout sets off at the approach's own pace and slows to rest.
+    const roll = k('roll').move!;
+    expect(roll.ease).toBe('out');
+    expect(roll.at).toBe(fly.at + fly.dur);
+    const rollStart = (pos(roll.at + 20).x - pos(roll.at).x) / 20;
+    const flyEnd = (pos(roll.at).x - pos(roll.at - 20).x) / 20;
+    expect(Math.abs(rollStart - flyEnd)).toBeLessThan(flyEnd * 0.35);
+    // THE FORECAST: wide and red in the added-cost zone at first; after each waypoint narrower and nearer the planned finish;
+    // inside it, amber, at the last.
+    const F = g.forecast;
+    expect(F[0].x - F[0].w / 2).toBeGreaterThanOrEqual(g.delay.x0);
+    expect(F[3].x - F[3].w / 2).toBeGreaterThanOrEqual(g.target.x0);
+    expect(F[3].x + F[3].w / 2).toBeLessThanOrEqual(g.target.x1);
+    F.forEach((f, i) => {
+      if (!i) return;
+      expect(f.w).toBeLessThan(F[i - 1].w);
+      expect(f.x).toBeLessThan(F[i - 1].x);
+    });
+    g.gates.forEach((gate, i) => {
+      // Each waypoint lies on the approach, appears ahead of the aircraft, and the forecast moves with it, as one eased move.
+      expect(gate.y).toBeCloseTo(g.approachY(gate.x), 6);
+      const appear = k(`gate-${i}`).at;
+      const pass = k(`pass-${i}`).at;
+      expect(pass - appear).toBeGreaterThanOrEqual(1200);
+      expect(pos(appear).x).toBeLessThan(gate.x);
+      expect(Math.abs(pos(pass).x - gate.x)).toBeLessThan(2);
+      const move = k(`f-${i}`).move!;
+      const narrow = k(`fw-${i}`).move!;
+      expect([move.at, narrow.at, move.dur]).toEqual([appear, appear, narrow.dur]);
+      expect(move.dx).toBeCloseTo(F[i + 1].x - F[i].x, 6);
+      expect(narrow.scaleX).toBeCloseTo(F[i + 1].w / F[i].w, 9);
+      if (i) expect(appear).toBeGreaterThan(k(`gate-${i - 1}`).at + move.dur);
+    });
+    // Its centre and width, followed through the story: continuous, and only ever narrowing and moving toward the target.
+    let prev = { x: Infinity, w: Infinity };
+    for (let t = 0; t <= scene.end; t += 25) {
+      const st = at(t);
+      const x = F[0].x + [0, 1, 2].reduce((n, i) => n + st[`f-${i}`].mx, 0);
+      const wNow = F[0].w * [0, 1, 2].reduce((n, i) => n * st[`fw-${i}`].sx, 1);
+      expect(x).toBeLessThanOrEqual(prev.x + 1e-9);
+      expect(wNow).toBeLessThanOrEqual(prev.w + 1e-9);
+      prev = { x, w: wNow };
+    }
+    expect(prev.x).toBeCloseTo(F[3].x, 6);
+    expect(prev.w).toBeCloseTo(F[3].w, 6);
+    // Red until the last waypoint brings it inside, then amber, read there for at least half a second; its words give way as
+    // the aircraft passes the last waypoint, and its band, on the planned finish, as the aircraft touches down on it.
+    expect(k('forecastLate').out).toBe(k('forecastOn').at);
+    expect(k('forecastOn').at).toBeGreaterThanOrEqual(k('gate-2').at);
+    expect(k('forecastLabel').out! - (k('f-2').move!.at + k('f-2').move!.dur)).toBeGreaterThanOrEqual(500);
+    expect(k('forecastLabel').out).toBe(k('pass-2').at);
+    expect(k('forecast').out).toBe(roll.at + roll.dur);
+    // THE RUNWAY: a long planned completion zone, then a boundary, then the overrun.
+    const zone = g.target.x1 - g.target.x0;
+    expect(zone).toBeGreaterThanOrEqual(2 * (g.planeSpan.back + g.planeSpan.front) * 0.85);
+    expect(g.boundary.x).toBeGreaterThan(g.target.x1);
+    expect(g.boundary.x).toBeLessThan(g.delay.x0);
+    // It lands: the main gear touches down in the first third of the planned zone; it rolls out and comes to a complete
+    // stop wholly inside the zone, with runway left (at least a fifth of the zone) before the boundary; it never reaches
+    // the overrun.
+    expect(g.touchdown.x).toBeGreaterThan(g.target.x0);
+    expect(g.touchdown.x).toBeLessThanOrEqual(g.target.x0 + zone / 3);
+    const rest = pos(scene.end);
+    expect(rest.x).toBeCloseTo(g.rollout.x, 6);
+    expect(rest.y).toBeCloseTo(g.runway.y, 6);
+    expect(rest.x - g.planeSpan.back).toBeGreaterThanOrEqual(g.target.x0);
+    expect(g.target.x1 - (rest.x + g.planeSpan.front)).toBeGreaterThanOrEqual(zone / 5);
+    for (let t = 0; t <= scene.end; t += 25) expect(pos(t).x + g.planeSpan.front).toBeLessThan(g.boundary.x);
+    // It decelerates smoothly to a stop: never faster than at touchdown, slower and slower, and still at the end.
+    let v0 = Infinity;
+    for (let t = roll.at; t < roll.at + roll.dur; t += 50) {
+      const v = pos(t + 50).x - pos(t).x;
+      expect(v).toBeLessThanOrEqual(v0 + 1e-9);
+      expect(v).toBeGreaterThanOrEqual(0);
+      v0 = v;
+    }
+    expect(pos(roll.at + roll.dur + 500).x).toBeCloseTo(pos(roll.at + roll.dur).x, 9);
+    // The stop marker comes in as it stops; the forecast's band, under the stopping point, gives way then.
+    expect(k('stop').at).toBe(roll.at + roll.dur);
+    expect(g.forecast[3].x).toBeCloseTo(g.rollout.x, 6);
+    expect(k('landed').at).toBeGreaterThanOrEqual(roll.at + roll.dur);
+    const end = at(scene.end);
+    for (const key of ['landed', 'stop', 'target', 'aim', 'boundary', 'targetLabel', 'delay', 'glide', ...g.gates.map((_, i) => `pass-${i}`)]) expect(end[key].o, key).toBe(1);
+    expect(end.forecast.o).toBe(0);
+    expect(end.forecastLabel.o).toBe(0);
   });
 
-  it('Better decisions: one continuous story; the line and six options travel together, keep all six at the early stop, and two at the late one', () => {
+  it('Better decisions: 3 known choices, 3 discovered one at a time, 6 viable, 4 lost one at a time, 2 remain; then the close', () => {
     const k = (key: string) => cueAt('owner-better-decisions', key);
     const scene = buildOwnerScene('owner-better-decisions', 'desktop');
-    const g = choiceGeometry('desktop');
+    const g = windowGeometry('desktop');
     const at = (t: number) => ownerStateAt(scene, t);
-    // The words: the founder's messages and feet.
-    expect(CHOICE_FOOT.in).toEqual({ head: 'Early planning preserves your choices.', support: 'More options. Better decisions.' });
-    expect(CHOICE_FOOT.out).toEqual({ head: 'Late planning limits your choices.', support: 'Less time. Fewer options. More pressure.' });
-    expect(CHOICE_TIMED).toEqual({
-      head: 'Correctly timed decisions protect your options.',
-      support: 'JiTpro helps your contractor identify what decisions are needed, when they are needed, and why the timing matters.',
+    // The founder's words, exactly (2026-11-13).
+    expect(WINDOW_STAGES.early).toEqual({ heading: 'Information still developing', foot: { head: 'Premature decisions can limit your choices.', support: 'Incomplete information. Unnecessary commitments.' } });
+    expect(WINDOW_STAGES.right).toEqual({ heading: 'The right time to decide', foot: { head: 'The right timing preserves your choices.', support: 'Enough information. Enough time. Better decisions.' } });
+    expect(WINDOW_STAGES.late).toEqual({ heading: 'Options become limited', foot: { head: 'Delayed decisions can eliminate your options.', support: 'Less time. Fewer choices. Greater pressure.' } });
+    expect(WINDOW_CLOSE).toBe('Correctly timed information and decisions protect your options.');
+    expect(WINDOW_CLOSE_SUPPORT).toBe('JiTpro helps your contractor plan early and communicate exactly when decisions are needed.');
+    expect(OWNER_TAKEAWAY['owner-better-decisions']).toBe(WINDOW_CLOSE);
+    expect(WINDOW_WORDS).toEqual({
+      now: 'Now',
+      time: 'Time passes',
+      zones: ['Too early', 'Right time', 'Too late'],
+      choice: 'Choice',
+      known: 'Known options',
+      six: 'Six viable options',
+      two: 'Only two viable options remain',
+      found: 'New option discovered',
     });
-    expect(OWNER_TAKEAWAY['owner-better-decisions']).toBe(CHOICE_TIMED.head);
-    expect(CHOICE_WORDS.early).toBe('Decision identified early');
-    expect(CHOICE_WORDS.late).toBe('Decision identified late');
-    expect([CHOICE_WORDS.more, CHOICE_WORDS.time]).toEqual(['More options', 'Time passes']);
-    expect(Object.values(CHOICE_WORDS).join(' | ')).not.toMatch(/\d|\$|%|funnel|tile|finish|material|guarantee|always|never/i);
-    // The cone is drawn once, before anything moves, and does not move.
-    const drawn = ['ground', 'cone', 'wall-top', 'wall-bottom', 'axis', 'time', 'more', 'foot'];
-    const SHOWN = k('line').at;
-    for (const key of drawn) {
-      expect(k(key).at + (k(key).dur ?? 350), key).toBeLessThanOrEqual(SHOWN);
-      expect(k(key).move, key).toBeUndefined();
+    // Why each is lost, in order (founder, 2026-11-13): no generic callout remains.
+    expect(WINDOW_LOSS_REASONS).toEqual(['Lead time too long', 'Production slot lost', 'Price no longer viable', 'Approval time exhausted']);
+    expect(Object.values(WINDOW_WORDS).flat().join(' | ')).not.toMatch(/no longer (viable|available)/i);
+    expect(g.cards.map((_, j) => `${g.name(j).word} ${g.name(j).letter}`)).toEqual(['Choice 1', 'Choice 2', 'Choice 3', 'Choice 4', 'Choice 5', 'Choice 6']);
+
+    // The states at the three stops: three known (the others not drawn at all); six; two, four lost.
+    const count = (when: 'early' | 'right' | 'late', state: string) => g.stop(when).states.filter((x) => x === state).length;
+    expect(g.stop('early').states).toEqual(['available', 'available', 'available', 'undiscovered', 'undiscovered', 'undiscovered']);
+    expect([count('right', 'available'), count('right', 'unavailable')]).toEqual([6, 0]);
+    expect([count('late', 'available'), count('late', 'unavailable')]).toEqual([2, 4]);
+    // Lost one at a time, in place, as the corridor narrows: Choices 6, 1, 5, 2; Choices 3 and 4 remain.
+    expect(g.changes.map((c) => [c.option + 1, c.to])).toEqual([[6, 'unavailable'], [1, 'unavailable'], [5, 'unavailable'], [2, 'unavailable']]);
+    expect(g.stop('late').states.map((x, j) => (x === 'available' ? j + 1 : 0)).filter(Boolean)).toEqual([3, 4]);
+    for (const c of g.changes) expect(c.x).toBeGreaterThan(g.shape.peak);
+    g.changes.forEach((c, n) => n && expect(c.x - g.changes[n - 1].x).toBeGreaterThanOrEqual(8));
+
+    // An undiscovered choice is not on the picture: nothing of it is drawn until it is found.
+    for (const j of [3, 4, 5]) {
+      const found = k(`card-${j}`).at;
+      for (let t = 0; t < found; t += 50) for (const key of [`card-${j}`, `glow-${j}`, `found-${j}`]) expect(at(t)[key].o, `${key} at ${t}`).toBe(0);
     }
-    // The sheet and the foot's bar (founder, 2026-11-12) never go: once in, the bar stays to the end; only its words change.
-    for (const key of ['ground', 'foot']) expect(k(key).out, key).toBeUndefined();
-    for (let t = k('foot').at + k('foot').dur!; t <= scene.end + 5000; t += 50) expect(at(t).foot.o).toBe(1);
-    expect(scene.cues.some((c) => c.k === 'footIn' || c.k === 'footOut')).toBe(false);
-    // ONE GROUP: the line and the six cards are moved by the same two cues, so they cannot part; nothing else moves them.
-    const cards = g.cards.map((_, j) => `card-${j}`);
-    for (const key of ['line', ...cards]) expect(k(key).move, key).toBeUndefined();
-    const run1 = k('now').move!;
-    const run2 = k('nowOn').move!;
-    const early = g.stop('early');
-    const late = g.stop('late');
-    expect(g.start.x + run1.dx).toBeCloseTo(early.x);
-    expect(g.start.x + run1.dx + run2.dx).toBeCloseTo(late.x);
-    expect(run2.at).toBeGreaterThan(run1.at + run1.dur + 4000);
-    expect(run2.dur).toBeGreaterThanOrEqual(4500);
-    // Shown at the mouth, all six, before time passes; the column never closes up.
-    for (const key of ['line', ...cards]) expect(k(key).at + k(key).dur!, key).toBeLessThanOrEqual(run1.at);
-    for (let j = 1; j < g.cards.length; j++) expect(g.cards[j].y - g.cards[j - 1].y).toBeCloseTo(g.cards[1].y - g.cards[0].y);
-    // THE CONE DECIDES: at the early stop it holds all six (timed properly, nothing lost); at the late stop, two.
-    // Early: about a quarter of the way along the cone. Late: 85 to 90% of the way.
-    const along = (x: number) => (x - g.cone.x0) / (g.cone.x1 - g.cone.x0);
-    expect(along(early.x)).toBeCloseTo(0.25, 1);
-    expect(along(late.x)).toBeGreaterThanOrEqual(0.85);
-    expect(along(late.x)).toBeLessThanOrEqual(0.9);
-    expect(early.open).toBe(CHOICE_COUNT);
-    expect(late.open).toBe(2);
-    expect(g.lost).toHaveLength(CHOICE_COUNT - 2);
-    // Each is lost, from the outside in, at the moment the moving group reaches the point where the cone stops holding it.
-    const offs = g.lost.map((l) => k(`off-${l.option}`));
-    const outside = (j: number) => Math.abs(g.cards[j].y - g.cone.cy);
-    offs.forEach((c, i) => {
-      const l = g.lost[i];
-      expect(l.x).toBeGreaterThan(early.x);
-      expect(l.x).toBeLessThanOrEqual(late.x);
-      expect(c.at).toBeGreaterThan(run2.at);
-      expect(c.at).toBeLessThanOrEqual(run2.at + run2.dur);
-      expect(at(c.at).nowOn.mx / run2.dx).toBeCloseTo((l.x - early.x) / (late.x - early.x), 1);
-      // From the outside in, one at a time: each alternative has its own latest viable moment.
-      if (i) {
-        expect(outside(l.option)).toBeLessThan(outside(g.lost[i - 1].option));
-        expect(c.at - offs[i - 1].at).toBeGreaterThanOrEqual(250);
-      }
+    expect(scene.cues.some((c) => /^prov-/.test(c.k))).toBe(false);
+    for (const j of [0, 1, 2]) expect(k(`card-${j}`).at).toBeLessThan(3000);
+
+    // The group moves in legs, the marker and the stack together, and stops at each discovery and each loss.
+    const legs = scene.cues.filter((c) => /^leg-/.test(c.k));
+    expect(legs).toHaveLength(g.discover.length + 1 + g.changes.length + 1);
+    legs.forEach((l, n) => {
+      expect(l.move!.dx).toBeGreaterThan(0);
+      if (n) expect(l.move!.at).toBeGreaterThan(legs[n - 1].move!.at + legs[n - 1].move!.dur);
     });
-    // Identifying early is not deciding early: no choice is shown being made.
-    expect(scene.cues.some((c) => /chosen|tick|pick/.test(c.k))).toBe(false);
-    const open = g.cards.map((_, j) => j).filter((j) => !g.lost.some((l) => l.option === j));
-    expect(open).toEqual([2, 3]);
-    // Lost options stay seen: the card is never withdrawn before the story is, and the cross is laid over it.
-    for (const l of g.lost) expect(k(`card-${l.option}`).out).toBe(k(`off-${l.option}`).out);
-    // The early stop: its message and foot once the group is there, held about four seconds, gone before it moves on.
-    expect(k('msgEarly').at).toBeGreaterThanOrEqual(run1.at + run1.dur);
-    expect(k('footInWords').at).toBeGreaterThan(k('msgEarly').at);
-    expect(k('msgEarly').out!).toBeLessThanOrEqual(run2.at);
-    // Each stop is held four to five and a half seconds from the moment the group arrives.
-    expect(k('msgEarly').out! - (run1.at + run1.dur)).toBeGreaterThanOrEqual(4000);
-    expect(k('msgEarly').out! - (run1.at + run1.dur)).toBeLessThanOrEqual(5500);
-    // The late stop: the pressure as the cone narrows; then its message and foot, held.
-    expect(k('pressure').at).toBeGreaterThan(run2.at);
-    expect(k('msgLate').at).toBeGreaterThanOrEqual(run2.at + run2.dur);
-    expect(k('footOutWords').at).toBeGreaterThan(k('msgLate').at);
-    // The foot's words cross over at the late stop: the first line goes as the second comes, with no gap and no overlap
-    // long enough to read both.
-    const inGone = k('footInWords').out! + k('footInWords').outDur!;
-    expect(k('footInWords').out!).toBeGreaterThanOrEqual(run2.at + run2.dur);
-    expect(k('footOutWords').at).toBeGreaterThanOrEqual(k('footInWords').out!);
-    expect(k('footOutWords').at).toBeLessThanOrEqual(inGone);
-    // PLAYED ONCE (founder, 2026-11-12): the late stop is complete once its foot words are in; it is held about a second;
-    // then the whole illustration fades away together, smoothly, while the bar stays.
-    const lateDone = k('footOutWords').at + k('footOutWords').dur!;
-    const story = ['cone', 'wall-top', 'wall-bottom', 'axis', 'time', 'more', 'line', 'pressure', 'msgLate', ...cards, ...offs.map((c) => c.k)];
-    const fade = k('msgLate').out!;
-    for (const key of story) {
-      expect(k(key).out, key).toBe(fade);
-      expect(k(key).outDur, key).toBe(k('msgLate').outDur);
+    const stops = [g.stop('early').x];
+    for (const l of legs) stops.push(stops[stops.length - 1] + l.move!.dx);
+    expect(stops.map((x) => Math.round(x))).toEqual([g.stop('early').x, ...g.discover, g.stop('right').x, ...g.changes.map((c) => c.x), g.stop('late').x].map((x) => Math.round(x)));
+    const groupX = (t: number) => g.stop('early').x + legs.reduce((sum, l) => sum + at(t)[l.k].mx, 0);
+
+    // Each discovery, one at a time, while the group stands still: the card arrives as the stack moves up half a step;
+    // an amber outline and *New option discovered*; read at least half a second; then the callout and outline go and the card stays.
+    const discoveries = [3, 4, 5].map((j) => ({ j, card: k(`card-${j}`), glow: k(`glow-${j}`), note: k(`found-${j}`), shift: k(`shift-${j}`) }));
+    discoveries.forEach((d, n) => {
+      expect(d.shift.move).toMatchObject({ at: d.card.at, dx: 0, dy: -g.stackStep });
+      expect(Math.abs(groupX(d.card.at) - g.discover[n])).toBeLessThan(0.01);
+      expect(groupX(d.note.out! + d.note.outDur!)).toBeCloseTo(g.discover[n], 6);
+      expect(d.note.at).toBeGreaterThanOrEqual(d.card.at);
+      expect(d.note.out! - (d.note.at + d.note.dur!)).toBeGreaterThanOrEqual(500);
+      expect([d.glow.out, d.glow.outDur]).toEqual([d.note.out, d.note.outDur]);
+      expect(d.card.out).toBe(k('card-0').out);
+      if (n) expect(d.card.at).toBeGreaterThan(discoveries[n - 1].note.out! + discoveries[n - 1].note.outDur!);
+    });
+    // The known label goes with the first discovery; six viable at the right time; two remain at the end.
+    expect(k('statusKnown').out).toBe(discoveries[0].card.at);
+    const right = k('headRight');
+    expect(k('statusSix').at).toBeGreaterThan(right.at);
+    expect(k('statusSix').at).toBeGreaterThan(discoveries[2].note.out!);
+    // The right time is held 4 to 5 s, the longest hold.
+    const lossLegs = legs.slice(g.discover.length + 1);
+    const held = lossLegs[0].move!.at - legs[g.discover.length].move!.at - legs[g.discover.length].move!.dur;
+    expect(held).toBeGreaterThanOrEqual(4000);
+    expect(held).toBeLessThanOrEqual(5000);
+
+    // Each loss, one at a time, while the group stands at the point where the choice no longer fits: a red outline and its
+    // reason; read 0.5 to 0.8 s; the red X; the reason and outline go; the card stays, crossed out.
+    const losses = g.changes.map((c) => ({ c, warn: k(`warn-${c.option}`), note: k(`lost-${c.option}`), off: k(`off-${c.option}`) }));
+    losses.forEach((l, n) => {
+      expect(Math.abs(groupX(l.warn.at) - l.c.x)).toBeLessThan(0.01);
+      expect(groupX(l.note.out! + l.note.outDur!)).toBeCloseTo(l.c.x, 6);
+      expect(l.off.at - (l.note.at + l.note.dur!)).toBeGreaterThanOrEqual(500);
+      expect(l.off.at - (l.note.at + l.note.dur!)).toBeLessThanOrEqual(800);
+      expect(l.note.out).toBeGreaterThanOrEqual(l.off.at + l.off.dur!);
+      expect([l.warn.out, l.warn.outDur]).toEqual([l.note.out, l.note.outDur]);
+      expect(l.off.out).toBe(k('card-0').out);
+      if (n) expect(l.warn.at).toBeGreaterThan(losses[n - 1].note.out! + losses[n - 1].note.outDur!);
+    });
+    expect(k('statusTwo').at).toBeGreaterThan(losses[losses.length - 1].note.out!);
+    expect(k('takeaway').at - k('headLate').at).toBeGreaterThanOrEqual(4000);
+
+    // The window comes in on the last leg into it; the haze clears on the way in; the risk comes on only on the way out.
+    const intoWindow = legs[g.discover.length];
+    expect(k('window').at).toBe(intoWindow.move!.at);
+    expect(k('haze').out).toBe(legs[0].move!.at);
+    expect(k('pressure').at).toBeGreaterThan(lossLegs[0].move!.at);
+    // The foot: the bar never leaves; only its words change, one set at a time.
+    expect(k('foot').out).toBeUndefined();
+    const feet = ['footEarly', 'footRight', 'footLate', 'takeaway'];
+    for (let t = k('footEarly').at; t <= scene.end; t += 50) {
+      expect(at(t).foot.o).toBe(1);
+      expect(feet.filter((f) => at(t)[f].o > 0.5).length).toBeLessThanOrEqual(1);
     }
-    expect(fade - lateDone).toBeGreaterThanOrEqual(800);
-    expect(fade - lateDone).toBeLessThanOrEqual(1300);
-    expect(k('msgLate').outDur!).toBeGreaterThanOrEqual(700);
-    const cleared = fade + k('msgLate').outDur!;
-    // The group's carriers only move it; they never fade, so nothing fades twice over.
-    for (const key of ['now', 'nowOn']) expect(k(key).out, key).toBeUndefined();
-    // The late foot words stay while the cone fades, and are gone before the close begins.
-    expect(k('footOutWords').out!).toBeGreaterThan(fade);
-    const lateWordsGone = k('footOutWords').out! + k('footOutWords').outDur!;
-    expect(lateWordsGone).toBeLessThanOrEqual(cleared + 200);
-    // The close: correctly timed decisions. Only once the frame is clear: the six options again, all open, one after
-    // another; then the line about JiTpro; last, the closing line on the foot. Nothing is crossed out; nothing leaves.
-    const timed = g.cards.map((_, j) => k(`timed-${j}`));
-    timed.forEach((c, j) => {
-      expect(c.at, c.k).toBeGreaterThanOrEqual(cleared);
-      expect(c.at).toBeGreaterThanOrEqual(lateWordsGone);
-      expect(c.out, c.k).toBeUndefined();
-      if (j) expect(c.at).toBeGreaterThan(timed[j - 1].at);
-    });
-    expect(k('timedWords').at).toBeGreaterThan(timed[timed.length - 1].at);
-    expect(k('takeaway').at).toBeGreaterThan(k('timedWords').at);
-    expect(scene.end).toBeGreaterThanOrEqual(20000);
-    expect(scene.end).toBeLessThanOrEqual(26000);
-    // It rests on the close, which reduced motion shows at once: the bar, its closing line, the six options and the line
-    // about JiTpro; none of the cone's story.
+    // No choice is made: no selection, no check mark.
+    expect(scene.cues.some((c) => /select|check|chosen/.test(c.k))).toBe(false);
+    // It rests on the close, which reduced motion shows at once: the corridor, its window and stage names, the six choices
+    // all available, and the closing line; none of the moving group, its labels, the callouts, the headings or the risk.
     const rest = at(scene.end);
-    for (const key of ['ground', 'foot', 'takeaway', 'timedWords', ...timed.map((c) => c.k)]) expect(rest[key].o, key).toBe(1);
-    for (const key of [...story, 'msgEarly', 'footInWords', 'footOutWords']) expect(rest[key].o, key).toBe(0);
+    for (const key of ['ground', 'cone', 'window', 'zones', 'axis', 'foot', 'takeaway', ...g.cards.map((_, j) => `rest-${j}`)]) expect(rest[key].o, key).toBe(1);
+    for (const key of ['marker', 'pressure', 'haze', 'headEarly', 'headRight', 'headLate', 'footEarly', 'footRight', 'footLate', 'statusKnown', 'statusSix', 'statusTwo', ...g.cards.map((_, j) => `card-${j}`)])
+      expect(rest[key].o, key).toBe(0);
+    for (const c of g.changes) for (const key of [`off-${c.option}`, `warn-${c.option}`, `lost-${c.option}`]) expect(rest[key].o, key).toBe(0);
+    expect(k('rest-0').at).toBeGreaterThanOrEqual(k('marker').out! + k('marker').outDur!);
   });
 });
 
@@ -1071,8 +1143,8 @@ describe('Project Owners visuals: composed for the frame', () => {
         return { x0: Math.min(...pts.map((pt) => pt.x)), y0: Math.min(...pts.map((pt) => pt.y)), x1: Math.max(...pts.map((pt) => pt.x)), y1: Math.max(...pts.map((pt) => pt.y)) };
       };
       const fs = d ? { name: 10, icon: 18, pad: 10, state: 9 } : { name: 8, icon: 12, pad: 7, state: 7.5 };
-      const header = textWidth(TEAM_STATES.out, fs.state, { caps: true, tracking: 0.12 });
-      const words: Box[] = [{ x0: w / 2 - header / 2, y0: g.stateY - fs.state * 0.75, x1: w / 2 + header / 2, y1: g.stateY + 1 }];
+      // No heading names the state (founder, 2026-11-13); the words checked are the cards' and what lands on them.
+      const words: Box[] = [];
       g.at.forEach((p, i) => {
         const left = g.onLeft(i);
         const edge = left ? p.x + fs.pad : p.x + g.card.w - fs.pad;
@@ -1146,7 +1218,13 @@ describe('Project Owners visuals: composed for the frame', () => {
       expect(B.supportY - B.headY).toBeGreaterThanOrEqual(B.support * 1.5);
       expect(B.supportY).toBeLessThanOrEqual(h - 8);
       expect(B.head).toBeGreaterThan(B.support * 1.3);
-      expect(OWNER_TAKEAWAY['owner-protect-investment'].length * B.head * 0.56).toBeLessThanOrEqual(w - 12);
+      // Each line of the foot fits on one line, at one size: the band's own, or a half-point step smaller where the
+      // founder's longer line needs it (2026-11-13), never much smaller.
+      const size = teamFootHead(mode);
+      expect(size).toBeLessThanOrEqual(B.head);
+      expect(size).toBeGreaterThanOrEqual(B.head * 0.9);
+      for (const line of [TEAM_FOOT.out.head, TEAM_FOOT.in.head]) expect(textWidth(line, size)).toBeLessThanOrEqual(w - 16);
+      for (const line of [TEAM_FOOT.out.support, TEAM_FOOT.in.support]) expect(textWidth(line, B.support)).toBeLessThanOrEqual(w - 16);
     });
 
     it(`${mode}: Reduce risk spreads three documents across the frame, rests the dice in the middle, and piles the notices either side of them`, () => {
@@ -1276,15 +1354,86 @@ describe('Project Owners visuals: composed for the frame', () => {
       expect(g.stage.inset).toBeLessThan(margin);
     });
 
-    it(`${mode}: Better decisions sets the cone between the messages and the band, the options apart, and every word clear`, () => {
-      const g = choiceGeometry(mode);
+    it(`${mode}: More predictability sets the runway above the band, its zones labelled, and every word clear of the approach and the aircraft`, () => {
+      const g = landingGeometry(mode);
+      const T = g.type;
+      type Box = { x0: number; y0: number; x1: number; y1: number; name: string };
+      const text = (name: string, x: number, base: number, words: string, size: number, anchor: 'middle' | 'end'): Box => {
+        const tw = textWidth(words, size, { caps: true, tracking: 0.08 });
+        const x0 = anchor === 'middle' ? x - tw / 2 : x - tw;
+        return { name, x0, y0: base - size * 0.75, x1: x0 + tw, y1: base + size * 0.25 };
+      };
+      const meet = (p: Box, q: Box) => p.x0 < q.x1 && q.x0 < p.x1 && p.y0 < q.y1 && q.y0 < p.y1;
+      const inside = (p: Box, q: Box) => p.x0 >= q.x0 && p.x1 <= q.x1 && p.y0 >= q.y0 && p.y1 <= q.y1;
+      const frame: Box = { name: 'frame', x0: 2, y0: 2, x1: w - 2, y1: g.band.y - 2 };
+      const R = g.runway;
+      expect(R.x0).toBeLessThan(g.target.x0);
+      expect(g.target.x1).toBeLessThan(g.delay.x0);
+      expect(g.delay.x1).toBeLessThanOrEqual(R.x1);
+      expect(R.y + R.h).toBeLessThanOrEqual(g.ground.y + 0.01);
+      const target = text('target', (g.target.x0 + g.target.x1) / 2, g.labelY, LANDING_WORDS.target, T.zone, 'middle');
+      const delay = LANDING_WORDS.delayLines.map((line, i) => text(line, (g.delay.x0 + g.delay.x1) / 2, g.labelY + i * g.labelStep, line, T.zone, 'middle'));
+      for (const b of [target, ...delay]) {
+        expect(inside(b, frame), b.name).toBe(true);
+        expect(b.y0).toBeGreaterThan(g.ground.y);
+      }
+      for (const b of delay) {
+        expect(meet(target, b)).toBe(false);
+        expect(b.x0).toBeGreaterThanOrEqual(g.boundary.x);
+      }
+      // The projected finish's label, at each of its four places, inside the frame and above the runway.
+      for (const f of g.forecast) {
+        const b = text('forecast', f.x, R.y - g.forecastLabel, LANDING_WORDS.forecast, T.label, 'middle');
+        expect(inside(b, frame)).toBe(true);
+        expect(b.y1).toBeLessThan(R.y);
+        // Clear of the boundary post (and its cap) wherever it passes.
+        expect(b.y1).toBeLessThan(R.y - g.boundary.h - 2.5 * g.k);
+      }
+      // The waypoints' labels: beneath and left of the approach, inside the frame, clear of it, of the runway and of each other.
+      const labels = g.gates.map((gate, i) => text(`gate ${i}`, gate.x - g.gateLabel.dx, gate.y + g.gateLabel.dy, gate.label, T.label, 'end'));
+      for (const b of labels) {
+        expect(inside(b, frame), b.name).toBe(true);
+        expect(b.y1).toBeLessThan(R.y - 2);
+        // Clear of the runway's near end.
+        expect(b.x1).toBeLessThan(R.x0 - 2);
+        for (let x = Math.max(b.x0, g.start.x); x <= b.x1; x += 1) expect(b.y0, `${b.name} vs approach at ${x}`).toBeGreaterThan(g.approachY(x) + 1);
+      }
+      labels.forEach((b, i) => i && expect(meet(b, labels[i - 1])).toBe(false));
+      // The aircraft, wherever it is once in view, is inside the frame and never covers a waypoint's label or the forecast's.
+      const scene = buildOwnerScene('owner-predictability', mode);
+      const s = g.plane;
+      for (let t = 0; t <= scene.end; t += 25) {
+        const st = ownerStateAt(scene, t);
+        if (st.plane.o < 1) continue;
+        const px = g.start.x + st.fly.mx + st.roll.mx + st.settle.mx;
+        const py = g.start.y + st.fly.my + st.roll.my + st.settle.my;
+        const part = (name: string, x0: number, y0: number, x1: number, y1: number): Box => ({ name, x0: px + x0 * s, y0: py + y0 * s, x1: px + x1 * s, y1: py + y1 * s });
+        // Its parts: fin, tail cone (which rises to the fin), cabin and nose, and gear.
+        const plane = [part('fin', -38, -31.5, -21.5, -15), part('tailcone', -41, -20, -20, -12.5), part('cabin', -20, -21.5, 37.5, -7), part('gear', -1, -8, 28, 0)];
+        const whole: Box = { name: 'plane', x0: px - g.planeSpan.back, y0: py - g.planeSpan.up - 1, x1: px + g.planeSpan.front, y1: py };
+        expect(inside(whole, { ...frame, y1: g.ground.y + 1 }), `plane at ${t}`).toBe(true);
+        labels.forEach((b, i) => {
+          if (st[`gate-${i}`].o > 0) for (const p of plane) expect(meet(p, b), `plane ${p.name} over ${b.name} at ${t}`).toBe(false);
+        });
+        if (st.forecast.o * st.forecastLabel.o > 0.05) {
+          const fx = g.forecast[0].x + [0, 1, 2].reduce((n, i) => n + st[`f-${i}`].mx, 0);
+          const b = text('forecast', fx, R.y - g.forecastLabel, LANDING_WORDS.forecast, T.label, 'middle');
+          for (const p of plane) expect(meet(p, b), `plane ${p.name} over the forecast at ${t}`).toBe(false);
+        }
+      }
+      expect(textWidth(LANDING_FOOT.head, g.band.head)).toBeLessThanOrEqual(w - 16);
+      expect(textWidth(LANDING_FOOT.support, g.band.support)).toBeLessThanOrEqual(w - 16);
+    });
+
+    it(`${mode}: Better decisions sets the window between the heading and the band, the options apart, and every word clear`, () => {
+      const g = windowGeometry(mode);
       const d = mode === 'desktop';
       const T = g.type;
-      const C = g.cone;
+      const C = g.shape;
       type Box = { x0: number; y0: number; x1: number; y1: number; name: string };
-      const text = (name: string, x: number, base: number, words: string, size: number, opts: { caps?: boolean; tracking?: number; anchor?: 'start' | 'middle' } = {}): Box => {
+      const text = (name: string, x: number, base: number, words: string, size: number, opts: { caps?: boolean; tracking?: number; anchor?: 'start' | 'middle' | 'end' } = {}): Box => {
         const tw = textWidth(words, size, opts);
-        const x0 = opts.anchor === 'middle' ? x - tw / 2 : x;
+        const x0 = opts.anchor === 'middle' ? x - tw / 2 : opts.anchor === 'end' ? x - tw : x;
         return { name, x0, y0: base - size * 0.75, x1: x0 + tw, y1: base + size * 0.25 };
       };
       const meet = (p: Box, q: Box) => p.x0 < q.x1 && q.x0 < p.x1 && p.y0 < q.y1 && q.y0 < p.y1;
@@ -1294,84 +1443,124 @@ describe('Project Owners visuals: composed for the frame', () => {
       const Hc = g.card.h;
       const topAt = (x: number) => C.cy - g.half(x);
       const bottomAt = (x: number) => C.cy + g.half(x);
-      /** A card as it rests about (x, y), its soft offset included. */
       const cardBox = (name: string, x: number, y: number): Box => ({ name, x0: x - W / 2, y0: y - Hc / 2, x1: x + W / 2 + 1.2 * g.k, y1: y + Hc / 2 + 2 * g.k });
-      // The cone: wide at its mouth, narrow at its tip, inside the frame, above the time axis, which is above the band.
-      expect(g.half(C.x0)).toBeGreaterThan(g.half(C.x1) * 5);
+      // The corridor: an elongated lens, narrow, widest a little before the middle, narrow again, the right end the narrowest.
+      const S = WINDOW_SHAPE;
+      expect(g.half(C.peak)).toBeCloseTo(g.k * S.hM, 6);
+      expect(g.half(C.x0)).toBeCloseTo(g.k * S.hL, 6);
+      expect(g.half(C.x1)).toBeCloseTo(g.k * S.hR, 6);
+      expect(g.half(C.peak) / g.half(C.x0)).toBeGreaterThan(2);
+      expect(g.half(C.x0) / g.half(C.x1)).toBeGreaterThan(3);
+      let prev = 0;
+      for (let x = C.x0; x <= C.peak; x += 1) {
+        expect(g.half(x)).toBeGreaterThanOrEqual(prev - 1e-9);
+        prev = g.half(x);
+      }
+      prev = Infinity;
+      for (let x = C.peak; x <= C.x1; x += 1) {
+        expect(g.half(x)).toBeLessThanOrEqual(prev + 1e-9);
+        prev = g.half(x);
+      }
+      expect(topAt(C.peak)).toBeGreaterThan(g.tag.y + g.tag.h);
       expect(C.x0).toBeGreaterThanOrEqual(frame.x0 + 10);
       expect(C.x1 + g.pressure.thick).toBeLessThanOrEqual(frame.x1 - 10);
-      // Time: one unbroken axis; its words above its start, under the mouth, clear of the cone and of the ticks; the
-      // marker's pointer beneath it, above the band.
-      const A = g.axis;
-      const time = text('time', A.label.x, A.label.y, CHOICE_WORDS.time, T.label, { caps: true, tracking: 0.08 });
-      expect(time.y0).toBeGreaterThanOrEqual(bottomAt(time.x0) + 2);
-      expect(time.y1).toBeLessThanOrEqual(A.y - A.tick - 1);
-      expect(A.y + A.pointer.h).toBeLessThanOrEqual(g.band.y - 2);
-      for (const x of A.ticks) {
-        expect(x).toBeGreaterThan(A.x0);
-        expect(x).toBeLessThan(A.x1);
+      // The decision window lies about the peak, inside the corridor.
+      expect(g.window.from).toBeLessThan(C.peak);
+      expect(g.window.to).toBeGreaterThan(C.peak);
+      expect(g.window.x0).toBeGreaterThan(C.x0);
+      expect(g.window.x1).toBeLessThan(C.x1);
+      // The heading, at the top, on one line, inside the frame and above the NOW tag at every stop.
+      const headings = (['early', 'right', 'late'] as const).map((when) => text(when, g.heading.x, g.heading.y, WINDOW_STAGES[when].heading, T.heading, { caps: true, tracking: 0.1, anchor: 'middle' }));
+      for (const h of headings) {
+        expect(inside(h, frame), h.name).toBe(true);
+        expect(h.y1).toBeLessThanOrEqual(g.tag.y - 2);
       }
-      // *More options* above the mouth, clear of the cone.
-      const more = text('more', g.more.x, g.more.y, CHOICE_WORDS.more, T.label);
-      expect(inside(more, frame)).toBe(true);
-      expect(more.y1).toBeLessThanOrEqual(topAt(more.x1) - 2);
-      // The line reaches across the cone wherever it stands (it is clipped to it).
-      expect(g.start.y0).toBeLessThanOrEqual(topAt(g.start.x));
-      expect(g.start.y1).toBeGreaterThanOrEqual(bottomAt(g.start.x));
-      // Each card is named, *OPTION A* to *OPTION F*, legibly: at least 6.5 units, with room either side and above and below.
+      // The NOW tag holds its word; the marker runs from it to above the stage names; its pointer sits on the axis, above the band.
+      expect(textWidth(WINDOW_WORDS.now, T.tag, { caps: true, tracking: 0.12 })).toBeLessThanOrEqual(g.tag.w - 6);
+      expect(T.tag).toBeGreaterThanOrEqual(6.5);
+      const zones = g.zones.map((z) => text(z.word, z.x, z.y, z.word, T.zone, { caps: true, tracking: 0.08, anchor: 'middle' }));
+      for (const z of zones) {
+        expect(inside(z, frame), z.name).toBe(true);
+        expect(z.y0).toBeGreaterThan(g.line.y1);
+        expect(z.y0).toBeGreaterThanOrEqual(bottomAt(z.x0) + 2);
+        expect(z.y0).toBeGreaterThanOrEqual(bottomAt(z.x1) + 2);
+        expect(z.y1).toBeLessThanOrEqual(g.axis.y - g.axis.tick - 1);
+      }
+      zones.forEach((z, i) => i && expect(z.x0).toBeGreaterThan(zones[i - 1].x1 + 8));
+      const A = g.axis;
+      expect(A.y + A.pointer.h).toBeLessThanOrEqual(g.band.y - 2);
+      // *TIME PASSES*, beneath the arrow's end, above the band, clear of the marker's pointer at every stop.
+      const time = text('time', A.label.x, A.label.y, WINDOW_WORDS.time, T.label, { caps: true, tracking: 0.08, anchor: 'end' });
+      expect(time.y0).toBeGreaterThan(A.y);
+      expect(time.y1).toBeLessThanOrEqual(g.band.y - 2);
+      for (const when of ['early', 'right', 'late'] as const) {
+        const x = g.stop(when).x;
+        expect(meet(time, { name: 'pointer', x0: x - A.pointer.w, y0: A.y, x1: x + A.pointer.w, y1: A.y + A.pointer.h })).toBe(false);
+      }
+      // Each card is named, *CHOICE 1* to *CHOICE 6*, legibly, with room around its name.
       expect(g.card.label).toBeGreaterThanOrEqual(6.5);
       g.cards.forEach((_, j) => {
         const name = g.name(j);
-        expect(`${name.word} ${name.letter}`).toBe(`Option ${'ABCDEF'[j]}`);
+        expect(`${name.word} ${name.letter}`).toBe(`Choice ${j + 1}`);
         expect(textWidth(`${name.word} ${name.letter}`, g.card.label, { caps: true, tracking: 0.06 })).toBeLessThanOrEqual(W - (d ? 10 : 6));
       });
-      expect(g.card.label * 0.72).toBeLessThanOrEqual(Hc - (d ? 6 : 4));
-      // The cards: apart; wholly inside the cone at the mouth and at the early stop; and wherever the group goes, inside
-      // the frame, clear of the messages, of the time axis and its words, and of *More options*.
       g.cards.forEach((c, j) => j && expect(c.y - g.cards[j - 1].y - Hc).toBeGreaterThanOrEqual(2.5));
-      for (const x of [g.start.x, g.stop('early').x])
-        for (const c of g.cards) {
-          expect(x - W / 2).toBeGreaterThanOrEqual(C.x0);
-          expect(g.half(x + W / 2) - Math.abs(c.y - C.cy) - Hc / 2).toBeGreaterThanOrEqual(0);
+      // Wherever the group stands (every stop: the three stages, each discovery and each loss), every known card is inside
+      // the frame, between the tag and the stage names, clear of the headings, and wholly inside the corridor while it
+      // is available; its callout and the group's status label are inside the frame and clear of the cards.
+      const N = g.note;
+      const stopsAt: { x: number; n: number; note?: { j: number; words: string; left?: boolean } }[] = [
+        { x: g.stop('early').x, n: CHOICE_KNOWN },
+        ...g.discover.map((x, n) => ({ x, n: CHOICE_KNOWN + n + 1, note: { j: CHOICE_KNOWN + n, words: WINDOW_WORDS.found } })),
+        { x: g.stop('right').x, n: CHOICE_COUNT },
+        ...g.changes.map((c, i) => ({ x: c.x, n: CHOICE_COUNT, note: { j: c.option, words: WINDOW_LOSS_REASONS[i], left: true } })),
+        { x: g.stop('late').x, n: CHOICE_COUNT },
+      ];
+      for (const st of stopsAt) {
+        const cardsHere = Array.from({ length: st.n }, (_, j) => cardBox(`card ${j + 1} at ${st.x}`, st.x, g.stackY(j, st.n)));
+        cardsHere.forEach((card, j) => {
+          expect(inside(card, frame), card.name).toBe(true);
+          expect(card.y0).toBeGreaterThan(g.tag.y + g.tag.h);
+          for (const z of zones) expect(meet(card, z), `${card.name} ${z.name}`).toBe(false);
+          for (const h of headings) expect(meet(card, h)).toBe(false);
+          // Before the losses begin, every known card fits the corridor.
+          if (st.x <= g.stop('right').x) expect(g.fits(j, st.x, st.n), card.name).toBe(true);
+        });
+        if (st.note) {
+          const tw = textWidth(st.note.words, N.size, { caps: true, tracking: 0.08 });
+          const y = g.stackY(st.note.j, st.n);
+          const pw = tw + 2 * N.pad;
+          const x0 = st.note.left ? st.x - N.dx - pw : st.x + N.dx;
+          const pill: Box = { name: st.note.words, x0, y0: y - N.h / 2, x1: x0 + pw, y1: y + N.h / 2 };
+          expect(inside(pill, frame), `${pill.name} at ${st.x}`).toBe(true);
+          for (const card of cardsHere) expect(meet(pill, card), `${pill.name} / ${card.name}`).toBe(false);
+          // Clear of the marker's line, which runs through the middle of the stack.
+          expect(pill.x1 < st.x - 1 || pill.x0 > st.x + 1, `${pill.name} / marker`).toBe(true);
+          expect(N.size).toBeGreaterThanOrEqual(6);
         }
-      const messages = (['early', 'late'] as const).map((when) => {
-        const M = g.message(CHOICE_WORDS[when]);
-        expect(M.lines).toHaveLength(1);
-        return M.lines.map((l, i) => text(`${when} ${i}`, M.x, l.y, l.line, T.message, { caps: true, tracking: 0.1, anchor: 'middle' }));
-      });
-      for (const lines of messages)
-        for (const m of lines) {
-          expect(inside(m, frame), m.name).toBe(true);
-          expect(meet(m, more), m.name).toBe(false);
-          // Above the cone along its whole width.
-          expect(m.y1, m.name).toBeLessThanOrEqual(topAt(Math.max(C.x0, m.x0)) - 2);
-        }
-      for (const x of [g.start.x, g.stop('early').x, g.stop('late').x])
-        for (const c of g.cards) {
-          const card = cardBox('card', x, c.y);
-          expect(inside(card, frame)).toBe(true);
-          expect(card.y1).toBeLessThan(A.y - A.tick - 1);
-          for (const m of messages.flat()) expect(meet(card, m), `${m.name} at ${x}`).toBe(false);
-          expect(meet(card, more)).toBe(false);
-          expect(meet(card, time)).toBe(false);
-        }
-      // The close: six options in a level row, centred, apart and inside the frame; the line about JiTpro beneath them on
-      // at most two lines, each inside the frame and clear of the row; and the closing line fits the foot on its own.
-      const t = g.timed;
-      const cards = t.xs.map((x, j) => cardBox(`timed ${j}`, x, t.y));
-      expect((t.xs[0] + t.xs[t.xs.length - 1]) / 2).toBeCloseTo(w / 2, 0);
-      cards.forEach((c, j) => {
-        expect(inside(c, frame), c.name).toBe(true);
-        if (j) expect(c.x0 - cards[j - 1].x1).toBeGreaterThanOrEqual(4);
-      });
-      expect(t.support.lines.length).toBeLessThanOrEqual(2);
-      expect(t.support.lines.map((l) => l.line).join(' ')).toBe(CHOICE_TIMED.support);
-      for (const l of t.support.lines) {
-        const line = text(l.line, t.support.x, l.y, l.line, t.support.size, { anchor: 'middle' });
-        expect(inside(line, { ...frame, x0: frame.x0 + 8, x1: frame.x1 - 8 }), l.line).toBe(true);
-        for (const c of cards) expect(line.y0, l.line).toBeGreaterThan(c.y1 + 6);
       }
-      expect(textWidth(CHOICE_TIMED.head, g.band.head)).toBeLessThanOrEqual(w - 16);
+      for (const [words, n, x] of [[WINDOW_WORDS.known, CHOICE_KNOWN, g.stop('early').x], [WINDOW_WORDS.six, CHOICE_COUNT, g.stop('right').x], [WINDOW_WORDS.two, CHOICE_COUNT, g.stop('late').x]] as const) {
+        const label = text(words, x, g.statusY(n), words, T.zone, { caps: true, tracking: 0.1, anchor: 'middle' });
+        expect(inside(label, frame), words).toBe(true);
+        expect(label.y0).toBeGreaterThan(g.tag.y + g.tag.h);
+        expect(label.y1).toBeLessThan(g.stackY(0, n) - g.card.h / 2);
+      }
+      g.cards.forEach((c) => {
+        const card = cardBox('rest', g.close.x, c.y);
+        expect(inside(card, frame)).toBe(true);
+        expect(card.x0).toBeGreaterThan(g.window.x0);
+        expect(card.x1).toBeLessThan(g.window.x1);
+      });
+      // The foot: each line and phrase, and the closing line, on one line inside the frame.
+      for (const st of Object.values(WINDOW_STAGES)) {
+        expect(textWidth(st.foot.head, g.band.head)).toBeLessThanOrEqual(w - 16);
+        expect(textWidth(st.foot.support, g.band.support)).toBeLessThanOrEqual(w - 16);
+      }
+      expect(textWidth(WINDOW_CLOSE, g.band.head)).toBeLessThanOrEqual(w - 16);
+      // The closing amber line: on one line, at the band's size or a half-point step below it, never smaller.
+      const closeSize = windowCloseSupportSize(mode);
+      expect(closeSize).toBe(d ? g.band.support : g.band.support - 0.5);
+      expect(textWidth(WINDOW_CLOSE_SUPPORT, closeSize)).toBeLessThanOrEqual(w - 16);
     });
   }
 });
