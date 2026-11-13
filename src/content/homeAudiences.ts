@@ -168,7 +168,7 @@ export const HOME_AUDIENCES: readonly Audience[] = [
         description:
           'You’re trusting your general contractor with a substantial investment. You deserve confidence that they’re planning ahead, managing risks, and keeping you informed before problems threaten your budget or schedule.',
         descriptionMore:
-          'You deserve a contractor with a plan, not just a promise. JiTpro helps them build and manage the procurement plan that supports that promise.',
+          'You deserve a contractor with a plan, not just assurances. JiTpro helps them build and manage the procurement plan that supports that promise.',
       },
       {
         id: 'owner-protect-investment',
@@ -189,9 +189,10 @@ export const HOME_AUDIENCES: readonly Audience[] = [
       {
         id: 'owner-better-decisions',
         label: 'Better decisions',
-        headline: 'Know what needs your decision, and why it matters.',
+        headline: 'Stay in control of your project’s decisions.',
         description:
-          'JiTpro helps your contractor communicate what decisions are needed, when they’re required, and how they affect upcoming work.',
+          'Your contractor manages hundreds of details, deadlines, and dependencies that affect your choices. JiTpro helps organize that complexity so your contractor can give you the information you need, when you need it.',
+        closing: 'More time to consider your options. Fewer last-minute surprises. Better decisions.',
       },
     ],
   },

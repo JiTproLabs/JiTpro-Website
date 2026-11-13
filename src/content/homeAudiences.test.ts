@@ -70,7 +70,7 @@ describe('HOME_AUDIENCES (Design System Section 54.2)', () => {
 
   it('gives only Identify, Plan and Control a second paragraph and closing statement, Reduce risk a second paragraph alone, and no tab the withdrawn role link or checklist', () => {
     const tabs = HOME_AUDIENCES.flatMap((a) => a.tabs);
-    expect(tabs.filter((t) => t.closing).map((t) => t.id)).toEqual(['gc-identify', 'gc-plan', 'gc-control']);
+    expect(tabs.filter((t) => t.closing).map((t) => t.id)).toEqual(['gc-identify', 'gc-plan', 'gc-control', 'owner-better-decisions']);
     expect(tabs.filter((t) => t.descriptionMore).map((t) => t.id)).toEqual(['gc-identify', 'gc-plan', 'gc-control', 'owner-reduce-risk', 'owner-protect-investment']);
     expect(tabs.filter((t) => t.roleLink || t.checklist)).toEqual([]);
   });
@@ -81,22 +81,28 @@ describe('HOME_AUDIENCES (Design System Section 54.2)', () => {
       ['Reduce risk', 'Your construction project shouldn’t have to feel like a gamble.'],
       ['Protect your investment', 'Protect your investment with a contractor who plans beyond their own budget.'],
       ['More predictability', 'Know what’s coming before it becomes urgent.'],
-      ['Better decisions', 'Know what needs your decision, and why it matters.'],
+      ['Better decisions', 'Stay in control of your project’s decisions.'],
     ]);
-    // The takeaway is the visual's closing line, not copy. Reduce risk alone has a second paragraph (revised 2026-11-11; rewritten 2026-11-12).
-    for (const t of owners.tabs) expect(t.closing ?? t.checklist ?? t.roleLink).toBeUndefined();
+    // Reduce risk alone has a second paragraph (revised 2026-11-11; rewritten 2026-11-12). Better decisions alone has a closing
+    // statement (founder, 2026-11-12); the others close on their visual's line.
+    for (const t of owners.tabs) expect(t.checklist ?? t.roleLink).toBeUndefined();
+    expect(owners.tabs.filter((t) => t.closing).map((t) => [t.label, t.closing])).toEqual([['Better decisions', 'More time to consider your options. Fewer last-minute surprises. Better decisions.']]);
+    expect(owners.tabs[3].description).toBe(
+      'Your contractor manages hundreds of details, deadlines, and dependencies that affect your choices. JiTpro helps organize that complexity so your contractor can give you the information you need, when you need it.',
+    );
     for (const t of owners.tabs.slice(2)) expect(t.descriptionMore).toBeUndefined();
     const risk = owners.tabs[0];
     expect(risk.description).toBe(
       'You’re trusting your general contractor with a substantial investment. You deserve confidence that they’re planning ahead, managing risks, and keeping you informed before problems threaten your budget or schedule.',
     );
     expect(risk.descriptionMore).toBe(
-      'You deserve a contractor with a plan, not just a promise. JiTpro helps them build and manage the procurement plan that supports that promise.',
+      'You deserve a contractor with a plan, not just assurances. JiTpro helps them build and manage the procurement plan that supports that promise.',
     );
     // Where JiTpro acts, it acts through the owner's contractor.
     expect(risk.descriptionMore).toContain('a contractor with a plan');
     expect(risk.descriptionMore).toContain('JiTpro helps them build and manage the procurement plan');
-    for (const t of owners.tabs.slice(1)) expect(`${t.description} ${t.descriptionMore ?? ''}`).toMatch(/JiTpro helps your (general )?contractor/);
+    // Better decisions (2026-11-12): JiTpro organizes the complexity *so your contractor can* inform the owner; still through the contractor.
+    for (const t of owners.tabs.slice(1)) expect(`${t.description} ${t.descriptionMore ?? ''}`).toMatch(/JiTpro helps your (general )?contractor|JiTpro helps organize [^.]* so your contractor can/);
     // Protect your investment (rewritten 2026-11-12, twice): the owner's investment reaches beyond construction, and the contractor is the owner's partner in protecting it.
     const protect = owners.tabs[1];
     expect(protect.description).toBe(

@@ -7,31 +7,33 @@ import {
   GAMBLE_NOTICES,
   GAMBLE_PLAN,
   GAMBLE_SPECS,
+  GAMBLE_TURN,
   GAMBLE_URGENT,
   HOUSE_RENDER,
   LOOKAHEAD_STEPS,
   OWNER_CANVAS,
   OWNER_DECISIONS,
   OWNER_NARROW_BELOW,
-  OWNER_QUESTION,
   OWNER_TAKEAWAY,
-  REQUEST_PILE,
   TEAM,
   TEAM_CONTRACTOR,
+  TEAM_FOOT,
   TEAM_MARK,
   TEAM_PARTIES,
-  TEAM_POWERED,
-  TEAM_REQUESTS,
   TEAM_RUSH,
   TEAM_STATES,
   TEAM_WASTE_ROUNDS,
+  CHOICE_FOOT,
+  CHOICE_TIMED,
+  CHOICE_WORDS,
   buildOwnerScene,
+  choiceGeometry,
   fullDay,
   gambleGeometry,
   houseBackdrop,
+  requestLabel,
   lookaheadWindow,
   ownerStateAt,
-  requestGeometry,
   shieldPath,
   shortDay,
   teamGeometry,
@@ -39,6 +41,7 @@ import {
   type OwnerTabId,
   type TeamId,
 } from './ownerScenes';
+import { SweepingHand } from './SweepingHand';
 import '../demo/tokens.css';
 import '../demo/screens/procurement-schedule/scheduleTokens.css';
 import '../demo/screens/procurement-chain/chainTokens.css';
@@ -47,14 +50,14 @@ import '../demo/screens/procurement-chain/chainTokens.css';
  * The Project Owners tabs' visuals (Design System Section 54.4.5): four short
  * stories, each drawn for the frame as vector on its own canvas (a desktop
  * design and a narrow one), never a scaled-down application screen. Reduce
- * risk and Protect your investment are illustrations in Identify's document
- * style; More predictability and Better decisions read the sample project.
+ * risk, Protect your investment and Better decisions are illustrations in
+ * Identify's document style; More predictability reads the sample project.
  *
  * ONE CLOCK (Section 46.3). Every element that changes carries a `data-k`
  * key. Each animation frame, `ownerStateAt(scene, t)` gives every key its
  * opacity, rise, drawn length, travel, turn and scale, and this component applies them.
- * Not played: parked on the opening frame. Played: one pass, then rest.
- * Reduced motion: the resting state at once (Section 46.5).
+ * Not played: parked on the opening frame. Played: one pass, then rest; none
+ * loops. Reduced motion: the resting state at once (Section 46.5).
  *
  * Colour: the application's tokens. Amber (`--jpd-accent`) marks the one
  * thing each scene is about. It is an illustration: the visual column is
@@ -104,6 +107,8 @@ function Takeaway({ tab, mode }: { tab: OwnerTabId; mode: OwnerMode }) {
 
 /* The documents are drawn as Identify's are (Section 54.4.1): white paper, one ink at several strengths. */
 const PAPER = 'var(--jp-surface-white)';
+/* What the papers lie on in Reduce risk: the light surface, a cool off-white. */
+const GROUND = 'var(--jp-surface-light)';
 const DOC_INK = 'var(--jp-ink-secondary)';
 const docLine = (opacity: number, width = 0.8) => ({ stroke: DOC_INK, strokeOpacity: opacity, strokeWidth: width, fill: 'none' });
 const docWash = (opacity: number) => ({ fill: DOC_INK, fillOpacity: opacity });
@@ -118,7 +123,45 @@ function Paper({ x, y, w, h, rx = 2 }: { x: number; y: number; w: number; h: num
   );
 }
 
-/** A stack of architectural drawings: two sheets beneath, an exterior elevation on top. Drawn on 230 x 150 and scaled to the sheet. */
+/**
+ * The house on the drawings: the Hero's house (`assets/hero/house-render`), redrawn as a front elevation. The render
+ * is a night perspective; a plan set shows a building flat, in line. So this is drawn from it, not traced and not
+ * placed: the tall pylon with its slot of light, the slatted pergola on the roof, the great roof and its overhang,
+ * the glazed upper storey behind a balcony rail, the cantilevered balcony slab, the glazed ground storey with the
+ * stair seen through it, the garage, the lower wing to the left with its own roof and balcony, and the entry steps.
+ * On the sheet's own 230-unit width, the ground at y = 120. Line only: no fill, no shade, no amber.
+ */
+const box = (x: number, y: number, w: number, h: number) => `M${x} ${y}h${w}v${h}h${-w}Z`;
+const HOUSE_ELEVATION = {
+  masses: [
+    box(66, 30, 14, 90), // the pylon
+    box(24, 61, 42, 4), // the left wing's roof
+    box(31, 65, 35, 22), // its upper storey
+    box(16, 87, 50, 4), // its balcony slab
+    box(27, 91, 39, 29), // its lower storey
+    box(80, 55, 100, 4.5), // the great roof
+    box(84, 59.5, 84, 25), // the upper storey
+    box(78, 84.5, 102, 4.5), // the balcony slab
+    box(84, 89, 52, 31), // the glazed ground storey
+    'M136 89H172V120', // the garage wall
+    box(142, 97, 26, 23), // the garage door
+    'M84 55V37H122V55', // the pergola on the roof
+    'M56 120V117H94V120M60 117V114H90V117', // the entry steps
+  ].join(''),
+  detail: [
+    box(71.5, 40, 3, 62), // the slot of light in the pylon
+    'M84 41.5H122M84 46H122M84 50.5H122', // the pergola's slats
+    'M42 65V87M54 65V87M40 91V120M53 91V120', // the left wing's glazing
+    'M16 87V80H31', // its balcony rail
+    'M105 59.5V84.5M126 59.5V84.5M147 59.5V84.5', // the upper storey's glazing
+    'M80 77H180V84.5', // the balcony rail
+    'M101 89V120M118 89V120', // the ground storey's glazing
+    'M104 117L132 93', // the stair, seen through the glass
+    'M142 103H168M142 109H168M142 115H168', // the garage door's panels
+  ].join(''),
+};
+
+/** A stack of architectural drawings: two sheets beneath, the house's front elevation on top. Drawn on 230 x 150 and scaled to the sheet. */
 function DrawingStack({ sheet }: { sheet: { x: number; y: number; w: number; h: number; turn: number } }) {
   const u = sheet.w / 230;
   const W = 230;
@@ -138,20 +181,12 @@ function DrawingStack({ sheet }: { sheet: { x: number; y: number; w: number; h: 
         <rect x={2 / u} y={3 / u} width={W} height={H} style={docWash(0.1)} />
         <rect width={W} height={H} style={{ ...ln(0.55, 0.9), fill: PAPER }} />
         <rect x={6} y={6} width={W - 12} height={H - 12} style={ln(0.4, 0.6)} />
-        {/* An exterior elevation: gable, walls, windows, a door, the ground and a dimension string. */}
-        <polyline points="22,62 82,26 142,62" style={ln(0.75)} />
-        <rect x={30} y={62} width={104} height={58} style={ln(0.75)} />
-        <path d="M14 120H152" style={ln(0.85, 1.1)} />
-        {[40, 62, 106].flatMap((x) =>
-          [72, 96].map((y) => (
-            <g key={`${x}-${y}`}>
-              <rect x={x} y={y} width={14} height={15} style={ln(0.75, 0.7)} />
-              <path d={`M${x + 7} ${y}v15`} style={ln(0.5, 0.5)} />
-            </g>
-          )),
-        )}
-        <rect x={84} y={93} width={15} height={27} style={ln(0.75, 0.7)} />
-        <path d="M30 133H134M30 130v6M82 130v6M134 130v6" style={ln(0.5, 0.5)} />
+        {/* The front elevation of the Hero's house, drawn flat as a plan set draws it: its masses, the lighter lines within
+            them, the ground and a dimension string. */}
+        <path d={HOUSE_ELEVATION.masses} style={{ ...ln(0.75), strokeLinejoin: 'round' }} />
+        <path d={HOUSE_ELEVATION.detail} style={ln(0.5, 0.5)} />
+        <path d="M10 120H184" style={ln(0.85, 1.1)} />
+        <path d="M16 133H180M16 130v6M80 130v6M180 130v6" style={ln(0.5, 0.5)} />
         <rect x={14} y={14} width={46} height={2.4} style={docWash(0.35)} />
         {/* The title block, down the right. */}
         <path d={`M186 6V${H - 6}M186 ${H - 44}H${W - 6}`} style={ln(0.4, 0.6)} />
@@ -179,41 +214,6 @@ function Die({ size, face }: { size: number; face: number }) {
       {(pips[face] ?? pips[3]).map(([x, y], i) => (
         <circle key={i} cx={x} cy={y} r={size * 0.085} style={{ fill: navy }} />
       ))}
-    </>
-  );
-}
-
-/**
- * A hand and forearm sweeping a table, seen from above, drawn about the
- * wrist on its leading side: that side runs straight up the page at x = 0
- * and everything else lies to its left. One flowing outline: the forearm
- * narrowing to the wrist, the heel of the hand, four fingers held together
- * and stepped in length, the thumb held out and curving back to the wrist.
- * Plain line on paper, with a navy sleeve; no shading and no character.
- * The caller leans it and sets it moving.
- */
-function SweepingHand({ arm }: { arm: number }) {
-  const skin = { fill: PAPER, stroke: navy, strokeWidth: 1.5, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const };
-  const outline = [
-    `M0 ${arm}L0 24`,
-    'C5 8 6 -16 4 -38L4 -80', // the heel of the hand, and up the little finger
-    'Q4 -88 -2 -88Q-8 -88 -8 -80L-8 -98', // little finger
-    'Q-8 -106 -14 -106Q-20 -106 -20 -98L-20 -106', // ring finger
-    'Q-20 -114 -26 -114Q-32 -114 -32 -106L-32 -94', // middle finger
-    'Q-32 -102 -38 -102Q-44 -102 -44 -94L-44 -56', // index finger
-    'C-46 -42 -58 -46 -64 -60Q-70 -68 -75 -62Q-78 -54 -70 -42', // out along the thumb and round its tip
-    'C-62 -28 -50 -22 -46 -8C-44 6 -40 14 -40 24', // back to the wrist
-    `L-46 ${arm}Z`,
-  ].join('');
-  return (
-    <>
-      <path d={outline} transform="translate(3 4)" style={docWash(0.12)} />
-      <path d={outline} style={skin} />
-      {/* Where the fingers part. */}
-      <path d="M-8 -80V-54M-20 -98V-58M-32 -94V-60" style={{ fill: 'none', stroke: navy, strokeOpacity: 0.55, strokeWidth: 1.1, strokeLinecap: 'round' }} />
-      {/* The sleeve, from above the wrist back along the forearm, and its cuff. */}
-      <path d={`M0 ${arm}L0 68H-41.5L-46 ${arm}Z`} style={{ fill: navy }} />
-      <rect x={-44} y={56} width={47} height={17} rx={4} style={{ fill: navy, stroke: PAPER, strokeWidth: 1.1 }} />
     </>
   );
 }
@@ -293,6 +293,18 @@ function RiskVisual({ mode }: { mode: OwnerMode }) {
   const terms = GAMBLE_CONTRACT.terms.map((t) => (d || t.length <= 10 ? [t] : t.split(' ')));
   return (
     <>
+      {/* The table the documents lie on: a drawing sheet. A cool off-white ground, so the white papers lift off it; the faint
+          grid and the border the closing stage has, on the same pitch and inset, here in the documents' ink. Flat: no
+          gradient, no image. Drawn past the canvas, so a frame of another shape is still wholly covered. */}
+      <K k="ground">
+        <rect x={-w} y={-h} width={w * 3} height={h * 3} style={{ fill: GROUND }} />
+        <path
+          d={[...Array.from({ length: Math.ceil(w / g.stage.grid) - 1 }, (_, i) => `M${(i + 1) * g.stage.grid} 0V${h}`), ...Array.from({ length: Math.ceil(h / g.stage.grid) - 1 }, (_, i) => `M0 ${(i + 1) * g.stage.grid}H${w}`)].join('')}
+          style={docLine(0.07, 0.6)}
+        />
+        <rect x={g.stage.inset} y={g.stage.inset} width={w - 2 * g.stage.inset} height={h - 2 * g.stage.inset} style={docLine(0.22, 0.8)} />
+      </K>
+
       {/* 1. The promise: three project documents. Drawings to the left, the contract in the middle, the specification to the right. */}
       <K k="drawings">
         <DrawingStack sheet={g.sheet} />
@@ -382,15 +394,23 @@ function RiskVisual({ mode }: { mode: OwnerMode }) {
           </g>
         );
       })}
-      {/* 4. The hand that sweeps the table clear, leaning in from the lower left and travelling up to the right: notices and
-          dice go with it; the documents beneath do not. */}
+      {/* 4. The hand that sweeps the table clear: one finished illustration, leaned and moved as a single object. It comes in
+          from the lower left and travels up to the right; notices and dice go with it; the documents beneath do not. */}
       <g transform={`translate(${g.hand.ax} ${g.hand.ay})`}>
         <K k="hand">
           <g transform={`rotate(${g.hand.tilt}) scale(${g.hand.scale})`}>
-            <SweepingHand arm={g.hand.arm / g.hand.scale} />
+            <SweepingHand />
           </g>
         </K>
       </g>
+
+      {/* The turn: one line on the cleared table, over the documents once they have stepped back. Plain type, the caption's
+          own, larger: no rule, no accent. */}
+      <K k="turn">
+        <text x={g.turn.x} y={g.turn.y} textAnchor="middle" style={{ fontSize: g.turn.size, fontWeight: 700, letterSpacing: '-0.02em', fill: navy }}>
+          {GAMBLE_TURN}
+        </text>
+      </K>
 
       {/* 5. The stage the story closes on: navy, with the faint grid and border of a drawing sheet. It is drawn
           past the canvas on every side, so a frame of another shape is still wholly navy. */}
@@ -598,11 +618,11 @@ const GROUP_GLYPH: Record<TeamId, string> = {
 function InvestmentVisual({ mode }: { mode: OwnerMode }) {
   const d = mode === 'desktop';
   const g = teamGeometry(mode);
-  const { w, h } = OWNER_CANVAS[mode];
+  const { w } = OWNER_CANVAS[mode];
   const s = g.shield;
   const onNavy = v('--jpd-nav-text');
   const late = v('--jpd-chain-commitment-late');
-  const f = d ? { name: 10, line: 9.5, tag: 9.5, pad: 10, hero: 10.5, mark: 11.5, state: 9, icon: 18, hat: 19 } : { name: 8, line: 7.5, tag: 7.5, pad: 7, hero: 7.5, mark: 8, state: 7.5, icon: 12, hat: 11.5 };
+  const f = d ? { name: 10, line: 9.5, pad: 10, hero: 10.5, mark: 11.5, state: 9, icon: 18, hat: 19 } : { name: 8, line: 7.5, pad: 7, hero: 7.5, mark: 8, state: 7.5, icon: 12, hat: 11.5 };
   const caps = (size: number, fill: string, tracking = '0.08em') => ({ fontSize: size, fontWeight: 800, letterSpacing: tracking, textTransform: 'uppercase' as const, fill });
   const outline = shieldPath(s);
   const inset = d ? 7 : 5;
@@ -681,9 +701,11 @@ function InvestmentVisual({ mode }: { mode: OwnerMode }) {
             </K>
             {/* Out of control: what it costs this group. */}
             <K k={`effect-${i}`}>
-              <text x={edgeX} y={lineY} textAnchor={anchor} style={{ fontSize: f.line, fontWeight: 700, fill: late }}>
-                {t.effect}
-              </text>
+              {g.effectLines(i).map((line, n, lines) => (
+                <text key={line} x={edgeX} y={lineY + (n - (lines.length - 1) / 2) * g.effectSize * 1.18} textAnchor={anchor} style={{ fontSize: g.effectSize, fontWeight: 700, fill: late }}>
+                  {line}
+                </text>
+              ))}
             </K>
             {/* In control: how this group now stands. A check, one calm word, and the node where its line arrives. */}
             <K k={`calm-${i}`}>
@@ -708,7 +730,7 @@ function InvestmentVisual({ mode }: { mode: OwnerMode }) {
           <g key={i} transform={`translate(${rest.cx} ${rest.cy})`}>
             <K k={`rush-${i}`}>
               <g transform={`rotate(${rest.turn})`}>
-                <Slip w={g.tag.w} h={g.tag.h} label={TEAM_REQUESTS[r.mark]} size={f.tag} />
+                <Slip w={rest.w} h={g.tag.h} label={requestLabel(r)} size={g.tag.size} />
               </g>
             </K>
           </g>
@@ -793,19 +815,43 @@ function InvestmentVisual({ mode }: { mode: OwnerMode }) {
         );
       })}
 
-      {/* 3. The close: a navy band along the foot, under the whole connected picture. Drawn past the canvas, so a frame
-          of another shape is still closed by it. */}
-      <K k="band">
-        <rect x={-w} y={g.band.y} width={w * 3} height={h * 2} style={{ fill: navy }} />
-        <rect x={-w} y={g.band.y} width={w * 3} height={d ? 2.5 : 2} style={{ fill: amber }} />
+      {/* The foot of each state: one band, the same for both. The first state's goes when that state is withdrawn; the
+          second's rises at the close, under the whole connected picture, and stays. */}
+      {/* One bar, there throughout; only its words change. Both feet draw the same bar under the one key. */}
+      <TeamFoot mode={mode} band="foot" words="footOutWords" {...TEAM_FOOT.out} />
+      <TeamFoot mode={mode} band="foot" words="takeaway" {...TEAM_FOOT.in} />
+    </>
+  );
+}
+
+/**
+ * The foot of Protect your investment, used by both of its states so that the
+ * two are the same band: navy, an amber edge along its top, a line in white
+ * and a phrase beneath it in amber, centred. Drawn past the canvas on every
+ * side but its top, so a frame of another shape is still closed by it.
+ * `band` and `words` are the keys the clock shows them by.
+ */
+function TeamFoot({ mode, band, words, head, support }: { mode: OwnerMode; band: string; words: string; head: string; support?: string }) {
+  const d = mode === 'desktop';
+  const { w, h } = OWNER_CANVAS[mode];
+  const B = teamGeometry(mode).band;
+  /* A line alone sits in the middle of where the line and the phrase would be. */
+  const headY = support === undefined ? (B.headY + B.supportY) / 2 + (B.head - B.support) * 0.3 : B.headY;
+  return (
+    <>
+      <K k={band}>
+        <rect x={-w} y={B.y} width={w * 3} height={h * 2} style={{ fill: navy }} />
+        <rect x={-w} y={B.y} width={w * 3} height={d ? 2.5 : 2} style={{ fill: amber }} />
       </K>
-      <K k="takeaway">
-        <text x={w / 2} y={g.band.headY} textAnchor="middle" style={{ fontSize: g.band.head, fontWeight: 700, letterSpacing: '-0.015em', fill: onNavy }}>
-          {OWNER_TAKEAWAY['owner-protect-investment']}
+      <K k={words}>
+        <text x={w / 2} y={headY} textAnchor="middle" style={{ fontSize: B.head, fontWeight: 700, letterSpacing: '-0.015em', fill: v('--jpd-nav-text') }}>
+          {head}
         </text>
-        <text x={w / 2} y={g.band.supportY} textAnchor="middle" style={{ fontSize: g.band.support, fontWeight: 700, fill: amber }}>
-          {TEAM_POWERED}
-        </text>
+        {support !== undefined && (
+          <text x={w / 2} y={B.supportY} textAnchor="middle" style={{ fontSize: B.support, fontWeight: 700, fill: amber }}>
+            {support}
+          </text>
+        )}
       </K>
     </>
   );
@@ -922,78 +968,197 @@ function PredictabilityVisual({ mode }: { mode: OwnerMode }) {
 
 /* -------------------------------------------------------- 4. Better decisions */
 
+/**
+ * The cone (Design System Section 54.4.5; founder briefs 2026-11-12): one corridor tapering from left to right, wide
+ * where the project is early and narrow where it is late. It does not move. One story, never reset: an amber line
+ * marking the time, its pointer on the time axis, and a column of six named option cards on it travel together. The
+ * group stops a quarter of the way in, all six held (decision identified early); carries on; as the cone narrows, the
+ * options it has no room for are left outside its walls one at a time, washed out and crossed out in red but still
+ * seen; and it stops near the narrow end with two (decision identified late). Played once: after a beat the cone fades
+ * away and the visual closes on correctly timed decisions, the six options again, all open. Drawn as an architectural
+ * sheet, in the family of Protect your investment: the faint grid behind, a finer grid within the corridor, double
+ * linework and a centre line, paper cards, and the same foot. Nobody is drawn.
+ */
 function DecisionsVisual({ mode }: { mode: OwnerMode }) {
   const d = mode === 'desktop';
+  const g = choiceGeometry(mode);
   const { w } = OWNER_CANVAS[mode];
-  const g = requestGeometry(mode);
-  const first = OWNER_DECISIONS[0];
-  const y0 = g.rowY(0);
-  const why: [string, string][] = [
-    ['Required by', fullDay(first.requiredBy)],
-    ['Needed for', first.neededFor],
-    ['Supports', `${first.item} on site, ${fullDay(first.onSite)}`],
-  ];
-  const wp = d ? 40 : 26;
-  const dotX = g.why.x + (d ? 16 : 12);
-  const dotY = (i: number) => g.why.y + (d ? 26 : 17) + i * wp;
-  return (
-    <>
-      {REQUEST_PILE.map((di, order) => {
-        const dec = OWNER_DECISIONS[di];
-        const at = g.pile[order];
-        return (
-          <g key={dec.id} transform={`translate(${at.x} ${at.y})`}>
-            <K k={`req-${di}`}>
-              <rect x={0.5} y={0.5} width={g.card.w - 1} height={g.card.h - 1} rx={6} style={{ fill: surface, stroke: v('--jpd-state-scheduled-edge') }} />
-              <text x={d ? 16 : 11} y={g.card.h / 2 + (d ? 4.2 : 3.4)} style={{ fontSize: d ? 12.5 : 9.5, fontWeight: 700, letterSpacing: '-0.01em', fill: ink }}>
-                {dec.request}
-              </text>
-              {/* The ordinary experience: everything marked the same. A neutral tag, not a warning. */}
-              <K k={`asap-${di}`}>
-                <rect x={g.card.w - (d ? 54 : 40)} y={g.card.h / 2 - (d ? 9 : 7)} width={d ? 42 : 32} height={d ? 18 : 14} rx={3} style={{ fill: v('--jpd-state-active') }} />
-                <text x={g.card.w - (d ? 33 : 24)} y={g.card.h / 2 + (d ? 3.2 : 2.7)} textAnchor="middle" style={{ fontSize: d ? 9 : 7.5, fontWeight: 800, letterSpacing: '0.08em', fill: v('--jpd-nav-text') }}>
-                  ASAP
-                </text>
-              </K>
-              <K k={`due-${di}`}>
-                <text x={g.card.w - (d ? 14 : 10)} y={g.card.h / 2 + (d ? 4.2 : 3.4)} textAnchor="end" style={{ fontSize: d ? 12 : 9, fontWeight: 700, fill: ink }}>
-                  {fullDay(dec.requiredBy)}
-                </text>
-              </K>
-            </K>
-          </g>
-        );
-      })}
-      <K k="question">
-        <text x={w / 2} y={d ? 268 : 158} textAnchor="middle" style={{ fontSize: d ? 17 : 12.5, fontWeight: 700, letterSpacing: '-0.015em', fill: navy }}>
-          {`“${OWNER_QUESTION}”`}
+  const T = g.type;
+  const late = v('--jpd-chain-commitment-late');
+  const caps = (size: number, fill: string) => ({ fontSize: size, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' as const, fill });
+  const W = g.card.w;
+  const Hc = g.card.h;
+  const C = g.cone;
+  const clip = `choice-cone-${mode}`;
+  const press = `choice-press-${mode}`;
+  const wash = `choice-wash-${mode}`;
+  const warm = `choice-warm-${mode}`;
+  /* The pressure near the narrow end: from a little before the late stop to the tip, the walls thicken outward and redden. */
+  const wedge = (side: -1 | 1) => {
+    const n = 16;
+    const at = (j: number) => g.pressure.from + ((C.x1 - g.pressure.from) * j) / n;
+    const thick = (j: number) => g.pressure.thick * (j / n) ** 1.4;
+    const inner = Array.from({ length: n + 1 }, (_, j) => `${at(j)} ${C.cy + side * g.half(at(j))}`);
+    const outer = Array.from({ length: n + 1 }, (_, j) => `${at(j)} ${C.cy + side * (g.half(at(j)) + thick(j))}`).reverse();
+    return `M${[...inner, ...outer].join('L')}Z`;
+  };
+  const message = (k: string, words: string, fill: string) => {
+    const M = g.message(words);
+    return (
+      <K k={k}>
+        <text textAnchor="middle" style={{ ...caps(T.message, fill), letterSpacing: '0.1em' }}>
+          {M.lines.map((l) => (
+            <tspan key={l.line} x={M.x} y={l.y}>
+              {l.line}
+            </tspan>
+          ))}
         </text>
       </K>
-      <K k="first">
-        <rect x={g.rowX} y={y0} width={d ? 4 : 3} height={g.card.h} rx={2} style={{ fill: amber }} />
-        <text x={g.rowX} y={y0 - (d ? 8 : 5)} style={kicker(d ? 8.5 : 7.5, v('--jpd-warn-fg'))}>
-          Needed first
+    );
+  };
+  /** An option, drawn about its middle: a paper card with a soft offset beneath it, and its name, *OPTION* and its letter. */
+  const option = (j: number) => {
+    const name = g.name(j);
+    return (
+      <>
+        <rect x={-W / 2 + 1.2 * g.k} y={-Hc / 2 + 2 * g.k} width={W} height={Hc} rx={g.card.round} style={docWash(0.12)} />
+        <rect x={-W / 2} y={-Hc / 2} width={W} height={Hc} rx={g.card.round} style={{ fill: PAPER, stroke: DOC_INK, strokeOpacity: 0.5, strokeWidth: d ? 0.9 : 0.7 }} />
+        <text x={0} y={g.card.label * 0.36} textAnchor="middle" style={{ ...caps(g.card.label, sec), fontWeight: 700, letterSpacing: '0.06em' }}>
+          {name.word}
+          <tspan style={{ fill: navy, fontWeight: 800 }}>{` ${name.letter}`}</tspan>
+        </text>
+      </>
+    );
+  };
+  /* The red cross over a lost option: corner to corner, inside its edges. */
+  const ix = W / 2 - (d ? 5 : 3.5);
+  const iy = Hc / 2 - (d ? 3 : 2);
+  /* The group moves as one: the line, its pointer and the cards are each wrapped in `now` (to the early stop) and `nowOn` (on to the late one). */
+  const moving = (children: ReactNode) => (
+    <K k="now">
+      <K k="nowOn">{children}</K>
+    </K>
+  );
+  const grid = d ? 28 : 21.2;
+  const fine = grid / 2;
+  const H = g.band.y;
+  const A = g.axis;
+  const P = A.pointer;
+  return (
+    <>
+      <defs>
+        <clipPath id={clip}>
+          <path d={g.outline} />
+        </clipPath>
+        <linearGradient id={press} gradientUnits="userSpaceOnUse" x1={g.pressure.from} y1={0} x2={C.x1} y2={0}>
+          <stop offset="0" style={{ stopColor: late, stopOpacity: 0 }} />
+          <stop offset="1" style={{ stopColor: late, stopOpacity: 1 }} />
+        </linearGradient>
+        <linearGradient id={wash} gradientUnits="userSpaceOnUse" x1={g.pressure.from} y1={0} x2={C.x1} y2={0}>
+          <stop offset="0" style={{ stopColor: late, stopOpacity: 0 }} />
+          <stop offset="1" style={{ stopColor: late, stopOpacity: 0.12 }} />
+        </linearGradient>
+        {/* The corridor warms toward its narrow end: clear at the mouth, a breath of amber past the middle, the late colour at the tip. */}
+        <linearGradient id={warm} gradientUnits="userSpaceOnUse" x1={C.x0} y1={0} x2={C.x1} y2={0}>
+          <stop offset="0.35" style={{ stopColor: amber, stopOpacity: 0 }} />
+          <stop offset="0.72" style={{ stopColor: amber, stopOpacity: 0.07 }} />
+          <stop offset="1" style={{ stopColor: late, stopOpacity: 0.1 }} />
+        </linearGradient>
+      </defs>
+      {/* The sheet: a faint grid, as Protect your investment's. */}
+      <K k="ground">
+        <path d={[...Array.from({ length: Math.ceil(w / grid) - 1 }, (_, i) => `M${(i + 1) * grid} 0V${H}`), ...Array.from({ length: Math.ceil(H / grid) - 1 }, (_, i) => `M0 ${(i + 1) * grid}H${w}`)].join('')} style={docLine(0.05, 0.6)} />
+      </K>
+
+      {/* The corridor: a soft shadow beneath it, the paper, its warming, a finer grid within it, its centre line and the fine
+          line inside each wall. The walls themselves are drawn on, from the mouth. */}
+      <K k="cone">
+        <path d={g.outline} transform={`translate(0 ${3 * g.k})`} style={docWash(0.07)} />
+        <path d={g.outline} style={{ fill: PAPER, fillOpacity: 0.94 }} />
+        <path d={g.outline} style={{ fill: `url(#${warm})` }} />
+        <g clipPath={`url(#${clip})`}>
+          <path d={[...Array.from({ length: Math.ceil(w / fine) }, (_, i) => `M${i * fine} 0V${H}`), ...Array.from({ length: Math.ceil(H / fine) }, (_, i) => `M0 ${i * fine}H${w}`)].join('')} style={docLine(0.07, 0.4)} />
+        </g>
+        <path d={`M${C.x0 + 6 * g.k} ${C.cy}H${C.x1 - 4 * g.k}`} style={{ ...docLine(0.32, d ? 0.6 : 0.45), strokeDasharray: d ? '12 3 2 3' : '8 2 1.5 2' }} />
+        <path d={g.inner(-1)} style={docLine(0.3, d ? 0.5 : 0.4)} />
+        <path d={g.inner(1)} style={docLine(0.3, d ? 0.5 : 0.4)} />
+      </K>
+      <K k="pressure">
+        <path d={g.outline} style={{ fill: `url(#${wash})` }} />
+        <path d={wedge(-1)} style={{ fill: `url(#${press})` }} />
+        <path d={wedge(1)} style={{ fill: `url(#${press})` }} />
+      </K>
+      <Drawn k="wall-top" d={g.wall(-1)} stroke={DOC_INK} width={d ? 1.3 : 1} cap="round" />
+      <Drawn k="wall-bottom" d={g.wall(1)} stroke={DOC_INK} width={d ? 1.3 : 1} cap="round" />
+      <Drawn k="axis" d={`M${A.x0} ${A.y}H${A.x1}`} stroke={DOC_INK} width={d ? 1.1 : 0.8} />
+      <K k="time">
+        <path d={A.ticks.map((x) => `M${x} ${A.y}v${-A.tick}`).join('')} style={docLine(0.6, d ? 0.8 : 0.6)} />
+        <path d={`M${A.x1 + (d ? 6 : 4)} ${A.y}l${d ? -8 : -5.5} ${d ? -4 : -2.8}v${d ? 8 : 5.6}z`} style={{ fill: DOC_INK }} />
+        <text x={A.label.x} y={A.label.y} style={caps(T.label, DOC_INK)}>
+          {CHOICE_WORDS.time}
+        </text>
+      </K>
+      <K k="more">
+        <text x={g.more.x} y={g.more.y} style={{ fontSize: T.label, fontWeight: 700, fill: navy }}>
+          {CHOICE_WORDS.more}
         </text>
       </K>
 
-      {/* Why its date matters: what it is needed for, and what that supports. */}
-      <K k="why">
-        <rect x={g.why.x + 0.5} y={g.why.y + 0.5} width={g.why.w - 1} height={g.why.h - 1} rx={6} style={{ fill: surface, stroke: edge }} />
-        {why.map(([label, value], i) => (
-          <g key={label}>
-            <circle cx={dotX} cy={dotY(i)} r={d ? 3.5 : 2.8} style={{ fill: i === 0 ? amber : surface, stroke: amber, strokeWidth: 1.5 }} />
-            <text x={dotX + (d ? 14 : 10)} y={dotY(i) - (d ? 4 : 2.5)} style={kicker(d ? 8 : 7.5, sec)}>
-              {label}
-            </text>
-            <text x={dotX + (d ? 14 : 10)} y={dotY(i) + (d ? 10 : 7.5)} style={{ fontSize: d ? 10.5 : 8.8, fontWeight: 700, fill: ink }}>
-              {value}
-            </text>
+      {/* The group. The line marks the present: amber, with a faint halo, clipped to the cone (the clip stays put; the line
+          moves within it), so its height is always the cone's where it stands. Its pointer rides beneath the time axis, its
+          tip on the line. The cards are not clipped: those the cone has no room for are left outside it. */}
+      <g clipPath={`url(#${clip})`}>
+        {moving(
+          <K k="line">
+            <path d={`M${g.start.x} ${g.start.y0}V${g.start.y1}`} style={{ fill: 'none', stroke: amber, strokeOpacity: 0.22, strokeWidth: d ? 5 : 3.5 }} />
+            <path d={`M${g.start.x} ${g.start.y0}V${g.start.y1}`} style={{ fill: 'none', stroke: amber, strokeWidth: d ? 1.6 : 1.1 }} />
+          </K>,
+        )}
+      </g>
+      {moving(
+        <K k="line">
+          <path d={`M${g.start.x} ${A.y + 0.5}l${P.w} ${P.h}h${-2 * P.w}z`} style={{ fill: amber, stroke: navy, strokeWidth: d ? 0.8 : 0.6, strokeLinejoin: 'round' }} />
+        </K>,
+      )}
+      {moving(
+        g.cards.map((c, j) => (
+          <g key={j} transform={`translate(${g.start.x} ${c.y})`}>
+            <K k={`card-${j}`}>{option(j)}</K>
+            {g.lost.some((l) => l.option === j) && (
+              <K k={`off-${j}`}>
+                <rect x={-W / 2 - 0.5} y={-Hc / 2 - 0.5} width={W + 1 + 2 * g.k} height={Hc + 1 + 3 * g.k} rx={g.card.round} style={{ fill: v('--jp-surface-light'), fillOpacity: 0.55 }} />
+                <rect x={-W / 2} y={-Hc / 2} width={W} height={Hc} rx={g.card.round} style={{ fill: 'none', stroke: DOC_INK, strokeOpacity: 0.45, strokeWidth: d ? 0.9 : 0.7, strokeDasharray: d ? '3 2' : '2 1.5' }} />
+                <path d={`M${-ix} ${-iy}L${ix} ${iy}M${ix} ${-iy}L${-ix} ${iy}`} style={{ fill: 'none', stroke: late, strokeWidth: d ? 1.5 : 1, strokeLinecap: 'round' }} />
+              </K>
+            )}
           </g>
-        ))}
+        )),
+      )}
+
+      {/* The two callouts, at the top of the frame. */}
+      {message('msgEarly', CHOICE_WORDS.early, navy)}
+      {message('msgLate', CHOICE_WORDS.late, late)}
+
+      {/* The close: correctly timed decisions. The six options again, all open, in a row; the line about JiTpro beneath. */}
+      {g.timed.xs.map((cx, j) => (
+        <K key={j} k={`timed-${j}`}>
+          <g transform={`translate(${cx} ${g.timed.y})`}>{option(j)}</g>
+        </K>
+      ))}
+      <K k="timedWords">
+        <text textAnchor="middle" style={{ fontSize: g.timed.support.size, fontWeight: 600, fill: ink }}>
+          {g.timed.support.lines.map((l) => (
+            <tspan key={l.line} x={g.timed.support.x} y={l.y}>
+              {l.line}
+            </tspan>
+          ))}
+        </text>
       </K>
-      <Drawn k="whyPath" d={d ? `M${g.rowX + g.card.w} ${y0 + g.card.h / 2}H${g.why.x}` : `M${g.rowX + 14} ${y0 + g.card.h}V${g.why.y}`} stroke={amber} width={1.5} />
-      <Drawn k="whyPath" d={`M${dotX} ${dotY(0) + (d ? 5 : 4)}V${dotY(why.length - 1) - (d ? 5 : 4)}`} stroke={amber} width={1.5} />
-      <Takeaway tab="owner-better-decisions" mode={mode} />
+
+      {/* One bar, there throughout; only its words change. The three feet draw the same bar under the one key. */}
+      <TeamFoot mode={mode} band="foot" words="footInWords" {...CHOICE_FOOT.in} />
+      <TeamFoot mode={mode} band="foot" words="footOutWords" {...CHOICE_FOOT.out} />
+      <TeamFoot mode={mode} band="foot" words="takeaway" head={CHOICE_TIMED.head} />
     </>
   );
 }
@@ -1107,6 +1272,7 @@ export default function OwnerVisual({ tab, played }: { tab: OwnerTabId; played: 
       apply();
     } else {
       startedAt.current ??= performance.now();
+      /* One pass, then rest on the last frame. */
       const tick = () => {
         t = Math.min(endOf(), performance.now() - startedAt.current!);
         apply();

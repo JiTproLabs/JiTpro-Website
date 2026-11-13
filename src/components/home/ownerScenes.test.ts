@@ -10,32 +10,42 @@ import {
   GAMBLE_NOTICES,
   GAMBLE_PLAN,
   GAMBLE_SPECS,
+  GAMBLE_TURN,
   GAMBLE_URGENT,
   HOUSE_RENDER,
   OWNER_CANVAS,
   OWNER_DECISIONS,
   OWNER_TABS,
   OWNER_TAKEAWAY,
-  REQUEST_PILE,
   TEAM,
   TEAM_CONTRACTOR,
+  TEAM_FOOT,
   TEAM_MARK,
   TEAM_PARTIES,
-  TEAM_POWERED,
-  TEAM_REQUESTS,
   TEAM_RUSH,
   TEAM_STATES,
   TEAM_WASTE_ROUNDS,
+  SWEEP_HAND,
+  boxCorners,
+  CHOICE_COUNT,
+  CHOICE_FOOT,
+  CHOICE_TIMED,
+  CHOICE_WORDS,
   buildOwnerScene,
+  choiceGeometry,
+  cueStateAt,
   gambleGeometry,
   houseBackdrop,
   isOwnerTab,
   lookaheadWindow,
   ownerStateAt,
-  requestGeometry,
+  requestLabel,
+  textWidth,
   shieldPath,
   teamGeometry,
+  travelInto,
   type OwnerMode,
+  type SweepBox,
 } from './ownerScenes';
 
 const MODES: OwnerMode[] = ['desktop', 'phone'];
@@ -53,30 +63,36 @@ describe('Project Owners visuals: one sample project (Section 54.4.5)', () => {
   it('Protect your investment: the general contractor in the middle, and the four groups the contractor\'s coordination reaches', () => {
     expect(TEAM.map((t) => t.label)).toEqual(['Owner', 'Design team', 'Consultants', 'Vendors']);
     expect([...TEAM_CONTRACTOR.lines, TEAM_CONTRACTOR.short]).toEqual(['General', 'contractor', 'Contractor']);
-    expect([TEAM_STATES.out, TEAM_STATES.in]).toEqual(['Contractor out of control', 'Contractor in control']);
-    expect([...TEAM_REQUESTS]).toEqual(['Urgent', 'ASAP', 'Revised']);
-    // Each group shows one cost of disorder, and one calm word once the contractor is in control. No two alike.
-    expect(TEAM.map((t) => t.effect)).toEqual(['Cost exposure', 'Repeated revisions', 'Extra review', 'Stop-start flow']);
-    expect(TEAM.map((t) => t.calm)).toEqual(['Informed', 'Aligned', 'Coordinated', 'Clarity']);
+    expect([TEAM_STATES.out, TEAM_STATES.in]).toEqual(['Weak procurement planning', 'Precise procurement planning']);
+    // Weak planning costs each group something of its own: two requests, and what they add up to (founder, 2026-11-12).
+    expect(TEAM.map((t) => [...t.requests])).toEqual([['Surprise', 'Rushed decision'], ['ASAP', 'No priority'], ['ASAP', 'No priority'], ['Rushed deadlines', 'Rescheduled']]);
+    expect(TEAM.map((t) => t.effect)).toEqual(['Last-minute decisions', 'Competing urgent requests', 'Competing urgent requests', 'Stop-start work']);
+    // And one calm word each once the contractor is in control. No two alike.
+    expect(TEAM.map((t) => t.calm)).toEqual(['In control', 'Aligned', 'Coordinated', 'Ready']);
     expect(new Set(TEAM.map((t) => t.calm)).size).toBe(TEAM.length);
     expect(OWNER_TAKEAWAY['owner-protect-investment']).toBe('A coordinated contractor protects your investment.');
     expect(OWNER_TAKEAWAY['owner-protect-investment']).not.toBe(OWNER_TAKEAWAY['owner-reduce-risk']);
-    expect([TEAM_MARK, TEAM_POWERED]).toEqual(['JiTpro', 'Powered by JiTpro.']);
+    expect(TEAM_MARK).toBe('JiTpro');
+    // The foot of each state, in the founder's words: a line, and a phrase beneath it. The second state's line is the closing line.
+    expect(TEAM_FOOT.out).toEqual({ head: 'Weak procurement planning puts your investment at risk.', support: 'Preventable delays. Rising costs. Eroding profits.' });
+    expect(TEAM_FOOT.in).toEqual({ head: 'A coordinated contractor protects your investment.', support: 'JiTpro gets the field what it needs, when it needs it.' });
+    expect(TEAM_FOOT.in.head).toBe(OWNER_TAKEAWAY['owner-protect-investment']);
   });
 
   it('Protect your investment: every group is sent two rushed requests with different marks, the second after everyone has had a first', () => {
     TEAM.forEach((_, to) => {
       const mine = TEAM_RUSH.filter((r) => r.to === to);
       expect(mine.map((r) => r.round)).toEqual([0, 1]);
-      expect(mine[0].mark).not.toBe(mine[1].mark);
+      expect(requestLabel(mine[0])).not.toBe(requestLabel(mine[1]));
     });
     expect(TEAM_RUSH.map((r) => r.round)).toEqual([0, 0, 0, 0, 1, 1, 1, 1]);
-    for (const r of TEAM_RUSH) expect(TEAM_REQUESTS[r.mark]).toBeTruthy();
+    for (const r of TEAM_RUSH) expect(requestLabel(r)).toBeTruthy();
   });
 
   it('Protect your investment: says coordination, never a timetable, an amount or a promise', () => {
-    const words = [...TEAM.flatMap((t) => [t.label, t.effect, t.calm]), ...TEAM_CONTRACTOR.lines, TEAM_CONTRACTOR.short, TEAM_STATES.out, TEAM_STATES.in, ...TEAM_REQUESTS, TEAM_POWERED, OWNER_TAKEAWAY['owner-protect-investment']].join(' | ');
-    expect(words).not.toMatch(/\d|\$|%|guarantee|always|never|eliminate|save[sd]?\b|change order|waste|insur|schedul/i);
+    const words = [...TEAM.flatMap((t) => [t.label, t.effect, t.calm, ...t.requests]), ...TEAM_CONTRACTOR.lines, TEAM_CONTRACTOR.short, TEAM_STATES.out, TEAM_STATES.in, ...Object.values(TEAM_FOOT.out), ...Object.values(TEAM_FOOT.in)].join(' | ');
+    // *Rescheduled* on a vendor's request is the founder's (2026-11-12): a disruption, not a timetable.
+    expect(words.replace('Rescheduled', '')).not.toMatch(/\d|\$|%|guarantee|always|never|eliminate|save[sd]?\b|change order|waste|insur|schedul/i);
   });
 
   it('Reduce risk: an illustration of a contract and a gamble, in the founder\'s words, with no project data', () => {
@@ -135,11 +151,6 @@ describe('Project Owners visuals: one sample project (Section 54.4.5)', () => {
     }
   });
 
-  it('piles the requests up out of date order, every one once', () => {
-    expect([...REQUEST_PILE].sort()).toEqual(OWNER_DECISIONS.map((_, i) => i));
-    expect(REQUEST_PILE).not.toEqual(OWNER_DECISIONS.map((_, i) => i));
-  });
-
   it('frames the look-ahead in whole months around every decision and on-site date', () => {
     const w = lookaheadWindow();
     for (const d of OWNER_DECISIONS) {
@@ -172,16 +183,18 @@ describe('Project Owners visuals: one clock each', () => {
             if (c.roll) expect(c.at + c.roll.dur).toBeLessThanOrEqual(scene.end);
           }
           expect(scene.end).toBeGreaterThanOrEqual(10000);
-          expect(scene.end).toBeLessThanOrEqual(16500);
+          expect(scene.end).toBeLessThanOrEqual(26000);
         });
 
         it('opens empty, ends on its takeaway, and rests', () => {
           for (const s of Object.values(at(0))) expect(s.o).toBe(0);
           const end = at(scene.end);
           expect(end.takeaway).toEqual({ o: 1, ty: 0, draw: 1, mx: 0, my: 0, rot: 0, sc: 1 });
-          // The takeaway is the last thing to appear, and is given time to be read.
+          // The takeaway is the last thing to appear, and is given time to be read. In Protect your investment it is the
+          // second state's foot words, which come in as that state is named (founder, 2026-11-12), so the state completes after it.
           const takeaway = scene.cues.find((c) => c.k === 'takeaway')!;
-          expect(Math.max(...scene.cues.map((c) => c.at))).toBe(takeaway.at);
+          if (tab === 'owner-protect-investment') expect(takeaway.at).toBeGreaterThan(scene.cues.find((c) => c.k === 'stateIn')!.at);
+          else expect(Math.max(...scene.cues.map((c) => c.at))).toBe(takeaway.at);
           expect(scene.end - takeaway.at).toBeGreaterThanOrEqual(1300);
           expect(at(scene.end + 5000)).toEqual(end);
           // Everything has settled: shown or gone, drawn in full, in place.
@@ -219,6 +232,10 @@ describe('Project Owners visuals: one clock each', () => {
     const paper = [...documents, 'term-0', 'term-1'];
     const plan = k('plan');
     const hand = k('hand');
+    // The sheet they lie on is there from the first moment and is never moved or withdrawn; only the closing stage covers it.
+    expect([k('ground').at, k('ground').out]).toEqual([0, undefined]);
+    expect(k('ground').push ?? k('ground').move ?? k('ground').from ?? k('ground').rise).toBeUndefined();
+    expect(k('ground').at + k('ground').dur!).toBeLessThanOrEqual(k('drawings').at + k('drawings').dur!);
     // 1. Trust: three project documents, one after another, and both promises, in place before anything disturbs them.
     const opening = paper.map((key) => k(key).at);
     expect(opening).toEqual([...opening].sort((a, b) => a - b));
@@ -229,7 +246,7 @@ describe('Project Owners visuals: one clock each', () => {
       expect(die.roll!.dx).toBeGreaterThan(0);
       expect(die.roll!.hops).toBe(2);
       expect(die.roll!.turns).toBeLessThanOrEqual(1);
-      expect(die.at + die.roll!.dur).toBeLessThanOrEqual(3600);
+      expect(die.at + die.roll!.dur).toBeLessThanOrEqual(4200);
     }
     // The question waits for the dice to settle, and then stays: through the surprises and the pause, until the hand comes in.
     const settled = Math.max(...dice.map((die) => die.at + die.roll!.dur));
@@ -288,15 +305,28 @@ describe('Project Owners visuals: one clock each', () => {
     }
     const swept = ownerStateAt(scene, cleared);
     for (const key of paper) expect([swept[key].o, swept[key].mx, swept[key].my], key).toEqual([1, 0, 0]);
-    // 7. A brief reset: the documents are seen alone for a beat, then step back to a ghost of themselves, together; and the
-    // plan follows at once. No long wait.
+    // 7. A brief reset: the documents are seen alone for a beat, then step back to a ghost of themselves, together.
     const reset = k('drawings').out!;
     for (const key of paper) expect([k(key).out, k(key).outTo], key).toEqual([reset, k('drawings').outTo]);
     expect(k('drawings').outTo).toBeGreaterThan(0);
     expect(k('drawings').outTo).toBeLessThanOrEqual(0.25);
     expect(reset - cleared).toBeLessThanOrEqual(400);
-    expect(plan.at).toBeGreaterThan(reset);
-    expect(plan.at - cleared).toBeLessThanOrEqual(700);
+    // The turn: once everything swept is gone, one line is shown alone on the cleared table, the founder's words exactly. It
+    // is held long enough to read once and no longer, and it is gone before the plan sets out.
+    expect(GAMBLE_TURN).toBe('It doesn’t have to be this way.');
+    const turn = k('turn');
+    expect(turn.at).toBeGreaterThanOrEqual(cleared + 100);
+    expect(turn.at).toBeGreaterThanOrEqual(reset);
+    expect(turn.push ?? turn.move ?? turn.from ?? turn.roll).toBeUndefined();
+    const read = turn.out! - (turn.at + (turn.dur ?? 350));
+    expect(read).toBeGreaterThanOrEqual(900);
+    expect(read).toBeLessThanOrEqual(1500);
+    expect(plan.at).toBeGreaterThanOrEqual(turn.out! + turn.outDur!);
+    expect(plan.at - cleared).toBeLessThanOrEqual(2200);
+    const reading = ownerStateAt(scene, turn.out!);
+    expect(reading.turn.o).toBe(1);
+    for (const key of ['die-0', 'die-1', 'caption', 'hand', 'plan', 'stage', 'takeaway', ...notices.map((_, i) => `notice-${i}`)]) expect(reading[key].o, key).toBe(0);
+    for (const key of paper) expect(reading[key].o, key).toBeCloseTo(k('drawings').outTo!);
     expect(plan.from!.dx).toBeGreaterThan(0);
     // 8. The plan, as before: its six lines appear and are checked one at a time.
     expect(lines).toHaveLength(6);
@@ -315,12 +345,12 @@ describe('Project Owners visuals: one clock each', () => {
     expect([k('stage').at, k('stage').out]).toEqual([push.at, undefined]);
     expect(k('takeaway').at).toBeGreaterThanOrEqual(push.at + 600);
     expect(k('takeaway').at).toBeLessThanOrEqual(push.at + push.dur);
-    expect(scene.end).toBeLessThanOrEqual(14500);
+    expect(scene.end).toBeLessThanOrEqual(17000);
     expect(scene.end - (push.at + push.dur)).toBeGreaterThanOrEqual(1400);
     // At rest: the stage, the plan with every line checked, and the closing lockup. No hand, no notices, no dice, no question;
     // the documents are ghosts beneath the stage.
     const end = ownerStateAt(scene, 1e9);
-    for (const key of ['die-0', 'die-1', 'caption', 'hand', ...notices.map((_, i) => `notice-${i}`)]) expect(end[key].o, key).toBe(0);
+    for (const key of ['die-0', 'die-1', 'caption', 'hand', 'turn', ...notices.map((_, i) => `notice-${i}`)]) expect(end[key].o, key).toBe(0);
     for (const key of paper) expect(end[key].o, key).toBeCloseTo(k('drawings').outTo!);
     for (const key of ['plan', 'stage', 'takeaway', ...lines.flatMap((_, i) => [`line-${i}`, `check-${i}`])]) expect(end[key].o, key).toBe(1);
     const g = gambleGeometry('desktop');
@@ -361,106 +391,172 @@ describe('Project Owners visuals: one clock each', () => {
     }
   });
 
-  it('Reduce risk: the hand leans in from the lower left and sweeps up to the right; each notice and die waits for it, then goes with it, off the table', () => {
+  it('Reduce risk: the hand reaches in from the lower left and pushes up to the right; each notice and die waits until it is reached, then goes off the table; the hand is drawn back', () => {
+    const smooth = (u: number) => {
+      const x = Math.min(1, Math.max(0, u));
+      return x * x * (3 - 2 * x);
+    };
     for (const mode of MODES) {
       const scene = buildOwnerScene('owner-reduce-risk', mode);
       const g = gambleGeometry(mode);
       const { w, h } = OWNER_CANVAS[mode];
-      const { go, along, face } = g.sweep;
+      const { go, fingers, front, outline } = g.sweep;
       const H = g.hand;
-      const sweep = scene.cues.find((c) => c.k === 'hand')!.push!;
+      const cue = scene.cues.find((c) => c.k === 'hand')!;
+      const sweep = cue.push!;
+      const start = sweep.at;
+      const end = sweep.at + sweep.dur;
+      const letGo = start + sweep.dur * H.letGo;
       const inside = (p: { x: number; y: number }) => p.x > 0 && p.x < w && p.y > 0 && p.y < h;
-      /** The wrist, on the hand's leading side, at a moment. */
-      const wristAt = (t: number) => ({ x: H.ax + ownerStateAt(scene, t).hand.mx, y: H.ay + ownerStateAt(scene, t).hand.my });
-      /** A point on the hand's leading side, so far along it from the wrist (fingertips positive, forearm negative). */
-      const onSide = (t: number, far: number) => ({ x: wristAt(t).x + along.x * far, y: wristAt(t).y + along.y * far });
-      // It is not a stiff upright arm, and it does not travel level or straight up: it leans, fingers to the upper right,
-      // forearm trailing to the lower left; and it travels up and to the right at a shallower angle than it leans.
-      expect(H.tilt).toBeGreaterThanOrEqual(15);
-      expect(H.tilt).toBeLessThanOrEqual(35);
+      const wrists = new Map<number, { x: number; y: number }>();
+      const wristAt = (t: number) => {
+        if (!wrists.has(t)) wrists.set(t, { x: H.ax + cueStateAt(cue, t).mx, y: H.ay + cueStateAt(cue, t).my });
+        return wrists.get(t)!;
+      };
+      /** Points of the hand's outline, where they are at a moment. */
+      const handAt = (t: number, points: readonly { x: number; y: number }[]) => {
+        const wrist = wristAt(t);
+        return points.map((p) => ({ x: wrist.x + p.x, y: wrist.y + p.y }));
+      };
+      /** How far the hand has gone, the way it travels. */
+      const gone = (t: number) => (wristAt(t).x - H.ax) * go.x + (wristAt(t).y - H.ay) * go.y;
+      /** How far the sweep has gone: what everything that has been reached travels with. */
+      const swept = (t: number) => sweep.travel * smooth((t - start) / sweep.dur);
+
+      // It travels up and to the right, on a diagonal, and it leads with its fingers: they point up and to the right too, a
+      // little more steeply than it travels, so it is neither a stiff upright arm nor a level one, and it goes slightly side-on.
       expect(H.dir).toBeGreaterThanOrEqual(18);
       expect(H.dir).toBeLessThanOrEqual(40);
-      expect(along.x).toBeGreaterThan(0);
-      expect(along.y).toBeLessThan(0);
       expect(go.x).toBeGreaterThan(0);
       expect(go.y).toBeLessThan(0);
+      expect(fingers.x).toBeGreaterThan(0);
+      expect(fingers.y).toBeLessThan(0);
+      const lead = 90 - H.tilt - H.dir;
+      expect(lead).toBeGreaterThanOrEqual(0);
+      expect(lead).toBeLessThanOrEqual(20);
       expect([sweep.ux, sweep.uy]).toEqual([go.x, go.y]);
-      // Its leading side faces the way it is going, near enough to push with.
-      expect(go.x * face.x + go.y * face.y).toBeGreaterThan(0.5);
-      // Before the sweep the whole of it is out of sight: fingertips, thumb, wrist, and every part of the forearm.
-      const start = sweep.at;
-      for (let far = -H.arm; far <= H.reach; far += 8) {
-        expect(inside(onSide(start, far)), `${mode} start ${far}`).toBe(false);
-        // The far side of the arm too: its width lies behind the leading side.
-        expect(inside({ x: onSide(start, far).x - face.x * 80 * H.scale, y: onSide(start, far).y - face.y * 80 * H.scale })).toBe(false);
+      expect(sweep.reach).toBe(0);
+      // One finished illustration moved as one object: it is carried, never turned, stretched or redrawn on the way.
+      for (let t = start; t <= end; t += 50) expect([cueStateAt(cue, t).rot, cueStateAt(cue, t).sc, cueStateAt(cue, t).ty]).toEqual([0, 1, 0]);
+
+      // Before the sweep the whole of it is out of sight, beyond the lower left corner: fingers, thumb, cuff and all of the sleeve.
+      for (const p of handAt(start, outline)) expect(inside(p), `${mode} start`).toBe(false);
+      expect(wristAt(start).x).toBeLessThan(w * 0.25);
+      expect(wristAt(start).y).toBeGreaterThan(h);
+      // It goes out and comes back, once: forward to a single furthest point, then back the way it came, to where it started.
+      let furthest = 0;
+      let turnedAt = start;
+      for (let t = start; t <= end; t += 5) {
+        if (gone(t) > furthest) {
+          furthest = gone(t);
+          turnedAt = t;
+        }
       }
-      // It comes from the lower left: at first its forearm lies below and left of its wrist, off the left edge.
-      expect(onSide(start, -H.arm / 4).x).toBeLessThan(wristAt(start).x);
-      expect(onSide(start, -H.arm / 4).y).toBeGreaterThan(wristAt(start).y);
-      expect(wristAt(start).x).toBeLessThan(0);
-      // And after it, out of sight again, off the top and the right; the cut end of the sleeve is never seen.
-      const end = sweep.at + sweep.dur;
-      for (let far = -H.arm; far <= H.reach; far += 8) expect(inside({ x: onSide(end, far).x - face.x * 80 * H.scale, y: onSide(end, far).y - face.y * 80 * H.scale }), `${mode} end ${far}`).toBe(false);
-      for (let t = start; t <= end; t += 20) expect(inside(onSide(t, -H.arm)), `${mode} sleeve end at ${t}`).toBe(false);
-      // One smooth pass: it only ever goes forward, starting and finishing gently.
-      const gone = (t: number) => (wristAt(t).x - H.ax) * go.x + (wristAt(t).y - H.ay) * go.y;
-      let before = 0;
-      for (let t = start + 10; t <= end; t += 10) {
-        expect(gone(t)).toBeGreaterThanOrEqual(before);
-        before = gone(t);
+      for (let t = start + 5; t <= end; t += 5) {
+        if (t <= turnedAt) expect(gone(t)).toBeGreaterThanOrEqual(gone(t - 5) - 1e-9);
+        else expect(gone(t)).toBeLessThanOrEqual(gone(t - 5) + 1e-9);
+        // It never leaves its line, and never gets ahead of what it has pushed.
+        expect((wristAt(t).x - H.ax) * go.y - (wristAt(t).y - H.ay) * go.x).toBeCloseTo(0, 6);
+        expect(gone(t)).toBeLessThanOrEqual(swept(t) + 1e-9);
       }
-      expect(gone(end)).toBeCloseTo(H.travel);
-      expect(gone(start + 50)).toBeLessThan(gone(start + sweep.dur / 2 + 50) - gone(start + sweep.dur / 2));
+      // Until it lets go it keeps exactly with the sweep; it lets go only after the last thing has been set moving.
+      for (let t = start; t <= letGo; t += 5) expect(gone(t)).toBeCloseTo(swept(t), 6);
+      expect(turnedAt).toBeGreaterThan(letGo);
+      expect(turnedAt).toBeLessThan(start + sweep.dur * 0.7);
+      // At its furthest the hand is well into the frame, fingertips and all: it is seen doing the pushing. The cut end of
+      // the sleeve is never seen, and nor is anything but hand and sleeve: the forearm does not cross the frame.
+      const tips = handAt(turnedAt, front).filter((_, i) => i < front.length * 0.8);
+      expect(tips.filter(inside).length / tips.length).toBeGreaterThan(0.9);
+      expect(wristAt(turnedAt).x).toBeGreaterThan(w * 0.3);
+      const far = outline.map((p, i) => ({ i, far: Math.hypot(p.x, p.y) })).filter((p) => p.far > SWEEP_HAND.arm * H.scale * 0.9);
+      expect(far.length).toBeGreaterThan(0);
+      for (let t = start; t <= end; t += 20) for (const p of far) expect(inside({ x: wristAt(t).x + outline[p.i].x, y: wristAt(t).y + outline[p.i].y }), `${mode} sleeve end at ${t}`).toBe(false);
+      // And after it, out of sight again, where it began.
+      expect(gone(end)).toBeCloseTo(0, 6);
+      for (const p of handAt(end, outline)) expect(inside(p), `${mode} end`).toBe(false);
+      expect(cue.out).toBe(end);
+
       const things = [
-        ...g.notices.map((n, i) => ({ key: `notice-${i}`, cx: n.cx, cy: n.cy, hw: g.notice.w / 2, hh: g.notice.h / 2, from: n.from })),
-        ...g.dice.map((die, i) => ({ key: `die-${i}`, cx: die.cx, cy: die.cy, hw: g.die / 2, hh: g.die / 2, from: null })),
-      ];
+        ...g.notices.map((n, i) => ({ key: `notice-${i}`, from: n.from as { dx: number; dy: number; rot: number } | null })),
+        ...g.dice.map((_, i) => ({ key: `die-${i}`, from: null })),
+      ].map((thing, i) => ({ ...thing, box: g.boxes[i], reach: [...g.reach.notices, ...g.reach.dice][i] }));
+      /** A thing's outline, closely spaced, moved by an offset. */
+      const rim = (box: SweepBox, by: number) => {
+        const corners = boxCorners(box);
+        return corners.flatMap((a, n) => {
+          const b = corners[(n + 1) % 4];
+          return Array.from({ length: 40 }, (_, k) => ({ x: a.x + ((b.x - a.x) * k) / 40 + go.x * by, y: a.y + ((b.y - a.y) * k) / 40 + go.y * by }));
+        });
+      };
+      /** Is any of these points within `pad` of the box? */
+      const touches = (points: { x: number; y: number }[], box: SweepBox, pad: number) => points.some((p) => travelInto(p, go, box, pad) === 0);
+      const moved = (box: SweepBox, by: number): SweepBox => ({ ...box, cx: box.cx + go.x * by, cy: box.cy + go.y * by });
       for (const thing of things) {
-        const cue = scene.cues.find((c) => c.k === thing.key)!;
-        const at = (t: number) => ownerStateAt(scene, t)[thing.key];
+        const own = scene.cues.find((c) => c.k === thing.key)!;
+        const at = (t: number) => cueStateAt(own, t);
+        expect(own.push!.reach).toBe(thing.reach);
         if (thing.from) {
-          expect([at(cue.at).mx, at(cue.at).my, at(cue.at).rot]).toEqual([thing.from.dx, thing.from.dy, thing.from.rot]);
-          const landed = at(cue.at + cue.dur!);
+          expect([at(own.at).mx, at(own.at).my, at(own.at).rot]).toEqual([thing.from.dx, thing.from.dy, thing.from.rot]);
+          const landed = at(own.at + own.dur!);
           expect([landed.mx, landed.my, landed.rot, landed.o]).toEqual([0, 0, 0, 1]);
         }
-        /** How far the thing's rearmost corner stands ahead of the hand's leading side, measured square to that side. */
-        const ahead = (t: number) => {
-          const s = at(t);
-          const wrist = wristAt(t);
-          return (thing.cx + s.mx - wrist.x) * face.x + (thing.cy + s.my - wrist.y) * face.y - (thing.hw * Math.abs(face.x) + thing.hh * Math.abs(face.y));
-        };
         let touchedAt = -1;
         for (let t = start; t <= end; t += 10) {
           const s = at(t);
           // In full view for the whole sweep: pushed away, never faded away.
           expect(s.o, thing.key).toBe(1);
+          const carried = s.mx * go.x + s.my * go.y;
           if (s.mx === 0 && s.my === 0) {
-            // Not yet reached: it has not stirred, and the hand's leading side is still behind it.
+            // Not yet reached: it has not stirred, and the hand is not yet upon it.
             expect(touchedAt).toBe(-1);
             expect(s.rot).toBe(0);
-            expect(ahead(t)).toBeGreaterThanOrEqual(H.gap - 0.001);
+            expect(swept(t)).toBeLessThanOrEqual(thing.reach + 1e-9);
           } else {
-            // Reached: from here it is held just ahead of the leading side, neither left behind nor run through,
-            // and it goes the way the hand goes: up and to the right.
+            // Reached: from here it goes the way the hand goes, up and to the right, exactly with the sweep.
             if (touchedAt < 0) touchedAt = t;
-            expect(ahead(t)).toBeCloseTo(H.gap, 3);
+            expect(carried).toBeCloseTo(swept(t) - thing.reach, 6);
             expect(s.mx).toBeGreaterThan(0);
             expect(s.my).toBeLessThan(0);
             expect(s.my / s.mx).toBeCloseTo(go.y / go.x, 6);
           }
+          // The hand is never drawn through it: no point of the hand's leading outline is ever inside it.
+          expect(touches(handAt(t, front), moved(thing.box, carried), -1.5), `${mode} ${thing.key} run through at ${t}`).toBe(false);
         }
         expect(touchedAt, thing.key).toBeGreaterThan(start);
-        // When it is reached it is beside the hand or the forearm, not out beyond the fingertips: something is there to push it.
-        const wrist = wristAt(touchedAt);
-        const beside = (thing.cx - wrist.x) * along.x + (thing.cy - wrist.y) * along.y;
-        expect(beside, `${mode} ${thing.key} beside the hand`).toBeLessThanOrEqual(H.reach);
-        expect(beside).toBeGreaterThanOrEqual(-H.arm);
-        // By the end of the sweep it is wholly off the canvas, well before the end; only then is it removed.
+        // By three-quarters of the way through it is wholly off the canvas; only at the end is it removed.
         const last = at(end);
-        expect(inside({ x: thing.cx + last.mx - thing.hw * 1.3, y: thing.cy + last.my + thing.hh * 1.3 })).toBe(false);
+        expect(inside({ x: thing.box.cx + last.mx - thing.box.hw * 1.3, y: thing.box.cy + last.my + thing.box.hh * 1.3 })).toBe(false);
         const early = at(start + sweep.dur * 0.75);
-        expect(thing.cx + early.mx - thing.hw > w || thing.cy + early.my + thing.hh < 0, `${mode} ${thing.key} off by three-quarters`).toBe(true);
-        expect(at(cue.out! + cue.outDur!).o).toBe(0);
+        expect(thing.box.cx + early.mx - thing.box.hw > w || thing.box.cy + early.my + thing.box.hh < 0, `${mode} ${thing.key} off by three-quarters`).toBe(true);
+        expect(at(own.out! + own.outDur!).o).toBe(0);
+      }
+      // What set each thing moving, at the moment it was: the hand itself, come within a sliver of it while it still kept up
+      // with the sweep; or something already moving that ran into it (a pile goes as a pile, a die knocks on a card).
+      // Never nothing: every thing's going is traced back, thing by thing, to the hand.
+      const handAtReach = (reach: number) => front.map((p) => ({ x: H.ax + go.x * reach + p.x, y: H.ay + go.y * reach + p.y }));
+      const byHand = things.map((thing) => thing.reach <= swept(letGo) && touches(handAtReach(thing.reach), thing.box, H.gap + 1.5) && !touches(handAtReach(thing.reach), thing.box, H.gap - 1.5));
+      expect(g.byHand).toEqual(byHand);
+      expect(byHand.filter(Boolean).length).toBeGreaterThanOrEqual(1);
+      const accounted = [...byHand];
+      for (let found = true; found; ) {
+        found = false;
+        things.forEach((thing, i) => {
+          if (accounted[i]) return;
+          const ranInto = things.some((other, j) => {
+            const lead = thing.reach - other.reach;
+            return accounted[j] && lead >= -1e-6 && (touches(rim(other.box, lead), thing.box, 1.5) || touches(rim(thing.box, 0), moved(other.box, lead), 1.5));
+          });
+          if (ranInto) {
+            accounted[i] = true;
+            found = true;
+          }
+        });
+      }
+      things.forEach((thing, i) => expect(accounted[i], `${mode} ${thing.key} set moving by something`).toBe(true));
+      // And it is at the dice when they go: its fingertips are within a finger's width of each die as the die is set moving.
+      for (const die of things.filter((thing) => thing.key.startsWith('die'))) {
+        const handThen = front.map((p) => ({ x: H.ax + go.x * die.reach + p.x, y: H.ay + go.y * die.reach + p.y }));
+        expect(touches(handThen, die.box, 16 * H.scale), `${mode} ${die.key} with the hand at it`).toBe(true);
       }
     }
   });
@@ -531,9 +627,28 @@ describe('Project Owners visuals: one clock each', () => {
     expect(bin.out! + bin.outDur!).toBeLessThan(k('shield').at);
     // It is held, then withdrawn all at once. The four groups stay.
     const rewind = k('loose').out!;
-    expect(rewind - Math.max(...rush.map((r) => r.at + r.dur!))).toBeGreaterThanOrEqual(1000);
+    // Held, complete, long enough to take in: four seconds from the last request landing.
+    expect(rewind - Math.max(...rush.map((r) => r.at + r.dur!))).toBeGreaterThanOrEqual(3900);
     expect(rewind).toBe(k('loose').out);
     for (const c of [...rush, ...friction, ...effects, k('stateOut')]) expect(c.out).toBe(rewind);
+    // THE FOOT IS SCENERY (founder, 2026-11-12): one navy bar, in with the opening and never fading; only its words change.
+    const scene = buildOwnerScene('owner-protect-investment', 'desktop');
+    expect(k('foot').at).toBe(0);
+    expect(k('foot').out).toBeUndefined();
+    expect(k('foot').move ?? k('foot').rise).toBeUndefined();
+    for (let t = k('foot').at + k('foot').dur!; t <= scene.end + 5000; t += 50) expect(ownerStateAt(scene, t).foot.o).toBe(1);
+    expect(scene.cues.some((c) => c.k === 'footOut' || c.k === 'band')).toBe(false);
+    // The first state's words come in once the friction has been drawn, are read for at least three seconds, and go with
+    // the state; the second state's come in the same way, as it is named, and stay. Never both at once.
+    expect(k('footOutWords').at).toBeGreaterThanOrEqual(friction[0].at);
+    expect(k('footOutWords').rise).toBe(k('takeaway').rise);
+    expect(k('footOutWords').dur).toBe(k('takeaway').dur);
+    expect(k('footOutWords').out).toBe(rewind);
+    expect(rewind - (k('footOutWords').at + 350)).toBeGreaterThanOrEqual(3000);
+    expect(k('takeaway').at).toBeGreaterThan(k('footOutWords').out! + k('footOutWords').outDur!);
+    expect(k('takeaway').at).toBeGreaterThan(k('stateIn').at);
+    expect(k('takeaway').at - k('stateIn').at).toBeLessThanOrEqual(800);
+    expect(k('takeaway').out).toBeUndefined();
     for (const i of idx) expect(k(`card-${i}`).out).toBeUndefined();
     // 2. The shield is drawn around the contractor, calmly, on a clear frame; then it stands and the state is named again.
     const guard = k('guard');
@@ -564,19 +679,18 @@ describe('Project Owners visuals: one clock each', () => {
       expect(c.from ?? c.roll ?? c.move ?? c.arc).toBeUndefined();
       if (j > 0) expect(c.at - keeps[j - 1].at).toBeGreaterThanOrEqual(150);
     });
-    expect(k('band').at).toBeGreaterThanOrEqual(keeps[keeps.length - 1].at + 500);
-    // 3. The close: nothing is taken away; a band rises along the foot, then the closing line.
-    expect(k('band').at).toBeGreaterThanOrEqual(k(`calm-${n - 1}`).at + 700);
-    expect(k('takeaway').at).toBeGreaterThan(k('band').at);
-    const scene = buildOwnerScene('owner-protect-investment', 'desktop');
-    expect(scene.end).toBeGreaterThanOrEqual(12000);
-    expect(scene.end).toBeLessThanOrEqual(15000);
+    // 3. The close: nothing is taken away. The second state, once whole, is held at least three seconds before it rests.
+    expect(scene.end).toBeGreaterThanOrEqual(18000);
+    expect(scene.end).toBeLessThanOrEqual(23000);
+    expect(scene.end - (keeps[keeps.length - 1].at + keeps[keeps.length - 1].dur!)).toBeGreaterThanOrEqual(3000);
+    // The first is withdrawn in a beat before the shield is drawn.
+    expect(guard.at - rewind).toBeGreaterThanOrEqual(500);
     // The calm state is given at least as long on screen as the disorder was.
     expect(scene.end - guard.at).toBeGreaterThanOrEqual(rewind - friction[0].at);
     // At rest: the contractor in the shield, the four groups connected and calm, and the closing line. Nothing of the first state.
     // Nothing has moved from where it is drawn, and nothing is enlarged.
     const end = ownerStateAt(scene, 1e9);
-    const gone = /^(rush|friction|effect|bill)-|^(loose|stateOut|bin|binBack)$/;
+    const gone = /^(rush|friction|effect|bill)-|^(loose|stateOut|footOutWords|bin|binBack)$/;
     for (const c of scene.cues) {
       expect(end[c.k].o, c.k).toBe(gone.test(c.k) ? 0 : 1);
       if (!gone.test(c.k)) expect([end[c.k].mx, end[c.k].my, end[c.k].rot, end[c.k].sc], c.k).toEqual([0, 0, 0, 1]);
@@ -760,23 +874,133 @@ describe('Project Owners visuals: one clock each', () => {
     expect(k('legend').at).toBeGreaterThan(k(`decide-${n - 1}`).at);
   });
 
-  it('Better decisions: requests pile up marked alike, the question, then date order with dates in place of the marks, then why', () => {
+  it('Better decisions: one continuous story; the line and six options travel together, keep all six at the early stop, and two at the late one', () => {
     const k = (key: string) => cueAt('owner-better-decisions', key);
-    const n = OWNER_DECISIONS.length;
-    const lastRequest = Math.max(...OWNER_DECISIONS.map((_, i) => k(`req-${i}`).at));
-    expect(k('question').at).toBeGreaterThan(lastRequest + 350);
-    for (let i = 0; i < n; i++) {
-      const move = k(`req-${i}`).move!;
-      expect(move.at).toBeGreaterThan(k('question').out!);
-      // The mark gives way to the date: never both.
-      expect(k(`asap-${i}`).out! + 300).toBeLessThanOrEqual(k(`due-${i}`).at);
-      expect(k(`due-${i}`).at).toBeGreaterThanOrEqual(move.at + move.dur - 100);
+    const scene = buildOwnerScene('owner-better-decisions', 'desktop');
+    const g = choiceGeometry('desktop');
+    const at = (t: number) => ownerStateAt(scene, t);
+    // The words: the founder's messages and feet.
+    expect(CHOICE_FOOT.in).toEqual({ head: 'Early planning preserves your choices.', support: 'More options. Better decisions.' });
+    expect(CHOICE_FOOT.out).toEqual({ head: 'Late planning limits your choices.', support: 'Less time. Fewer options. More pressure.' });
+    expect(CHOICE_TIMED).toEqual({
+      head: 'Correctly timed decisions protect your options.',
+      support: 'JiTpro helps your contractor identify what decisions are needed, when they are needed, and why the timing matters.',
+    });
+    expect(OWNER_TAKEAWAY['owner-better-decisions']).toBe(CHOICE_TIMED.head);
+    expect(CHOICE_WORDS.early).toBe('Decision identified early');
+    expect(CHOICE_WORDS.late).toBe('Decision identified late');
+    expect([CHOICE_WORDS.more, CHOICE_WORDS.time]).toEqual(['More options', 'Time passes']);
+    expect(Object.values(CHOICE_WORDS).join(' | ')).not.toMatch(/\d|\$|%|funnel|tile|finish|material|guarantee|always|never/i);
+    // The cone is drawn once, before anything moves, and does not move.
+    const drawn = ['ground', 'cone', 'wall-top', 'wall-bottom', 'axis', 'time', 'more', 'foot'];
+    const SHOWN = k('line').at;
+    for (const key of drawn) {
+      expect(k(key).at + (k(key).dur ?? 350), key).toBeLessThanOrEqual(SHOWN);
+      expect(k(key).move, key).toBeUndefined();
     }
-    expect(k('first').at).toBeGreaterThan(k(`due-${n - 1}`).at);
-    expect(k('why').at).toBeGreaterThan(k('first').at);
-    const end = ownerStateAt(buildOwnerScene('owner-better-decisions', 'desktop'), 1e9);
-    for (let i = 0; i < n; i++) expect([end[`asap-${i}`].o, end[`due-${i}`].o, end[`req-${i}`].o]).toEqual([0, 1, 1]);
-    expect(end.question.o).toBe(0);
+    // The sheet and the foot's bar (founder, 2026-11-12) never go: once in, the bar stays to the end; only its words change.
+    for (const key of ['ground', 'foot']) expect(k(key).out, key).toBeUndefined();
+    for (let t = k('foot').at + k('foot').dur!; t <= scene.end + 5000; t += 50) expect(at(t).foot.o).toBe(1);
+    expect(scene.cues.some((c) => c.k === 'footIn' || c.k === 'footOut')).toBe(false);
+    // ONE GROUP: the line and the six cards are moved by the same two cues, so they cannot part; nothing else moves them.
+    const cards = g.cards.map((_, j) => `card-${j}`);
+    for (const key of ['line', ...cards]) expect(k(key).move, key).toBeUndefined();
+    const run1 = k('now').move!;
+    const run2 = k('nowOn').move!;
+    const early = g.stop('early');
+    const late = g.stop('late');
+    expect(g.start.x + run1.dx).toBeCloseTo(early.x);
+    expect(g.start.x + run1.dx + run2.dx).toBeCloseTo(late.x);
+    expect(run2.at).toBeGreaterThan(run1.at + run1.dur + 4000);
+    expect(run2.dur).toBeGreaterThanOrEqual(4500);
+    // Shown at the mouth, all six, before time passes; the column never closes up.
+    for (const key of ['line', ...cards]) expect(k(key).at + k(key).dur!, key).toBeLessThanOrEqual(run1.at);
+    for (let j = 1; j < g.cards.length; j++) expect(g.cards[j].y - g.cards[j - 1].y).toBeCloseTo(g.cards[1].y - g.cards[0].y);
+    // THE CONE DECIDES: at the early stop it holds all six (timed properly, nothing lost); at the late stop, two.
+    // Early: about a quarter of the way along the cone. Late: 85 to 90% of the way.
+    const along = (x: number) => (x - g.cone.x0) / (g.cone.x1 - g.cone.x0);
+    expect(along(early.x)).toBeCloseTo(0.25, 1);
+    expect(along(late.x)).toBeGreaterThanOrEqual(0.85);
+    expect(along(late.x)).toBeLessThanOrEqual(0.9);
+    expect(early.open).toBe(CHOICE_COUNT);
+    expect(late.open).toBe(2);
+    expect(g.lost).toHaveLength(CHOICE_COUNT - 2);
+    // Each is lost, from the outside in, at the moment the moving group reaches the point where the cone stops holding it.
+    const offs = g.lost.map((l) => k(`off-${l.option}`));
+    const outside = (j: number) => Math.abs(g.cards[j].y - g.cone.cy);
+    offs.forEach((c, i) => {
+      const l = g.lost[i];
+      expect(l.x).toBeGreaterThan(early.x);
+      expect(l.x).toBeLessThanOrEqual(late.x);
+      expect(c.at).toBeGreaterThan(run2.at);
+      expect(c.at).toBeLessThanOrEqual(run2.at + run2.dur);
+      expect(at(c.at).nowOn.mx / run2.dx).toBeCloseTo((l.x - early.x) / (late.x - early.x), 1);
+      // From the outside in, one at a time: each alternative has its own latest viable moment.
+      if (i) {
+        expect(outside(l.option)).toBeLessThan(outside(g.lost[i - 1].option));
+        expect(c.at - offs[i - 1].at).toBeGreaterThanOrEqual(250);
+      }
+    });
+    // Identifying early is not deciding early: no choice is shown being made.
+    expect(scene.cues.some((c) => /chosen|tick|pick/.test(c.k))).toBe(false);
+    const open = g.cards.map((_, j) => j).filter((j) => !g.lost.some((l) => l.option === j));
+    expect(open).toEqual([2, 3]);
+    // Lost options stay seen: the card is never withdrawn before the story is, and the cross is laid over it.
+    for (const l of g.lost) expect(k(`card-${l.option}`).out).toBe(k(`off-${l.option}`).out);
+    // The early stop: its message and foot once the group is there, held about four seconds, gone before it moves on.
+    expect(k('msgEarly').at).toBeGreaterThanOrEqual(run1.at + run1.dur);
+    expect(k('footInWords').at).toBeGreaterThan(k('msgEarly').at);
+    expect(k('msgEarly').out!).toBeLessThanOrEqual(run2.at);
+    // Each stop is held four to five and a half seconds from the moment the group arrives.
+    expect(k('msgEarly').out! - (run1.at + run1.dur)).toBeGreaterThanOrEqual(4000);
+    expect(k('msgEarly').out! - (run1.at + run1.dur)).toBeLessThanOrEqual(5500);
+    // The late stop: the pressure as the cone narrows; then its message and foot, held.
+    expect(k('pressure').at).toBeGreaterThan(run2.at);
+    expect(k('msgLate').at).toBeGreaterThanOrEqual(run2.at + run2.dur);
+    expect(k('footOutWords').at).toBeGreaterThan(k('msgLate').at);
+    // The foot's words cross over at the late stop: the first line goes as the second comes, with no gap and no overlap
+    // long enough to read both.
+    const inGone = k('footInWords').out! + k('footInWords').outDur!;
+    expect(k('footInWords').out!).toBeGreaterThanOrEqual(run2.at + run2.dur);
+    expect(k('footOutWords').at).toBeGreaterThanOrEqual(k('footInWords').out!);
+    expect(k('footOutWords').at).toBeLessThanOrEqual(inGone);
+    // PLAYED ONCE (founder, 2026-11-12): the late stop is complete once its foot words are in; it is held about a second;
+    // then the whole illustration fades away together, smoothly, while the bar stays.
+    const lateDone = k('footOutWords').at + k('footOutWords').dur!;
+    const story = ['cone', 'wall-top', 'wall-bottom', 'axis', 'time', 'more', 'line', 'pressure', 'msgLate', ...cards, ...offs.map((c) => c.k)];
+    const fade = k('msgLate').out!;
+    for (const key of story) {
+      expect(k(key).out, key).toBe(fade);
+      expect(k(key).outDur, key).toBe(k('msgLate').outDur);
+    }
+    expect(fade - lateDone).toBeGreaterThanOrEqual(800);
+    expect(fade - lateDone).toBeLessThanOrEqual(1300);
+    expect(k('msgLate').outDur!).toBeGreaterThanOrEqual(700);
+    const cleared = fade + k('msgLate').outDur!;
+    // The group's carriers only move it; they never fade, so nothing fades twice over.
+    for (const key of ['now', 'nowOn']) expect(k(key).out, key).toBeUndefined();
+    // The late foot words stay while the cone fades, and are gone before the close begins.
+    expect(k('footOutWords').out!).toBeGreaterThan(fade);
+    const lateWordsGone = k('footOutWords').out! + k('footOutWords').outDur!;
+    expect(lateWordsGone).toBeLessThanOrEqual(cleared + 200);
+    // The close: correctly timed decisions. Only once the frame is clear: the six options again, all open, one after
+    // another; then the line about JiTpro; last, the closing line on the foot. Nothing is crossed out; nothing leaves.
+    const timed = g.cards.map((_, j) => k(`timed-${j}`));
+    timed.forEach((c, j) => {
+      expect(c.at, c.k).toBeGreaterThanOrEqual(cleared);
+      expect(c.at).toBeGreaterThanOrEqual(lateWordsGone);
+      expect(c.out, c.k).toBeUndefined();
+      if (j) expect(c.at).toBeGreaterThan(timed[j - 1].at);
+    });
+    expect(k('timedWords').at).toBeGreaterThan(timed[timed.length - 1].at);
+    expect(k('takeaway').at).toBeGreaterThan(k('timedWords').at);
+    expect(scene.end).toBeGreaterThanOrEqual(20000);
+    expect(scene.end).toBeLessThanOrEqual(26000);
+    // It rests on the close, which reduced motion shows at once: the bar, its closing line, the six options and the line
+    // about JiTpro; none of the cone's story.
+    const rest = at(scene.end);
+    for (const key of ['ground', 'foot', 'takeaway', 'timedWords', ...timed.map((c) => c.k)]) expect(rest[key].o, key).toBe(1);
+    for (const key of [...story, 'msgEarly', 'footInWords', 'footOutWords']) expect(rest[key].o, key).toBe(0);
   });
 });
 
@@ -817,21 +1041,80 @@ describe('Project Owners visuals: composed for the frame', () => {
       expect(design.x).toBeGreaterThan(turnR + 6);
       expect(vendors.y).toBeGreaterThanOrEqual(owner.y + g.card.h + (d ? 40 : 24));
       expect(owner.y).toBeGreaterThanOrEqual(g.stateY + 6);
-      expect(vendors.y + g.card.h + g.tag.h).toBeLessThan(g.band.y);
       expect(s.cy + s.h / 2 + 6).toBeLessThan(g.band.y);
-      // Requests rest on each card's inner corners, the first at the top and the second at the foot, inside the canvas, clear of the shield.
+      // Requests rest at each card's inner corners, the first across the top and the second just below the foot. Each is as
+      // wide as its words need, at full size, and runs outward from the inner corner: inside the canvas, clear of the shield
+      // and the contractor's card, clear of the state's name, the closing band and every other request, and off the words
+      // on every card.
+      type Box = { x0: number; y0: number; x1: number; y1: number };
+      type Pt = { x: number; y: number };
+      const corners = (b: Box): Pt[] => [{ x: b.x0, y: b.y0 }, { x: b.x1, y: b.y0 }, { x: b.x1, y: b.y1 }, { x: b.x0, y: b.y1 }];
+      /** A slip's outline as it rests, turned. */
+      const slipShape = (t: { cx: number; cy: number; w: number; turn: number }): Pt[] => {
+        const c = Math.cos((t.turn * Math.PI) / 180);
+        const sn = Math.sin((t.turn * Math.PI) / 180);
+        return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => ({ x: t.cx + c * u * (t.w / 2) - sn * v * (g.tag.h / 2), y: t.cy + sn * u * (t.w / 2) + c * v * (g.tag.h / 2) }));
+      };
+      /** Do two convex outlines overlap? (No line can be drawn between them.) */
+      const meet = (p: Pt[], q: Pt[]) =>
+        [p, q].every((shape) =>
+          shape.every((a, i) => {
+            const b = shape[(i + 1) % shape.length];
+            const axis = { x: -(b.y - a.y), y: b.x - a.x };
+            const span = (pts: Pt[]) => pts.map((pt) => pt.x * axis.x + pt.y * axis.y);
+            return Math.max(...span(p)) > Math.min(...span(q)) && Math.max(...span(q)) > Math.min(...span(p));
+          }),
+        );
+      /** A slip's bounding box, turned as it rests. */
+      const slipBox = (t: { cx: number; cy: number; w: number; turn: number }): Box => {
+        const pts = slipShape(t);
+        return { x0: Math.min(...pts.map((pt) => pt.x)), y0: Math.min(...pts.map((pt) => pt.y)), x1: Math.max(...pts.map((pt) => pt.x)), y1: Math.max(...pts.map((pt) => pt.y)) };
+      };
+      const fs = d ? { name: 10, icon: 18, pad: 10, state: 9 } : { name: 8, icon: 12, pad: 7, state: 7.5 };
+      const header = textWidth(TEAM_STATES.out, fs.state, { caps: true, tracking: 0.12 });
+      const words: Box[] = [{ x0: w / 2 - header / 2, y0: g.stateY - fs.state * 0.75, x1: w / 2 + header / 2, y1: g.stateY + 1 }];
       g.at.forEach((p, i) => {
-        const [first, second] = [g.tagAt(i, 0), g.tagAt(i, 1)];
+        const left = g.onLeft(i);
+        const edge = left ? p.x + fs.pad : p.x + g.card.w - fs.pad;
+        const nameW = fs.icon + (d ? 7 : 5) + textWidth(TEAM[i].label, fs.name, { caps: true, tracking: 0.08 });
+        const nameY = p.y + (d ? 11 : 7.5) + fs.icon / 2 + fs.name * 0.36;
+        words.push({ x0: left ? edge : edge - nameW, y0: nameY - fs.name * 0.75, x1: left ? edge + nameW : edge, y1: nameY + 1 });
+        const lines = g.effectLines(i);
+        const lineY = p.y + (d ? 45 : 31);
+        lines.forEach((line, n) => {
+          const y = lineY + (n - (lines.length - 1) / 2) * g.effectSize * 1.18;
+          const lw = textWidth(line, g.effectSize);
+          // Each line of what it costs the group stays between the card's edges, and below the group's name.
+          expect(lw, `${mode} ${line}`).toBeLessThanOrEqual(g.card.w - 2 * fs.pad);
+          expect(y - g.effectSize * 0.75).toBeGreaterThan(nameY + 3);
+          expect(y + g.effectSize * 0.25).toBeLessThan(p.y + g.card.h - (d ? 10 : 7));
+          words.push({ x0: left ? edge : edge - lw, y0: y - g.effectSize * 0.75, x1: left ? edge + lw : edge, y1: y + g.effectSize * 0.25 });
+        });
+      });
+      const loose = { x0: s.cx - g.loose.w / 2 - 6, y0: s.cy - g.loose.h / 2 - 6, x1: s.cx + g.loose.w / 2 + 6, y1: s.cy + g.loose.h / 2 + 6 };
+      const slips = TEAM_RUSH.map((r) => ({ r, t: g.tagAt(r.to, r.round) }));
+      slips.forEach(({ r, t }, j) => {
+        const box = slipBox(t);
+        const label = `${mode} ${requestLabel(r)} (${TEAM[r.to].label})`;
+        // Its words at full size, with room either side: never squeezed to fit.
+        expect(t.w, label).toBeGreaterThanOrEqual(textWidth(requestLabel(r), g.tag.size, { caps: true, tracking: 0.06 }) + 2 * g.tag.pad - 1e-9);
+        expect(box.x0, label).toBeGreaterThanOrEqual(2);
+        expect(box.x1, label).toBeLessThanOrEqual(w - 2);
+        expect(box.y1, label).toBeLessThan(g.band.y - 2);
+        expect(meet(slipShape(t), corners(loose)), label).toBe(false);
+        const p = g.at[r.to];
+        const innerEdge = g.onLeft(r.to) ? p.x + g.card.w : p.x;
+        if (g.onLeft(r.to)) expect(t.cx + t.w / 2).toBeLessThan(left);
+        else expect(t.cx - t.w / 2).toBeGreaterThan(right);
+        // Its inner end at the inner corner, the rest of it running outward over the card.
+        expect(Math.abs((g.onLeft(r.to) ? t.cx + t.w / 2 : t.cx - t.w / 2) - innerEdge)).toBeLessThanOrEqual(d ? 10 : 8);
+        if (r.round === 0) expect(t.cy).toBeLessThan(p.y + 4);
+        else expect(t.cy).toBeGreaterThan(p.y + g.card.h);
+        for (const word of words) expect(meet(slipShape(t), corners(word)), `${label} over words`).toBe(false);
+        slips.forEach(({ t: other }, k) => k !== j && expect(meet(slipShape(t), slipShape(other)), `${label} over another`).toBe(false));
+      });
+      g.at.forEach((p, i) => {
         const innerEdge = g.onLeft(i) ? p.x + g.card.w : p.x;
-        for (const t of [first, second]) {
-          expect(Math.abs(t.cx - innerEdge)).toBeLessThan(g.tag.w * 0.6);
-          expect(t.cx - g.tag.w / 2).toBeGreaterThanOrEqual(2);
-          expect(t.cx + g.tag.w / 2).toBeLessThanOrEqual(w - 2);
-          if (g.onLeft(i)) expect(t.cx + g.tag.w / 2).toBeLessThan(left);
-          else expect(t.cx - g.tag.w / 2).toBeGreaterThan(right);
-        }
-        expect(first.cy).toBeLessThan(p.y + 4);
-        expect(second.cy).toBeGreaterThan(p.y + g.card.h - 6);
         // The friction runs from the contractor's card to this card's inner edge, and is jagged.
         const jag = g.friction(i);
         expect(jag.split('L').length - 1).toBeGreaterThanOrEqual(5);
@@ -993,32 +1276,102 @@ describe('Project Owners visuals: composed for the frame', () => {
       expect(g.stage.inset).toBeLessThan(margin);
     });
 
-    it(`${mode}: the requests land in date order, in separate rows, inside the canvas`, () => {
-      const g = requestGeometry(mode);
-      const scene = buildOwnerScene('owner-better-decisions', mode);
-      const end = ownerStateAt(scene, scene.end);
-      const landed = OWNER_DECISIONS.map((_, i) => {
-        const from = g.pile[REQUEST_PILE.indexOf(i)];
-        return { x: from.x + end[`req-${i}`].mx, y: from.y + end[`req-${i}`].my };
-      });
-      landed.forEach((p, i) => {
-        expect(p.x).toBeCloseTo(g.rowX);
-        expect(p.y).toBeCloseTo(g.rowY(i));
-        expect(p.x + g.card.w).toBeLessThanOrEqual(w);
-        if (i > 0) expect(p.y - landed[i - 1].y).toBeGreaterThanOrEqual(g.card.h + 4);
-      });
-      for (const p of g.pile) {
-        expect(p.x).toBeGreaterThanOrEqual(0);
-        expect(p.x + g.card.w).toBeLessThanOrEqual(w);
-        expect(p.y + g.card.h).toBeLessThan(h * 0.68);
+    it(`${mode}: Better decisions sets the cone between the messages and the band, the options apart, and every word clear`, () => {
+      const g = choiceGeometry(mode);
+      const d = mode === 'desktop';
+      const T = g.type;
+      const C = g.cone;
+      type Box = { x0: number; y0: number; x1: number; y1: number; name: string };
+      const text = (name: string, x: number, base: number, words: string, size: number, opts: { caps?: boolean; tracking?: number; anchor?: 'start' | 'middle' } = {}): Box => {
+        const tw = textWidth(words, size, opts);
+        const x0 = opts.anchor === 'middle' ? x - tw / 2 : x;
+        return { name, x0, y0: base - size * 0.75, x1: x0 + tw, y1: base + size * 0.25 };
+      };
+      const meet = (p: Box, q: Box) => p.x0 < q.x1 && q.x0 < p.x1 && p.y0 < q.y1 && q.y0 < p.y1;
+      const inside = (p: Box, q: Box) => p.x0 >= q.x0 && p.x1 <= q.x1 && p.y0 >= q.y0 && p.y1 <= q.y1;
+      const frame: Box = { name: 'frame', x0: 2, y0: 2, x1: w - 2, y1: g.band.y - 2 };
+      const W = g.card.w;
+      const Hc = g.card.h;
+      const topAt = (x: number) => C.cy - g.half(x);
+      const bottomAt = (x: number) => C.cy + g.half(x);
+      /** A card as it rests about (x, y), its soft offset included. */
+      const cardBox = (name: string, x: number, y: number): Box => ({ name, x0: x - W / 2, y0: y - Hc / 2, x1: x + W / 2 + 1.2 * g.k, y1: y + Hc / 2 + 2 * g.k });
+      // The cone: wide at its mouth, narrow at its tip, inside the frame, above the time axis, which is above the band.
+      expect(g.half(C.x0)).toBeGreaterThan(g.half(C.x1) * 5);
+      expect(C.x0).toBeGreaterThanOrEqual(frame.x0 + 10);
+      expect(C.x1 + g.pressure.thick).toBeLessThanOrEqual(frame.x1 - 10);
+      // Time: one unbroken axis; its words above its start, under the mouth, clear of the cone and of the ticks; the
+      // marker's pointer beneath it, above the band.
+      const A = g.axis;
+      const time = text('time', A.label.x, A.label.y, CHOICE_WORDS.time, T.label, { caps: true, tracking: 0.08 });
+      expect(time.y0).toBeGreaterThanOrEqual(bottomAt(time.x0) + 2);
+      expect(time.y1).toBeLessThanOrEqual(A.y - A.tick - 1);
+      expect(A.y + A.pointer.h).toBeLessThanOrEqual(g.band.y - 2);
+      for (const x of A.ticks) {
+        expect(x).toBeGreaterThan(A.x0);
+        expect(x).toBeLessThan(A.x1);
       }
-      // Piled, the cards overlap: crowded, as the ordinary experience is.
-      expect(g.pile[1].y - g.pile[0].y).toBeLessThan(g.card.h);
-      expect(g.why.x + g.why.w).toBeLessThanOrEqual(w);
-      expect(g.why.y + g.why.h).toBeLessThan(h - (mode === 'desktop' ? 50 : 30));
-      // On a narrow frame the other requests step back for the explanation; on a desktop frame they stay.
-      const later = scene.cues.find((c) => c.k === 'req-1')!;
-      expect(later.outTo).toBe(mode === 'phone' ? 0.2 : undefined);
+      // *More options* above the mouth, clear of the cone.
+      const more = text('more', g.more.x, g.more.y, CHOICE_WORDS.more, T.label);
+      expect(inside(more, frame)).toBe(true);
+      expect(more.y1).toBeLessThanOrEqual(topAt(more.x1) - 2);
+      // The line reaches across the cone wherever it stands (it is clipped to it).
+      expect(g.start.y0).toBeLessThanOrEqual(topAt(g.start.x));
+      expect(g.start.y1).toBeGreaterThanOrEqual(bottomAt(g.start.x));
+      // Each card is named, *OPTION A* to *OPTION F*, legibly: at least 6.5 units, with room either side and above and below.
+      expect(g.card.label).toBeGreaterThanOrEqual(6.5);
+      g.cards.forEach((_, j) => {
+        const name = g.name(j);
+        expect(`${name.word} ${name.letter}`).toBe(`Option ${'ABCDEF'[j]}`);
+        expect(textWidth(`${name.word} ${name.letter}`, g.card.label, { caps: true, tracking: 0.06 })).toBeLessThanOrEqual(W - (d ? 10 : 6));
+      });
+      expect(g.card.label * 0.72).toBeLessThanOrEqual(Hc - (d ? 6 : 4));
+      // The cards: apart; wholly inside the cone at the mouth and at the early stop; and wherever the group goes, inside
+      // the frame, clear of the messages, of the time axis and its words, and of *More options*.
+      g.cards.forEach((c, j) => j && expect(c.y - g.cards[j - 1].y - Hc).toBeGreaterThanOrEqual(2.5));
+      for (const x of [g.start.x, g.stop('early').x])
+        for (const c of g.cards) {
+          expect(x - W / 2).toBeGreaterThanOrEqual(C.x0);
+          expect(g.half(x + W / 2) - Math.abs(c.y - C.cy) - Hc / 2).toBeGreaterThanOrEqual(0);
+        }
+      const messages = (['early', 'late'] as const).map((when) => {
+        const M = g.message(CHOICE_WORDS[when]);
+        expect(M.lines).toHaveLength(1);
+        return M.lines.map((l, i) => text(`${when} ${i}`, M.x, l.y, l.line, T.message, { caps: true, tracking: 0.1, anchor: 'middle' }));
+      });
+      for (const lines of messages)
+        for (const m of lines) {
+          expect(inside(m, frame), m.name).toBe(true);
+          expect(meet(m, more), m.name).toBe(false);
+          // Above the cone along its whole width.
+          expect(m.y1, m.name).toBeLessThanOrEqual(topAt(Math.max(C.x0, m.x0)) - 2);
+        }
+      for (const x of [g.start.x, g.stop('early').x, g.stop('late').x])
+        for (const c of g.cards) {
+          const card = cardBox('card', x, c.y);
+          expect(inside(card, frame)).toBe(true);
+          expect(card.y1).toBeLessThan(A.y - A.tick - 1);
+          for (const m of messages.flat()) expect(meet(card, m), `${m.name} at ${x}`).toBe(false);
+          expect(meet(card, more)).toBe(false);
+          expect(meet(card, time)).toBe(false);
+        }
+      // The close: six options in a level row, centred, apart and inside the frame; the line about JiTpro beneath them on
+      // at most two lines, each inside the frame and clear of the row; and the closing line fits the foot on its own.
+      const t = g.timed;
+      const cards = t.xs.map((x, j) => cardBox(`timed ${j}`, x, t.y));
+      expect((t.xs[0] + t.xs[t.xs.length - 1]) / 2).toBeCloseTo(w / 2, 0);
+      cards.forEach((c, j) => {
+        expect(inside(c, frame), c.name).toBe(true);
+        if (j) expect(c.x0 - cards[j - 1].x1).toBeGreaterThanOrEqual(4);
+      });
+      expect(t.support.lines.length).toBeLessThanOrEqual(2);
+      expect(t.support.lines.map((l) => l.line).join(' ')).toBe(CHOICE_TIMED.support);
+      for (const l of t.support.lines) {
+        const line = text(l.line, t.support.x, l.y, l.line, t.support.size, { anchor: 'middle' });
+        expect(inside(line, { ...frame, x0: frame.x0 + 8, x1: frame.x1 - 8 }), l.line).toBe(true);
+        for (const c of cards) expect(line.y0, l.line).toBeGreaterThan(c.y1 + 6);
+      }
+      expect(textWidth(CHOICE_TIMED.head, g.band.head)).toBeLessThanOrEqual(w - 16);
     });
   }
 });

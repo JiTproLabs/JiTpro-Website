@@ -2,7 +2,7 @@
  * The Project Owners tabs' visuals, as pure data and state (Design System
  * Section 54.4.5, 2026-11-11). PURE: no DOM, no React.
  *
- * ONE PROJECT. More predictability and Better decisions read the sample
+ * ONE PROJECT. More predictability reads the sample
  * project the general contractor tabs draw: the owner's decisions in its
  * schedule and in Connect's dependencies. No chain, activity, date or
  * dependency is changed or authored here; only short display names are.
@@ -110,6 +110,8 @@ export const GAMBLE_CONTRACT = {
 export const GAMBLE_SPECS = { title: 'Specifications', short: 'Specs' } as const;
 /** What the dice stand for (set as one line): the owner's uncertainty about the two promises. */
 export const GAMBLE_CAPTION = ['Hoping everything goes', 'according to plan?'] as const;
+/** The turn of the story, shown alone on the cleared table before the plan arrives (founder, 2026-11-12). */
+export const GAMBLE_TURN = 'It doesn’t have to be this way.';
 /** The surprises, in the order they arrive (founder, 2026-11-12: six, where there had been three). */
 export const GAMBLE_NOTICES = ['Change order', 'Schedule delay', 'Cost overrun', 'Decision needed now', 'More revisions', 'Another surprise'] as const;
 /** The one lettered in the late colour: the demand for a decision now. */
@@ -127,6 +129,109 @@ export const GAMBLE_PLAN = {
   /** The line beneath the closing headline, in its two sentences. */
   support: ['Your contractor’s procurement plan.', 'Powered by JiTpro.'],
 } as const;
+/**
+ * The sweeping hand's illustration (`SweepingHand.tsx`), measured in its own
+ * units about the wrist: fingers up the page (negative y), sleeve down it.
+ * `tip`: the tip of the middle finger, the foremost point of the hand.
+ * `arm`: the length of sleeve drawn behind the wrist, long enough that its
+ * cut end is never seen. `front`: the outline that can meet something as the
+ * hand goes forward, from the outside of the thumb round its tip, across the
+ * web, over the four fingertips and down the leading side to the cuff and
+ * the first of the sleeve. `rest`: the rest of the sleeve's outline, which
+ * touches nothing but must be out of sight before and after. Both follow the
+ * drawn outline; if the drawing changes, they change with it.
+ */
+export const SWEEP_HAND = {
+  tip: { x: -43, y: -155.8 },
+  arm: 900,
+  front: [
+    [-87, -54], [-96.5, -81.2], [-93.8, -89.5], [-85.5, -86.8], [-77, -70], [-69.5, -57.5], [-66, -84], [-63.2, -137], [-57.5, -142.7], [-51.8, -137],
+    [-50.5, -127], [-48.8, -150], [-43, -155.8], [-37.2, -150], [-35, -128], [-33.1, -138.5], [-27.5, -144.1], [-21.9, -138.5], [-19.2, -104], [-17, -113],
+    [-12, -118], [-7, -113], [-2, -68], [-0.5, -36], [-8, 5], [-2.5, 17], [0, 13], [0, 240],
+  ],
+  rest: [[0, 900], [-88, 900], [-86, 300], [-62, 13], [-53, 5], [-70, -18]],
+} as const;
+
+type Spot = { x: number; y: number };
+/** Something on the table that can be pushed: a rectangle about its centre, turned. */
+export type SweepBox = { cx: number; cy: number; hw: number; hh: number; turn: number };
+const RAD = Math.PI / 180;
+/** Points along a line of points, no more than `step` apart. */
+const spaced = (points: readonly Spot[], step: number, closed = false): Spot[] => {
+  const out: Spot[] = [];
+  const n = closed ? points.length : points.length - 1;
+  for (let i = 0; i < n; i++) {
+    const a = points[i];
+    const b = points[(i + 1) % points.length];
+    const parts = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / step));
+    for (let k = 0; k < parts; k++) out.push({ x: a.x + ((b.x - a.x) * k) / parts, y: a.y + ((b.y - a.y) * k) / parts });
+  }
+  if (!closed) out.push(points[points.length - 1]);
+  return out;
+};
+/** A box's four corners. */
+export const boxCorners = (b: SweepBox): Spot[] => {
+  const c = Math.cos(b.turn * RAD);
+  const sn = Math.sin(b.turn * RAD);
+  return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, w]) => ({ x: b.cx + c * u * b.hw - sn * w * b.hh, y: b.cy + sn * u * b.hw + c * w * b.hh }));
+};
+/** How far a point must go in the direction `go` before it enters a box grown by `pad` all round: 0 if it is in it already, null if it never does. */
+export function travelInto(p: Spot, go: Spot, b: SweepBox, pad = 0): number | null {
+  const c = Math.cos(-b.turn * RAD);
+  const sn = Math.sin(-b.turn * RAD);
+  const q = [c * (p.x - b.cx) - sn * (p.y - b.cy), sn * (p.x - b.cx) + c * (p.y - b.cy)];
+  const g = [c * go.x - sn * go.y, sn * go.x + c * go.y];
+  const half = [b.hw + pad, b.hh + pad];
+  let lo = -Infinity;
+  let hi = Infinity;
+  for (let i = 0; i < 2; i++) {
+    if (Math.abs(g[i]) < 1e-9) {
+      if (Math.abs(q[i]) > half[i]) return null;
+      continue;
+    }
+    const t1 = (-half[i] - q[i]) / g[i];
+    const t2 = (half[i] - q[i]) / g[i];
+    lo = Math.max(lo, Math.min(t1, t2));
+    hi = Math.min(hi, Math.max(t1, t2));
+  }
+  return hi >= Math.max(lo, 0) ? Math.max(lo, 0) : null;
+}
+/**
+ * How far a sweep must travel in the direction `go` before each box is set
+ * moving, and whether the sweeper itself did it. A box is set moving by the
+ * sweeper's own outline (`pusher`, where it starts) coming within `gap` of
+ * it, which the sweeper can do only in its first `keepsUp` of travel, while
+ * it keeps up with the sweep; or by a box already moving running into it:
+ * things push things, so a pile goes as a pile and a die knocks on a card.
+ * Once moving, everything travels with the sweep, so nothing moving catches
+ * or is caught by anything else that is. A box nothing reaches is Infinity.
+ */
+export function sweepReaches(pusher: readonly Spot[], go: Spot, boxes: readonly SweepBox[], gap: number, keepsUp: number): { reach: number[]; byHand: boolean[] } {
+  const least = (points: readonly Spot[], way: Spot, b: SweepBox, pad: number) =>
+    points.reduce((best, p) => {
+      const d = travelInto(p, way, b, pad);
+      return d === null ? best : Math.min(best, d);
+    }, Infinity);
+  const direct = boxes.map((b) => least(pusher, go, b, gap)).map((r) => (r <= keepsUp ? r : Infinity));
+  const reach = [...direct];
+  const rims = boxes.map((b) => spaced(boxCorners(b), 3, true));
+  const back = { x: -go.x, y: -go.y };
+  for (let changed = true; changed; ) {
+    changed = false;
+    boxes.forEach((pushed, i) =>
+      boxes.forEach((pushing, j) => {
+        if (i === j || !(reach[j] < reach[i])) return;
+        const d = Math.min(least(rims[j], go, pushed, 0), least(rims[i], back, pushing, 0));
+        if (reach[j] + d < reach[i] - 1e-6) {
+          reach[i] = reach[j] + d;
+          changed = true;
+        }
+      }),
+    );
+  }
+  return { reach, byHand: reach.map((r, i) => r === direct[i] && r < Infinity) };
+}
+
 /** The faces the dice come to rest on. They mean nothing; they are not a pair, and not a seven. */
 export const GAMBLE_DICE = [3, 5] as const;
 
@@ -145,35 +250,74 @@ export const GAMBLE_DICE = [3, 5] as const;
  * The words are the founder's (brief, 2026-11-12) except those marked AUTHORED.
  */
 export const TEAM = [
-  /* In the order of their corners: top left, top right, bottom right, bottom left. Each effect is one of the brief's, shortened;
-     each calm word is one of the brief's. None says "scheduled": this is about coordination, not a timetable. */
-  { id: 'owner', label: 'Owner', effect: 'Cost exposure', calm: 'Informed' },
-  { id: 'design', label: 'Design team', effect: 'Repeated revisions', calm: 'Aligned' },
-  { id: 'consultants', label: 'Consultants', effect: 'Extra review', calm: 'Coordinated' },
-  { id: 'vendors', label: 'Vendors', effect: 'Stop-start flow', calm: 'Clarity' },
+  /* In the order of their corners: top left, top right, bottom right, bottom left. Weak planning costs each group something
+     different (founder, 2026-11-12): two rushed requests of its own, and what they add up to. Each calm word is an end state of
+     the contractor's planning, the founder's (2026-11-12). */
+  { id: 'owner', label: 'Owner', requests: ['Surprise', 'Rushed decision'], effect: 'Last-minute decisions', calm: 'In control' },
+  { id: 'design', label: 'Design team', requests: ['ASAP', 'No priority'], effect: 'Competing urgent requests', calm: 'Aligned' },
+  { id: 'consultants', label: 'Consultants', requests: ['ASAP', 'No priority'], effect: 'Competing urgent requests', calm: 'Coordinated' },
+  /* The founder's *Unrealistic deadlines* is set as the brief's own fallback, *Rushed deadlines*: the longer will not fit on
+     a slip without running off the frame or being set too small to read. */
+  { id: 'vendors', label: 'Vendors', requests: ['Rushed deadlines', 'Rescheduled'], effect: 'Stop-start work', calm: 'Ready' },
 ] as const;
 export type TeamId = (typeof TEAM)[number]['id'];
 /** The hero's name: on two lines in the middle of a desktop frame, shortened on a narrow one. */
 export const TEAM_CONTRACTOR = { lines: ['General', 'contractor'], short: 'Contractor' } as const;
-/** The two states, named above the picture in the brief's own words. */
-export const TEAM_STATES = { out: 'Contractor out of control', in: 'Contractor in control' } as const;
-/** The marks on the rushed requests that leave an uncoordinated contractor. */
-export const TEAM_REQUESTS = ['Urgent', 'ASAP', 'Revised'] as const;
+/** The two states, named above the picture (founder, 2026-11-12; they had been *Contractor out of control* and *Contractor in control*). Set in capitals by the renderer. */
+export const TEAM_STATES = { out: 'Weak procurement planning', in: 'Precise procurement planning' } as const;
 /**
- * The requests in the order they are sent: who each goes to, which mark it
- * carries, and whether it is that group's first or second. Everyone gets a
- * second while still dealing with the first, and never the same mark twice.
+ * The requests in the order they are sent: who each goes to, and whether it
+ * is that group's first or second. Everyone gets a second while still
+ * dealing with the first. What each says is the group's own (`TEAM`).
  */
 export const TEAM_RUSH = [
-  { to: 0, mark: 0, round: 0 },
-  { to: 1, mark: 2, round: 0 },
-  { to: 2, mark: 1, round: 0 },
-  { to: 3, mark: 2, round: 0 },
-  { to: 0, mark: 2, round: 1 },
-  { to: 1, mark: 1, round: 1 },
-  { to: 2, mark: 0, round: 1 },
-  { to: 3, mark: 1, round: 1 },
+  { to: 0, round: 0 },
+  { to: 1, round: 0 },
+  { to: 2, round: 0 },
+  { to: 3, round: 0 },
+  { to: 0, round: 1 },
+  { to: 1, round: 1 },
+  { to: 2, round: 1 },
+  { to: 3, round: 1 },
 ] as const;
+/** What a request says. */
+export const requestLabel = (r: { to: number; round: number }) => TEAM[r.to].requests[r.round];
+
+/*
+ * How wide a line of type is set, for fitting words to slips and cards. Measured from Arial Bold, which sets wider than
+ * the Inter Tight the page uses, so a line that fits by this measure fits on the page with room to spare.
+ */
+const LOWER = [556, 611, 556, 611, 556, 333, 611, 611, 278, 278, 556, 278, 889, 611, 611, 611, 611, 389, 556, 333, 611, 556, 778, 556, 556, 500];
+const UPPER = [722, 722, 722, 722, 667, 611, 778, 722, 278, 556, 722, 611, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611];
+export function textWidth(text: string, size: number, opts: { caps?: boolean; tracking?: number } = {}): number {
+  const set = opts.caps ? text.toUpperCase() : text;
+  let units = 0;
+  for (const ch of set) {
+    const c = ch.charCodeAt(0);
+    if (c >= 97 && c <= 122) units += LOWER[c - 97];
+    else if (c >= 65 && c <= 90) units += UPPER[c - 65];
+    else if (ch === ' ' || ch === '.' || ch === '’' || ch === "'") units += 278;
+    else if (ch === '-') units += 333;
+    else units += 722;
+  }
+  return (units / 1000 + (opts.tracking ?? 0) * set.length) * size;
+}
+/** Words set on one line if they fit `room`, otherwise broken onto two as evenly as the words allow. */
+export function fitLines(text: string, size: number, room: number): string[] {
+  if (textWidth(text, size) <= room) return [text];
+  const words = text.split(' ');
+  let best: string[] = [text];
+  let worst = Infinity;
+  for (let k = 1; k < words.length; k++) {
+    const lines = [words.slice(0, k).join(' '), words.slice(k).join(' ')];
+    const widest = Math.max(...lines.map((l) => textWidth(l, size)));
+    if (widest < worst) {
+      worst = widest;
+      best = lines;
+    }
+  }
+  return best;
+}
 /**
  * Wasted money, while the contractor is out of control: how many bills leave
  * each group for the jobsite dumpster. It stands for avoidable waste from
@@ -190,21 +334,76 @@ export const TEAM_WASTE_ROUNDS = 3;
  */
 export type TeamParty = number | 'gc';
 export const TEAM_PARTIES: readonly TeamParty[] = ['gc', ...TEAM.map((_, i) => i)];
-/** What stands behind the contractor in control: the mark on the shield, and the phrase beneath the closing line (the founder's, from Reduce risk). */
+/** What stands behind the contractor in control: the mark on the shield. */
 export const TEAM_MARK = 'JiTpro';
-export const TEAM_POWERED = 'Powered by JiTpro.';
 
-/** The order the requests pile up in before they are put in date order: deliberately not date order. */
-export const REQUEST_PILE = [1, 3, 0, 2].filter((i) => i < OWNER_DECISIONS.length);
+/**
+ * The foot of each state of Protect your investment: one band, the same in
+ * both, carrying a line and a phrase beneath it (founder, 2026-11-12). The
+ * second state's line is the visual's closing line, unchanged.
+ */
+export const TEAM_FOOT = {
+  out: { head: 'Weak procurement planning puts your investment at risk.', support: 'Preventable delays. Rising costs. Eroding profits.' },
+  in: { head: 'A coordinated contractor protects your investment.', support: 'JiTpro gets the field what it needs, when it needs it.' },
+} as const;
+
+/* ------------------------------------------- Better decisions (redrawn 2026-11-12) */
+
+/**
+ * BETTER DECISIONS is an ILLUSTRATION, as Reduce risk and Protect your
+ * investment are, and reads no project data (founder briefs, 2026-11-12).
+ * ONE CONE, AND IT DOES NOT MOVE: a corridor tapering from left to right,
+ * wide where the project is early and narrow where it is late; time passes
+ * along it, and its height is how much room for choice is left.
+ * ONE GROUP, ONE STORY, NEVER RESET: six options in a column ride with a
+ * dashed line that marks the time. They keep their places in the column; the
+ * cone does not squeeze them together. The group stops a quarter of the way
+ * in, while the cone still holds all six: the decision identified early. It
+ * carries on from there; as the cone narrows, the options it no longer has
+ * room for are left outside its walls and become unavailable, one at a time,
+ * still seen, crossed out in red. It stops near the narrow end with two: the
+ * decision identified late. Nothing falls, and nothing is set by hand: an
+ * option is lost when the cone no longer holds it. Each option stands for an
+ * alternative with its own lead time, so each has its own latest viable
+ * moment; the column is set a little off the centre line so that no two are
+ * lost at once. Identifying a decision early is not making it early: no
+ * choice is shown being made. The owner decides; the contractor identifies
+ * the decision and its timing. Nobody is drawn, and nobody is blamed.
+ * The callouts and the feet are the founder's (brief, 2026-11-12).
+ * THEN IT MOVES ON, ONCE (founder, 2026-11-12): it plays one time, never
+ * loops; after a beat at the late stop the cone is faded away, and the
+ * visual closes on correctly timed decisions: the six options again, all
+ * open, a line on what JiTpro helps the contractor do, and the closing line
+ * on the foot. Identified early; decided at the right time.
+ */
+export const CHOICE_FOOT = {
+  in: { head: 'Early planning preserves your choices.', support: 'More options. Better decisions.' },
+  out: { head: 'Late planning limits your choices.', support: 'Less time. Fewer options. More pressure.' },
+} as const;
+/** The close, the founder's words: the closing line, on the foot, and the line set above it, beneath the options. */
+export const CHOICE_TIMED = {
+  head: 'Correctly timed decisions protect your options.',
+  support: 'JiTpro helps your contractor identify what decisions are needed, when they are needed, and why the timing matters.',
+} as const;
+/** The words on the picture: the founder's. The two callouts are shown at the stops, each with its foot. */
+export const CHOICE_WORDS = {
+  more: 'More options',
+  time: 'Time passes',
+  early: 'Decision identified early',
+  late: 'Decision identified late',
+  option: 'Option',
+} as const;
+/** How many options there are, and their letters (founder, 2026-11-12): each is named, *Option A* to *Option F*; any alternative, never a product. */
+export const CHOICE_COUNT = 6;
+export const CHOICE_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'] as const;
 
 /** The closing line of each visual, exactly as supplied by the founder (2026-11-11; Reduce risk, 2026-11-12). */
 export const OWNER_TAKEAWAY: Record<OwnerTabId, string> = {
   'owner-reduce-risk': 'Confidence requires a plan.',
-  'owner-protect-investment': 'A coordinated contractor protects your investment.',
+  'owner-protect-investment': TEAM_FOOT.in.head,
   'owner-predictability': 'Fewer surprises. More time to prepare.',
-  'owner-better-decisions': 'Clear priorities. Better-informed decisions.',
+  'owner-better-decisions': CHOICE_TIMED.head,
 };
-export const OWNER_QUESTION = 'Which decision do you need first?';
 export const LOOKAHEAD_STEPS = ['Coming up', 'Prepare', 'Decision required'] as const;
 export { shortDay, fullDay };
 
@@ -248,6 +447,7 @@ export type Cue = {
    */
   roll?: { dur: number; dx: number; hop: number; hops: number; turns: number };
 };
+/** A visual's cues and its length. A visual plays once and rests on its last frame, which reduced motion shows at once (Sections 46.5, 46.6). */
 export type OwnerScene = { tab: OwnerTabId; mode: OwnerMode; cues: Cue[]; end: number };
 export type CueState = { o: number; ty: number; draw: number; mx: number; my: number; rot: number; sc: number };
 
@@ -293,28 +493,91 @@ export const ownerStateAt = (scene: OwnerScene, t: number): Record<string, CueSt
  * contract in the middle, the specifications to the right. The dice roll
  * across them and come to rest in the middle of the frame, on the contract
  * beneath its two promises. Six notices pile up in two columns, either side
- * of the dice and never on them. A hand sweeps notices and dice away, up and
- * to the right; the documents stay, then step back, and the plan is laid
+ * of the dice and never on them. A hand reaches in from the lower left and
+ * pushes notices and dice away, up and to the right, then is drawn back; the
+ * documents stay, then step back, and the plan is laid
  * over them. At the close a navy stage is drawn over all of it and the plan
  * alone is left, enlarged, beside the lockup.
  */
 export function gambleGeometry(mode: OwnerMode) {
+  /* Worked out once for each design: it is the same every time it is asked for. */
+  const laid = GAMBLE.get(mode) ?? layGamble(mode);
+  GAMBLE.set(mode, laid);
+  return laid;
+}
+const GAMBLE = new Map<OwnerMode, ReturnType<typeof layGamble>>();
+function layGamble(mode: OwnerMode) {
   const d = mode === 'desktop';
   const die = d ? 34 : 24;
   const notice = d ? { w: 164, h: 54 } : { w: 116, h: 34 };
+  /* Where the dice and the notices rest; the notices in order of arrival, alternating sides: the first, third and fifth form
+     a column to the left of the dice, the second, fourth and sixth a column to the right. Each lands a little lower than the
+     one above, so its heading shows. */
+  const dice = d
+    ? [
+        { cx: 262, cy: 178, turn: -8 },
+        { cx: 300, cy: 190, turn: 12 },
+      ]
+    : [
+        { cx: 159, cy: 118, turn: -8 },
+        { cx: 184, cy: 126, turn: 12 },
+      ];
+  const notices = d
+    ? [
+        { cx: 126, cy: 96, turn: -6, from: { dx: -70, dy: -10, rot: -10 } },
+        { cx: 438, cy: 100, turn: 4, from: { dx: 80, dy: -30, rot: 12 } },
+        { cx: 120, cy: 152, turn: 5, from: { dx: -90, dy: 10, rot: 12 } },
+        { cx: 444, cy: 156, turn: -5, from: { dx: 100, dy: 10, rot: -12 } },
+        { cx: 128, cy: 208, turn: -3, from: { dx: -70, dy: 40, rot: -10 } },
+        { cx: 434, cy: 212, turn: 6, from: { dx: 70, dy: 50, rot: 12 } },
+      ]
+    : [
+        { cx: 62, cy: 44, turn: -6, from: { dx: -44, dy: -6, rot: -10 } },
+        { cx: 277, cy: 46, turn: 4, from: { dx: 50, dy: -18, rot: 12 } },
+        { cx: 60, cy: 86, turn: 5, from: { dx: -56, dy: 6, rot: 12 } },
+        { cx: 279, cy: 88, turn: -5, from: { dx: 60, dy: 6, rot: -12 } },
+        { cx: 63, cy: 128, turn: -3, from: { dx: -44, dy: 24, rot: -10 } },
+        { cx: 276, cy: 130, turn: 6, from: { dx: 44, dy: 30, rot: 12 } },
+      ];
   /*
-   * The sweeping hand. `ax, ay`: where its wrist starts, on its leading side, off the canvas to the left. `tilt`: how far
-   * the arm leans from upright, fingers toward the upper right, so that the forearm runs off the lower left. `dir`: the
-   * angle above level at which it travels, up and to the right. `travel`: how far. `reach`: its length from wrist to
-   * fingertips; `arm`: the length of forearm behind the wrist. `gap`: the sliver between it and what it pushes.
+   * The sweeping hand: it reaches in from beyond the lower left corner, fingers first, pushes the dice and the notices
+   * up and to the right, and is drawn back the way it came. `scale`: the size the illustration is drawn at, set by the
+   * dice and the notices it pushes. `tilt`: how far it is turned from upright, so its fingers point to the upper right.
+   * `dir`: the angle above level at which it travels, a little shallower than its fingers point, so it goes slightly
+   * side-on. `aim`: a point its middle fingertip passes through, at the dice, so the fingers arrive at the dice as the
+   * heel of the hand takes the nearest notice. `travel`: how far the sweep carries
+   * what it pushes. `letGo`: the share of the sweep's time after which the hand stops keeping up and is drawn back; what
+   * it has pushed carries on. `gap`: the sliver between the hand and what it pushes.
    */
-  const hand = d ? { ax: -90, ay: 170, tilt: 22, dir: 25, travel: 1130, scale: 1, reach: 114, arm: 900, gap: 3 } : { ax: -56, ay: 96, tilt: 22, dir: 25, travel: 700, scale: 0.62, reach: 114 * 0.62, arm: 900 * 0.62, gap: 2 };
-  const rad = Math.PI / 180;
-  /* The way it travels; the way its fingers point; and the way its leading side faces. */
-  const go = { x: Math.cos(hand.dir * rad), y: -Math.sin(hand.dir * rad) };
-  const along = { x: Math.sin(hand.tilt * rad), y: -Math.cos(hand.tilt * rad) };
-  const face = { x: Math.cos(hand.tilt * rad), y: Math.sin(hand.tilt * rad) };
-  const bite = go.x * face.x + go.y * face.y;
+  const hand = d ? { scale: 1.35, tilt: 44, dir: 38, aim: { x: 290, y: 190 }, travel: 900, letGo: 0.45, gap: 3 } : { scale: 0.82, tilt: 44, dir: 38, aim: { x: 176, y: 123 }, travel: 545, letGo: 0.45, gap: 2 };
+  /* The way it travels, and the way its fingers point. */
+  const go = { x: Math.cos(hand.dir * RAD), y: -Math.sin(hand.dir * RAD) };
+  const fingers = { x: Math.sin(hand.tilt * RAD), y: -Math.cos(hand.tilt * RAD) };
+  /* A point of the illustration, as it lies on the canvas when the wrist is at the origin. */
+  const placed = ([x, y]: readonly [number, number]): Spot => ({
+    x: (Math.cos(hand.tilt * RAD) * x - Math.sin(hand.tilt * RAD) * y) * hand.scale,
+    y: (Math.sin(hand.tilt * RAD) * x + Math.cos(hand.tilt * RAD) * y) * hand.scale,
+  });
+  const front = spaced(SWEEP_HAND.front.map(placed), 3);
+  const outline = [...front, ...spaced(SWEEP_HAND.rest.map(placed), 12, true)];
+  const tip = placed([SWEEP_HAND.tip.x, SWEEP_HAND.tip.y]);
+  /* It starts on its line, drawn back until no part of it is on the canvas, and a little further. */
+  const canvas = OWNER_CANVAS[mode];
+  const wristAt = (backBy: number): Spot => ({ x: hand.aim.x - go.x * backBy - tip.x, y: hand.aim.y - go.y * backBy - tip.y });
+  const shows = (wrist: Spot) => outline.some((p) => wrist.x + p.x > 0 && wrist.x + p.x < canvas.w && wrist.y + p.y > 0 && wrist.y + p.y < canvas.h);
+  let backBy = 0;
+  while (shows(wristAt(backBy))) backBy += 2;
+  const wrist = wristAt(backBy + 8);
+  /* When each thing is set moving: by the hand, while it keeps up with the sweep, or by something already moving. */
+  const boxes: SweepBox[] = [...notices.map((n) => ({ cx: n.cx, cy: n.cy, hw: notice.w / 2, hh: notice.h / 2, turn: n.turn })), ...dice.map((o) => ({ cx: o.cx, cy: o.cy, hw: die / 2, hh: die / 2, turn: o.turn }))];
+  const swept = sweepReaches(
+    front.map((p) => ({ x: wrist.x + p.x, y: wrist.y + p.y })),
+    go,
+    boxes,
+    hand.gap,
+    hand.travel * ease(hand.letGo),
+  );
+  if (swept.reach.some((r) => !(r > 0 && r < hand.travel))) throw new Error('ownerScenes: the sweeping hand does not reach everything on the table');
   return {
     /** The top sheet of the stack of drawings, before its turn (degrees, about its centre). */
     sheet: d ? { x: 14, y: 92, w: 196, h: 128, turn: -4 } : { x: 4, y: 62, w: 108, h: 70, turn: -4 },
@@ -326,47 +589,24 @@ export function gambleGeometry(mode: OwnerMode) {
     termX: d ? 240 : 148,
     /** The dice: their size, where each comes to rest (the middle of the frame), and how they roll in from the right, across the documents. */
     die,
-    dice: d
-      ? [
-          { cx: 262, cy: 178, turn: -8 },
-          { cx: 300, cy: 190, turn: 12 },
-        ]
-      : [
-          { cx: 159, cy: 118, turn: -8 },
-          { cx: 184, cy: 126, turn: 12 },
-        ],
+    dice,
     roll: d ? { dx: 330, hop: 30 } : { dx: 200, hop: 20 },
     /** The caption, on one line beneath everything: its centre and its baseline. */
     caption: d ? { x: 280, y: 270 } : { x: 170, y: 183 },
+    /** The turn: one line in the middle of the cleared table, where the dice were. Its centre, its baseline and its size. */
+    turn: d ? { x: 280, y: 172, size: 22 } : { x: 170, y: 106, size: 14 },
     /** The notices: one size, each resting at a centre and a turn, each arriving from an offset. */
     notice,
-    /* In order of arrival, alternating sides: the first, third and fifth form a column to the left of the dice, the second,
-       fourth and sixth a column to the right. Each lands a little lower than the one above, so its heading shows. */
-    notices: d
-      ? [
-          { cx: 126, cy: 96, turn: -6, from: { dx: -70, dy: -10, rot: -10 } },
-          { cx: 438, cy: 100, turn: 4, from: { dx: 80, dy: -30, rot: 12 } },
-          { cx: 120, cy: 152, turn: 5, from: { dx: -90, dy: 10, rot: 12 } },
-          { cx: 444, cy: 156, turn: -5, from: { dx: 100, dy: 10, rot: -12 } },
-          { cx: 128, cy: 208, turn: -3, from: { dx: -70, dy: 40, rot: -10 } },
-          { cx: 434, cy: 212, turn: 6, from: { dx: 70, dy: 50, rot: 12 } },
-        ]
-      : [
-          { cx: 62, cy: 44, turn: -6, from: { dx: -44, dy: -6, rot: -10 } },
-          { cx: 277, cy: 46, turn: 4, from: { dx: 50, dy: -18, rot: 12 } },
-          { cx: 60, cy: 86, turn: 5, from: { dx: -56, dy: 6, rot: 12 } },
-          { cx: 279, cy: 88, turn: -5, from: { dx: 60, dy: 6, rot: -12 } },
-          { cx: 63, cy: 128, turn: -3, from: { dx: -44, dy: 24, rot: -10 } },
-          { cx: 276, cy: 130, turn: 6, from: { dx: 44, dy: 30, rot: 12 } },
-        ],
-    hand,
-    /** The hand's three directions, as unit vectors: travel, fingers, leading side. */
-    sweep: { go, along, face },
-    /**
-     * How far the hand must travel before its leading side reaches a thing of
-     * this half-size centred here. From then on the thing moves with it.
-     */
-    sweepReach: (cx: number, cy: number, halfW: number, halfH: number) => ((cx - hand.ax) * face.x + (cy - hand.ay) * face.y - (halfW * Math.abs(face.x) + halfH * Math.abs(face.y)) - hand.gap) / bite,
+    notices,
+    /** The hand: its settings, and where its wrist starts (`ax`, `ay`), out of sight beyond the lower left corner. */
+    hand: { ...hand, ax: wrist.x, ay: wrist.y },
+    /** The sweep: the way it travels, the way the fingers point, the hand's outline that pushes and its whole outline (both about the wrist). */
+    sweep: { go, fingers, front, outline },
+    /** How far the sweep must travel before each notice, and each die, is set moving. From then on it travels with the sweep. */
+    reach: { notices: swept.reach.slice(0, notices.length), dice: swept.reach.slice(notices.length) },
+    /** What the hand pushes, as boxes: the notices, then the dice; and whether the hand itself set each moving, or something already moving did. */
+    boxes,
+    byHand: swept.byHand,
     /** The contractor's plan, and the centre line of each of its lines. */
     plan: d ? { x: 354, y: 40, w: 186, h: 192 } : { x: 200, y: 10, w: 136, h: 160 },
     /** How far to the right the plan sets out from: beyond the canvas. */
@@ -415,15 +655,31 @@ export function teamGeometry(mode: OwnerMode) {
   const shield = d ? { cx: 280, cy: 145, w: 146, h: 172 } : { cx: 170, cy: 88, w: 88, h: 104 };
   /* The contractor out of control: a plain card, askew. */
   const loose = d ? { w: 116, h: 96, turn: -5 } : { w: 74, h: 60, turn: -5 };
-  const tag = d ? { w: 60, h: 19 } : { w: 44, h: 13 };
+  /* A request slip: its height, the least it is ever as wide, the type on it, and the room either side of its words. */
+  const tag = d ? { w: 60, h: 19, size: 9.5, pad: 8 } : { w: 44, h: 13, size: 7.5, pad: 6 };
+  const tagWidth = (label: string) => Math.max(tag.w, textWidth(label, tag.size, { caps: true, tracking: 0.06 }) + 2 * tag.pad);
   /* A card's edge nearest the contractor, and its middle height. */
   const inner = (i: number) => (onLeft(i) ? at[i].x + card.w : at[i].x);
   const mid = (i: number) => at[i].y + card.h / 2;
-  /* Where a request comes to rest: on the card's inner corners, the first at the top, the second at the foot. */
+  /*
+   * Where a request comes to rest: at the card's inner corners, the first across its top edge and the second just below
+   * its foot, clear of the words on the card. Its inner end stays where it was (a little past the inner edge at the top,
+   * flush with it at the foot) and a longer request runs outward, over the card, never toward the contractor.
+   */
   const tagAt = (to: number, round: number) => {
-    const inset = (d ? [20, 30] : [14, 22])[round] * (onLeft(to) ? -1 : 1);
-    return { cx: inner(to) + inset, cy: round === 0 ? at[to].y - (d ? 2 : 1) : at[to].y + card.h - (d ? 3 : 2), turn: (round === 0 ? 6 : -5) * (onLeft(to) ? 1 : -1) };
+    const w = tagWidth(requestLabel({ to, round }));
+    const past = (d ? [10, 0] : [8, 0])[round];
+    const out = onLeft(to) ? -1 : 1;
+    return {
+      cx: inner(to) - out * past + (out * w) / 2,
+      cy: round === 0 ? at[to].y - (d ? 2 : 1) : at[to].y + card.h + (d ? 6 : 4),
+      turn: (round === 0 ? 6 : -5) * (onLeft(to) ? 1 : -1),
+      w,
+    };
   };
+  /* What weak planning adds up to for each group, on the card: one line, or two where one will not fit between its edges. */
+  const effectSize = d ? 9.5 : 7.5;
+  const effectLines = (i: number) => fitLines(TEAM[i].effect, effectSize, card.w - 2 * (d ? 10 : 7));
   /* The shield's sides are upright between these two heights; every line of the second state meets it there. */
   const left = shield.cx - shield.w / 2;
   const right = shield.cx + shield.w / 2;
@@ -442,9 +698,11 @@ export function teamGeometry(mode: OwnerMode) {
     onLeft,
     shield,
     loose,
-    stateY: d ? 24 : 13,
+    stateY: d ? 24 : 12,
     tag,
     tagAt,
+    effectSize,
+    effectLines,
     /** Each request sets out from the contractor. */
     tagFrom: (to: number, round: number) => {
       const rest = tagAt(to, round);
@@ -498,14 +756,14 @@ export function teamGeometry(mode: OwnerMode) {
       const side = onLeft(i) ? -1 : 1;
       const from = onTop(i) ? { x: at[i].x + card.w / 2, y: at[i].y + card.h + (d ? 3 : 2) } : { x: inner(i) + side * (d ? 14 : 9), y: mid(i) + (d ? 6 : 4) };
       const to = { x: bin.cx + side * bin.w * (0.2 + round * 0.04), y: bin.top + bin.h * 0.55 };
-      const c1 = onTop(i) ? { x: from.x + (to.x - from.x) * (d ? 0.6 : 0.7), y: from.y + (d ? 95 : 82) } : { x: from.x - side * (d ? 36 : 34), y: from.y - (d ? 24 : 14) };
+      const c1 = onTop(i) ? { x: from.x + (to.x - from.x) * (d ? 0.6 : 0.7), y: from.y + (d ? 99 : 82) } : { x: from.x - side * (d ? 36 : 34), y: from.y - (d ? 24 : 14) };
       const c2 = { x: to.x, y: bin.top - (onTop(i) ? (d ? 24 : 16) : d ? 32 : 18) };
       return { from, c1, c2, to };
     },
     /**
      * Protected value, once the contractor is in control: the middle of a
      * small shield with a dollar sign, the same on each of the five. On a
-     * group's card, the inner foot, where the second rushed request had been.
+     * group's card, the inner foot, just above where the second rushed request had been.
      * For the contractor it stands just outside the great shield, at its
      * lower right: a shield drawn on the shield would be one nested in another.
      */
@@ -556,26 +814,121 @@ export function shieldPath(s: { cx: number; cy: number; w: number; h: number }):
   return `M${l} ${t + c}Q${l} ${t} ${l + c} ${t}H${r - c}Q${r} ${t} ${r} ${t + c}V${waist}C${r} ${s.cy + s.h * 0.36} ${s.cx + s.w * 0.2} ${s.cy + s.h * 0.46} ${s.cx} ${b}C${s.cx - s.w * 0.2} ${s.cy + s.h * 0.46} ${l} ${s.cy + s.h * 0.36} ${l} ${waist}Z`;
 }
 
-/** The request cards of Better decisions: where each is piled, and its row once in date order. */
-export function requestGeometry(mode: OwnerMode) {
+/**
+ * Better decisions: the cone. Laid out once on the desktop canvas and set on
+ * the narrow one at 0.6 of the size; only the type is set separately, so it
+ * stays readable. Every word's and every option's place is here, so it can be
+ * checked.
+ *
+ * THE CONE is symmetric about a level centre line, with straight walls.
+ * THE GROUP is a dashed line across the cone and a column of six options
+ * centred on it, which travel together. An option is open while the cone
+ * holds it, measured at its leading edge, where the cone is lower; it is lost
+ * from the point where it would cross a wall.
+ */
+export const CHOICE_CONE = { x0: 40, x1: 520, cy: 150, h0: 104, h1: 16 } as const;
+/** Where the group sets out, and its two stops (desktop units): early, a quarter of the way along the cone, where it holds all six; late, 85% of the way, near the narrow end. */
+export const CHOICE_AT = { start: 76, early: 160, late: 448 } as const;
+export type ChoiceWhen = 'early' | 'late';
+export function choiceGeometry(mode: OwnerMode) {
   const d = mode === 'desktop';
-  const card = d ? { w: 300, h: 40 } : { w: 204, h: 26 };
-  const rowX = d ? 20 : 10;
-  const rowY = (i: number) => (d ? 44 + i * 52 : 28 + i * 31);
-  const pile = d
-    ? [
-        { x: 120, y: 58 },
-        { x: 152, y: 94 },
-        { x: 100, y: 130 },
-        { x: 168, y: 166 },
-      ]
-    : [
-        { x: 60, y: 30 },
-        { x: 84, y: 54 },
-        { x: 48, y: 78 },
-        { x: 92, y: 102 },
-      ];
-  return { card, rowX, rowY, pile, why: d ? { x: 340, y: 44, w: 200, h: 144 } : { x: 10, y: 62, w: 320, h: 92 } };
+  const k = d ? 1 : 0.6;
+  const X = (x: number) => (d ? x : 2 + k * x);
+  const Y = (y: number) => (d ? y : k * y - 2.4);
+  const C = CHOICE_CONE;
+  /** The cone's half-height at a point along it (desktop units). */
+  const halfAt = (x: number) => C.h0 - (C.h0 - C.h1) * Math.min(1, Math.max(0, (x - C.x0) / (C.x1 - C.x0)));
+  /**
+   * An option card, in desktop units: half its height, the gap between cards, and how far its leading edge is ahead of
+   * the line (half its width). Its drawn size is set per frame below, so that its label is legible on both.
+   */
+  const HALF = 8;
+  const GAP = 6;
+  const LEAD = 30;
+  /* The column, set this far below the centre line so that no two options are lost at once. Its offsets never change. */
+  const OFF = 3;
+  const offsets = Array.from({ length: CHOICE_COUNT }, (_, j) => OFF + (j - (CHOICE_COUNT - 1) / 2) * (2 * HALF + GAP));
+  /** Whether the cone holds option j with the group at x: its outer edge at the card's leading edge is inside the wall. */
+  const holds = (j: number, x: number) => Math.abs(offsets[j]) + HALF <= halfAt(x + LEAD);
+  /** The card as drawn: desktop, the layout's own size; narrow, wider than 0.6 of it, so that *OPTION A* stays legible. */
+  const card = d ? { w: 60, h: 16, round: 3, label: 8.5 } : { w: 42, h: 10, round: 2, label: 6.5 };
+  const type = d ? { label: 8.5, message: 10 } : { label: 7, message: 8 };
+  const AXIS_Y = Y(276);
+  /** The heavier, redder walls near the narrow end: as thick as this at the tip, in desktop units. */
+  const PRESS = 5;
+  const r1 = (n: number) => Math.round(n * 10) / 10;
+  const wallPoints = (side: -1 | 1, inset = 0) =>
+    Array.from({ length: 13 }, (_, n) => {
+      const x = C.x0 + ((C.x1 - C.x0) * n) / 12;
+      return `${r1(X(x))} ${r1(Y(C.cy + side * (halfAt(x) - inset)))}`;
+    });
+  /* Where each option is lost, as the group carries on from the early stop: the first point at which the cone no longer holds it. */
+  const lost: { option: number; x: number }[] = [];
+  offsets.forEach((_, j) => {
+    for (let x = CHOICE_AT.early; x <= CHOICE_AT.late; x += 0.5)
+      if (!holds(j, x)) {
+        lost.push({ option: j, x: X(x) });
+        break;
+      }
+  });
+  lost.sort((a, b) => a.x - b.x || a.option - b.option);
+  /* A callout, at the top of the frame, in small capitals, on one line. */
+  const message = (words: string) => ({ x: X(280), lines: [{ line: words, y: d ? 26 : 14 }] });
+  /* The close: the six options in a level row across the middle of the frame, a little larger, all open; the line about
+     JiTpro beneath them, on two lines; the closing line on the foot. */
+  const band = teamGeometry(mode).band;
+  const timedGap = d ? 12 : 6;
+  const rowY = Math.round(band.y * 0.42);
+  const supportSize = d ? 12 : 8.5;
+  const supportLines = fitLines(CHOICE_TIMED.support, supportSize, (d ? 560 : 340) - (d ? 120 : 30));
+  const supportTop = rowY + card.h / 2 + (d ? 36 : 22);
+  const timed = {
+    y: rowY,
+    xs: Array.from({ length: CHOICE_COUNT }, (_, j) => X(280) + (j - (CHOICE_COUNT - 1) / 2) * (card.w + timedGap)),
+    support: { x: X(280), size: supportSize, lines: supportLines.map((line, i) => ({ line, y: supportTop + i * supportSize * 1.4 })) },
+  };
+  return {
+    k,
+    type,
+    /** The cone in this design's units: its ends, its centre line, its half-height at a point, its walls, and the whole of it as one shape. */
+    cone: { x0: X(C.x0), x1: X(C.x1), cy: Y(C.cy) },
+    half: (x: number) => k * halfAt((x - X(0)) / k),
+    wall: (side: -1 | 1) => `M${wallPoints(side).join('L')}`,
+    /** A fine second line just inside each wall: the drawing's linework. */
+    inner: (side: -1 | 1) => `M${wallPoints(side, 3.5).join('L')}`,
+    outline: `M${[...wallPoints(-1), ...wallPoints(1).reverse()].join('L')}Z`,
+    /** The group where it sets out: the line (its full height, clipped to the cone) and the cards about it. */
+    start: { x: X(CHOICE_AT.start), y0: Y(C.cy - C.h0 - 6), y1: Y(C.cy + C.h0 + 6) },
+    cards: offsets.map((o) => ({ dx: 0, y: Y(C.cy + o) })),
+    card,
+    /** Each option's name: *Option A* to *Option F*, from the top of the column. */
+    name: (j: number) => ({ word: CHOICE_WORDS.option, letter: CHOICE_LETTERS[j] }),
+    /** The two stops: where the group is, and how many options the cone holds there. */
+    stop: (when: ChoiceWhen) => ({ x: X(CHOICE_AT[when]), open: offsets.filter((_, j) => holds(j, CHOICE_AT[when])).length }),
+    /** Where each option is lost, in the order they go (pairs, top and bottom, go together). */
+    lost,
+    message,
+    /** The pressure near the narrow end: from a little before the late stop to the tip, the walls thicken to `thick` and redden. */
+    pressure: { from: X(CHOICE_AT.late - 60), thick: k * PRESS },
+    /** *More options*, above the mouth. */
+    more: { x: X(C.x0), y: Y(C.cy - C.h0) - (d ? 8 : 5) },
+    /**
+     * Time, beneath it all: one unbroken line with fine ticks rising from it and an arrowhead; *Time passes* above its
+     * start, under the mouth; and the marker's pointer, which travels beneath the line with the group, its tip on the line.
+     */
+    axis: {
+      x0: X(C.x0),
+      x1: X(C.x1),
+      y: AXIS_Y,
+      label: { x: X(C.x0), y: AXIS_Y - (d ? 9 : 5) },
+      ticks: Array.from({ length: 11 }, (_, n) => X(C.x0 + 40 * (n + 1))),
+      tick: d ? 3 : 2,
+      pointer: d ? { w: 5, h: 6 } : { w: 3.5, h: 4.5 },
+    },
+    band,
+    /** The close: the row of six options, all open, and the line beneath them. */
+    timed,
+  };
 }
 
 /* -------------------------------------------------------------- the scenes */
@@ -583,24 +936,28 @@ export function requestGeometry(mode: OwnerMode) {
 function riskScene(mode: OwnerMode): OwnerScene {
   const g = gambleGeometry(mode);
   /* The surprises arrive one at a time, each sooner and faster than the last: mounting pressure. */
-  const arrives = [4100, 4520, 4900, 5240, 5540, 5800];
-  const lands = [440, 400, 360, 320, 290, 260];
+  const arrives = [4850, 5340, 5780, 6175, 6525, 6830];
+  const lands = [500, 455, 410, 365, 330, 300];
   /** The last surprise has landed; everything is held still, just long enough to register; then the hand sweeps. */
   const PILED = arrives[arrives.length - 1] + lands[lands.length - 1];
-  const PAUSE = 700;
+  const PAUSE = 850;
   const SWEEP = PILED + PAUSE;
-  const SWEEP_MS = 1350;
+  const SWEEP_MS = 1550;
   const CLEARED = SWEEP + SWEEP_MS;
-  /* Everything the hand pushes moves exactly with it from the moment it is reached, the way the hand is going, and is taken
+  /* Everything swept moves exactly with the sweep from the moment it is reached, the way the hand is going, and is taken
      out of the picture only once the sweep is over and it is long off the table. */
-  const pushed = (cx: number, cy: number, halfW: number, halfH: number, spin: number) => ({
-    push: { at: SWEEP, dur: SWEEP_MS, travel: g.hand.travel, reach: g.sweepReach(cx, cy, halfW, halfH), ux: g.sweep.go.x, uy: g.sweep.go.y, spin },
-    out: CLEARED,
-    outDur: 100,
-  });
-  /** The table is clear: the documents are seen alone for a beat, then step back; and the plan arrives. */
-  const RESET = CLEARED + 100;
-  const PLAN = RESET + 300;
+  const sweep = { at: SWEEP, dur: SWEEP_MS, travel: g.hand.travel, ux: g.sweep.go.x, uy: g.sweep.go.y };
+  const pushed = (reach: number, spin: number) => ({ push: { ...sweep, reach, spin }, out: CLEARED, outDur: 100 });
+  /* The hand keeps up with the sweep until it lets go; from then it is drawn back, by the whole of the way, as the sweep
+     runs out. So it slows, turns round and leaves the way it came, while what it pushed carries on off the table. */
+  const LET_GO = SWEEP + SWEEP_MS * g.hand.letGo;
+  /** The table is clear: the documents are seen alone for a beat, then step back. */
+  const RESET = CLEARED + 150;
+  /* The turn: as the documents step back, one line is shown alone on the cleared table, held long enough to read once, and
+     gone before the plan arrives. Nothing else moves while it is read. */
+  const TURN = RESET + 100;
+  const TURN_OUT = TURN + 350 + 1100;
+  const PLAN = TURN_OUT + 300;
   const SETTLE = 650;
   const lineAt = (i: number) => PLAN + SETTLE + 150 + i * 300;
   /** When the camera pushes in on the plan, and everything else is let go. */
@@ -608,29 +965,34 @@ function riskScene(mode: OwnerMode): OwnerScene {
   /* The documents are never swept. They step back to a ghost of themselves as the plan is laid over them, and the stage covers them at the close. */
   const paper = { out: RESET, outDur: 450, outTo: 0.16 };
   const cues: Cue[] = [
+    // The sheet the documents lie on: an off-white ground, a faint grid and a border. It is there until the stage covers it.
+    { k: 'ground', at: 0, dur: 400 },
     // 1. Trust: three project documents, spread across the frame; and on the contract, a budget and a completion date.
-    { k: 'drawings', at: 0, dur: 400, ...paper },
-    { k: 'contract', at: 250, dur: 450, rise: 8, ...paper },
-    { k: 'specs', at: 500, dur: 450, rise: 8, ...paper },
-    ...GAMBLE_CONTRACT.terms.map((_, i): Cue => ({ k: `term-${i}`, at: 950 + i * 250, ...paper })),
+    { k: 'drawings', at: 0, dur: 450, ...paper },
+    { k: 'contract', at: 300, dur: 500, rise: 8, ...paper },
+    { k: 'specs', at: 600, dur: 500, rise: 8, ...paper },
+    ...GAMBLE_CONTRACT.terms.map((_, i): Cue => ({ k: `term-${i}`, at: 1150 + i * 300, ...paper })),
     // 2. Uncertainty: a pair of dice rolls across the documents and comes to rest in the middle of the frame.
     ...g.dice.map(
-      (die, i): Cue => ({
+      (_, i): Cue => ({
         k: `die-${i}`,
-        at: 2000 + i * 110,
+        at: 2400 + i * 130,
         dur: 150,
-        roll: { dur: 1150 + i * 120, dx: g.roll.dx, hop: g.roll.hop, hops: 2, turns: 0.9 + i * 0.1 },
-        ...pushed(die.cx, die.cy, g.die / 2, g.die / 2, 80 + i * 50),
+        roll: { dur: 1300 + i * 140, dx: g.roll.dx, hop: g.roll.hop, hops: 2, turns: 0.9 + i * 0.1 },
+        ...pushed(g.reach.dice[i], 80 + i * 50),
       }),
     ),
     // The question, beneath them. It stays through the surprises and the pause, and goes as the hand comes in.
-    { k: 'caption', at: 3400, rise: 4, out: SWEEP, outDur: 300 },
+    { k: 'caption', at: 4050, rise: 4, out: SWEEP, outDur: 300 },
     // 3. The surprises: six notices land either side of the dice, never on them, faster and faster. Then nothing moves.
-    ...g.notices.map((n, i): Cue => ({ k: `notice-${i}`, at: arrives[i], dur: lands[i], from: n.from, ...pushed(n.cx, n.cy, g.notice.w / 2, g.notice.h / 2, n.turn * 3) })),
-    // 4. A hand comes in from the lower left and sweeps up and to the right, taking notices and dice with it. The documents stay.
-    { k: 'hand', at: SWEEP, dur: 60, push: { at: SWEEP, dur: SWEEP_MS, travel: g.hand.travel, reach: 0, ux: g.sweep.go.x, uy: g.sweep.go.y }, out: CLEARED, outDur: 60 },
-    // 5. A better alternative: the contractor's plan slides in over the documents, which have stepped back; its lines are checked.
-    // 6. Confidence: with every line checked, a navy stage is drawn across the frame and the plan,
+    ...g.notices.map((n, i): Cue => ({ k: `notice-${i}`, at: arrives[i], dur: lands[i], from: n.from, ...pushed(g.reach.notices[i], n.turn * 3) })),
+    // 4. A hand reaches in from the lower left and pushes up and to the right; notices and dice go off the table; the hand is
+    //    drawn back the way it came. The documents stay.
+    { k: 'hand', at: SWEEP, dur: 60, push: { ...sweep, reach: 0 }, move: { at: LET_GO, dur: CLEARED - LET_GO, dx: -sweep.travel * sweep.ux, dy: -sweep.travel * sweep.uy }, out: CLEARED, outDur: 60 },
+    // 5. The turn: one line, alone on the cleared table, between what was swept away and what replaces it.
+    { k: 'turn', at: TURN, rise: 4, out: TURN_OUT, outDur: 300 },
+    // 6. A better alternative: the contractor's plan slides in over the documents, which have stepped back; its lines are checked.
+    // 7. Confidence: with every line checked, a navy stage is drawn across the frame and the plan,
     //    the one thing left on it, moves to the left and grows.
     { k: 'stage', at: PUSH, dur: 600 },
     { k: 'plan', at: PLAN, dur: SETTLE, from: { dx: g.planFrom, dy: 0, rot: 3 }, move: { at: PUSH, dur: 900, dx: g.lockup.dx, dy: g.lockup.dy, scale: g.lockup.scale } },
@@ -645,62 +1007,85 @@ function riskScene(mode: OwnerMode): OwnerScene {
 
 function investmentScene(mode: OwnerMode): OwnerScene {
   const g = teamGeometry(mode);
-  /** When the first state is withdrawn; when the shield begins to be drawn; when the closing band rises. */
-  const REWIND = 6600;
-  const GUARD = 7000;
-  const BAND = 11300;
-  const first = { out: REWIND };
+  /*
+   * PACE (slowed 2026-11-12, founder: calm, controlled, easy to read). Movements run about 40% longer than they did,
+   * steps within a state follow a little further apart, and the long pauses are where the story turns: the first state
+   * is held, complete, for four seconds before it is withdrawn; the frame is clear for a beat before the shield is drawn;
+   * the second state is held, complete; and the close rests.
+   * THE FOOT IS SCENERY (founder, 2026-11-12): the navy bar and its amber edge come in with the opening and stay to the
+   * end, never fading; only its words change. The first state's words come in once its friction is drawn and go with
+   * it; the second state's come in as that state is named, and stay.
+   */
+  /** When the first state's foot words come in, once its friction is drawn. */
+  const FOOT = 3400;
+  /** When the first state is complete (its last request has landed); it is held this long before it is withdrawn. */
+  const FIRST_DONE = 8040;
+  const FIRST_HOLD = 3960;
+  const REWIND = FIRST_DONE + FIRST_HOLD;
+  /** The beat between the two states: the first withdrawn, the frame clear, then the shield begins. */
+  const GUARD = REWIND + 600;
+  /** When the second state is named, once the shield stands; its foot words follow. */
+  const STATE_IN = GUARD + 1700;
+  /** When the second state is complete (the last protected-value shield has settled); then it rests. */
+  const SECOND_DONE = GUARD + 5610;
+  /** The lag between a moment and the foot words that go with it: the same for both states. */
+  const WORDS_AFTER = 550;
+  const first = { out: REWIND, outDur: 500 };
   const n = TEAM.length;
   /** How long a bill takes from its card into the dumpster: slow enough to follow. */
-  const BILL_FLIGHT = 1100;
+  const BILL_FLIGHT = 1400;
   /** The contractor's own bills fall a short way, straight down. */
-  const BILL_DROP = 800;
+  const BILL_DROP = 1000;
   const cues: Cue[] = [
     // The sheet the picture is drawn on: a faint grid and crop marks. It is there throughout.
-    { k: 'ground', at: 0, dur: 600 },
+    { k: 'ground', at: 0, dur: 800 },
+    // The foot: the navy bar and its amber edge. Scenery: in with the opening, there to the end; only its words change.
+    { k: 'foot', at: 0, dur: 650 },
     // 1. The contractor, in the middle, and the four groups around; the state is named.
-    { k: 'loose', at: 0, dur: 450, rise: 6, ...first },
-    { k: 'stateOut', at: 300, ...first },
-    ...TEAM.map((_, i): Cue => ({ k: `card-${i}`, at: 600 + i * 200, rise: 5 })),
+    { k: 'loose', at: 0, dur: 650, rise: 6, ...first },
+    { k: 'stateOut', at: 400, dur: 500, ...first },
+    ...TEAM.map((_, i): Cue => ({ k: `card-${i}`, at: 900 + i * 280, dur: 500, rise: 5 })),
     // Out of control: friction runs outward to each group, and rushed requests follow it.
-    ...TEAM.map((_, i): Cue => ({ k: `friction-${i}`, at: 1900 + i * 150, dur: 500, draw: true, ...first })),
-    ...TEAM_RUSH.map((r, i): Cue => ({ k: `rush-${i}`, at: (r.round === 0 ? 2300 : 4500) + r.to * 200, dur: 420, from: g.tagFrom(r.to, r.round), ...first })),
+    ...TEAM.map((_, i): Cue => ({ k: `friction-${i}`, at: 2800 + i * 200, dur: 700, draw: true, ...first })),
+    ...TEAM_RUSH.map((r, i): Cue => ({ k: `rush-${i}`, at: (r.round === 0 ? 3400 : 6600) + r.to * 280, dur: 600, from: g.tagFrom(r.to, r.round), ...first })),
+    // The first state's foot words, on the bar. They go with the rest of the first state; the bar stays.
+    { k: 'footOutWords', at: FOOT + WORDS_AFTER, dur: 500, rise: 5, ...first },
     // What it does to each of them, between the first requests and the second.
-    ...TEAM.map((_, i): Cue => ({ k: `effect-${i}`, at: 3400 + i * 220, rise: 3, ...first })),
+    ...TEAM.map((_, i): Cue => ({ k: `effect-${i}`, at: 5000 + i * 300, dur: 500, rise: 3, ...first })),
     // And money is wasted: a jobsite dumpster, and bills leaving the contractor and all four groups for it in turn. The flow builds: each
     // bill follows the last a little sooner. No new bill is launched once the disorder is withdrawn; those in the air
     // finish their fall; and the dumpster goes as the shield begins to be drawn.
-    ...(['binBack', 'bin'] as const).map((k): Cue => ({ k, at: 3350, rise: 4, out: GUARD, outDur: 400 })),
+    ...(['binBack', 'bin'] as const).map((k): Cue => ({ k, at: 4950, dur: 500, rise: 4, out: GUARD, outDur: 550 })),
     ...Array.from({ length: TEAM_WASTE_ROUNDS }, (_, r) =>
       TEAM_PARTIES.map((who, e): Cue => {
         const nth = r * TEAM_PARTIES.length + e;
-        const at = 3500 + nth * 195 - ((nth * (nth - 1)) / 2) * 7;
+        const at = 5150 + nth * 255 - ((nth * (nth - 1)) / 2) * 6;
         const path = g.billPath(who, r);
         const by = (point: { x: number; y: number }) => ({ dx: point.x - path.from.x, dy: point.y - path.from.y });
         // The contractor's bills have only a short way to fall; the groups' cross the frame.
         const flight = who === 'gc' ? BILL_DROP : BILL_FLIGHT;
         const turn = who === 'gc' ? (r - 1) * 14 : (g.onLeft(who) ? 1 : -1) * (24 + r * 10);
-        return { k: `bill-${who}-${r}`, at, dur: 250, arc: { at: at + 250, dur: flight, c1: by(path.c1), c2: by(path.c2), to: by(path.to), rot: turn }, out: at + 250 + flight, outDur: 120 };
+        return { k: `bill-${who}-${r}`, at, dur: 320, arc: { at: at + 320, dur: flight, c1: by(path.c1), c2: by(path.c2), to: by(path.to), rot: turn }, out: at + 320 + flight, outDur: 160 };
       }),
     ).flat(),
     // 2. In control: the shield is drawn around the contractor, calmly, then stands; the state is named again.
-    { k: 'guard', at: GUARD, dur: 900, draw: true },
-    { k: 'shield', at: GUARD + 700, dur: 500 },
-    { k: 'stateIn', at: GUARD + 1200 },
+    { k: 'guard', at: GUARD, dur: 1300, draw: true },
+    { k: 'shield', at: GUARD + 1000, dur: 700 },
+    { k: 'stateIn', at: STATE_IN, dur: 500 },
+    // The second state's foot words, on the same bar, as the state is named: the closing line. They stay.
+    { k: 'takeaway', at: STATE_IN + WORDS_AFTER, dur: 500, rise: 5 },
     // The same four, reached one after another by a level line, each settling as it is reached.
     ...Array.from({ length: n }, (_, i): Cue[] => [
-      { k: `node-${i}`, at: GUARD + 1700 + i * 150, dur: 200 },
-      { k: `link-${i}`, at: GUARD + 1700 + i * 150, dur: 450, draw: true },
-      { k: `calm-${i}`, at: GUARD + 2050 + i * 150, rise: 3 },
+      { k: `node-${i}`, at: GUARD + 2400 + i * 220, dur: 300 },
+      { k: `link-${i}`, at: GUARD + 2400 + i * 220, dur: 650, draw: true },
+      { k: `calm-${i}`, at: GUARD + 2900 + i * 220, dur: 500, rise: 3 },
     ]).flat(),
     // Then value is protected: once the network is whole and calm, a small shield with a dollar sign settles beside each of the
     // five, one by one, the groups first and the contractor last. Where money was leaving, it is now kept.
-    ...[...TEAM.map((_, i): TeamParty => i), 'gc' as TeamParty].map((who, j): Cue => ({ k: `keep-${who}`, at: GUARD + 2900 + j * 170, dur: 400, rise: 4 })),
-    // 3. The close: nothing is taken away; a navy band rises along the foot with the closing line.
-    { k: 'band', at: BAND, dur: 500 },
-    { k: 'takeaway', at: BAND + 400, rise: 5 },
+    ...[...TEAM.map((_, i): TeamParty => i), 'gc' as TeamParty].map((who, j): Cue => ({ k: `keep-${who}`, at: GUARD + 4100 + j * 240, dur: 550, rise: 4 })),
+    // 3. The close: nothing is taken away. Once complete, it is held, and rests.
   ];
-  return { tab: 'owner-protect-investment', mode, cues, end: BAND + 2400 };
+  return { tab: 'owner-protect-investment', mode, cues, end: SECOND_DONE + 4590 };
 }
 
 function predictabilityScene(mode: OwnerMode): OwnerScene {
@@ -725,28 +1110,93 @@ function predictabilityScene(mode: OwnerMode): OwnerScene {
 }
 
 function decisionsScene(mode: OwnerMode): OwnerScene {
-  const g = requestGeometry(mode);
-  const n = OWNER_DECISIONS.length;
-  const cues: Cue[] = [];
-  REQUEST_PILE.forEach((d, order) => {
-    const from = g.pile[order];
-    // Drawn where it is piled; it travels to its row, in date order.
-    cues.push({ k: `req-${d}`, at: 300 + order * 450, rise: 8, move: { at: 4900, dur: 900, dx: g.rowX - from.x, dy: g.rowY(d) - from.y }, ...(mode === 'phone' && d > 0 ? { out: 7200, outTo: 0.2 } : {}) });
-    cues.push({ k: `asap-${d}`, at: 300 + order * 450 + 150, out: 5000, outDur: 300 });
-    cues.push({ k: `due-${d}`, at: 5700 + d * 120 });
-  });
-  cues.push(
-    // 2. The owner's question.
-    { k: 'question', at: 2700, rise: 6, out: 4600 },
-    // 3. In order: the one needed first.
-    { k: 'first', at: 6300 },
-    // 4. Why its date matters.
-    { k: 'why', at: 7300, rise: 6 },
-    { k: 'whyPath', at: 7700, dur: 900, draw: true },
-    { k: 'takeaway', at: 9900, rise: 6 },
-  );
-  if (n === 0) throw new Error('ownerScenes: the sample project has no owner decisions');
-  return { tab: 'owner-better-decisions', mode, cues, end: 11300 };
+  const g = choiceGeometry(mode);
+  /*
+   * ONE GROUP, ONE STORY, PLAYED ONCE (founder briefs 2026-11-12). The cone, the time axis and the words at its mouth
+   * are drawn, and the foot's bar with them. Then, without a reset: the line and its six options at the mouth; the group
+   * moves to the early stop, all six held, the first callout and foot words, held; the group carries on, and as the cone
+   * narrows it loses the options it no longer has room for; the late stop, two open, the second callout and foot words.
+   * A beat of about a second once the late stop is complete; then the whole illustration fades away together, the bar
+   * staying, and the visual closes on correctly timed decisions: the six options, all open, the line about JiTpro, and
+   * the closing line on the foot. Then it rests.
+   */
+  const DRAWN = 2400;
+  /** Each stop is held about five seconds from the moment the group arrives. */
+  const HOLD = 3300;
+  const early = g.stop('early');
+  const late = g.stop('late');
+  /* 1. The line and the six options, at the mouth. */
+  const SHOW = DRAWN + 100;
+  const shown = SHOW + 300 + (g.cards.length - 1) * 120 + 450;
+  /* 2. Time passes a little; the group stops early. */
+  const RUN1 = { at: shown + 300, dur: 1400 };
+  const EARLY = RUN1.at + RUN1.dur + 250;
+  /* 3. Held; then it carries on, to the late stop. */
+  const ON = EARLY + 400 + 550 + 500 + HOLD;
+  const RUN2 = { at: ON + 300, dur: 5600 };
+  const LATE = RUN2.at + RUN2.dur + 250;
+  /* 4. The late stop is complete once its foot words are in; held about a second; then the illustration fades away, together. */
+  const LATE_DONE = LATE + 550 + 600;
+  const PAUSE = 1000;
+  const FADE = LATE_DONE + PAUSE;
+  const FADE_MS = 900;
+  const story = { out: FADE, outDur: FADE_MS };
+  /* 5. The close, once the frame above the bar is clear: the six options, all open; the line about JiTpro; the closing line. */
+  const CLEAR = FADE + FADE_MS + 200;
+  const ROW_MS = 110;
+  const SUPPORT = CLEAR + (g.cards.length - 1) * ROW_MS + 550;
+  const CLOSE = SUPPORT + 900;
+  /* When the group, eased along its second run, reaches a point: the clock's own easing, inverted. */
+  const when = (x: number) => {
+    const share = (x - early.x) / (late.x - early.x);
+    let lo = 0;
+    let hi = 1;
+    for (let n = 0; n < 50; n++) {
+      const m = (lo + hi) / 2;
+      if (ease(m) < share) lo = m;
+      else hi = m;
+    }
+    return Math.round(RUN2.at + RUN2.dur * lo);
+  };
+  const cues: Cue[] = [
+    // The sheet and the cone, and time. Drawn once; the sheet stays, the cone goes when the story is done.
+    { k: 'ground', at: 0, dur: 800 },
+    { k: 'cone', at: 300, dur: 700, ...story },
+    { k: 'wall-top', at: 300, dur: 1200, draw: true, ...story },
+    { k: 'wall-bottom', at: 300, dur: 1200, draw: true, ...story },
+    { k: 'axis', at: 700, dur: 900, draw: true, ...story },
+    { k: 'time', at: 1100, dur: 500, ...story },
+    { k: 'more', at: 1300, dur: 500, rise: 3, ...story },
+    // The foot: the navy bar and its amber edge are scenery. They come in once and stay to the end; only the words on
+    // them change (founder, 2026-11-12).
+    { k: 'foot', at: 300, dur: 700 },
+    // 1. The group: the line marking the time, and six options on it, all open.
+    { k: 'line', at: SHOW, dur: 400, ...story },
+    ...g.cards.map((_, j): Cue => ({ k: `card-${j}`, at: SHOW + 300 + j * 120, dur: 450, rise: 4, ...story })),
+    // 2. Time passes a little, and the group stops while the cone still holds all six: timed properly, nothing is lost.
+    //    The line and the cards are moved as one (`now`, then `nowOn`, applied to both). The two only carry the group;
+    //    what is in them fades by its own cue.
+    { k: 'now', at: SHOW, dur: 1, move: { at: RUN1.at, dur: RUN1.dur, dx: early.x - g.start.x, dy: 0 } },
+    { k: 'msgEarly', at: EARLY, dur: 500, rise: 3, out: ON, outDur: 450 },
+    // Its words come in at the stop, and stay while the group carries on, until the late stop's words take their place.
+    { k: 'footInWords', at: EARLY + 400, dur: 600, rise: 3, out: LATE + 300, outDur: 500 },
+    // 3. Time carries on, and the group with it. As the cone narrows, the options it has no room for are left outside its
+    //    walls: crossed out, still seen. The walls near the narrow end take the strain.
+    { k: 'nowOn', at: SHOW, dur: 1, move: { at: RUN2.at, dur: RUN2.dur, dx: late.x - early.x, dy: 0 } },
+    ...g.lost.map((l): Cue => ({ k: `off-${l.option}`, at: when(l.x), dur: 500, ...story })),
+    { k: 'pressure', at: RUN2.at + RUN2.dur * 0.5, dur: RUN2.dur * 0.5 + 200, ...story },
+    // 4. Left too late: two open.
+    { k: 'msgLate', at: LATE, dur: 500, rise: 3, ...story },
+    // The foot's words cross from the first line to the second; the bar does not move. They stay while the cone fades,
+    // and go once it has.
+    { k: 'footOutWords', at: LATE + 550, dur: 600, rise: 3, out: FADE + 500, outDur: 500 },
+    // 5. Correctly timed decisions: the six options again, all open, in a calm row; the line about JiTpro beneath them;
+    //    and, last, the closing line on the foot. Then it rests. Reduced motion shows this frame.
+    ...g.cards.map((_, j): Cue => ({ k: `timed-${j}`, at: CLEAR + j * ROW_MS, dur: 500, rise: 4 })),
+    { k: 'timedWords', at: SUPPORT, dur: 600, rise: 3 },
+    { k: 'takeaway', at: CLOSE, dur: 600, rise: 3 },
+  ];
+  return { tab: 'owner-better-decisions', mode, cues, end: CLOSE + 2200 };
 }
 
 export function buildOwnerScene(tab: OwnerTabId, mode: OwnerMode): OwnerScene {
