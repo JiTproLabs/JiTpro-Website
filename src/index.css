@@ -1,7 +1,7 @@
 /* Inter Tight 400 and 500 are required by the JiTpro demo UI system
    (src/components/demo), which sets its application type in that face. The
    marketing site itself continues to use 600/700/800 only. */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 
 @import 'tailwindcss';
@@ -58,6 +58,7 @@
      against it (§8.1.1, amber on light surfaces). Hierarchy is ink. */
   --jp-surface-light: #f1f5f9; /* role inversion of --jp-text-primary */
   --jp-ink-secondary: #475569; /* body and structural linework on light */
+  --jp-surface-white: #ffffff; /* raised light zone within a light act (§8.8, 2026-11-05) */
 }
 
 /*
@@ -84,6 +85,7 @@
 
   --color-jp-surface-light: var(--jp-surface-light);
   --color-jp-ink-secondary: var(--jp-ink-secondary);
+  --color-jp-surface-white: var(--jp-surface-white);
 }
 
 /*
@@ -229,6 +231,40 @@
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
+    }
+  }
+
+  /* THE FOUR-STEP STICKY STACK (Design System §46.11, Decision Log
+     2026-11-06). Each step panel sticks as it reaches the top of the view and
+     the next panel, later in the DOM and so painted above it, scrolls up over
+     it: four sheets stacked by the reader's own scroll. Pure position:sticky -
+     nothing is animated, intercepted or snapped. The panels stick inside their
+     own list, so after Step 04 the stack scrolls away as ordinary content.
+
+     `--jp-stack-top` is set per panel by KnowWhatsComingSection: the sticky
+     navigation's height for a panel that fits the view, or a negative offset
+     for a taller one (Step 03), so it scrolls fully into view and sticks only
+     once its bottom edge is reached. The fallback is the navigation bar's
+     h-20 plus its 1px border.
+
+     Only from lg, only on a view tall enough to hold a panel, and only when
+     motion is welcome; otherwise the panels are ordinary content. */
+  @media (min-width: 64rem) and (min-height: 40rem) and (prefers-reduced-motion: no-preference) {
+    .jp-step-stack {
+      position: sticky;
+      top: var(--jp-stack-top, calc(5rem + 1px));
+    }
+
+    /* THE PASSING EDGE (Decision Log 2026-11-06). Each INCOMING panel (02-04)
+       casts one tight shadow upward from its top hairline onto the panel it is
+       covering, so it reads as a sheet passing over another. Negative spread
+       keeps it a thin band at the edge, never a card shadow; the colour is the
+       page ink mixed down, so no colour literal exists. Every step covers
+       something (Step 01 covers the intro panel); the intro covers nothing and
+       casts none. Inside this block only, so it exists only while the panels
+       actually stack. */
+    .jp-step-cover {
+      box-shadow: 0 -10px 18px -14px color-mix(in srgb, var(--jp-background) 38%, transparent);
     }
   }
 

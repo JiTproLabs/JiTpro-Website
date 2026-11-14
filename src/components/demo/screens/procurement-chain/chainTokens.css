@@ -1,0 +1,58 @@
+/* --------------------------------------------------------------------------
+   PROCUREMENT CHAIN - color tokens (Design System Section 51.7).
+
+   The one definition site for the `--jpd-chain-*` sub-namespace of the
+   approved product-demo namespace (Decision Log 2026-09-04 (d)). Imported only
+   by the Procurement Chain. The schedule's `--jpd-phase-*` family tokens are
+   deliberately untouched: the full schedule keeps its palette.
+
+   Every activity value carries white label text at WCAG AA (4.5:1) or better
+   at the LIGHTEST point of its gradient - the gradient only ever darkens.
+   -------------------------------------------------------------------------- */
+
+.jpd {
+  /* Activity families. Ratios are white text on the flat token. */
+  --jpd-chain-buyout: #1e40af;        /* 8.72:1 */
+  --jpd-chain-coordination: #0e7490;  /* 5.36:1 */
+  --jpd-chain-preparation: #1d5fe0;   /* 5.58:1 */
+  --jpd-chain-review: #7c3aed;        /* 5.70:1 */
+  --jpd-chain-revision: #5b21b6;      /* 8.98:1 */
+  --jpd-chain-production: #c2410c;    /* 5.18:1 - red-orange, not an amber */
+  --jpd-chain-logistics: #7c2d12;     /* 9.37:1 */
+
+  /* Events. */
+  --jpd-chain-milestone: #0d1730;     /* 17.76:1 on white as a mark */
+  --jpd-chain-ros: #15803d;           /* 5.02:1 */
+
+  /* Aliases, not new values. */
+  --jpd-chain-commitment: var(--jpd-commitment);
+  --jpd-chain-commitment-late: var(--jpd-commitment-late);
+  --jpd-chain-issue-at-risk: var(--jpd-warn-fg);      /* 3.64:1 as a graphic */
+  --jpd-chain-issue-impacted: var(--jpd-error-fg);
+  --jpd-chain-ink: var(--jpd-text-strong);
+  --jpd-chain-ink-secondary: var(--jpd-text-secondary);
+  --jpd-chain-on-fill: var(--jpd-surface);
+  /* The calendar grid behind the homepage Plan chain (Section 54.4.2):
+     day lines on the Schedule's grid-strong hairline, week lines a step
+     darker, non-working days at about half the Schedule's shading so the
+     bands never outweigh the lines or the labels drawn over them. */
+  --jpd-chain-grid-day: var(--jpd-grid-strong);
+  --jpd-chain-grid-week: color-mix(in srgb, var(--jpd-text-strong) 16%, var(--jpd-surface));
+  --jpd-chain-nonworking: color-mix(in srgb, var(--jpd-text-strong) 3%, transparent);
+
+  /* Derived, never authored. */
+  --jpd-chain-shadow: color-mix(in srgb, var(--jpd-text) 18%, transparent);
+  --jpd-chain-commitment-fill: color-mix(in srgb, var(--jpd-chain-commitment) 7%, var(--jpd-surface));
+  --jpd-chain-issue-fill: color-mix(in srgb, var(--jpd-chain-issue-at-risk) 9%, var(--jpd-surface));
+  --jpd-chain-issue-fill-impacted: color-mix(in srgb, var(--jpd-chain-issue-impacted) 9%, var(--jpd-surface));
+  --jpd-chain-rule: color-mix(in srgb, var(--jpd-chain-ros) 70%, transparent);
+  --jpd-chain-axis: var(--jpd-grid-strong);
+}
+
+/* The hit layer's buttons carry the shared mark classes so the existing
+   inspection hook recognises them; their visuals are drawn in the SVG, so the
+   buttons themselves are transparent. Focus is shown by the SVG ring and by
+   the shared focus-visible outline. */
+.jpd-chain-hit {
+  position: absolute;
+}

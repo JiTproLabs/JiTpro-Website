@@ -585,11 +585,13 @@ const steelC: CommitmentSpec[] = [
     'ss-2', 'Issue the completed structural design with member sizes fixed for detailing.'),
   C('steel-c2', 'Connection Design Criteria Issued', 'engineering', 'Structural Engineer', 'MC', 'structural',
     'ss-3', 'Issue connection design criteria and delegated design requirements to the detailer.',
-    // Required 21 Sep, issued 28 Sep - five working days late. Detailing
+    // Required 29 Sep, issued 6 Oct - five working days late. Detailing
     // started against incomplete criteria and the first review cycle absorbed
     // the difference. Re-pinned with the requirement when the work calendar
-    // gained federal holidays, so the miss is still five working days.
-    { completedOn: '2026-09-28' }),
+    // gained federal holidays, and again when milestones stopped consuming a
+    // working day (2026-11-07: requirement 21 Sep -> 29 Sep, actual
+    // 28 Sep -> 6 Oct), so the miss is still five working days.
+    { completedOn: '2026-10-06' }),
   C('steel-c3', 'Architectural Interface Confirmed', 'design', 'Architect', 'JS', 'architect',
     'ss-3', 'Confirm exposed steel conditions, finishes and the interfaces where steel meets enclosure.'),
 ];
@@ -612,13 +614,15 @@ const heritageC: CommitmentSpec[] = [
     { leadDays: 2 }),
   C('heritage-c2', 'Final Frame Finish & Colour Selection', 'selection', 'Owner', 'EM', 'owner',
     'hw-4', 'Select the final frame finish and colour that the fabrication order is placed against.',
-    // Originally required and agreed for 23 Oct; provided 2 Nov, six working
+    // Originally required and agreed for 2 Nov; provided 10 Nov, six working
     // days late. The current forecast has since re-planned the Initial
     // Submittal around the actual, which is why the derived requirement now
-    // reads 2 Nov - the baseline is what keeps the miss visible. Re-pinned
-    // with the requirement when the work calendar gained federal holidays.
-    { baselineRequiredBy: '2026-10-23', committedFor: '2026-10-23', completedOn: '2026-11-02' }),
-  C('heritage-c3', 'Final Glazing Selection', 'selection', 'Architect', 'JS', 'architect',
+    // reads 10 Nov - the baseline is what keeps the miss visible. Re-pinned
+    // with the requirement when the work calendar gained federal holidays,
+    // and again when milestones stopped consuming a working day (2026-11-07:
+    // every date moved +6 working days, 23 Oct -> 2 Nov and 2 Nov -> 10 Nov).
+    { baselineRequiredBy: '2026-11-02', committedFor: '2026-11-02', completedOn: '2026-11-10' }),
+  C('heritage-c3', 'Final Glazing Specification', 'selection', 'Architect', 'JS', 'architect',
     'hw-4', 'Confirm the glazing make-up, coating and performance for every opening type.'),
 ];
 
@@ -771,7 +775,9 @@ const heritageRisk: RiskSpec = {
       id: 'heritage-i1',
       kind: 'missed-commitment',
       title: 'Frame Finish Selection Received Late',
-      identifiedOn: '2026-11-02',
+      // The day the late selection arrived (heritage-c2's actual). Moved with
+      // it on 2026-11-07, from 2 Nov.
+      identifiedOn: '2026-11-10',
       cause:
         'The final frame finish and colour selection was provided later than the date the Owner had agreed to.',
       impact: 'Completion of the Initial Submittal was delayed.',

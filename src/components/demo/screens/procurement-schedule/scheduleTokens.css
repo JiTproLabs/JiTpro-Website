@@ -36,9 +36,26 @@
   --jpd-commitment: #be185d;
   --jpd-commitment-late: #b91c1c;
 
+  /* THE SUMMARY BAR (2026-11-06). The homepage Build-the-chain comparison's
+     conventional one-activity-per-phase schedule. Neutral by design and an
+     alias, not a new value: it must not read as any of the nine family hues,
+     because it is the absence of that breakdown. */
+  --jpd-summary-bar: var(--jpd-text-muted);
+
   --jpd-grid: #f1f2f4;
   --jpd-grid-strong: #e6e8ea;
   --jpd-today: #94a3b8;
+
+  /* ACTIVITY STATE, WITHOUT FAMILY (2026-11-11, Design System Section 54.4.4).
+     The homepage Control visual draws every activity by where it stands on
+     one date, not by its family, so that amber alone carries what needs
+     attention. Complete and under way are solid; scheduled is an outline, so
+     the three differ by form as well as tone. Each is at least 3:1 on
+     --jpd-surface. */
+  --jpd-state-complete: #8793a1;
+  --jpd-state-active: #3f4b5a;
+  --jpd-state-scheduled-fill: #eef1f4;
+  --jpd-state-scheduled-edge: #7f8b99;
 
   /* NON-WORKING DAYS. Weekends and observed U.S. federal holidays share one
      treatment: the question the shading answers is "is work expected on this
@@ -47,6 +64,15 @@
      reads identically over the white row and the tinted selected row while
      staying beneath every bar, diamond and marker. */
   --jpd-nonworking: color-mix(in srgb, var(--jpd-text-strong) 6%, transparent);
+}
+
+/* THE PLANNING VIEW (2026-11-06). The homepage Build-the-chain comparison
+   illustrates planning assumptions, not a status report: it draws no data-date
+   line, so nothing in it is dimmed as complete. Scoped to `.jpd-plan`; the
+   full schedule is untouched. */
+.jpd-plan .jpd-step--complete,
+.jpd-plan .jpd-commit--complete .jpd-commit__mark {
+  opacity: 1;
 }
 
 /* The band is presentation only. It never intercepts the pointer, so a click

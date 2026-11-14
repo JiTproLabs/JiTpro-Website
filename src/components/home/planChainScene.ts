@@ -1,0 +1,1361 @@
+/**
+ * The Plan tab's visual: the scene, its one timeline and its camera (Design
+ * System Section 54.4.2). PURE: no DOM, no React.
+ *
+ * THE SCENE. A project procurement schedule drawn in the procurement chain's
+ * own visual language (Section 51): one row per procurement item, every row
+ * laid out by the chain's layout engine (`buildChainLayout`) on ONE shared
+ * calendar axis at the chain's approved scale. The focal chain, the
+ * approved Custom Steel Windows and Doors scenario (`chainScenario.ts`), is
+ * drawn with its labels, in the middle third of the schedule. Its activities
+ * and durations are unchanged; its whole chain is anchored earlier, on
+ * PLAN_FOCAL_REQUIRED_ON_SITE, so that strict Required On Site order puts it
+ * eighth of fifteen (refined 2026-11-10). Around it are the shared schedule fixture's other
+ * fourteen items (`scheduleFixture.ts`), bars and milestones only, LENGTHENED
+ * for this illustration: each is rebuilt through the same scheduling engine
+ * with its activity durations scaled by its own factor, so the project shows
+ * realistic variation. The fixture itself is unchanged. The fixture's own
+ * steel window package is left out, because the focal chain is that package.
+ * Rows run in strict Required On Site order, earliest at the top, as a
+ * procurement schedule reads. Commitments and issues are removed
+ * from every row: the Plan stage shows the procurement chain itself.
+ *
+ * ONE TIMELINE (§46.3, §51.12). `planStateAt(scene, frame, t)` maps one clock
+ * (ms since the tab's `played` turned true) through one ordered table of
+ * stages to everything that moves: the camera, the planning edge, and every
+ * opacity. The renderer applies it and computes nothing.
+ *
+ *   1. The field's requirement: the item's name and date are stated, then
+ *      its Required On Site milestone appears on the calendar, alone. It is
+ *      given time to register.
+ *   2. The work: the list begins, its heading and Required On Site first,
+ *      then the five groups of procurement activity that date depends on,
+ *      one at a time, each with its working days, then their total. Nothing
+ *      of the chain is drawn yet (redesigned 2026-11-11).
+ *   3. The chain builds backward, one activity at a time: a planning edge
+ *      travels right to left, revealing each activity from its right end,
+ *      and the camera follows it. It rests briefly on each completed
+ *      activity, a little longer on a milestone, before the next. The group
+ *      being built is marked in the list.
+ *   4. The camera pulls back to the whole chain, and holds.
+ *   5. It pulls back again to the whole project schedule, and rests.
+ */
+
+import { buildChainLayout, CHAIN, FONT, type ChainLayout, type Measure } from '../demo/screens/procurement-chain/chainLayout';
+import { buildSteelWindowsChain, CHAIN_LABELS } from '../demo/screens/procurement-chain/chainScenario';
+import { SCHEDULE_ITEMS } from '../demo/screens/procurement-schedule/scheduleFixture';
+import { buildItem, type PhaseFamily, type ScheduleItem, type StepSpec } from '../demo/screens/procurement-schedule/scheduleModel';
+import { iso, nonWorkingRuns, parse, workdaysBetween } from '../demo/screens/procurement-schedule/workCalendar';
+
+/* ------------------------------------------------------------ the items */
+
+/** The Plan stage shows the chain itself: no commitments, no issues. */
+const chainOnly = (item: ScheduleItem): ScheduleItem => ({ ...item, commitments: [], issues: [] });
+
+/** The fixture's steel window package; the focal chain stands in for it. */
+export const REPLACED_FIXTURE_ITEM = 'itm-heritage';
+
+/**
+ * The featured chain's Required On Site date ON THE HOMEPAGE (2026-11-10).
+ * The approved scenario's own date is 30 November 2027, the latest of all
+ * fifteen items, which in date order would make it the last row. Anchored
+ * here instead, the same engine moves every date of the chain together
+ * (Section 51.13, representative dates follow the anchor): 312 working days,
+ * the same activities and durations, starting 4 June 2026. It falls between
+ * the fixture's 23 August and 13 September dates: eighth of fifteen.
+ */
+export const PLAN_FOCAL_REQUIRED_ON_SITE = '2027-09-01';
+
+export const FOCAL_ITEM = chainOnly(buildSteelWindowsChain(PLAN_FOCAL_REQUIRED_ON_SITE));
+
+/**
+ * A fixture item rebuilt through the scheduling engine with every activity's
+ * duration scaled by `factor` (rounded, at least one working day). Its
+ * Required On Site date, its sequence, its milestones and any explicit float
+ * between steps are kept: each step's relationship to the one before it is
+ * read back from the resolved dates. At a factor of 1 it reproduces the
+ * fixture's dates exactly (planChainScene.test.ts).
+ */
+export function lengthened(item: ScheduleItem, factor: number): ScheduleItem {
+  const specs: StepSpec[] = item.steps.map((s, i) => {
+    if (s.milestoneAnchor === 'start') throw new Error(`lengthened: ${s.id} is a start milestone`);
+    const prev = item.steps[i - 1];
+    // Inclusive working-day count between the predecessor's finish and this step.
+    const between = prev ? workdaysBetween(parse(prev.endDate), parse(s.startDate)) : 1;
+    return {
+      id: s.id,
+      name: s.name,
+      family: s.family,
+      kind: s.kind,
+      ...(s.kind === 'phase' ? { days: Math.max(1, Math.round(s.durationWorkdays * factor)) } : {}),
+      gap: s.kind === 'phase' ? Math.max(1, between - 1) : Math.max(1, between),
+      org: s.responsibleOrganizationId,
+      owner: s.commitmentOwnerId,
+      owed: s.whatIsOwed,
+    };
+  });
+  return buildItem(item.id, item.name, item.category, item.requiredOnSiteDate, specs);
+}
+
+/**
+ * Each surrounding chain's own duration factor, so no two share a length.
+ * Representative, for this illustration only.
+ */
+const FACTORS: Readonly<Record<string, number>> = {
+  'itm-permit': 1.9,
+  'itm-concrete': 2.3,
+  'itm-steel': 1.7,
+  'itm-framing': 2.6,
+  'itm-switchgear': 1.8,
+  'itm-stone': 1.45,
+  'itm-hvac': 1.9,
+  'itm-tile': 2.0,
+  'itm-elevator': 1.75,
+  'itm-casework': 1.6,
+  'itm-railings': 1.35,
+  'itm-plumbing': 1.55,
+  'itm-intdoors': 2.1,
+  'itm-lighting': 1.6,
+};
+
+/**
+ * Every row's item, top to bottom, in strict Required On Site order
+ * (refined 2026-11-10): the order a procurement schedule reads in.
+ */
+export const ROW_ITEMS: ScheduleItem[] = [
+  FOCAL_ITEM,
+  ...SCHEDULE_ITEMS.filter((i) => i.id !== REPLACED_FIXTURE_ITEM).map((i) => {
+    const factor = FACTORS[i.id];
+    if (factor === undefined) throw new Error(`planChainScene: no duration factor for ${i.id}`);
+    return chainOnly(lengthened(i, factor));
+  }),
+].sort((a, b) => (a.requiredOnSiteDate < b.requiredOnSiteDate ? -1 : a.requiredOnSiteDate > b.requiredOnSiteDate ? 1 : 0));
+export const FOCAL_ROW = ROW_ITEMS.indexOf(FOCAL_ITEM);
+export const OTHER_ITEMS = ROW_ITEMS.filter((i) => i !== FOCAL_ITEM);
+
+/** Whole months from the earliest start to the month after the latest Required On Site. */
+export function sharedDomain(items: ScheduleItem[]): { start: string; end: string } {
+  const starts = items.map((i) => i.startDate).sort();
+  const ends = items.map((i) => i.requiredOnSiteDate).sort();
+  const s = parse(starts[0]);
+  s.setUTCDate(1);
+  const e = parse(ends[ends.length - 1]);
+  e.setUTCMonth(e.getUTCMonth() + 1, 1);
+  return { start: iso(s), end: iso(e) };
+}
+
+/* ------------------------------------------------------------ the scene */
+
+export type PlanRow = { item: ScheduleItem; layout: ChainLayout; dy: number };
+
+export type BuildStep = {
+  id: string;
+  family: PhaseFamily;
+  /** The planning edge travels from `from` to `to` (right to left). */
+  from: number;
+  to: number;
+  /** The activity's own span, for the camera's framing. */
+  span: number;
+  start: number;
+  /** The edge's move across the activity. */
+  duration: number;
+  /**
+   * The rest after it (refined 2026-11-10): the edge and camera hold on the
+   * completed activity, labelled, before the next one begins. Part of the
+   * step's own interval, so the one clock never accumulates a separate delay.
+   */
+  dwell: number;
+  /** Whether the edge rests on a milestone (other than Required On Site). */
+  milestone: boolean;
+};
+
+export type PlanScene = {
+  width: number;
+  height: number;
+  focal: PlanRow;
+  others: PlanRow[];
+  /** The focal bar's vertical centre, in canvas px. */
+  focalCy: number;
+  rosX: number;
+  /** The whole focal chain, Required On Site label included. */
+  chainLeft: number;
+  chainRight: number;
+  steps: BuildStep[];
+  times: Times;
+  /** Where the scene sits in the application screen (refined 2026-11-10). */
+  place: Placement;
+  /** The step list's six groups, with their place on the one clock. */
+  list: ListEntry[];
+  /** The featured item's name, as the list's heading (redesigned 2026-11-11). */
+  itemTitle: string;
+  /** Every activity's working days, summed from the chain. */
+  totalWorkdays: number;
+  /** The opening statement, shown on the rail before the list (founder-supplied 2026-11-11). */
+  lead: string;
+  /** The timescale header's periods, on the chain's calendar (refined 2026-11-10). */
+  timescale: Timescale;
+  /**
+   * Long activities' in-bar labels (refined 2026-11-10): the bar's span, the
+   * label's own centre and half-width, in canvas px. See labelShiftsAt.
+   */
+  longLabels: { id: string; x0: number; x1: number; c0: number; half: number }[];
+};
+
+/* ---------------------------------------------------------- the step list */
+
+/**
+ * THE STEP LIST (refined 2026-11-10). The featured chain's activities in six
+ * consolidated groups, in backward-planning order, shown beside the chain as
+ * it builds. Founder-specified: exactly these six. Membership is by activity
+ * family, so every step and milestone belongs to exactly one group, and each
+ * group's working days are the sum of its activities' durations: read from
+ * the chain, never authored. Dependencies, decisions and commitments are not
+ * here; they belong to Connect.
+ */
+export const PLAN_STEP_GROUPS: readonly { id: string; label: string; families: readonly PhaseFamily[] }[] = [
+  { id: 'ros', label: 'Required On Site', families: ['required'] },
+  { id: 'fabrication', label: 'Fabrication & Delivery', families: ['production', 'logistics'] },
+  { id: 'review', label: 'Review & Approvals', families: ['review', 'revision', 'approval'] },
+  { id: 'preparation', label: 'Submittal Preparation', families: ['preparation'] },
+  { id: 'coordination', label: 'Submittal Coordination', families: ['coordination'] },
+  { id: 'buyout', label: 'Buyout', families: ['buyout'] },
+];
+
+export type ListEntry = {
+  id: string;
+  label: string;
+  /** Working days of the group's activities; null for a milestone. */
+  workdays: number | null;
+  /** The milestone's date, for a milestone. */
+  date: string | null;
+  /** The family whose token marks the entry. */
+  family: PhaseFamily;
+  /**
+   * When it appears; and from when, until when, it is the step being built
+   * (ms). Redesigned 2026-11-11: every group is named before the build
+   * begins, so appearing and being built are now separate moments.
+   */
+  appearAt: number;
+  activeFrom: number;
+  activeUntil: number;
+  /** Its working days as a share of the longest group's, 0 to 1 (0 for a milestone). */
+  weight: number;
+};
+
+const groupOf = (f: PhaseFamily) => {
+  const g = PLAN_STEP_GROUPS.findIndex((x) => x.families.includes(f));
+  if (g < 0) throw new Error(`planChainScene: no step group for family ${f}`);
+  return g;
+};
+
+/** Each group's working days and milestone date, from the chain's own steps. */
+export function stepGroupTotals(item: ScheduleItem) {
+  return PLAN_STEP_GROUPS.map((_, i) => {
+    const steps = item.steps.filter((s) => groupOf(s.family) === i);
+    const phases = steps.filter((s) => s.kind === 'phase');
+    return {
+      workdays: phases.length ? phases.reduce((n, s) => n + s.durationWorkdays, 0) : null,
+      date: phases.length ? null : steps[0]?.startDate ?? null,
+    };
+  });
+}
+
+/**
+ * THE APPLICATION SCREEN (refined 2026-11-10). The finished schedule is shown
+ * as the JiTpro Schedule module: the shared application shell (`JiTproShell`,
+ * the Procurement Register's own chrome) on its fixed 1448 x 1086 canvas,
+ * with the Schedule module's page header and toolbar, then a schedule box:
+ * the item column on the left and the timeline on the right.
+ *
+ * These are the screen's layout px. The renderer builds the screen to them,
+ * and the scene's chains are placed into the timeline by them, so the month
+ * header, the row bands and the bars agree. The schedule ends above the
+ * Register overview's crop line (about 904 px), so the final view shows all
+ * fifteen rows and the legend.
+ */
+export const APP = {
+  w: 1448,
+  h: 1086,
+  /** The shell's top bar and sidebar (JiTproShell). */
+  topBar: 60,
+  sidebar: 205,
+  /** The main column's padding (as the Schedule screen's). */
+  padL: 18,
+  padR: 26,
+  /** The page header and toolbar block, a fixed height. */
+  toolsH: 122,
+  /** Toolbar to schedule box (as the Schedule screen's). */
+  ganttGap: 14,
+  /** The period header band and the item column (as the Schedule screen's). */
+  periodH: 30,
+  leftW: 226,
+  /** Row height bounds; the rows fit above this line. */
+  rowHMax: 48,
+  rowHMin: 34,
+  rowsBottomMax: 852,
+} as const;
+
+export type Placement = {
+  /** Screen px per scene px. */
+  k: number;
+  /** The scene's origin in the screen. */
+  ox: number;
+  oy: number;
+  /** The schedule box: its outer top-left and width in the screen. */
+  box: { x: number; y: number; w: number };
+  timelineX: number;
+  timelineW: number;
+  rowsTop: number;
+  rowH: number;
+  /** Each row's band, top to bottom, in screen px (the featured row is taller). */
+  bands: { top: number; height: number }[];
+  rowsBottom: number;
+  /** Lines an item name may take at this row height. */
+  nameLines: number;
+};
+
+type Times = {
+  rosIn: number;
+  rosInDuration: number;
+  buildStart: number;
+  buildEnd: number;
+  chainArrive: number;
+  holdEnd: number;
+  end: number;
+};
+
+/** Stage timing (ms after `played`). The build's own steps are timed per activity. */
+export const TIMING = {
+  /**
+   * THE OPENING, IN ORDER (corrected 2026-11-11). After the panel's 450 ms
+   * slide the frame is empty but for the calendar. The requirement is stated
+   * first (CARD_IN); the Required On Site milestone then appears on the
+   * calendar (ROS_IN), and is held.
+   */
+  CARD_IN: 500,
+  ROS_IN: 900,
+  ROS_IN_DURATION: 400,
+  /**
+   * THE WORK, NAMED (redesigned 2026-11-11). At GROUPS_AT the list begins:
+   * its heading, then, LIST_LEAD later, its six entries one at a time,
+   * GROUP_STAGGER apart, Required On Site first; then their total. The build
+   * begins once the total has been read.
+   *
+   * The list is whole or absent: no entry appears before its heading. The
+   * original visual opened on the Required On Site entry alone, on the
+   * rail; left in place, it appeared before the list it belongs to.
+   */
+  GROUPS_AT: 2700,
+  LIST_LEAD: 150,
+  GROUP_STAGGER: 330,
+  TOTAL_AT: 4800,
+  BUILD_START: 5700,
+  /**
+   * THE OPENING STATE OF THE RAIL (redesigned 2026-11-11). Before the list,
+   * the rail itself is the introduction: it turns navy, a short amber rule
+   * appears, then the statement, rising slightly. It holds; the rule and the
+   * statement fade; the rail returns to its light surface; and the list
+   * begins at GROUPS_AT. The rail never moves. Each `_AT` is ms after
+   * `played`; each `_OUT_BEFORE` is ms before GROUPS_AT.
+   */
+  LEAD_BG_AT: 450,
+  LEAD_BG: 300,
+  LEAD_RULE_AT: 600,
+  LEAD_RULE: 250,
+  LEAD_TEXT_AT: 700,
+  LEAD_TEXT: 400,
+  LEAD_CONTENT_OUT_BEFORE: 550,
+  LEAD_CONTENT_OUT: 250,
+  LEAD_BG_OUT_BEFORE: 350,
+  /**
+   * Per activity: a base plus a share of its length, so long work reads as
+   * long (refined 2026-11-10: Fabrication's pan had been too fast to follow;
+   * it now takes about 3.2 s).
+   */
+  STEP_BASE: 560,
+  STEP_PER_PX: 1.25,
+  STEP_MIN: 700,
+  STEP_MAX: 3400,
+  /**
+   * The rest after each activity, long enough to read its label before the
+   * next begins (founder direction 2026-11-10: about 600 to 800 ms, and 800
+   * to 1000 ms at a milestone), and longer where the activity's start is a
+   * milestone.
+   */
+  STEP_DWELL: 650,
+  MILESTONE_DWELL: 250,
+  /**
+   * A long activity (wider than LONG_SPAN canvas px, about 125 calendar days:
+   * Fabrication) rests a little longer, since the camera has just eased back
+   * in from its pull-back and the view needs a moment to settle.
+   */
+  LONG_SPAN: 1000,
+  LONG_SETTLE: 300,
+  ZOOM_TO_CHAIN: 1400,
+  /** The founder-directed pause on the whole chain (2026-11-10). */
+  CHAIN_HOLD: 1500,
+  PULLBACK: 2400,
+} as const;
+
+export function buildPlanScene(measure: Measure): PlanScene {
+  const domain = sharedDomain([FOCAL_ITEM, ...OTHER_ITEMS]);
+  const layoutOf = (item: ScheduleItem, labels?: Record<string, string>) =>
+    buildChainLayout(item, { containerWidth: 0, measure, labels, domain });
+
+  const focalLayout = layoutOf(FOCAL_ITEM, CHAIN_LABELS);
+  const width = focalLayout.width;
+  const n = ROW_ITEMS.length;
+
+  /* The screen's schedule box and timeline. */
+  const boxX = APP.sidebar + APP.padL;
+  const boxY = APP.topBar + APP.toolsH + APP.ganttGap;
+  const boxW = APP.w - APP.sidebar - APP.padL - APP.padR;
+  const timelineX = boxX + 1 + APP.leftW;
+  const timelineW = boxX + boxW - 1 - timelineX;
+  const rowsTop = boxY + 1 + APP.periodH;
+
+  /* The shared domain maps exactly onto the timeline. */
+  const k = timelineW / (width - CHAIN.PAD_L - CHAIN.PAD_R);
+  const ox = timelineX - k * CHAIN.PAD_L;
+  const oy = rowsTop;
+
+  /* The featured row keeps room beneath its bar for its own labels. */
+  const focalLabelBottom = Math.max(focalLayout.barBottom, ...focalLayout.labels.map((l) => l.box.y + l.box.h));
+  const focalExtra = Math.ceil((focalLabelBottom - focalLayout.barBottom) * k) + 4;
+  const rowH = Math.min(APP.rowHMax, Math.max(APP.rowHMin, Math.floor((APP.rowsBottomMax - rowsTop - focalExtra) / n)));
+
+  /* Row bands, top to bottom; each bar is centred in its row's first rowH. */
+  let y = rowsTop;
+  const bands = ROW_ITEMS.map((_, i) => {
+    const band = { top: y, height: rowH + (i === FOCAL_ROW ? focalExtra : 0) };
+    y += band.height;
+    return band;
+  });
+  const rowsBottom = y;
+  const rows: PlanRow[] = ROW_ITEMS.map((item, i) => {
+    const layout = item === FOCAL_ITEM ? focalLayout : layoutOf(item);
+    const barTop = (bands[i].top + rowH / 2 - oy) / k - CHAIN.H / 2;
+    return { item, layout, dy: barTop - layout.barTop };
+  });
+  const focal = rows[FOCAL_ROW];
+  const others = rows.filter((_, i) => i !== FOCAL_ROW);
+  const height = Math.max((rowsBottom - oy) / k, focal.dy + focalLayout.height);
+  const focalCy = focal.dy + focalLayout.cy;
+
+  const rosX = focalLayout.ros!.x;
+  const segs = focalLayout.segments;
+  const chainLeft = segs[0].x0 - 32;
+  const rosText = focalLayout.ros!.text;
+  const rosTextW = Math.max(...rosText.lines.map((l) => measure(l.text, FONT[l.font])));
+  const chainRight = rosText.x + rosTextW + 24;
+
+  /* The build: the activities from Required On Site backward. */
+  let clock: number = TIMING.BUILD_START;
+  const milestoneXs = focalLayout.milestones.filter((m) => !m.isRos).map((m) => m.x);
+  const steps: BuildStep[] = [...segs].reverse().map((s, k) => {
+    const span = s.x1 - s.x0;
+    const duration = Math.min(TIMING.STEP_MAX, Math.max(TIMING.STEP_MIN, TIMING.STEP_BASE + TIMING.STEP_PER_PX * span));
+    const milestone = milestoneXs.some((x) => Math.abs(x - s.x0) < 1);
+    const dwell = TIMING.STEP_DWELL + (milestone ? TIMING.MILESTONE_DWELL : 0) + (span > TIMING.LONG_SPAN ? TIMING.LONG_SETTLE : 0);
+    // The first step starts past the last chevron's point, so nothing shows before it.
+    const step = { id: s.step.id, family: s.family, from: k === 0 ? s.x1 + CHAIN.D : s.x1, to: s.x0, span, start: clock, duration, dwell, milestone };
+    clock += duration + dwell;
+    return step;
+  });
+  const buildEnd = clock;
+
+  /* The list: each group appears as its first activity starts building, and
+     is the step being built until its last activity's rest ends. Required On
+     Site appears with the anchor and is current until the build begins. */
+  const totals = stepGroupTotals(FOCAL_ITEM);
+  const longest = Math.max(...totals.map((x) => x.workdays ?? 0));
+  const list: ListEntry[] = PLAN_STEP_GROUPS.map((g, i) => {
+    const own = steps.filter((s) => groupOf(s.family) === i);
+    /* Every entry is named in stage 2, beneath the list's heading, Required
+       On Site first. A group of work is the current entry while its own
+       activities build; Required On Site, a milestone with nothing to
+       build, never is. */
+    const appearAt = TIMING.GROUPS_AT + TIMING.LIST_LEAD + i * TIMING.GROUP_STAGGER;
+    const activeFrom = i === 0 ? Number.POSITIVE_INFINITY : Math.min(...own.map((s) => s.start));
+    const activeUntil = i === 0 ? 0 : Math.max(...own.map((s) => s.start + s.duration + s.dwell));
+    return { id: g.id, label: g.label, ...totals[i], family: g.families[0], appearAt, activeFrom, activeUntil, weight: (totals[i].workdays ?? 0) / longest };
+  });
+  const totalWorkdays = FOCAL_ITEM.steps.reduce((n, s) => n + (s.kind === 'phase' ? s.durationWorkdays : 0), 0);
+
+  const timescale = buildTimescale(focalLayout, measure);
+  const longLabels = segs
+    .filter((sg) => sg.x1 - sg.x0 > TIMING.LONG_SPAN && sg.icon)
+    .map((sg) => {
+      const textW = sg.inner ? Math.max(...sg.inner.lines.map((l) => measure(l.text, FONT.chevron))) : 0;
+      const w = CHAIN.ICON + (sg.inner ? CHAIN.ICON_GAP + textW : 0);
+      return { id: sg.step.id, x0: sg.x0, x1: sg.x1, c0: sg.icon!.x + w / 2, half: w / 2 };
+    });
+
+  const chainArrive = buildEnd + TIMING.ZOOM_TO_CHAIN;
+  const holdEnd = chainArrive + TIMING.CHAIN_HOLD;
+
+  return {
+    width,
+    height,
+    focal,
+    others,
+    focalCy,
+    rosX,
+    chainLeft,
+    chainRight,
+    steps,
+    list,
+    itemTitle: FOCAL_ITEM.name.replace(' and ', ' & '),
+    lead: PLAN_LEAD,
+    totalWorkdays,
+    timescale,
+    longLabels,
+    place: {
+      k,
+      ox,
+      oy,
+      box: { x: boxX, y: boxY, w: boxW },
+      timelineX,
+      timelineW,
+      rowsTop,
+      rowH,
+      bands,
+      rowsBottom,
+      nameLines: rowH >= 46 ? 2 : 1,
+    },
+    times: {
+      rosIn: TIMING.ROS_IN,
+      rosInDuration: TIMING.ROS_IN_DURATION,
+      buildStart: TIMING.BUILD_START,
+      buildEnd,
+      chainArrive,
+      holdEnd,
+      end: holdEnd + TIMING.PULLBACK,
+    },
+  };
+}
+
+/* ------------------------------------------------------------ the state */
+
+export type Frame = {
+  w: number;
+  h: number;
+  /**
+   * Free room outside the frame, beside it, in the frame's coordinates
+   * (refined 2026-11-10): the unused copy-column area beneath the tab's copy,
+   * measured by the section. When it can hold the finished list, the list
+   * rests there and the application window keeps the whole frame.
+   */
+  aside?: Rect | null;
+  /**
+   * False where the visual has no step list (Connect, Section 54.4.3): the
+   * whole frame is the chain's area and the application window fills it.
+   */
+  list?: false;
+};
+/** The canvas point at the frame's centre, and the scale. */
+export type CameraView = { cx: number; cy: number; scale: number };
+
+export type PlanState = {
+  view: CameraView;
+  /** The planning edge: the focal chain is shown right of it. */
+  edgeX: number;
+  ros: number;
+  others: number;
+  summary: number;
+  /** The focal chain's own calendar axis, handed over to the schedule's. */
+  focalAxis: number;
+  /** The timescale header at the top of the chart, placed through the camera. */
+  header: HeaderState;
+  /** Each long activity's in-bar label offset along its bar, canvas px, by step id. */
+  labelShift: Record<string, number>;
+  /** The application screen around the finished schedule. */
+  app: number;
+  /** The calendar grid's day lines (with non-working shading) and week lines, 0 to 1. */
+  grid: { day: number; week: number };
+  /** The step list. */
+  list: {
+    /** Each entry's appearance, 0 to 1. */
+    appear: number[];
+    /** Each entry's current-step highlight, 0 to 1. */
+    active: number[];
+    /** From the build panel (0) to the final two columns (1). */
+    morph: number;
+    /**
+     * The field's requirement, stated in the chart beside the milestone: the
+     * item's name and its Required On Site date. Shown alone, then handed to
+     * the list's heading as the work begins to be named (Plan only).
+     */
+    card?: number;
+    /**
+     * The rail's opening state, before the list (Plan only): its navy
+     * ground, its amber rule and its statement, 0 to 1 each.
+     */
+    leadBg?: number;
+    leadRule?: number;
+    /** The rule's entrance alone, 0 to 1: it is drawn out as it appears, and does not shrink as it leaves. */
+    leadRuleIn?: number;
+    lead?: number;
+    /** The statement's entrance alone, 0 to 1: it rises as it fades in, and does not move as it leaves. */
+    leadIn?: number;
+    /** The list's heading, the item's name (Plan only). */
+    title?: number;
+    /** The total beneath the list (Plan only). */
+    total?: number;
+    /**
+     * What stays on the rail through the reveal of the schedule fades with
+     * this, 1 to 0 (Plan only): the heading and total always, and the entries
+     * too where they have nowhere to rest outside the frame.
+     */
+    rail?: number;
+  };
+};
+
+/* ------------------------------------------------------ the list's layouts */
+
+/** The Plan visual's opening statement, exactly as supplied by the founder (2026-11-11). */
+export const PLAN_LEAD = 'Start with when the field needs it.';
+
+/** One list entry's base box (screen px at scale 1), and the row pitch. */
+export const LIST_ITEM = { w: 170, h: 36, pitch: 40 } as const;
+/**
+ * The rail's heading (the item's name, up to two lines) above the entries,
+ * and the total beneath them, at scale 1 (redesigned 2026-11-11).
+ */
+export const LIST_TITLE_H = 42;
+export const LIST_TOTAL = { gap: 6, h: 18 } as const;
+/** Below this frame width the list cannot sit beside the chain: it goes beneath. */
+export const SIDE_MIN_W = 460;
+/** Its scale resting outside the frame, and the least that stays readable there. */
+const LIST_ASIDE_SCALE = 1.04;
+/** Resting beside the frame: the widest gap between and around the two columns, and the most open row pitch (scale 1). */
+const ASIDE_COL_GAP_MAX = 72;
+const ASIDE_PITCH_MAX = 50;
+const LIST_MIN_SCALE = 0.7;
+const LIST_COL_GAP = 8;
+
+type Rect = { x: number; y: number; w: number; h: number };
+export type Placed = { x: number; y: number; s: number };
+export type ListLayout = {
+  /**
+   * aside    the list builds in the frame and rests outside it, beside it;
+   *          the application window keeps the whole frame
+   * side     no room outside: the list stays on its rail and fades as the
+   *          schedule is revealed; the application window keeps the whole
+   *          frame (redesigned 2026-11-11; it had rested in the frame beside
+   *          a smaller window)
+   * stacked  narrow frames: a band beneath, the window above
+   */
+  mode: 'aside' | 'side' | 'stacked' | 'none';
+  /** Where the chain is framed while it builds and holds. */
+  area: Rect;
+  /** The build panel: a side rail, or a band beneath. */
+  panel: Rect;
+  /** Each entry's place in the build panel, and in the final layout. */
+  start: Placed[];
+  end: Placed[];
+  /**
+   * Aside only: the copy column's right edge, in the frame's coordinates. Left
+   * of it the list may pass only below the copy (the free area's top).
+   */
+  copyRight?: number;
+  /** The finished application window: its top-left and its canvas scale. */
+  window: Placed;
+};
+
+/**
+ * THE LIST'S TWO LAYOUTS, and the frame they share with the chain (refined
+ * 2026-11-10). Beside the chain (frames at least SIDE_MIN_W wide):
+ *
+ *   BUILD   a rail at the frame's left: the item's name, then one entry per
+ *           row at full size, then the total; the chain is framed in the
+ *           rest of the frame.
+ *   FINAL   the application window fills the frame. Where the copy leaves
+ *           free room beside the frame, the six entries rest there in two
+ *           columns of three (aside); otherwise they fade with the rail.
+ *
+ * Narrower frames (phones): the list is a band of two columns beneath the
+ * chain throughout, and the application window sits above it at the end.
+ * Every position is a transform of the same six entries, so the move from one
+ * layout to the other is the same list travelling, never a second list.
+ */
+/**
+ * The list at rest beneath the copy (refined 2026-11-10): two columns of
+ * three, centred as a group in the free area, with the gap between the
+ * columns equal to the margin either side (up to ASIDE_COL_GAP_MAX), and the
+ * rows opened to share the area's height (up to ASIDE_PITCH_MAX a row).
+ * Each entry stays left-aligned in itself.
+ */
+function asideColumns(a: Rect, s: number, rows: number): Placed[] {
+  const colW = LIST_ITEM.w * s;
+  const gap = Math.max(LIST_COL_GAP, Math.min(ASIDE_COL_GAP_MAX, (a.w - 2 * colW) / 3));
+  const x0 = a.x + (a.w - (2 * colW + gap)) / 2;
+  const pitch = Math.max(LIST_ITEM.pitch * s, Math.min(ASIDE_PITCH_MAX * s, (a.h - LIST_ITEM.h * s) / (rows - 1)));
+  return PLAN_STEP_GROUPS.map((_, i) => ({
+    x: x0 + (i >= rows ? colW + gap : 0),
+    y: a.y + (i % rows) * pitch,
+    s,
+  }));
+}
+
+export function listLayout(f: Frame): ListLayout {
+  if (f.list === false) {
+    const whole = { x: 0, y: 0, w: f.w, h: f.h };
+    return { mode: 'none', area: whole, panel: { x: 0, y: 0, w: 0, h: 0 }, start: [], end: [], window: { x: 0, y: 0, s: Math.max(f.w / APP.w, f.h / APP.h) } };
+  }
+  const n = PLAN_STEP_GROUPS.length;
+  const rows = Math.ceil(n / 2);
+  const m = Math.round(Math.min(14, Math.max(8, f.w * 0.022)));
+  const twoCols = (x: number, y: number, s: number): Placed[] =>
+    PLAN_STEP_GROUPS.map((_, i) => ({
+      x: x + (i >= rows ? LIST_ITEM.w * s + LIST_COL_GAP : 0),
+      y: y + (i % rows) * LIST_ITEM.pitch * s,
+      s,
+    }));
+  /** The whole screen at the largest scale the box allows: against the list (side) or centred (stacked). */
+  const fitWindow = (box: Rect, align: 'right' | 'center'): Placed => {
+    const s = Math.min(box.w / APP.w, box.h / APP.h);
+    const spare = box.w - APP.w * s;
+    return { x: box.x + (align === 'right' ? spare : spare / 2), y: box.y + (box.h - APP.h * s) / 2, s };
+  };
+
+  if (f.w >= SIDE_MIN_W) {
+    const railW = Math.round(Math.min(220, Math.max(176, f.w * 0.33)));
+    const sr = Math.min(1, (railW - 24) / LIST_ITEM.w);
+    const start = PLAN_STEP_GROUPS.map((_, i) => ({ x: 12, y: 14 + (LIST_TITLE_H + i * LIST_ITEM.pitch) * sr, s: sr }));
+
+    /* Room outside the frame: the window keeps the whole frame. */
+    const a = f.aside;
+    const fullW = 2 * LIST_ITEM.w + LIST_COL_GAP;
+    const fullH = (rows - 1) * LIST_ITEM.pitch + LIST_ITEM.h;
+    const sa = a ? Math.min(LIST_ASIDE_SCALE, a.w / fullW, a.h / fullH) : 0;
+    // The free area lies left of the frame, so the list's whole journey is leftward.
+    if (a && sa >= LIST_MIN_SCALE && a.x + a.w <= start[0].x) {
+      const cover = Math.max(f.w / APP.w, f.h / APP.h);
+      return {
+        mode: 'aside',
+        area: { x: railW, y: 0, w: f.w - railW, h: f.h },
+        panel: { x: 0, y: 0, w: railW, h: f.h },
+        start,
+        copyRight: a.x + a.w,
+        end: asideColumns(a, sa, rows),
+        window: { x: 0, y: 0, s: cover },
+      };
+    }
+
+    /* No room outside: the software is not shrunk to make room for the list.
+       The window keeps the whole frame and the list stays where it is. */
+    return {
+      mode: 'side',
+      area: { x: railW, y: 0, w: f.w - railW, h: f.h },
+      panel: { x: 0, y: 0, w: railW, h: f.h },
+      start,
+      end: start,
+      window: { x: 0, y: 0, s: Math.max(f.w / APP.w, f.h / APP.h) },
+    };
+  }
+
+  const colW = (f.w - 2 * m - LIST_COL_GAP) / 2;
+  const sb = Math.min(0.65, colW / LIST_ITEM.w);
+  const bandH = Math.round((rows - 1) * LIST_ITEM.pitch * sb + LIST_ITEM.h * sb + 2 * m);
+  const band = { x: 0, y: f.h - bandH, w: f.w, h: bandH };
+  const placed = twoCols(m, band.y + m, sb);
+  return {
+    mode: 'stacked',
+    area: { x: 0, y: 0, w: f.w, h: f.h - bandH },
+    panel: band,
+    start: placed,
+    end: placed,
+    window: fitWindow({ x: m, y: m, w: f.w - 2 * m, h: f.h - bandH - 2 * m }, 'center'),
+  };
+}
+
+export const clamp01 = (u: number) => Math.min(1, Math.max(0, u));
+/** Gentle ease, no overshoot (§46.4). */
+export const ease = (u: number) => {
+  const x = clamp01(u);
+  return x * x * (3 - 2 * x);
+};
+export const lerp = (a: number, b: number, u: number) => a + (b - a) * u;
+/** Scale interpolates geometrically, so a large zoom reads as even. */
+export const lerpView = (a: CameraView, b: CameraView, u: number): CameraView =>
+  u <= 0
+    ? a
+    : u >= 1
+      ? b
+      : {
+          cx: lerp(a.cx, b.cx, u),
+          cy: lerp(a.cy, b.cy, u),
+          scale: Math.exp(lerp(Math.log(a.scale), Math.log(b.scale), u)),
+        };
+
+/**
+ * Where the planning edge sits across the chain's area: a little left of
+ * centre for the anchor, then about a fifth across while building (refined
+ * 2026-11-10, from 0.58 and 0.42). Left of the edge is unbuilt, so the old
+ * framing left two fifths of the area empty; now the built chain fills it.
+ * 0.22 rather than 0.18 so a milestone label, centred on its diamond, clears
+ * the step list as it appears. Camera framing only: no date, duration, scale
+ * or timing moves.
+ */
+const EDGE_AT_ROS = 0.42;
+const EDGE_WHILE_BUILDING = 0.22;
+/**
+ * Scene px across the chain's area while building, so the chain's type stays
+ * readable beside the list; never closer than 700 scene px across the whole
+ * frame, the scale the build had before the list (so narrow frames keep the
+ * same, unhurried pans).
+ */
+const BUILD_VIEW_W = 470;
+const BUILD_FRAME_VIEW_W = 700;
+/** The narrowest a long activity may pull the camera back to while it builds. */
+export const BUILD_MIN_SCALE = 0.3;
+/** The share of a long activity's move over which the camera eases back, and in again. */
+export const ZOOM_RAMP = 0.3;
+/** Below the bar, so its duration and milestone labels are in view. */
+const LABEL_ROOM = 44;
+
+/** A mark is revealed as the planning edge reaches it, over this many canvas px. */
+export const REVEAL_RAMP = 24;
+export const revealAt = (x: number, edgeX: number) => clamp01((x + REVEAL_RAMP - edgeX) / REVEAL_RAMP);
+
+/**
+ * The view that puts scene x at fraction `frac` across the chain's area and
+ * scene y at the area's vertical centre.
+ */
+/** The build scale for a frame (scene px to frame px). Shared with Connect. */
+export const buildScale = (f: Frame) => Math.min(listLayout(f).area.w / BUILD_VIEW_W, f.w / BUILD_FRAME_VIEW_W);
+
+export const viewInArea = (f: Frame, x: number, frac: number, scale: number, y: number): CameraView => {
+  const a = listLayout(f).area;
+  return {
+    cx: x - (a.x + frac * a.w - f.w / 2) / scale,
+    // Centred in the chart beneath the timescale header (refined 2026-11-10).
+    cy: y - (a.y + HEADER.h + (a.h - HEADER.h) / 2 - f.h / 2) / scale,
+    scale,
+  };
+};
+
+/**
+ * As lerpView, but the screen point showing canvas x `anchorX` travels in a
+ * straight line between its two end positions (refined 2026-11-10). Plain
+ * interpolation, linear centre with geometric scale, swings a point far from
+ * the centre outward mid-zoom: on the pull-back to the whole chain it carried
+ * the chain's left end over the step list although both ends of the move are
+ * clear of it. Same endpoints, scale path and easing.
+ */
+const lerpViewAnchored = (a: CameraView, b: CameraView, u: number, f: Frame, anchorX: number): CameraView => {
+  if (u <= 0) return a;
+  if (u >= 1) return b;
+  const v = lerpView(a, b, u);
+  const at = (w: CameraView) => f.w / 2 + w.scale * (anchorX - w.cx);
+  return { ...v, cx: anchorX - (lerp(at(a), at(b), u) - f.w / 2) / v.scale };
+};
+
+/** The whole chain, Required On Site label included, across the chain's area. */
+export function chainView(scene: PlanScene, f: Frame): CameraView {
+  const a = listLayout(f).area;
+  const scale = (a.w * 0.94) / (scene.chainRight - scene.chainLeft);
+  return viewInArea(f, (scene.chainLeft + scene.chainRight) / 2, 0.5, scale, scene.focalCy + LABEL_ROOM / 2);
+}
+
+/** A view of scene px, as a view of the application screen's px. */
+export function toScreen(scene: PlanScene, v: CameraView): CameraView {
+  const { k, ox, oy } = scene.place;
+  return { cx: ox + k * v.cx, cy: oy + k * v.cy, scale: v.scale / k };
+}
+
+/**
+ * The finished view: the whole application screen's width, from its top, at
+ * the smallest scale that covers the frame. The Procurement Register's
+ * overview is framed the same way (Section 54.4.1), so the two read as one
+ * application.
+ */
+export function scheduleView(_scene: PlanScene, f: Frame): CameraView {
+  // The application window: the whole frame when the list rests outside it,
+  // else beside the list (refined 2026-11-10).
+  const w = listLayout(f).window;
+  return { cx: (f.w / 2 - w.x) / w.s, cy: (f.h / 2 - w.y) / w.s, scale: w.s };
+}
+
+/**
+ * One entry's place part-way through the move to its final layout (0 to 1).
+ * Shared by the renderer and the tests.
+ *
+ * Side: the entries do not move; they stay on the rail and fade with it
+ * (redesigned 2026-11-11).
+ *
+ * Aside: one continuous path per entry (see asideAt).
+ */
+export function listItemAt(lay: ListLayout, i: number, morph: number): Placed {
+  if (lay.mode === 'stacked') return lay.end[i];
+  if (lay.mode === 'side') return lay.start[i];
+  return asideAt(lay, i, morph);
+}
+
+/**
+ * THE ASIDE PATH (amended 2026-11-10). The list leaves the frame for the free
+ * area beneath the copy, left of the frame, on one path per entry: every
+ * entry's x only ever decreases and its y only ever increases, so nothing
+ * bounces. (The earlier move reflowed into two columns inside the frame
+ * first, which carried the second column about 150 px right before the whole
+ * list reversed and slid left.)
+ *
+ * Everything runs on one progress, `p`, the first column's share of its
+ * leftward travel: eased out of the pull-back's own eased progress, so the
+ * list sets off left at once and decelerates into place, on the same clock
+ * as the camera.
+ *
+ *   The second column drops to its resting height early, while it is still
+ *   inside the frame; the first column drops with it, as one block, then on
+ *   by the three rows that separate them. Both drops finish before the first
+ *   column reaches the copy column, so the list passes beneath the copy,
+ *   never across it.
+ *
+ *   The first column leads left; the second trails it by the gap that opens
+ *   into its own column, opening as fast as the second column can, still
+ *   moving left, allow.
+ *
+ * The first column starts above the second and finishes left of it, and the
+ * copy leaves no room to go around, so the two columns cross once, briefly
+ * (listCrossingFade dims the second column while they do). Every entry
+ * shares one scale progress, so the list shrinks as one.
+ */
+function asideAt(lay: ListLayout, i: number, morph: number): Placed {
+  if (morph >= 1) return lay.end[i];
+  const S = lay.start;
+  const E = lay.end;
+  const j = i % LIST_ROWS;
+  const k = asidePath(lay);
+  const p = asideProgress(morph);
+  const drop2 = ease(p / k.secondDropEnds);
+  const drop1 = ease((p - k.firstDropStarts) / ASIDE.FIRST_DROP_SPAN);
+  // One scale for the whole list, settled with the second column's drop.
+  const s = lerp(S[i].s, E[i].s, drop2);
+  const x = lerp(S[j].x, E[j].x, p);
+
+  if (i >= LIST_ROWS) return { x: x + k.beside * ease(p / k.openSpan), y: lerp(S[i].y, E[i].y, drop2), s };
+  // With the second column first (one block), then on alone.
+  const r = (E[i + LIST_ROWS].y - S[i + LIST_ROWS].y) / (E[i].y - S[i].y);
+  return { x, y: lerp(S[i].y, E[i].y, r * drop2 + (1 - r) * drop1), s };
+}
+
+const LIST_ROWS = Math.ceil(PLAN_STEP_GROUPS.length / 2);
+
+/** The first column's share of its leftward travel: off at once, slowing into place. */
+const asideProgress = (morph: number) => {
+  const m = clamp01(morph);
+  return 1 - (1 - m) * (1 - m);
+};
+
+/**
+ * The aside path's shape, in shares of `p` (see asideAt). OPEN_SLOWEST: the
+ * gap's opening span, as a multiple of the shortest a smooth opening can take
+ * while the second column still moves left (1.5); just above it, so the
+ * crossing is as brief as the geometry allows (about a third of a second).
+ */
+const ASIDE = {
+  SECOND_DROP_ENDS: 0.7,
+  FIRST_DROP_ENDS: 0.97,
+  FIRST_DROP_SPAN: 0.07,
+  OPEN_SLOWEST: 1.55,
+  /** The second column's deepest fade while the columns cross. */
+  CROSSING_FADE: 0.6,
+  /** The fade's ease in, ending just after the first column starts down past the second, and its ease out. */
+  FADE_IN: 0.11,
+  FADE_IN_LEAD: 0.02,
+  FADE_OUT: 0.11,
+} as const;
+
+/** The aside path's landmarks, from the layout: all in shares of `p`. */
+function asidePath(lay: ListLayout) {
+  const S = lay.start;
+  const E = lay.end;
+  /* The first column's travel left, the second column's offset beside it, and
+     how far along the first column reaches the copy column. */
+  const travel = S[0].x - E[0].x;
+  const beside = E[LIST_ROWS].x - E[0].x;
+  const atCopy = (S[0].x - lay.copyRight!) / travel;
+  // The gap opens at most this fast, so the second column never stops moving left.
+  const openSpan = (ASIDE.OPEN_SLOWEST * beside) / travel;
+  // Where the gap has opened to a first-column entry's width: the crossing is over.
+  const clear = Math.min(1, (LIST_ITEM.w * E[0].s) / beside);
+  const crossEnds = openSpan * (0.5 - Math.sin(Math.asin(1 - 2 * clear) / 3));
+  return {
+    beside,
+    openSpan,
+    secondDropEnds: ASIDE.SECOND_DROP_ENDS * atCopy,
+    firstDropStarts: ASIDE.FIRST_DROP_ENDS * atCopy - ASIDE.FIRST_DROP_SPAN,
+    crossEnds,
+  };
+}
+
+/**
+ * Each entry's opacity factor at this point of the move: 1, except in the
+ * aside move, where the second column fades back while the first passes down
+ * beside and across it, so the crossing reads as one column passing the
+ * other, not as text over text. The fade is a smooth envelope on the path's
+ * own progress, fully in just as the columns meet and easing out as they
+ * part, so it never flickers with the overlap's own quick changes.
+ */
+export function listCrossingFade(lay: ListLayout, morph: number): number[] {
+  if (lay.mode !== 'aside' || morph <= 0 || morph >= 1) return PLAN_STEP_GROUPS.map(() => 1);
+  const k = asidePath(lay);
+  const p = asideProgress(morph);
+  const inFrom = k.firstDropStarts + ASIDE.FADE_IN_LEAD - ASIDE.FADE_IN;
+  const envelope = ease((p - inFrom) / ASIDE.FADE_IN) * (1 - ease((p - k.crossEnds) / ASIDE.FADE_OUT));
+  return PLAN_STEP_GROUPS.map((_, i) => (i < LIST_ROWS ? 1 : 1 - ASIDE.CROSSING_FADE * envelope));
+}
+
+/** A list entry appears over this long (fade and a 6px rise, in the renderer). */
+export const LIST_APPEAR_MS = 300;
+/** The share of the pull-back's progress by which the rail's contents have faded. */
+export const RAIL_FADE_BY = 0.3;
+/** The current-step highlight fades in and out over these. */
+const ACTIVE_IN_MS = 150;
+const ACTIVE_OUT_MS = 250;
+
+/** The rail's opening state at t (see TIMING.LEAD_*). */
+function leadStateAt(t: number) {
+  const L = TIMING;
+  const contentOut = 1 - ease((t - (L.GROUPS_AT - L.LEAD_CONTENT_OUT_BEFORE)) / L.LEAD_CONTENT_OUT);
+  const leadIn = ease((t - L.LEAD_TEXT_AT) / L.LEAD_TEXT);
+  return {
+    // Navy, then back to the rail's own surface, complete exactly as the list begins.
+    leadBg: ease((t - L.LEAD_BG_AT) / L.LEAD_BG) * (1 - ease((t - (L.GROUPS_AT - L.LEAD_BG_OUT_BEFORE)) / L.LEAD_BG_OUT_BEFORE)),
+    leadRule: ease((t - L.LEAD_RULE_AT) / L.LEAD_RULE) * contentOut,
+    leadRuleIn: ease((t - L.LEAD_RULE_AT) / L.LEAD_RULE),
+    lead: leadIn * contentOut,
+    leadIn,
+  };
+}
+
+/** The list's state at t: appearance and highlight per entry, and the layout morph. */
+function listStateAt(scene: PlanScene, t: number): PlanState['list'] {
+  const T = scene.times;
+  const morph = t <= T.holdEnd ? 0 : ease((t - T.holdEnd) / (T.end - T.holdEnd));
+  return {
+    appear: scene.list.map((e) => ease((t - e.appearAt) / LIST_APPEAR_MS)),
+    active: scene.list.map((e) => clamp01((t - e.activeFrom) / ACTIVE_IN_MS) * (1 - clamp01((t - e.activeUntil) / ACTIVE_OUT_MS))),
+    // On exactly the pull-back's own progress, so the list and the camera travel together.
+    morph,
+    card: ease((t - TIMING.CARD_IN) / TIMING.ROS_IN_DURATION) * (1 - ease((t - TIMING.GROUPS_AT) / LIST_APPEAR_MS)),
+    ...leadStateAt(t),
+    title: ease((t - TIMING.GROUPS_AT) / LIST_APPEAR_MS),
+    total: ease((t - TIMING.TOTAL_AT) / LIST_APPEAR_MS),
+    // Gone in the pull-back's first third, before the application fades in.
+    rail: 1 - ease(morph / RAIL_FADE_BY),
+  };
+}
+
+/* -------------------------------------------------------- the calendar grid */
+
+/**
+ * THE CALENDAR GRID (refined 2026-11-10), in the chain's own coordinates.
+ * The chain's x scale is linear in calendar days (Section 51.3), so the
+ * boundary before day n of the domain is at PAD_L + n × pxPerDay, and every
+ * bar starts and ends on one. Weeks begin on Monday, as the Schedule's week
+ * ticks do. Non-working runs (weekends and observed holidays) come from the
+ * same working-day calendar the backward pass counts.
+ */
+export type CalendarGrid = {
+  days: number[];
+  weeks: number[];
+  nonWorking: { x: number; w: number }[];
+};
+
+export function calendarGrid(layout: ChainLayout): CalendarGrid {
+  const ppd = layout.pxPerDay;
+  const n = Math.round((layout.width - CHAIN.PAD_L - CHAIN.PAD_R) / ppd);
+  const start = parse(layout.domainStart);
+  const at = (d: number) => CHAIN.PAD_L + d * ppd;
+  const DAY = 86400000;
+  const days: number[] = [];
+  const weeks: number[] = [];
+  for (let d = 0; d <= n; d++) {
+    const date = new Date(start.getTime() + d * DAY);
+    (date.getUTCDay() === 1 ? weeks : days).push(at(d));
+  }
+  const end = new Date(start.getTime() + n * DAY);
+  const nonWorking = nonWorkingRuns(start, end).map((r) => ({
+    x: at(Math.round((r.start.getTime() - start.getTime()) / DAY)),
+    w: r.days * ppd,
+  }));
+  return { days, weeks, nonWorking };
+}
+
+/**
+ * The grid's density follows the camera, as a project tool's timescale does:
+ * a line shows only while its interval is wide enough on screen to read as a
+ * scale rather than a texture. Screen px per interval, faded between bounds.
+ */
+export const GRID_FADE = { day: [3, 5], week: [10, 18] } as const;
+const fadeBetween = (v: number, [a, b]: readonly [number, number]) => ease((v - a) / (b - a));
+
+/* --------------------------------------------------- the timescale header */
+
+/**
+ * THE TIMESCALE HEADER (refined 2026-11-10). As in Microsoft Project and
+ * Primavera P6, the time scale sits above the bars: two tiers pinned to the
+ * top of the chain's area, in frame px, so it never moves vertically and its
+ * type stays readable at any zoom. Horizontally, everything in it is placed
+ * through the same camera as the chain. Zoomed in: months over weeks; zoomed
+ * out: years over months, crossfading as a week narrows from 10 to 6 px.
+ */
+export const HEADER = {
+  /** Total height, and the upper tier's; the lower tier is the rest. */
+  h: 38,
+  top: 21,
+  /** Inset of a label from its period's edges and from the chart's left edge. */
+  pad: 6,
+  /** Week numbers show between these widths of a week on screen. */
+  weekLabel: [20, 28],
+  /**
+   * Months over weeks above this width of a week on screen, years over
+   * months below: low enough that Fabrication's pull-back (about 17 px a
+   * week) stays months over weeks, so the switch happens only on the move
+   * out to the whole chain.
+   */
+  zoomIn: [6, 10],
+} as const;
+const HEADER_FACE = '"Inter Tight", Inter, system-ui, sans-serif';
+export const HEADER_FONT = {
+  top: `700 12px ${HEADER_FACE}`,
+  bottom: `500 11px ${HEADER_FACE}`,
+} as const;
+
+/** One calendar period: where it spans on the chain, and its labels, longest first. */
+export type Period = { key: string; x0: number; x1: number; variants: { text: string; w: number }[] };
+export type Timescale = {
+  /** Upper tier zoomed in. */
+  months: Period[];
+  /** Upper tier zoomed out. */
+  years: Period[];
+  /** Lower tier zoomed out. */
+  monthsShort: Period[];
+  /** Lower tier zoomed in: each Monday, numbered with its day of the month. */
+  weeks: { key: string; x: number; text: string }[];
+};
+
+const MONTH_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+export function buildTimescale(layout: ChainLayout, measure: Measure): Timescale {
+  const DAY = 86400000;
+  const start = parse(layout.domainStart);
+  const n = Math.round((layout.width - CHAIN.PAD_L - CHAIN.PAD_R) / layout.pxPerDay);
+  const end = new Date(start.getTime() + n * DAY);
+  const X = (d: Date) => CHAIN.PAD_L + Math.round((d.getTime() - start.getTime()) / DAY) * layout.pxPerDay;
+  const variants = (texts: string[], font: string) => texts.map((text) => ({ text, w: measure(text, font) }));
+  const months: Period[] = [];
+  const monthsShort: Period[] = [];
+  const years: Period[] = [];
+  for (let d = new Date(start); d < end; ) {
+    const next = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1));
+    const m = d.getUTCMonth();
+    const y = d.getUTCFullYear();
+    const span = { key: `${y}-${m + 1}`, x0: X(d), x1: X(next < end ? next : end) };
+    const long = MONTH_LONG[m];
+    const short = long.slice(0, 3);
+    months.push({ ...span, variants: variants([`${long} ${y}`, `${short} ${y}`, short], HEADER_FONT.top) });
+    monthsShort.push({ ...span, variants: variants([short, short[0]], HEADER_FONT.bottom) });
+    if (m === 0 || years.length === 0) {
+      years.push({ key: `${y}`, x0: X(d), x1: X(end), variants: variants([`${y}`], HEADER_FONT.top) });
+      if (years.length > 1) years[years.length - 2].x1 = X(d);
+    }
+    d = next;
+  }
+  const weeks: Timescale['weeks'] = [];
+  for (let d = new Date(start); d <= end; d = new Date(d.getTime() + DAY)) {
+    if (d.getUTCDay() === 1) weeks.push({ key: iso(d), x: X(d), text: String(d.getUTCDate()) });
+  }
+  return { months, years, monthsShort, weeks };
+}
+
+/** A label placed in the header: its left edge in frame px, its text, and whether it shows. */
+export type HeaderLabel = { x: number; text: string; show: boolean };
+export type HeaderState = {
+  /** The header's box in the frame: the chain's area's top. */
+  box: Rect;
+  opacity: number;
+  /** Frame x = a + b × chain x: the camera's horizontal map, for the header's lines. */
+  a: number;
+  b: number;
+  /** Months over weeks (1) or years over months (0). */
+  zoomIn: number;
+  /** The week numbers' own fade, by how wide a week is on screen. */
+  weekLabels: number;
+  months: HeaderLabel[];
+  years: HeaderLabel[];
+  monthsShort: HeaderLabel[];
+  /** Week numbers: frame x of the Monday line. */
+  weeks: number[];
+};
+
+/**
+ * The longest label that fits its whole period, held at the chart's left
+ * edge while the period is in view and pushed out by the next period.
+ */
+function placePeriod(p: Period, a: number, b: number, left: number, right: number): HeaderLabel {
+  const sx0 = a + b * p.x0;
+  const sx1 = a + b * p.x1;
+  const v = p.variants.find((c) => c.w + 2 * HEADER.pad <= sx1 - sx0);
+  if (!v || sx1 <= left || sx0 >= right) return { x: sx0 + HEADER.pad, text: p.variants[0].text, show: false };
+  const x = Math.min(Math.max(sx0 + HEADER.pad, left + HEADER.pad), sx1 - HEADER.pad - v.w);
+  return { x, text: v.text, show: true };
+}
+
+export function headerAt(scene: PlanScene, f: Frame, view: CameraView, focalAxis: number): HeaderState {
+  const area = listLayout(f).area;
+  const { k, ox } = scene.place;
+  const b = view.scale * k;
+  const a = f.w / 2 + view.scale * (ox - view.cx);
+  const week = 7 * b * scene.focal.layout.pxPerDay;
+  const left = area.x;
+  const right = area.x + area.w;
+  const ts = scene.timescale;
+  return {
+    box: { x: area.x, y: area.y, w: area.w, h: HEADER.h },
+    opacity: focalAxis,
+    a,
+    b,
+    zoomIn: fadeBetween(week, HEADER.zoomIn),
+    weekLabels: fadeBetween(week, HEADER.weekLabel),
+    months: ts.months.map((p) => placePeriod(p, a, b, left, right)),
+    years: ts.years.map((p) => placePeriod(p, a, b, left, right)),
+    monthsShort: ts.monthsShort.map((p) => placePeriod(p, a, b, left, right)),
+    weeks: ts.weeks.map((w) => a + b * w.x),
+  };
+}
+
+/** The grid's opacities for a camera view, scaled by the focal axis's own fade. */
+export function gridAt(scene: PlanScene, view: CameraView, focalAxis: number) {
+  const pxPerDay = view.scale * scene.place.k * scene.focal.layout.pxPerDay;
+  return {
+    day: focalAxis * fadeBetween(pxPerDay, GRID_FADE.day),
+    week: focalAxis * fadeBetween(7 * pxPerDay, GRID_FADE.week),
+  };
+}
+
+export function planStateAt(scene: PlanScene, f: Frame, t: number): PlanState {
+  const s = planStateBase(scene, f, t);
+  return {
+    ...s,
+    grid: gridAt(scene, s.view, s.focalAxis),
+    header: headerAt(scene, f, s.view, s.focalAxis),
+    labelShift: labelShiftsAt(scene, f, s.view),
+  };
+}
+
+/** Clear of a long bar's ends: its start's milestones, its chevron point. */
+export const LONG_LABEL_INSET = 34;
+
+/**
+ * A long activity's in-bar label (refined 2026-11-10), centred within the part
+ * of its bar in view in the chain's area, kept LONG_LABEL_INSET clear of the
+ * bar's ends: its offset from where the layout drew it. Exactly zero wherever
+ * the whole bar is in view.
+ */
+export function labelShiftsAt(scene: PlanScene, f: Frame, view: CameraView): Record<string, number> {
+  const area = listLayout(f).area;
+  const { k, ox } = scene.place;
+  const sceneAt = (fx: number) => (view.cx + (fx - f.w / 2) / view.scale - ox) / k;
+  const left = sceneAt(area.x);
+  const right = sceneAt(area.x + area.w);
+  const out: Record<string, number> = {};
+  for (const l of scene.longLabels) {
+    const lo = l.x0 + LONG_LABEL_INSET + l.half;
+    const hi = l.x1 - LONG_LABEL_INSET - l.half;
+    const at = (x: number) => Math.min(hi, Math.max(lo, x));
+    const shown = (Math.max(l.x0, left) + Math.min(l.x1, right)) / 2;
+    out[l.id] = at(shown) - at((l.x0 + l.x1) / 2);
+  }
+  return out;
+}
+
+function planStateBase(scene: PlanScene, f: Frame, t: number): Omit<PlanState, 'grid' | 'header' | 'labelShift'> {
+  const T = scene.times;
+  const area = listLayout(f).area;
+  const sBuild = buildScale(f);
+  const cyBuild = scene.focalCy + LABEL_ROOM;
+  const ros = ease((t - T.rosIn) / T.rosInDuration);
+  const first = scene.steps[0];
+  const last = scene.steps[scene.steps.length - 1];
+  const list = listStateAt(scene, t);
+
+  /* 1. Required On Site, alone. */
+  if (t < T.buildStart) {
+    return {
+      view: toScreen(scene, viewInArea(f, scene.rosX, EDGE_AT_ROS, sBuild, cyBuild)),
+      edgeX: first.from,
+      ros,
+      others: 0,
+      summary: 0,
+      focalAxis: 1,
+      app: 0,
+      list,
+    };
+  }
+
+  /* 2. The backward build, one activity at a time. */
+  if (t < T.buildEnd) {
+    const k = scene.steps.findIndex((s) => t < s.start + s.duration + s.dwell);
+    const step = scene.steps[k];
+    // Moving, then resting (u stays 1 through the dwell).
+    const u = ease((t - step.start) / step.duration);
+    const edgeX = lerp(step.from, step.to, u);
+    const frac = k === 0 ? lerp(EDGE_AT_ROS, EDGE_WHILE_BUILDING, u) : EDGE_WHILE_BUILDING;
+    // A long activity eases the camera back to keep it in frame, and in again.
+    // The pull-back leads the edge (refined 2026-11-10): it is complete within
+    // the move's first ZOOM_RAMP of time, before the edge reaches speed, and
+    // the camera returns only in the last ZOOM_RAMP, as the edge slows. Timed
+    // on the edge's eased position it lagged, so content crossed the screen
+    // fastest while the view was still close.
+    const fit = Math.min(sBuild, Math.max(BUILD_MIN_SCALE, (area.w * 0.85) / step.span));
+    const tau = clamp01((t - step.start) / step.duration);
+    const back = tau < 0.5 ? ease(tau / ZOOM_RAMP) : ease((1 - tau) / ZOOM_RAMP);
+    const scale = sBuild - (sBuild - fit) * back;
+    return {
+      view: toScreen(scene, viewInArea(f, Math.min(edgeX, scene.rosX), frac, scale, cyBuild)),
+      edgeX,
+      ros: 1,
+      others: 0,
+      summary: 0,
+      focalAxis: 1,
+      app: 0,
+      list,
+    };
+  }
+
+  const built = toScreen(scene, viewInArea(f, last.to, EDGE_WHILE_BUILDING, sBuild, cyBuild));
+  const whole = toScreen(scene, chainView(scene, f));
+  const edgeX = last.to - 2 * REVEAL_RAMP;
+
+  /* 3. Back to the whole chain, then hold. */
+  if (t < T.holdEnd) {
+    const u = ease((t - T.buildEnd) / (T.chainArrive - T.buildEnd));
+    // Anchored on the chain's left end, nearest the step list.
+    const anchorX = scene.place.ox + scene.place.k * scene.chainLeft;
+    return { view: lerpViewAnchored(built, whole, u, f, anchorX), edgeX, ros: 1, others: 0, summary: ease((u - 0.5) / 0.5), focalAxis: 1, app: 0, list };
+  }
+
+  /* 4. Back again, to the project's whole schedule in the application, and
+     rest; the list moves to the application's side at the same time. */
+  const u = ease((t - T.holdEnd) / (T.end - T.holdEnd));
+  return {
+    view: lerpView(whole, scheduleView(scene, f), u),
+    edgeX,
+    ros: 1,
+    others: ease((u - 0.1) / 0.6),
+    summary: 1 - ease(u / 0.3),
+    focalAxis: 1 - ease(u / 0.3),
+    app: ease((u - 0.3) / 0.55),
+    list,
+  };
+}
+
+/** The canvas transform for a view in a frame (translate, then scale, from the top-left). */
+export function transformOf(view: CameraView, f: Frame): string {
+  const x = f.w / 2 - view.scale * view.cx;
+  const y = f.h / 2 - view.scale * view.cy;
+  return `translate(${x}px, ${y}px) scale(${view.scale})`;
+}

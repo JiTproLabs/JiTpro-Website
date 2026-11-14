@@ -61,7 +61,12 @@ const KPI_ICON_TINT: Record<string, { bg: string; fg: string }> = {
   error: { bg: 'var(--jpd-error-bg)', fg: '#e5484d' },
 };
 
-export default function ProductRegisterScreen() {
+/**
+ * `title` overrides the page heading only, for the homepage Identify preview
+ * (Design System Section 54.4.1), which names it the Procurement Register.
+ * Every other surface omits it and keeps the fixture's *Product Register*.
+ */
+export default function ProductRegisterScreen({ title = PAGE.title }: { title?: string } = {}) {
   return (
     <JiTproShell
       activeNav="Products"
@@ -190,7 +195,7 @@ export default function ProductRegisterScreen() {
               className="jpd-tight"
               style={{ fontSize: 28, fontWeight: 800, lineHeight: '30px', color: 'var(--jpd-text)' }}
             >
-              {PAGE.title}
+              {title}
             </h1>
             <div
               className="jpd-tight-sm"

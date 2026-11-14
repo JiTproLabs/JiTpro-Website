@@ -134,6 +134,18 @@ export { iso, parse, prevWorkday, subWorkdays, snapBack, workdaysBetween };
 
 /* --------------------------------------------------------------- the model */
 
+/**
+ * ACTIVITIES CONSUME TIME. MILESTONES RECORD EVENTS. (Decision Log
+ * 2026-11-07, scheduling correction.)
+ *
+ * A `phase` is work: it has a duration in working days. A `milestone` is a
+ * point in time: it has a date and ZERO duration, and it never adds a working
+ * day to the schedule. If an action takes time - processing a submittal,
+ * reviewing it, receiving material - that time is an activity, never something
+ * hidden inside a milestone.
+ */
+export type MilestoneAnchor = 'finish' | 'start';
+
 /** Authored input. Durations are working days; `gap` is slack BEFORE the step. */
 export type StepSpec = {
   id: string;
@@ -142,8 +154,21 @@ export type StepSpec = {
   kind: 'phase' | 'milestone';
   /** Working days. Duration phases only. */
   days?: number;
-  /** Working days of float between this step and the one after it. */
+  /**
+   * The relationship to the step BEFORE this one, in working days. `1` (the
+   * default) means no slack: a phase starts on the working day after its
+   * predecessor finishes, and a milestone falls on the very day its
+   * predecessor finishes. Each unit above 1 is one working day of explicit
+   * float, and is preserved exactly - nothing compresses it.
+   */
   gap?: number;
+  /**
+   * Milestones only. `finish` (the default) records the completion of the
+   * step before it and shares that step's finish date. `start` marks the
+   * start of the step after it and shares that step's start date; it must be
+   * declared explicitly, never inferred from the milestone's name.
+   */
+  anchor?: MilestoneAnchor;
   org: ScheduleOrgKey;
   owner: SchedulePersonKey;
   /** What this party owes the project during this step. */
@@ -164,6 +189,14 @@ export type ScheduleStep = {
   startDate: string;
   endDate: string;
   durationWorkdays: number;
+  /**
+   * Milestones only: whether the event happens at the END of its date (a
+   * finish milestone, completing the step before it) or at the START of its
+   * date (a start milestone, opening the step after it). Renderers place the
+   * mark from this, so a finish milestone sits exactly where its
+   * predecessor's bar ends.
+   */
+  milestoneAnchor?: MilestoneAnchor;
   status: PhaseStatus;
   responsibleOrganizationId: ScheduleOrgKey;
   responsibleOrganization: string;
@@ -507,27 +540,54 @@ export const DATA_DATE = '2026-11-26';
  * dates that could drift from it. One engine, two inputs, two outputs; neither
  * output can overwrite the other.
  */
-function walkBack(
-  requiredOnSiteDate: string,
-  specs: StepSpec[],
-): { id: string; startDate: string; endDate: string }[] {
-  const dates: { id: string; startDate: string; endDate: string }[] = [];
+export type PassDates = { id: string; startDate: string; endDate: string };
+
+/**
+ * THE ONE BACKWARD PASS. Both the current schedule and the baseline are
+ * produced here, so they cannot disagree about how a milestone is placed.
+ * (Until 2026-11-07 the loop was written out twice, once in each caller.)
+ *
+ * `cursor` is the latest working day the step being placed may FINISH on. It
+ * starts at Required On-Site and walks backward:
+ *
+ *   phase      finishes on the cursor and starts `days - 1` working days
+ *              earlier. Its predecessor may finish no later than `gap` working
+ *              days before its start (gap 1 = the working day before).
+ *   finish     ZERO DURATION. Falls on the cursor - the same day its
+ *   milestone  predecessor finishes - and does not move the cursor, so it adds
+ *              no working day. Explicit float (gap > 1) is still honoured: the
+ *              predecessor finishes `gap - 1` working days before it.
+ *   start      ZERO DURATION. Falls on its successor's start date. The cursor
+ *   milestone  is likewise left where the successor put it, less any explicit
+ *              float.
+ *
+ * Correction (Decision Log 2026-11-07): milestones used to take a working day
+ * of their own, so every milestone silently lengthened the path by a day.
+ */
+export function backwardPass(requiredOnSiteDate: string, specs: StepSpec[]): PassDates[] {
+  const dates: PassDates[] = new Array(specs.length);
   let cursor = snapBack(parse(requiredOnSiteDate));
   for (let i = specs.length - 1; i >= 0; i--) {
     const sp = specs[i];
-    let start: Date;
-    let end: Date;
+    const gap = Math.max(1, sp.gap ?? 1);
     if (sp.kind === 'milestone') {
-      end = new Date(cursor);
-      start = new Date(cursor);
-      cursor = subWorkdays(cursor, Math.max(1, sp.gap ?? 1));
+      let at: Date;
+      if ((sp.anchor ?? 'finish') === 'start') {
+        const next = dates[i + 1];
+        if (!next) throw new Error(`${sp.id}: a start milestone needs a step after it`);
+        at = parse(next.startDate);
+      } else {
+        at = new Date(cursor);
+      }
+      dates[i] = { id: sp.id, startDate: iso(at), endDate: iso(at) };
+      cursor = subWorkdays(sp.anchor === 'start' ? cursor : at, gap - 1);
     } else {
       const d = Math.max(1, sp.days ?? 1);
-      end = new Date(cursor);
-      start = subWorkdays(end, d - 1);
-      cursor = subWorkdays(start, Math.max(1, sp.gap ?? 1));
+      const end = new Date(cursor);
+      const start = subWorkdays(end, d - 1);
+      dates[i] = { id: sp.id, startDate: iso(start), endDate: iso(end) };
+      cursor = subWorkdays(start, gap);
     }
-    dates.unshift({ id: sp.id, startDate: iso(start), endDate: iso(end) });
   }
   return dates;
 }
@@ -541,36 +601,21 @@ export function buildItem(
   commitmentSpecs: CommitmentSpec[] = [],
   risk: RiskSpec = {},
 ): ScheduleItem {
-  const ros = parse(requiredOnSiteDate);
-  const out: ScheduleStep[] = [];
-  let cursor = snapBack(ros);
-
-  for (let i = specs.length - 1; i >= 0; i--) {
-    const s = specs[i];
-    let start: Date;
-    let end: Date;
-
-    if (s.kind === 'milestone') {
-      end = new Date(cursor);
-      start = new Date(cursor);
-      cursor = subWorkdays(cursor, Math.max(1, s.gap ?? 1));
-    } else {
-      const d = Math.max(1, s.days ?? 1);
-      end = new Date(cursor);
-      start = subWorkdays(end, d - 1);
-      cursor = subWorkdays(start, Math.max(1, s.gap ?? 1));
-    }
-
+  const passDates = backwardPass(requiredOnSiteDate, specs);
+  const out: ScheduleStep[] = specs.map((s, i) => {
+    const { startDate, endDate } = passDates[i];
     const person = SCHEDULE_PEOPLE[s.owner];
-    out.unshift({
+    return {
       id: s.id,
       scheduleItemId: id,
       kind: s.kind,
       family: s.family,
       name: s.name,
-      startDate: iso(start),
-      endDate: iso(end),
-      durationWorkdays: s.kind === 'milestone' ? 0 : workdaysBetween(start, end),
+      startDate,
+      endDate,
+      durationWorkdays:
+        s.kind === 'milestone' ? 0 : workdaysBetween(parse(startDate), parse(endDate)),
+      ...(s.kind === 'milestone' ? { milestoneAnchor: s.anchor ?? 'finish' } : {}),
       status: s.status ?? 'upcoming',
       responsibleOrganizationId: s.org,
       responsibleOrganization: SCHEDULE_ORGS[s.org],
@@ -580,8 +625,8 @@ export function buildItem(
       whatIsOwed: s.owed,
       commitmentId: s.commitmentId,
       requiredOnSiteDate,
-    });
-  }
+    };
+  });
 
   // Handoffs: each step points at the next, and names the party receiving it.
   for (let i = 0; i < out.length; i++) {
@@ -710,7 +755,7 @@ export function buildItem(
     const baseSpecs = specs.map((sp) =>
       byStep.has(sp.id) ? { ...sp, days: byStep.get(sp.id) } : sp,
     );
-    const dates = walkBack(requiredOnSiteDate, baseSpecs);
+    const dates = backwardPass(requiredOnSiteDate, baseSpecs);
     const stepDates: ScheduleBaseline['stepDates'] = {};
     for (const d of dates) stepDates[d.id] = { startDate: d.startDate, endDate: d.endDate };
     // A shorter original lead time means the path could have STARTED LATER.
