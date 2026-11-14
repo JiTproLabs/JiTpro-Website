@@ -71,21 +71,141 @@ async function secretsMatch(expectedSecret: string, presentedSecret: string): Pr
   return differences === 0;
 }
 
-const FAILURE_ALERT_TEXT = {
+type FailedEmail = "team" | "visitor";
+type FailureCause = "address-problem" | "service-problem";
+
+interface EmailFailure {
+  /** Plain-words explanation shown in the alert. */
+  reason: string;
+  /** Decides which wording and next steps the alert uses. */
+  cause: FailureCause;
+}
+
+interface FailureAlertWording {
+  whatHappened: string;
+  whatToDo: (leadId: number | string) => string[];
+}
+
+interface FailureAlertContent {
+  subject: string;
+  headline: string;
+  byCause: Record<FailureCause, FailureAlertWording>;
+}
+
+const FAILURE_ALERT_CONTENT: Record<FailedEmail, FailureAlertContent> = {
   team: {
     subject: "ALERT: a contact form message was not emailed to the team",
-    summary:
-      "Someone filled in the website contact form. Their message is saved, but the email that tells the team about it could not be sent.",
-    nextStep: "To follow up: open the leads table in Supabase and find this entry number.",
+    headline: "A contact form message was not emailed to the team",
+    byCause: {
+      "address-problem": {
+        whatHappened:
+          "Someone filled in the website contact form. Their message is saved, but the email that tells the team about it was rejected as invalid, so nobody on the team has been told about it yet.",
+        whatToDo: (leadId) => [
+          `Open the leads table in Supabase and find entry number ${leadId}.`,
+          "Read their message and follow up with them.",
+          "Ask whoever looks after the website to check the function's logs, using the reference below.",
+        ],
+      },
+      "service-problem": {
+        whatHappened:
+          "Someone filled in the website contact form. Their message is saved, but the email that tells the team about it could not be sent because of a problem with the email service, so nobody on the team has been told about it yet.",
+        whatToDo: (leadId) => [
+          `Open the leads table in Supabase and find entry number ${leadId}.`,
+          "Read their message and follow up with them.",
+          "Ask whoever looks after the email service (Resend) to check for problems, using the reference below.",
+        ],
+      },
+    },
   },
   visitor: {
     subject: "ALERT: a website visitor did not receive the thank-you email",
-    summary:
-      "Someone filled in the website contact form and the team was told, but the thank-you email to the visitor could not be sent. Their email address may be mistyped.",
-    nextStep:
-      "To follow up: open the leads table in Supabase, find this entry number, check the email address for typos, and reach out another way if you can.",
+    headline: "A website visitor did not get the thank-you email",
+    byCause: {
+      "address-problem": {
+        whatHappened:
+          "Someone filled in the website contact form and the team was told, but the thank-you email to the visitor was rejected, most likely because their email address is mistyped.",
+        whatToDo: (leadId) => [
+          `Open the leads table in Supabase and find entry number ${leadId}.`,
+          "Check the email address for typos.",
+          "If you can, reach out another way.",
+        ],
+      },
+      "service-problem": {
+        whatHappened:
+          "Someone filled in the website contact form and the team was told, but the thank-you email to the visitor could not be sent because of a problem with the email service. Their email address may be fine.",
+        whatToDo: (leadId) => [
+          `Open the leads table in Supabase and find entry number ${leadId}.`,
+          "Send them a short thank-you yourself.",
+          "Ask whoever looks after the email service (Resend) to check for problems, using the reference below.",
+        ],
+      },
+    },
   },
 };
+
+/**
+ * Builds the subject, styled HTML and plain-text versions of a failure alert.
+ * The plain-text copy is for mail programs that do not show styled emails.
+ */
+function buildFailureAlertEmail(params: {
+  requestId: string;
+  leadId: number | string;
+  failedEmail: FailedEmail;
+  failure: EmailFailure;
+}): { subject: string; html: string; text: string } {
+  const content = FAILURE_ALERT_CONTENT[params.failedEmail];
+  const wording = content.byCause[params.failure.cause];
+  const steps = wording.whatToDo(params.leadId);
+
+  const sectionHeadingStyle =
+    "margin: 0 0 6px 0; font-size: 14px; color: #475467; text-transform: uppercase; letter-spacing: 0.5px;";
+
+  const detailRow = (label: string, value: string, monospace = false) => `
+    <tr>
+      <td style="padding: 4px 14px; width: 120px; vertical-align: top;">${label}</td>
+      <td style="padding: 4px 14px;${monospace ? " font-family: monospace; font-size: 12px;" : ""}">${escapeHtmlEntities(value)}</td>
+    </tr>`;
+
+  const stepsHtml = steps.map((step) => `<li>${escapeHtmlEntities(step)}</li>`).join("");
+
+  const html = `
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; margin: 0 auto; background: #ffffff; font-family: Arial, Helvetica, sans-serif; color: #1a1a1a; border: 1px solid #e2e8f0;">
+      <tr><td style="background: #b42318; color: #ffffff; padding: 12px 24px; font-size: 13px; font-weight: bold; letter-spacing: 1px;">ALERT</td></tr>
+      <tr><td style="padding: 24px 24px 8px 24px;">
+        <h2 style="margin: 0 0 16px 0; font-size: 20px; line-height: 1.3;">${escapeHtmlEntities(content.headline)}</h2>
+        <h3 style="${sectionHeadingStyle}">What happened</h3>
+        <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.5;">${escapeHtmlEntities(wording.whatHappened)}</p>
+        <h3 style="${sectionHeadingStyle}">What to do</h3>
+        <ol style="margin: 0 0 24px 0; padding-left: 20px; font-size: 16px; line-height: 1.6;">${stepsHtml}</ol>
+      </td></tr>
+      <tr><td style="padding: 0 24px 24px 24px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background: #f4f5f7; border-radius: 6px; font-size: 13px; color: #475467;">
+          <tr><td colspan="2" style="padding: 10px 14px 4px 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Details, for whoever looks into it</td></tr>
+          ${detailRow("Entry number", String(params.leadId))}
+          ${detailRow("Reason", params.failure.reason)}
+          ${detailRow("Reference", params.requestId, true)}
+        </table>
+      </td></tr>
+    </table>
+  `;
+
+  const text = [
+    content.headline.toUpperCase(),
+    "",
+    "WHAT HAPPENED",
+    wording.whatHappened,
+    "",
+    "WHAT TO DO",
+    ...steps.map((step, index) => `${index + 1}. ${step}`),
+    "",
+    "DETAILS (for whoever looks into it)",
+    `Entry number: ${params.leadId}`,
+    `Reason: ${params.failure.reason}`,
+    `Reference: ${params.requestId}`,
+  ].join("\n");
+
+  return { subject: content.subject, html, text };
+}
 
 /**
  * Emails the alert address when one of the two contact form emails could not
@@ -102,12 +222,12 @@ async function sendFailureAlert(params: {
   requestId: string;
   leadId: number | string;
   alertRecipient: string;
-  failedEmail: "team" | "visitor";
-  reason: string;
+  failedEmail: FailedEmail;
+  failure: EmailFailure;
 }): Promise<void> {
-  const alertText = FAILURE_ALERT_TEXT[params.failedEmail];
-
   try {
+    const email = buildFailureAlertEmail(params);
+
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -117,14 +237,9 @@ async function sendFailureAlert(params: {
       body: JSON.stringify({
         from: "JiTpro Alerts <info@jit-pro.com>",
         to: [params.alertRecipient],
-        subject: alertText.subject,
-        text: [
-          alertText.summary,
-          `Contact form entry number: ${params.leadId}`,
-          `Reason: ${params.reason}`,
-          `Reference: ${params.requestId} (for whoever looks in the send-contact-notification logs)`,
-          alertText.nextStep,
-        ].join("\n"),
+        subject: email.subject,
+        html: email.html,
+        text: email.text,
       }),
     });
 
@@ -137,6 +252,54 @@ async function sendFailureAlert(params: {
   } catch (error) {
     console.error("Failure alert email could not be sent", { requestId: params.requestId, error });
   }
+}
+
+const UNKNOWN_EMAIL_FAILURE: EmailFailure = {
+  reason: "Unknown reason",
+  cause: "service-problem",
+};
+
+const EMAIL_SERVICE_UNREACHABLE: EmailFailure = {
+  reason: "Could not connect to the email service",
+  cause: "service-problem",
+};
+
+/**
+ * Turns an HTTP status from the email service into a plain-words reason and a
+ * cause. 400 and 422 mean the message itself was rejected as invalid, which for
+ * the visitor email usually means a mistyped address. Anything else points to a
+ * problem with permissions, limits or the service, not the visitor's address.
+ * The status code stays in brackets for whoever investigates.
+ */
+function describeEmailRefusal(status: number): EmailFailure {
+  if (status === 400 || status === 422) {
+    return {
+      reason: `The email service rejected the message as invalid (code ${status})`,
+      cause: "address-problem",
+    };
+  }
+  if (status === 401 || status === 403) {
+    return {
+      reason: `The email service did not accept our sending permission (code ${status})`,
+      cause: "service-problem",
+    };
+  }
+  if (status === 429) {
+    return {
+      reason: `The email service is limiting how many emails we can send (code ${status})`,
+      cause: "service-problem",
+    };
+  }
+  if (status >= 500) {
+    return {
+      reason: `The email service had a problem on its side (code ${status})`,
+      cause: "service-problem",
+    };
+  }
+  return {
+    reason: `The email service refused the message (code ${status})`,
+    cause: "service-problem",
+  };
 }
 
 Deno.serve(async (req: Request) => {
@@ -272,8 +435,8 @@ Deno.serve(async (req: Request) => {
       visitorEmailPromise,
     ]);
 
-    let internalFailureReason = "unknown";
-    let visitorFailureReason = "unknown";
+    let internalFailure = UNKNOWN_EMAIL_FAILURE;
+    let visitorFailure = UNKNOWN_EMAIL_FAILURE;
     let internalEmailSucceeded = false;
     let visitorEmailSucceeded = false;
     let internalErrorDetails = "";
@@ -285,12 +448,12 @@ Deno.serve(async (req: Request) => {
       internalEmailSucceeded = response.ok;
       if (!response.ok) {
         internalErrorDetails = body;
-        internalFailureReason = `email service returned status ${response.status}`;
+        internalFailure = describeEmailRefusal(response.status);
         console.error("Internal email failed at Resend API level", { requestId, body });
       }
     } else {
       internalErrorDetails = String(internalEmailOutcome.reason);
-      internalFailureReason = "could not connect to the email service";
+      internalFailure = EMAIL_SERVICE_UNREACHABLE;
       console.error("Internal email connection crashed", { requestId, error: internalEmailOutcome.reason });
     }
 
@@ -302,12 +465,12 @@ Deno.serve(async (req: Request) => {
       console.log("Visitor email status:", { requestId, status: res.status, body });
       visitorEmailSucceeded = res.ok;
       if (!res.ok) {
-        visitorFailureReason = `email service returned status ${res.status}`;
+        visitorFailure = describeEmailRefusal(res.status);
         console.warn("Visitor email failed at API level (likely bad email address)", { requestId, body });
       }
     } else if (visitorEmailOutcome.status === "rejected") {
       console.warn("Visitor email connection crashed", { requestId, error: visitorEmailOutcome.reason });
-      visitorFailureReason = "could not connect to the email service";
+      visitorFailure = EMAIL_SERVICE_UNREACHABLE;
     } else {
       // Should be unreachable given the checks above — logged loudly so a
       // future change to this logic can't silently break this case.
@@ -324,7 +487,7 @@ Deno.serve(async (req: Request) => {
         leadId: lead.id,
         alertRecipient,
         failedEmail: "team",
-        reason: internalFailureReason,
+        failure: internalFailure,
       });
     }
 
@@ -335,7 +498,7 @@ Deno.serve(async (req: Request) => {
         leadId: lead.id,
         alertRecipient,
         failedEmail: "visitor",
-        reason: visitorFailureReason,
+        failure: visitorFailure,
       });
     }
 
