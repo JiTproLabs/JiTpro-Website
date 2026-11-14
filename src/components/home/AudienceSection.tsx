@@ -271,6 +271,8 @@ export default function AudienceSection() {
   const copyColRef = useRef<HTMLDivElement>(null);
   const visualRef = useRef<HTMLDivElement>(null);
   const panelRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  /* Each audience's role-page link row: the free area ends above it (§54.4.2). */
+  const roleLinkRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [spare, setSpare] = useState<Record<string, SpareRect | null>>({});
   /* An unclipped layer the size of the frame's inner box, beside it. */
   const [asideHost, setAsideHost] = useState<HTMLDivElement | null>(null);
@@ -292,7 +294,11 @@ export default function AudienceSection() {
         }
         const kids = [...panel.children] as HTMLElement[];
         const top = Math.max(...kids.map((k) => offsetTopWithin(k, stage) + k.offsetHeight)) + SPARE_GAP;
-        const h = stage.offsetHeight - top;
+        // The area ends above the audience's role link, which sits beneath its tallest panel; else at the stage's foot.
+        const owner = HOME_AUDIENCES.find((a) => a.tabs.some((t) => t.id === id));
+        const link = owner ? roleLinkRefs.current[owner.id] : null;
+        const foot = link ? offsetTopWithin(link, stage) - SPARE_GAP : stage.offsetHeight;
+        const h = foot - top;
         next[id] = h > 0 ? { x: copy.offsetLeft - ox, y: top - oy, w: copy.offsetWidth, h } : null;
       }
       setSpare((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
@@ -570,7 +576,12 @@ export default function AudienceSection() {
                   {/* Tight spacing (§54.2.5): 8 px, then the link's own 12 px of padding, makes a 20 px gap above its
                       words; its 12 px of padding below hangs into the section's bottom padding (-mb-3), so the 47 px
                       target is kept and the link adds 43 px, within the pinned presentation's fit. */}
-                  <div className="-mb-3 mt-2 flex max-w-[58ch] justify-end [&_a]:pointer-events-auto">
+                  <div
+                    ref={(el) => {
+                      roleLinkRefs.current[owner.id] = el;
+                    }}
+                    className="-mb-3 mt-2 flex max-w-[58ch] justify-end [&_a]:pointer-events-auto"
+                  >
                     <RoleLink {...owner.roleLink!} spacing="" />
                   </div>
                 </div>
