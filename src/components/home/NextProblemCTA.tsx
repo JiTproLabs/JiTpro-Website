@@ -10,11 +10,17 @@ import { Link } from 'react-router-dom';
  * glow at the bottom edge.
  *
  * The action carries the same label and destination as the hero's primary,
- * so the page asks for one thing. The emphasis line is ink; the surface's
- * amber is the glow and the button.
+ * so the page asks for one thing. The surface's amber is the glow and the
+ * button.
  *
- * No top hairline of its own: the Section 5 band above (border-y) already
- * marks this boundary.
+ * Copy (2026-11-13): the proactive, one-project engagement — start with one
+ * project, alongside the GC's own team, without changing how the company
+ * operates. The headline is the one dominant element; the two supporting
+ * paragraphs share a single quiet body style.
+ *
+ * No top hairline of its own: it follows the light act directly (Section 5
+ * left the homepage on 2026-11-13), and the change from --jp-surface-light to
+ * --jp-background marks the boundary.
  */
 export default function NextProblemCTA() {
   return (
@@ -27,15 +33,15 @@ export default function NextProblemCTA() {
       <div className="relative mx-auto max-w-7xl">
         <div className="max-w-[46ch] sm:max-w-none sm:text-center">
           <h2 className="font-heading text-[2.125rem] font-extrabold leading-[1.08] tracking-[-0.022em] text-balance text-jp-text-primary sm:mx-auto sm:max-w-[24ch] sm:text-[2.875rem] lg:text-[3.5rem]">
-            Your next problem may already be taking shape.
+            A better way to deliver your next project.
           </h2>
 
-          <p className="mt-7 max-w-[58ch] text-[1.0625rem] leading-[1.7] text-jp-text-secondary sm:mx-auto sm:max-w-[48ch] sm:text-[1.125rem] lg:text-[1.1875rem]">
-            The question is whether you&apos;ll find it today or when it&apos;s already costing you money.
+          <p className="mt-7 max-w-[58ch] text-[1.0625rem] leading-[1.7] text-pretty text-jp-text-secondary sm:mx-auto sm:max-w-[48ch] sm:text-[1.125rem] lg:text-[1.1875rem]">
+            You don&apos;t need to change how your entire company operates to improve project results.
           </p>
 
-          <p className="mt-6 font-heading text-[1.25rem] font-semibold leading-[1.35] tracking-[-0.01em] text-balance text-jp-text-primary sm:text-[1.4375rem] lg:text-[1.5rem]">
-            Let&apos;s find it early.
+          <p className="mt-5 max-w-[58ch] text-[1.0625rem] leading-[1.7] text-pretty text-jp-text-secondary sm:mx-auto sm:max-w-[48ch] sm:text-[1.125rem] lg:text-[1.1875rem]">
+            Start with one project. We&apos;ll work alongside your team to bring greater clarity, control, and confidence to procurement planning.
           </p>
 
           <div className="mt-10 sm:mt-12">

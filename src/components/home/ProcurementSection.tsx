@@ -1,6 +1,6 @@
 /**
  * Section 1b — procurement is more than buying materials (Decision Log
- * 2026-11-06).
+ * 2026-11-06; copy revised and section recomposed 2026-11-13).
  *
  * What procurement actually involves and why it is hard for a GC to manage,
  * between the core belief and Section 2. Still on --jp-background, so it
@@ -8,112 +8,95 @@
  * beneath it, which is why this section carries no bottom padding of its own
  * (§48.6).
  *
- * COMPOSITION: the homepage's 5fr/7fr two-column grid on the shared left
- * edge (as Sections 3, 4 and 5); stacked below `lg`, heading first.
+ * COMPOSITION, three groups (founder brief 2026-11-13):
  *
- *   LEFT      the h2 at the homepage section-heading register, then the
- *             supporting statement beneath it (2026-11-10): the semibold
- *             heading-face statement register, in brand amber
- *   RIGHT     the opening paragraph and the six "must" sentences, each set on
- *             its own line so the sequence scans, at the secondary body
- *             register; then the key insight at the semibold heading-face
- *             statement register in primary ink; then the closing paragraph
- *             back at the body register; then the consequence, "Those delays
- *             spread. Costs grow. Profits shrink.", at the bold heading-face
- *             statement register in primary ink, the column's strongest line
- *             and still a step below the h2
+ *   1  From `lg`, an asymmetric 2fr / 3fr grid on the shared left edge.
+ *      LEFT   the h2, a short Brand Amber rule, and the opening paragraph at
+ *             a large body register, so the column is filled.
+ *      RIGHT  the six activities, unlabelled (2026-11-13), as one ordered
+ *             sequence on a continuous vertical line, a hollow node at each
+ *             step, a small mono numeral (illustrative order) and the
+ *             activity in the heading face. A line, not rules: it reads as
+ *             progression and differs from Section 2's ruled list.
+ *   2  The dependency: under a hairline, on the same columns, the insight at
+ *      the statement register (left) and the closing paragraph (right).
+ *   3  The conclusion: full width, the section's display line, "Profits
+ *      shrink." in Brand Amber.
  *
- * The approved copy appears exactly once ("procurement" is a scoped exception
- * to §20.1's retired-language rule). One amber element only: the supporting
- * statement, in --jp-brand-amber, the static brand color (§8.1.1, §48.7;
- * Decision Log 2026-11-10, superseding this section's earlier "no amber").
- * No cards, icons or graphics (§48.2, §48.4).
- *
- * THE STATEMENT'S REVEAL (§46; the homepage's own pattern, as AudienceSection
- * uses: a one-shot IntersectionObserver setting a flag, and CSS transitions).
- * Once it is comfortably in view, it fades in and rises 20px over 700 ms,
- * ease-out, and stays: the observer disconnects, so scrolling back does not
- * replay it. Transform and opacity only, so nothing around it moves. Reduced
- * motion: shown at once, without movement (§46.5).
+ * Stacked below `lg` in reading order. The approved copy (founder, 2026-11-13)
+ * appears exactly once ("procurement" is a scoped exception to §20.1's
+ * retired-language rule). Amber: the short rule and "Profits shrink." only.
+ * No motion, cards, icons or graphics (§48.2, §48.4).
  */
-import { useEffect, useRef, useState } from 'react';
 
-const MUST_SENTENCES = [
-  'Drawings must be complete.',
-  'Decisions must be made.',
-  'Products must be selected.',
-  'Subcontractors must be hired.',
-  'Submittals must be approved.',
-  'Materials must be ordered, built, and delivered.',
+const ACTIVITIES = [
+  'Drawings completed',
+  'Decisions made',
+  'Products selected',
+  'Subcontractors hired',
+  'Submittals approved',
+  'Materials delivered',
 ];
 
-/** Comfortably in view: at least half of it, above the bottom tenth of the view. */
-const REVEAL_AT = { threshold: 0.5, rootMargin: '0px 0px -10% 0px' } as const;
+const COLUMNS = 'lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-x-16 xl:gap-x-24';
 
 export default function ProcurementSection() {
-  const statementRef = useRef<HTMLParagraphElement>(null);
-  const [revealed, setRevealed] = useState(false);
-  useEffect(() => {
-    const el = statementRef.current;
-    if (!el || revealed) return;
-    if (typeof IntersectionObserver === 'undefined') {
-      setRevealed(true);
-      return;
-    }
-    const io = new IntersectionObserver((entries) => {
-      if (entries.some((e) => e.isIntersecting)) {
-        setRevealed(true);
-        io.disconnect();
-      }
-    }, REVEAL_AT);
-    io.observe(el);
-    return () => io.disconnect();
-  }, [revealed]);
-
   return (
     <section className="bg-jp-background px-6 pt-16 sm:px-8 sm:pt-20 lg:px-10 lg:pt-24">
-      <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-x-14 xl:gap-x-20">
-        <div>
-          <h2 className="max-w-[18ch] font-heading text-[1.875rem] font-extrabold leading-[1.12] tracking-[-0.02em] text-balance text-jp-text-primary sm:text-[2.5rem] lg:text-[3rem]">
-            Procurement is more than buying materials.
-          </h2>
+      <div className="mx-auto max-w-7xl">
+        {/* 1. The composition. */}
+        <div className={`${COLUMNS} lg:items-start`}>
+          <div>
+            <h2 className="max-w-[18ch] font-heading text-[1.875rem] font-extrabold leading-[1.12] tracking-[-0.02em] text-balance text-jp-text-primary sm:text-[2.5rem] lg:text-[2.75rem] xl:text-[3rem]">
+              Procurement is more than buying materials.
+            </h2>
+            <span aria-hidden="true" className="mt-7 block h-0.5 w-12 bg-jp-brand-amber sm:mt-8" />
+            <p className="mt-6 max-w-[40ch] text-[1.125rem] leading-[1.6] text-pretty text-jp-text-secondary sm:text-[1.25rem] lg:text-[1.3125rem]">
+              Every product, material, and service depends on a sequence of decisions, approvals, and commitments that must happen at the right time.
+            </p>
+          </div>
 
-          <p
-            ref={statementRef}
-            className={`mt-5 max-w-[30ch] font-heading text-[1.25rem] font-semibold leading-[1.35] tracking-[-0.01em] text-balance text-jp-brand-amber transition-[opacity,translate] duration-700 ease-out motion-reduce:transition-none sm:mt-6 sm:text-[1.4375rem] lg:text-[1.5rem] ${
-              revealed ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0 motion-reduce:translate-y-0 motion-reduce:opacity-100'
-            }`}
-          >
-            It&apos;s a complex sequence of activities, each with real durations and dependencies.
+          {/* The sequence: one continuous line from the first node to the
+              last, a hollow node per step. The numerals are illustrative
+              order, shown for the eye; the list carries the order for
+              assistive technology, and its accessible name replaces the
+              visible label removed on 2026-11-13. From `lg` the -mt-2 sets
+              the first activity's cap height level with the headline's. */}
+          <div className="mt-10 lg:-mt-2">
+            <ol aria-label="Procurement activities" className="relative">
+              <span aria-hidden="true" className="absolute top-[1.4rem] bottom-[1.4rem] left-[3.3125rem] w-px bg-jp-border/25 sm:left-[3.8125rem]" />
+              {ACTIVITIES.map((activity, i) => (
+                <li key={activity} className="relative grid grid-cols-[2.5rem_1.625rem_minmax(0,1fr)] items-center py-2.5 sm:grid-cols-[3rem_1.625rem_minmax(0,1fr)] sm:py-3">
+                  <span aria-hidden="true" className="font-mono text-xs font-bold tracking-[0.16em] text-jp-text-secondary/80 sm:text-sm">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span aria-hidden="true" className="relative mx-auto block size-2.5 rounded-full border border-jp-border/60 bg-jp-background" />
+                  <span className="pl-3 font-heading text-[1.25rem] font-semibold leading-snug tracking-[-0.01em] text-jp-text-primary sm:pl-4 sm:text-[1.375rem] lg:text-[1.5rem]">
+                    {activity}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+
+        {/* 2. The dependency, on the same columns beneath a hairline. */}
+        <div className={`mt-14 border-t border-jp-border/12 pt-10 sm:mt-16 sm:pt-12 ${COLUMNS} lg:items-baseline`}>
+          <p className="max-w-[24ch] font-heading text-[1.375rem] font-semibold leading-[1.3] tracking-[-0.01em] text-balance text-jp-text-primary sm:text-[1.5rem] lg:text-[1.625rem]">
+            Much of this work depends on people outside your company.
+          </p>
+          <p className="mt-4 max-w-[56ch] text-[1.0625rem] leading-[1.7] text-jp-text-secondary sm:text-[1.125rem] lg:mt-0 lg:text-[1.1875rem]">
+            One missed decision or late approval can delay deliveries, disrupt crews, and push work further down the schedule.
           </p>
         </div>
 
-        <div className="mt-8 max-w-[62ch] text-[1.0625rem] leading-[1.7] text-jp-text-secondary sm:text-[1.125rem] lg:mt-2 lg:text-[1.1875rem]">
-          <p>
-            Every product, material, and service your project needs depends on a series of intricate steps that must happen in the right order, at the right time, with realistic durations.
-          </p>
-
-          <p className="mt-5">
-            {MUST_SENTENCES.map((sentence, i) => (
-              <span key={sentence} className="block">
-                {sentence}
-                {i < MUST_SENTENCES.length - 1 ? ' ' : ''}
-              </span>
-            ))}
-          </p>
-
-          <p className="mt-8 font-heading text-[1.25rem] font-semibold leading-[1.35] tracking-[-0.01em] text-balance text-jp-text-primary sm:mt-10 sm:text-[1.4375rem] lg:text-[1.5rem]">
-            And much of that work depends on people outside your company.
-          </p>
-
-          <p className="mt-5 sm:mt-6">
-            That&apos;s why procurement is so difficult to get right. One missed decision or late approval can delay deliveries, disrupt crews, and push work further down the schedule.
-          </p>
-
-          <p className="mt-6 font-heading text-[1.5rem] font-bold leading-[1.2] tracking-[-0.02em] text-balance text-jp-text-primary sm:mt-8 sm:text-[1.75rem] lg:text-[2rem]">
-            Those delays spread. Costs grow. Profits shrink.
-          </p>
-        </div>
+        {/* 3. The conclusion: the section's payoff, full width. */}
+        <p className="mt-16 font-heading text-[2.25rem] font-extrabold leading-[1.04] tracking-[-0.035em] text-jp-text-primary sm:mt-20 sm:text-[3.5rem] lg:mt-24 lg:text-[4.25rem] xl:text-[5rem]">
+          <span className="block">Those delays spread. </span>
+          <span className="block">
+            Costs grow. <span className="whitespace-nowrap text-jp-brand-amber">Profits shrink.</span>
+          </span>
+        </p>
       </div>
     </section>
   );

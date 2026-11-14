@@ -822,8 +822,24 @@ describe('Project Owners visuals: one clock each', () => {
     expect(LANDING_WORDS.gates).toEqual(['Requirements identified', 'Commitments scheduled', 'Deliveries coordinated']);
     expect(LANDING_WORDS.forecast).toBe('Projected finish');
     expect(LANDING_WORDS.target).toBe('Planned completion zone');
-    expect(LANDING_WORDS.delayLines.join(' · ').toLowerCase()).toBe(LANDING_WORDS.delay.toLowerCase());
-    const words = [...Object.values(LANDING_FOOT), LANDING_WORDS.target, LANDING_WORDS.delay, LANDING_WORDS.forecast, ...LANDING_WORDS.gates, ...LANDING_WORDS.gatesShort].join(' | ');
+    // The overrun's words and the planned completion date's (founder, 2026-11-13, exact); no calendar date.
+    expect(LANDING_WORDS.delay).toBe('Added time + added cost');
+    expect(LANDING_WORDS.delayLines.join(' ').toLowerCase()).toBe(LANDING_WORDS.delay.toLowerCase());
+    expect(LANDING_WORDS.date).toBe('Planned completion date');
+    // The two annotations name the metaphor (founder brief, 2026-11-13): the aircraft is the project; the approach, the plan.
+    expect(LANDING_WORDS.project).toBe('Your project');
+    expect(LANDING_WORDS.plan).toBe('JiTpro flight plan');
+    // Each leader is drawn from its subject, then its words come in; both stay to the end.
+    for (const [lead, words] of [['planLead', 'planNote'], ['projectLead', 'projectNote']]) {
+      expect(k(lead).draw).toBe(true);
+      expect(k(words).at).toBeGreaterThanOrEqual(k(lead).at + (k(lead).dur ?? 0) - 100);
+      expect(at(scene.end)[lead].o).toBe(1);
+      expect(at(scene.end)[words].o).toBe(1);
+    }
+    // The approach is named once it is drawn; the aircraft once it is in.
+    expect(k('planLead').at).toBeGreaterThanOrEqual(k('glide').at + (k('glide').dur ?? 0) - 200);
+    expect(k('projectLead').at).toBeGreaterThanOrEqual(k('plane').at + (k('plane').dur ?? 0) - 100);
+    const words = [...Object.values(LANDING_FOOT), LANDING_WORDS.target, LANDING_WORDS.delay, LANDING_WORDS.forecast, ...LANDING_WORDS.gates, ...LANDING_WORDS.gatesShort, LANDING_WORDS.project, LANDING_WORDS.plan, LANDING_WORDS.date].join(' | ');
     expect(words).not.toMatch(/\d|\$|%|guarantee|always|never|eliminate|crash/i);
     // ONE of each: one aircraft, one approach, one runway, one planned finish.
     for (const key of ['plane', 'glide', 'runway', 'target', 'delay']) expect(scene.cues.filter((c) => c.k === key)).toHaveLength(1);
@@ -921,8 +937,14 @@ describe('Project Owners visuals: one clock each', () => {
     // THE RUNWAY: a long planned completion zone, then a boundary, then the overrun.
     const zone = g.target.x1 - g.target.x0;
     expect(zone).toBeGreaterThanOrEqual(2 * (g.planeSpan.back + g.planeSpan.front) * 0.85);
-    expect(g.boundary.x).toBeGreaterThan(g.target.x1);
-    expect(g.boundary.x).toBeLessThan(g.delay.x0);
+    // The planned completion date stands exactly on the seam: the amber zone ends and the overrun begins at it. Its line
+    // is drawn up from the runway, then its tag comes in; both are fixed, and stay.
+    expect(g.boundary.x).toBe(g.target.x1);
+    expect(g.boundary.x).toBe(g.delay.x0);
+    expect(k('boundary').draw).toBe(true);
+    expect(k('boundary').move).toBeUndefined();
+    expect(k('boundaryLabel').move).toBeUndefined();
+    expect(k('boundaryLabel').at).toBeGreaterThanOrEqual(k('boundary').at + (k('boundary').dur ?? 0) - 100);
     // It lands: the main gear touches down in the first third of the planned zone; it rolls out and comes to a complete
     // stop wholly inside the zone, with runway left (at least a fifth of the zone) before the boundary; it never reaches
     // the overrun.
@@ -948,7 +970,7 @@ describe('Project Owners visuals: one clock each', () => {
     expect(g.forecast[3].x).toBeCloseTo(g.rollout.x, 6);
     expect(k('landed').at).toBeGreaterThanOrEqual(roll.at + roll.dur);
     const end = at(scene.end);
-    for (const key of ['landed', 'stop', 'target', 'aim', 'boundary', 'targetLabel', 'delay', 'glide', ...g.gates.map((_, i) => `pass-${i}`)]) expect(end[key].o, key).toBe(1);
+    for (const key of ['landed', 'stop', 'target', 'aim', 'boundary', 'boundaryLabel', 'targetLabel', 'delay', 'glide', ...g.gates.map((_, i) => `pass-${i}`)]) expect(end[key].o, key).toBe(1);
     expect(end.forecast.o).toBe(0);
     expect(end.forecastLabel.o).toBe(0);
   });
@@ -1368,26 +1390,34 @@ describe('Project Owners visuals: composed for the frame', () => {
       const frame: Box = { name: 'frame', x0: 2, y0: 2, x1: w - 2, y1: g.band.y - 2 };
       const R = g.runway;
       expect(R.x0).toBeLessThan(g.target.x0);
-      expect(g.target.x1).toBeLessThan(g.delay.x0);
+      expect(g.target.x1).toBe(g.delay.x0);
       expect(g.delay.x1).toBeLessThanOrEqual(R.x1);
       expect(R.y + R.h).toBeLessThanOrEqual(g.ground.y + 0.01);
-      const target = text('target', (g.target.x0 + g.target.x1) / 2, g.labelY, LANDING_WORDS.target, T.zone, 'middle');
-      const delay = LANDING_WORDS.delayLines.map((line, i) => text(line, (g.delay.x0 + g.delay.x1) / 2, g.labelY + i * g.labelStep, line, T.zone, 'middle'));
+      const target = text('target', g.zoneLabelX.target, g.labelY, LANDING_WORDS.target, T.zone, 'middle');
+      const delay = LANDING_WORDS.delayLines.map((line, i) => text(line, g.zoneLabelX.delay, g.labelY + i * g.labelStep, line, T.zone, 'middle'));
       for (const b of [target, ...delay]) {
         expect(inside(b, frame), b.name).toBe(true);
         expect(b.y0).toBeGreaterThan(g.ground.y);
       }
       for (const b of delay) {
         expect(meet(target, b)).toBe(false);
-        expect(b.x0).toBeGreaterThanOrEqual(g.boundary.x);
+        // Clearly apart from the planned zone's words, and beyond the planned completion date.
+        expect(b.x0 - target.x1).toBeGreaterThanOrEqual(4);
+        expect(b.x0).toBeGreaterThanOrEqual(g.boundary.x + 1);
       }
+      // The planned completion date's tag, on top of its line: inside the frame, its words inside the tag.
+      const B = g.boundary;
+      const tagW = textWidth(LANDING_WORDS.date, B.tag.size, { caps: true, tracking: 0.08 }) + 2 * B.tag.pad;
+      const tag: Box = { name: 'date tag', x0: B.x - tagW / 2, y0: R.y - B.h - B.tag.h, x1: B.x + tagW / 2, y1: R.y - B.h };
+      expect(inside(tag, frame)).toBe(true);
+      expect(B.tag.size).toBeLessThanOrEqual(B.tag.h * 0.6);
       // The projected finish's label, at each of its four places, inside the frame and above the runway.
       for (const f of g.forecast) {
         const b = text('forecast', f.x, R.y - g.forecastLabel, LANDING_WORDS.forecast, T.label, 'middle');
         expect(inside(b, frame)).toBe(true);
         expect(b.y1).toBeLessThan(R.y);
-        // Clear of the boundary post (and its cap) wherever it passes.
-        expect(b.y1).toBeLessThan(R.y - g.boundary.h - 2.5 * g.k);
+        // Beneath the planned completion date's tag, wherever it passes (it crosses the line on a halo).
+        expect(b.y0).toBeGreaterThan(tag.y1 + 2);
       }
       // The waypoints' labels: beneath and left of the approach, inside the frame, clear of it, of the runway and of each other.
       const labels = g.gates.map((gate, i) => text(`gate ${i}`, gate.x - g.gateLabel.dx, gate.y + g.gateLabel.dy, gate.label, T.label, 'end'));
@@ -1399,6 +1429,21 @@ describe('Project Owners visuals: composed for the frame', () => {
         for (let x = Math.max(b.x0, g.start.x); x <= b.x1; x += 1) expect(b.y0, `${b.name} vs approach at ${x}`).toBeGreaterThan(g.approachY(x) + 1);
       }
       labels.forEach((b, i) => i && expect(meet(b, labels[i - 1])).toBe(false));
+      // The annotations' words (sentence case, bold: a generous estimate of their width).
+      const N = g.note;
+      const noteBox = (name: string, x: number, base: number, words: string): Box => ({ name, x0: x, y0: base - N.size * 0.75, x1: x + textWidth(words, N.size) * 1.08, y1: base + N.size * 0.25 });
+      // *JiTpro flight plan*: its dot on the approach; its words beneath the approach, inside the frame, clear of the
+      // waypoints' labels and of the runway; its leader ends just above its words.
+      const PN = g.planNote;
+      expect(Math.abs(PN.dot.y - g.approachY(PN.dot.x))).toBeLessThan(0.5);
+      const plan = noteBox('plan', PN.text.x, PN.text.y, LANDING_WORDS.plan);
+      expect(inside(plan, frame)).toBe(true);
+      for (let x = Math.max(plan.x0, g.start.x); x <= plan.x1; x += 1) expect(plan.y0, `plan note vs approach at ${x}`).toBeGreaterThan(g.approachY(x) + 2);
+      for (const b of labels) expect(meet(plan, b), `plan note over ${b.name}`).toBe(false);
+      expect(plan.x1).toBeLessThan(R.x0 - 2);
+      for (const b of [...labels, plan]) expect(meet(tag, b), `date tag over ${b.name}`).toBe(false);
+      expect(PN.end.y).toBeLessThan(plan.y0);
+      expect(PN.end.y).toBeGreaterThan(PN.dot.y);
       // The aircraft, wherever it is once in view, is inside the frame and never covers a waypoint's label or the forecast's.
       const scene = buildOwnerScene('owner-predictability', mode);
       const s = g.plane;
@@ -1415,10 +1460,29 @@ describe('Project Owners visuals: composed for the frame', () => {
         labels.forEach((b, i) => {
           if (st[`gate-${i}`].o > 0) for (const p of plane) expect(meet(p, b), `plane ${p.name} over ${b.name} at ${t}`).toBe(false);
         });
-        if (st.forecast.o * st.forecastLabel.o > 0.05) {
-          const fx = g.forecast[0].x + [0, 1, 2].reduce((n, i) => n + st[`f-${i}`].mx, 0);
-          const b = text('forecast', fx, R.y - g.forecastLabel, LANDING_WORDS.forecast, T.label, 'middle');
-          for (const p of plane) expect(meet(p, b), `plane ${p.name} over the forecast at ${t}`).toBe(false);
+        const forecast =
+          st.forecast.o * st.forecastLabel.o > 0.05 ? text('forecast', g.forecast[0].x + [0, 1, 2].reduce((n, i) => n + st[`f-${i}`].mx, 0), R.y - g.forecastLabel, LANDING_WORDS.forecast, T.label, 'middle') : undefined;
+        if (forecast) for (const p of plane) expect(meet(p, forecast), `plane ${p.name} over the forecast at ${t}`).toBe(false);
+        // Never over *JiTpro flight plan*'s words.
+        if (st.planNote.o > 0) for (const p of plane) expect(meet(p, plan), `plane ${p.name} over the plan note at ${t}`).toBe(false);
+        // Never under the planned completion date's tag, and always short of its line.
+        for (const p of plane) expect(meet(p, tag), `plane ${p.name} under the date tag at ${t}`).toBe(false);
+        expect(whole.x1).toBeLessThan(B.x - 2);
+        // *Your project* travels with it, level (its pitch undone exactly), above it: inside the frame, clear of the
+        // aircraft, the waypoints' labels, the forecast's words, the other annotation, and the stop marker and boundary.
+        expect(Math.abs(st.fly.rot + st.settle.rot + st.projectLevel.rot)).toBeLessThan(1e-9);
+        if (st.projectNote.o > 0) {
+          const PJ = g.projectNote;
+          const own = noteBox('project', px + PJ.text.x, py + PJ.text.y, LANDING_WORDS.project);
+          expect(inside(own, frame), `project note at ${t}`).toBe(true);
+          for (const p of plane) expect(meet(p, own), `plane ${p.name} under the project note at ${t}`).toBe(false);
+          expect(own.y1).toBeLessThan(py + PJ.end.y + 2);
+          labels.forEach((b, i) => st[`gate-${i}`].o > 0 && expect(meet(own, b), `project note over ${b.name} at ${t}`).toBe(false));
+          if (forecast) expect(meet(own, forecast), `project note over the forecast at ${t}`).toBe(false);
+          expect(meet(own, plan), `project note over the plan note at ${t}`).toBe(false);
+          // Clear of the planned completion date's tag, and short of its line.
+          expect(meet(own, tag), `project note under the date tag at ${t}`).toBe(false);
+          expect(own.x1).toBeLessThan(B.x - 2);
         }
       }
       expect(textWidth(LANDING_FOOT.head, g.band.head)).toBeLessThanOrEqual(w - 16);

@@ -28,11 +28,11 @@ export default function CoreBeliefSection() {
         </p>
 
         <h2 className="mx-auto mt-5 max-w-[30ch] font-heading text-[1.625rem] font-bold leading-[1.22] tracking-[-0.02em] text-balance text-jp-text-primary sm:mt-6 sm:text-[2.125rem] lg:text-[2.5rem]">
-          Even the most robust construction schedule can&apos;t hold if the field doesn&apos;t have what it needs, when it needs it.
+          Even the best construction schedule can&apos;t hold if the field doesn&apos;t have what it needs, when it needs it.
         </h2>
 
         <p className="mx-auto mt-6 max-w-[52ch] font-heading text-[1.25rem] font-semibold leading-[1.35] tracking-[-0.01em] text-balance text-jp-brand-amber sm:mt-7 sm:text-[1.4375rem] lg:text-[1.5rem]">
-          Early, accurate procurement planning is the first real opportunity general contractors have to make sure the construction schedule can hold.
+          Early, precise procurement planning gives general contractors their first real opportunity to protect that schedule.
         </p>
       </div>
     </section>

@@ -116,6 +116,8 @@ import IdentifyRegisterPreview from './IdentifyRegisterPreview';
 import PlanChainPreview from './PlanChainPreview';
 import OwnerVisual from './OwnerVisual';
 import { isOwnerTab } from './ownerScenes';
+import ArchitectVisual from './ArchitectVisual';
+import { isArchitectTab } from './architectVisuals';
 
 /** The short cross-fade for the rails when the audience changes. */
 const FADE =
@@ -247,6 +249,9 @@ export default function AudienceSection() {
   const [seen, setSeen] = useState(false);
   /* The Connect tab's dependency summary; its visual reveals it (§54.2.2). */
   const categoriesRef = useRef<HTMLUListElement>(null);
+  /* The invisible copies that place an audience's role link (§54.2.5) draw the Connect summary too; this ref keeps
+     them off the visual's. */
+  const reservedCategoriesRef = useRef<HTMLUListElement>(null);
   useEffect(() => {
     const el = stickyRef.current;
     if (!el || seen) return;
@@ -422,10 +427,12 @@ export default function AudienceSection() {
   return (
     <section ref={sectionRef} aria-labelledby={headingId} className="bg-jp-surface-light">
       {/* The presentation. Sticky only when pinned; its top is the
-          navigation's height, so it holds just below it. */}
+          navigation's height, so it holds just below it. On short desktop
+          views (at most 57rem tall) its padding, and the stage's space above
+          the tab content, are tighter so it still fits and pins (§54.2.5). */}
       <div
         ref={stickyRef}
-        className={`px-6 py-14 sm:px-8 sm:py-16 lg:px-10 [@media(min-width:64rem)_and_(max-height:54rem)]:py-12 ${pinned ? 'sticky' : ''}`}
+        className={`px-6 py-14 sm:px-8 sm:py-16 lg:px-10 [@media(min-width:64rem)_and_(max-height:57rem)]:py-8 ${pinned ? 'sticky' : ''}`}
         style={pinned ? { top: navH } : undefined}
       >
         <div className="mx-auto max-w-7xl">
@@ -504,7 +511,7 @@ export default function AudienceSection() {
 
           {/* THE STAGE, beneath the light-surface hairline: copy left, the
               sliding visual right, equal and top-aligned from lg. */}
-          <div ref={stageRef} className="relative mt-6 grid gap-8 border-t border-jp-ink-secondary/20 pt-8 sm:gap-10 lg:mt-8 lg:grid-cols-2 lg:items-start lg:gap-x-14 lg:pt-10 xl:gap-x-20">
+          <div ref={stageRef} className="relative mt-6 grid gap-8 border-t border-jp-ink-secondary/20 pt-8 sm:gap-10 lg:mt-8 lg:grid-cols-2 lg:items-start lg:gap-x-14 lg:pt-10 xl:gap-x-20 [@media(min-width:64rem)_and_(max-height:57rem)]:pt-7">
             {/* The copy: every tab's panel in one grid cell, so the column is
                 the tallest panel's height for every selection. Each panel is
                 either shown or hidden, never in between at rest. */}
@@ -526,27 +533,7 @@ export default function AudienceSection() {
                         COPY_MOTION
                       } ${isOpen ? COPY_SHOWN : COPY_HIDDEN}`}
                     >
-                      <h3 className="max-w-[22ch] font-heading text-[1.75rem] font-extrabold leading-[1.15] tracking-[-0.025em] text-balance text-jp-background sm:text-[2.125rem] lg:text-[2.5rem]">
-                        {tab.headline}
-                      </h3>
-                      {tab.roleLink && <RoleLink {...tab.roleLink} />}
-                      <p
-                        className={`max-w-[58ch] text-[1.0625rem] leading-[1.7] text-jp-ink-secondary sm:text-[1.125rem] lg:text-[1.1875rem] ${
-                          tab.roleLink ? 'mt-1 sm:mt-1.5' : 'mt-5 sm:mt-6'
-                        }`}
-                      >
-                        {tab.description}
-                      </p>
-                      {tab.descriptionMore && (
-                        <p className="mt-3 max-w-[58ch] text-[1.0625rem] leading-[1.7] text-jp-ink-secondary sm:text-[1.125rem] lg:text-[1.1875rem]">
-                          {tab.descriptionMore}
-                        </p>
-                      )}
-                      {tab.closing && (
-                        <p className="mt-4 max-w-[58ch] font-heading text-[1.0625rem] font-semibold leading-snug text-jp-background sm:text-[1.125rem] lg:text-[1.1875rem]">
-                          <ClosingStatement text={tab.closing} emphasis={tab.closingEmphasis} />
-                        </p>
-                      )}
+                      <PanelText tab={tab} />
                       {tab.checklist && <MethodChecklist lines={tab.checklist} played={isOpen && seen} />}
                       {tab.dependencyCategories && (
                         <DependencySummary listRef={categoriesRef} categories={tab.dependencyCategories} />
@@ -555,6 +542,39 @@ export default function AudienceSection() {
                   );
                 }),
               )}
+              {/* An audience's role-page link (§54.2.5): beneath its copy on every tab, at one place. Invisible copies of
+                  the audience's panels (all of each: text, checklist, summary) reserve the tallest one, so the link sits
+                  just beneath it whichever tab is open,
+                  never moving or fading with the tab, and the column (and the section) keeps its height. It follows the
+                  panels in reading and focus order, and is hidden, with the audience's fade, for every other audience.
+                  The panels' entrance transform lifts them into their own layer, so this one is raised above them; it
+                  passes every pointer through except on the link itself. */}
+              {HOME_AUDIENCES.filter((owner) => owner.roleLink).map((owner) => (
+                <div
+                  key={`${owner.id}-role-link`}
+                  className={`pointer-events-none relative z-10 col-start-1 row-start-1 min-w-0 ${FADE} ${
+                    owner.id === audience.id ? 'visible opacity-100' : 'invisible opacity-0'
+                  }`}
+                >
+                  <div aria-hidden="true" className="invisible grid">
+                    {owner.tabs.map((tab) => (
+                      <div key={tab.id} className="col-start-1 row-start-1 min-w-0">
+                        <PanelText tab={tab} />
+                        {tab.checklist && <MethodChecklist lines={tab.checklist} played={false} />}
+                        {tab.dependencyCategories && (
+                          <DependencySummary listRef={reservedCategoriesRef} categories={tab.dependencyCategories} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  {/* Tight spacing (§54.2.5): 8 px, then the link's own 12 px of padding, makes a 20 px gap above its
+                      words; its 12 px of padding below hangs into the section's bottom padding (-mb-3), so the 47 px
+                      target is kept and the link adds 43 px, within the pinned presentation's fit. */}
+                  <div className="-mb-3 mt-2 flex max-w-[58ch] justify-end [&_a]:pointer-events-auto">
+                    <RoleLink {...owner.roleLink!} spacing="" />
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* THE VISUAL: a vertical sliding viewport (§46.12). Each
@@ -600,6 +620,8 @@ export default function AudienceSection() {
                       if (tab.id === 'gc-connect') return <PlanChainPreview key={tab.id} played={played} variant="connect" categoriesRef={categoriesRef} />;
                       if (tab.id === 'gc-control') return <PlanChainPreview key={tab.id} played={played} variant="control" />;
                       if (isOwnerTab(tab.id)) return <OwnerVisual key={tab.id} tab={tab.id} played={played} />;
+                      /* The Architects visuals are static (§54.4.6): nothing to play. */
+                      if (isArchitectTab(tab.id)) return <ArchitectVisual key={tab.id} tab={tab.id} />;
                       return <ReservedVisual key={tab.id} tab={tab} first={i === 0} />;
                     })}
                   </div>
@@ -666,10 +688,43 @@ function AudienceControl({ value, onChange }: { value: string; onChange: (id: st
  * The last word and the arrow never separate when the label wraps. Hover
  * moves the arrow 4px right and nothing else; none under reduced motion.
  */
-function RoleLink({ label, to }: { label: string; to: string }) {
+/**
+ * A panel's words: the headline, an optional role link, the description and its optional second paragraph, and the
+ * closing statement (§54.2, §54.2.1). Shared by the panel and by the invisible copies that reserve an audience's tallest
+ * panel (§54.2.5), so the two always measure the same.
+ */
+function PanelText({ tab }: { tab: AudienceTab }) {
+  return (
+    <>
+      <h3 className="max-w-[22ch] font-heading text-[1.75rem] font-extrabold leading-[1.15] tracking-[-0.025em] text-balance text-jp-background sm:text-[2.125rem] lg:text-[2.5rem]">
+        {tab.headline}
+      </h3>
+      {tab.roleLink && <RoleLink {...tab.roleLink} />}
+      <p
+        className={`max-w-[58ch] text-[1.0625rem] leading-[1.7] text-jp-ink-secondary sm:text-[1.125rem] lg:text-[1.1875rem] ${
+          tab.roleLink ? 'mt-1 sm:mt-1.5' : 'mt-5 sm:mt-6'
+        }`}
+      >
+        {tab.description}
+      </p>
+      {tab.descriptionMore && (
+        <p className="mt-3 max-w-[58ch] text-[1.0625rem] leading-[1.7] text-jp-ink-secondary sm:text-[1.125rem] lg:text-[1.1875rem]">
+          {tab.descriptionMore}
+        </p>
+      )}
+      {tab.closing && (
+        <p className="mt-4 max-w-[58ch] font-heading text-[1.0625rem] font-semibold leading-snug text-jp-background sm:text-[1.125rem] lg:text-[1.1875rem]">
+          <ClosingStatement text={tab.closing} emphasis={tab.closingEmphasis} />
+        </p>
+      )}
+    </>
+  );
+}
+
+function RoleLink({ label, to, spacing = 'mt-1' }: { label: string; to: string; spacing?: string }) {
   const cut = label.lastIndexOf(' ');
   return (
-    <p className="mt-1">
+    <p className={spacing}>
       <Link
         to={to}
         className="group inline-block rounded py-3 font-heading text-base font-semibold leading-snug text-jp-background underline decoration-jp-brand-amber decoration-2 underline-offset-[5px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jp-background sm:text-[1.0625rem]"

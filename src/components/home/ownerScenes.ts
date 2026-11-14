@@ -307,13 +307,18 @@ export const LANDING_FOOT = {
 } as const;
 export const LANDING_WORDS = {
   target: 'Planned completion zone',
-  delay: 'Added time · added cost',
+  delay: 'Added time + added cost',
   /** The overrun's label, set on two lines in its shorter zone. */
-  delayLines: ['Added time', 'Added cost'],
+  delayLines: ['Added time +', 'Added cost'],
+  /** The marker at the end of the planned zone: the established target, never a calendar date (founder, 2026-11-13). */
+  date: 'Planned completion date',
   forecast: 'Projected finish',
   /** The three procurement-planning checkpoints, and their short forms on a narrow frame. */
   gates: ['Requirements identified', 'Commitments scheduled', 'Deliveries coordinated'],
   gatesShort: ['Identified', 'Scheduled', 'Coordinated'],
+  /** The two annotations that name the metaphor (founder brief, 2026-11-13): the aircraft, and the approach. */
+  project: 'Your project',
+  plan: 'JiTpro flight plan',
 } as const;
 
 /** The scene in desktop units (side elevation). The aircraft is placed by the point beneath its wheels. */
@@ -321,10 +326,10 @@ export const LANDING_AT = {
   ground: 252,
   /** The runway, to the right of the frame, so the approach can use the width (refined 2026-11-13). */
   runway: { x0: 232, x1: 548, top: 244, h: 8 },
-  /** The planned completion zone: long enough for touchdown, rollout and a controlled stop. Its end is the boundary. */
-  target: { x0: 268, x1: 442 },
-  /** The overrun: added time, added cost; it begins after the boundary and is never entered. */
-  delay: { x0: 446, x1: 540 },
+  /** The planned completion zone: long enough for touchdown, rollout and a controlled stop. Its end is the planned completion date. */
+  target: { x0: 268, x1: 444 },
+  /** The overrun: added time, added cost; it begins exactly at the planned completion date and is never entered. */
+  delay: { x0: 444, x1: 540 },
   /** A long, shallow final approach from the left. */
   start: { x: 54, y: 142 },
   /** The touchdown point, in the first third of the planned zone: where the main gear first meets the runway. */
@@ -335,6 +340,13 @@ export const LANDING_AT = {
   flare: { c1: { x: 136, y: 176 }, c2: { x: 222, y: 229 } },
   /** The waypoints, on the planned approach (x). */
   gates: [140, 178, 214],
+  /**
+   * The annotations (2026-11-13). *Your project*, relative to the point beneath the aircraft's wheels: a dot on the
+   * cabin roof, a leader up to just beneath the words, which start a little behind it. *JiTpro flight plan*: a dot on
+   * the planned approach near its start (x), a leader down to the words beneath it.
+   */
+  projectNote: { dot: { x: -2, y: -24 }, end: { x: 6, y: -40 }, text: { x: 0, y: -44 } },
+  planNote: { at: 78, end: { x: 64, y: 168 }, text: { x: 20, y: 177 } },
   /** The projected finish: its centre and width at the outset and after each waypoint, ending at the stopping point. */
   forecast: [
     { x: 492, w: 92 },
@@ -374,8 +386,19 @@ export function landingGeometry(mode: OwnerMode) {
     runway: { x0: X(L.runway.x0), x1: X(L.runway.x1), y: Y(L.runway.top), h: k * L.runway.h },
     target: { x0: X(L.target.x0), x1: X(L.target.x1) },
     delay: { x0: X(L.delay.x0), x1: X(L.delay.x1) },
-    /** The boundary post at the end of the planned zone: its x, and how far it stands above the runway. */
-    boundary: { x: X((L.target.x1 + L.delay.x0) / 2), h: k * 11 },
+    /**
+     * The planned completion date: a line on the seam between the planned zone and the overrun, standing this far above
+     * the runway, and its navy tag on top (its words' size, the tag's height and side padding). Fixed throughout.
+     */
+    boundary: { x: X(L.target.x1), h: d ? 60 : 38, tag: { size: d ? 7 : 6, h: d ? 13 : 10, pad: d ? 6 : 4.5 } },
+    /**
+     * The zone labels' centres: under their zones; on the narrow frame eased a little apart, so *PLANNED COMPLETION ZONE*
+     * and *ADDED TIME +* keep clear space between them.
+     */
+    zoneLabelX: {
+      target: (X(L.target.x0) + X(L.target.x1)) / 2 - (d ? 0 : 3),
+      delay: (X(L.delay.x0) + X(L.delay.x1)) / 2 + (d ? 0 : 4),
+    },
     /** The zone labels, beneath the runway (the overrun's on two lines, this far apart). */
     labelY: Y(L.ground + 16),
     labelStep: d ? 10 : 7,
@@ -388,11 +411,24 @@ export function landingGeometry(mode: OwnerMode) {
     /** The projected finish at each stage: its centre x and width, in this design's units. */
     forecast: L.forecast.map((f) => ({ x: X(f.x), w: k * f.w })),
     forecastH: k * 5,
-    /** The projected finish's words, this far above the runway: clear of the boundary post as they pass it. */
+    /** The projected finish's words, this far above the runway, beneath the planned completion date's tag (they cross its line on a halo). */
     forecastLabel: k * 19,
     /** Each checkpoint, on the planned approach; its label beneath and to its left, ending this far left of it. */
     gates: L.gates.map((x, i) => ({ x: X(x), y: Y(glideY(x)), label: (d ? LANDING_WORDS.gates : LANDING_WORDS.gatesShort)[i] })),
     gateLabel: { dx: d ? 12 : 10, dy: d ? 20 : 12 },
+    /** The annotations: their size, leader width and dot; *Your project* relative to the wheels, *JiTpro flight plan* placed. */
+    note: { size: d ? 9 : 7, lead: d ? 0.75 : 0.6, dot: d ? 1.6 : 1.2 },
+    projectNote: {
+      dot: { x: k * L.projectNote.dot.x, y: k * L.projectNote.dot.y },
+      end: { x: k * L.projectNote.end.x, y: k * L.projectNote.end.y },
+      text: { x: k * L.projectNote.text.x, y: k * L.projectNote.text.y },
+    },
+    /* On the narrow frame its words are relatively larger, so they sit a little further left and lower, clear of the approach. */
+    planNote: {
+      dot: { x: X(L.planNote.at), y: Y(glideY(L.planNote.at)) },
+      end: { x: X(L.planNote.end.x) - (d ? 0 : 6), y: Y(L.planNote.end.y) + (d ? 0 : 2) },
+      text: { x: X(L.planNote.text.x) - (d ? 0 : 10), y: Y(L.planNote.text.y) + (d ? 0 : 3.7) },
+    },
     /** The aircraft's scale: drawn at 1.15 of its unit size, and scaled with the design. Its length either side of the wheels, and its height. */
     plane: k * 1.15,
     planeSpan: { back: k * 1.15 * 40, front: k * 1.15 * 37, up: k * 1.15 * 31 },
@@ -1271,10 +1307,18 @@ function predictabilityScene(mode: OwnerMode): OwnerScene {
     { k: 'target', at: 700, dur: 500 },
     { k: 'aim', at: 900, dur: 400 },
     { k: 'targetLabel', at: 1000, dur: 500, rise: 3 },
-    { k: 'boundary', at: 1150, dur: 400 },
+    // The planned completion date: its line drawn up from the runway's seam, then its tag.
+    { k: 'boundary', at: 1150, dur: 400, draw: true },
+    { k: 'boundaryLabel', at: 1450, dur: 400, rise: 3 },
     { k: 'delay', at: 1200, dur: 500 },
     // The planned approach, and the projected finish: wide and red, in the added-cost zone.
     { k: 'glide', at: 1800, dur: 800 },
+    // The annotations name the metaphor: the approach as it completes, then the aircraft once it is in. Each leader is
+    // drawn from its subject, then its words fade in; they stay. *Your project* travels in the aircraft's own groups.
+    { k: 'planLead', at: 2400, dur: 300, draw: true },
+    { k: 'planNote', at: 2650, dur: 450, rise: 2 },
+    { k: 'projectLead', at: 3000, dur: 300, draw: true },
+    { k: 'projectNote', at: 3250, dur: 450, rise: 2 },
     // The forecast: its words give way as the aircraft passes the last waypoint, before it comes down over them; its band
     // stays, amber, where the aircraft will stop, until it has rolled out onto it and stopped.
     { k: 'forecast', at: 2100, dur: 600, out: ROLL.at + ROLL.dur, outDur: 600 },
@@ -1286,6 +1330,9 @@ function predictabilityScene(mode: OwnerMode): OwnerScene {
     { k: 'fly', at: 0, dur: 1, arc: { at: FLY.at, dur: FLY.dur, even: true, c1: by(g.flare.c1), c2: by(g.flare.c2), to: by(T), rot: -3 } },
     // Touchdown on the main gear (it turns about them); the nose settles onto the runway.
     { k: 'settle', at: 0, dur: 1, move: { at: TOUCH, dur: SETTLE, dx: 0, dy: 0, rot: 3 } },
+    // *Your project* travels in the aircraft's groups, but its words stay level: the exact opposite of the aircraft's pitch,
+    // from the same flight and settle (about the same point beneath the wheels).
+    { k: 'projectLevel', at: 0, dur: 1, arc: { at: FLY.at, dur: FLY.dur, even: true, c1: { dx: 0, dy: 0 }, c2: { dx: 0, dy: 0 }, to: { dx: 0, dy: 0 }, rot: 3 }, move: { at: TOUCH, dur: SETTLE, dx: 0, dy: 0, rot: -3 } },
     // Rollout: aligned with the runway, slowing smoothly to a complete stop inside the planned zone.
     { k: 'roll', at: 0, dur: 1, move: { at: ROLL.at, dur: ROLL.dur, dx: g.rollout.x - T.x, dy: 0, ease: 'out' } },
     // The stop: a small marker at the nose.

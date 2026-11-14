@@ -90,6 +90,11 @@ export type Audience = {
   label: string;
   /** Shown in this order; the first is selected when the audience is chosen. */
   tabs: readonly AudienceTab[];
+  /**
+   * Optional link to the audience's role page, beneath its copy on every tab, at one place (Section 54.2.5). `to` is an
+   * internal route.
+   */
+  roleLink?: { label: string; to: string };
 };
 
 export const HOME_AUDIENCES: readonly Audience[] = [
@@ -136,33 +141,42 @@ export const HOME_AUDIENCES: readonly Audience[] = [
         closing: 'Less chasing. Clearer priorities. Better coordination.',
       },
     ],
+    /* The audience's role page, beneath its copy on every tab (Section 54.2.5); sentence case (Sections 7.7, 48.1). */
+    roleLink: { label: 'Explore JiTpro for general contractors', to: '/roles/general-contractors' },
   },
   {
     id: 'architects',
-    label: 'Architects & design teams',
+    label: 'Architects',
+    /*
+     * Founder brief *Architects Section Update* (2026-11-13; Section 54.2.5): architects are influencers and referral
+     * partners, never purchasers. Each tab says what an architect gains when their general contractor plans
+     * procurement well: what is needed, when, and why it matters.
+     */
     tabs: [
       {
         id: 'arch-see-whats-coming',
         label: 'See what’s coming',
-        headline: 'Know what’s coming before it becomes urgent.',
+        headline: 'Know what’s needed, and when, before it becomes urgent.',
         description:
-          'See upcoming design questions, selections, and approvals early enough to prepare your team and coordinate its workload.',
+          'When your general contractor plans procurement early, you know what design information, submittals, and approvals will be needed and when. Clear expectations give your team time to prepare instead of reacting to last-minute demands.',
       },
       {
         id: 'arch-plan-workload',
         label: 'Plan your workload',
-        headline: 'Fewer surprises. More predictable review schedules.',
+        headline: 'Plan your workload. Not your next emergency.',
         description:
-          'Understand when submittals, design clarifications, and consultant input will be needed, instead of constantly reacting to unexpected requests.',
+          'Advance notice of upcoming requirements helps you allocate staff, coordinate consultants, and anticipate periods of heavy demand. With time to plan, your team can reduce unnecessary overtime, avoid repeated interruptions, and better protect your clients from preventable costs.',
       },
       {
-        id: 'arch-focus-priorities',
-        label: 'Focus on priorities',
-        headline: 'Know which decisions really matter right now.',
+        id: 'arch-protect-reputation',
+        label: 'Protect your reputation',
+        headline: 'Protect your work. Protect your reputation.',
         description:
-          'See how requested information affects downstream procurement and field work, so your team can focus its limited time on the right issues.',
+          'When you recommend a general contractor, your professional reputation is part of that recommendation. Contractors who take procurement planning seriously help protect your work, reduce avoidable disruption, and deliver a more predictable experience for your clients.',
       },
     ],
+    /* Sentence case, as Sections 7.7 and 48.1 require of control labels (the brief's *Architects* is lowered). */
+    roleLink: { label: 'Explore JiTpro for architects', to: '/roles/architects-engineers' },
   },
   {
     id: 'owners',
@@ -190,9 +204,12 @@ export const HOME_AUDIENCES: readonly Audience[] = [
         id: 'owner-predictability',
         label: 'More predictability',
         headline: 'Stay on course for a more predictable finish.',
+        /* Founder, 2026-11-13: the flight plan, in the visual's own metaphor, through the contractor. */
         description:
-          'Your completion date and budget are closely connected. When construction runs longer than planned, added time can bring added cost. JiTpro helps your contractor identify and manage procurement requirements early, giving the project team a clearer path to keep construction moving toward its planned completion.',
-        closing: 'Better procurement planning. Fewer preventable delays. More confidence in where your project will land.',
+          'Every flight begins with careful planning and a pre-flight checklist. Your construction project deserves that same level of preparation and precision.',
+        descriptionMore:
+          'JiTpro serves as your project’s procurement flight plan, helping your contractor identify what’s needed, who’s responsible, and when each step must be completed to keep construction on course.',
+        closing: 'A more predictable finish helps protect both your schedule and your budget.',
       },
       {
         id: 'owner-better-decisions',
@@ -206,6 +223,8 @@ export const HOME_AUDIENCES: readonly Audience[] = [
         closingEmphasis: 'Just in time.',
       },
     ],
+    /* The audience's role page, beneath its copy on every tab (Section 54.2.5); sentence case (Sections 7.7, 48.1). */
+    roleLink: { label: 'Explore JiTpro for project owners', to: '/roles/owners-developers' },
   },
 ];
 

@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { ArrowRight, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -6,13 +5,16 @@ import { Link } from 'react-router-dom';
  * Section 1 — the hero (Decision Log 2026-11-05, the six-section homepage;
  * Section 20.1 amendment of the same date).
  *
- *   EYEBROW   "Your project. Your team. Our expertise." (revised 2026-11-05,
- *             replacing "Built by contractors")
+ *   EYEBROW   "One project. Your team. Our expertise." (revised 2026-11-13,
+ *             replacing "Your project. Your team. Our expertise.", itself
+ *             revised 2026-11-05 from "Built by contractors")
  *   H1        "Broken schedules? / Broken promises? / Broken profits?" — one
  *             h1, three lines, all in primary ink (revised 2026-11-05)
- *   MESSAGES  one shared message area beneath the headline (revised
- *             2026-11-07): three messages, one at a time, resolving on the
- *             value proposition, which stays. See HeroMessages below.
+ *   STATEMENT "JiTpro helps protect your schedule, your promises, and your
+ *             profits by getting the field what it needs, when it needs it."
+ *             (copy revised 2026-11-13; three lines from `sm`, four on phones)
+ *             beneath the headline, static and visible on load (revised
+ *             2026-11-13, replacing the rotating message sequence)
  *   ACTIONS   the primary to /contact and the quiet secondary to /learn-more
  *
  * COMPACT BY DESIGN (revised 2026-11-05 after review): the headline, the
@@ -20,10 +22,11 @@ import { Link } from 'react-router-dom';
  * typical desktop viewport, so the spacing between them is deliberately
  * tight and the headline sits one step below the previous hero's scale.
  *
- * ONE MOTION ONLY. The message area is the hero's single animation (§46.4:
- * one focal element). The entrance animation and the hand-drawn underline of
- * the previous hero (HomeHero.tsx, kept in place and preserved at tag
- * `homepage-pre-messaging-simplification-2026-11-05`) do not carry over.
+ * NO MOTION (2026-11-13). Every word of the hero is there on load; nothing
+ * fades, rotates or waits. The entrance animation and the hand-drawn
+ * underline of the previous hero (HomeHero.tsx, kept in place and preserved
+ * at tag `homepage-pre-messaging-simplification-2026-11-05`) do not carry
+ * over.
  *
  * THE BACKGROUND is the approved house render treatment (§48.8 bounded
  * exception) reproduced from HomeHero.tsx rather than extracted from it, so
@@ -31,148 +34,14 @@ import { Link } from 'react-router-dom';
  * treatment: the same opacity, mask, `lighten` merge, scrim, grain and bottom
  * hand-off, without the reveal.
  *
- * AMBER on this surface (§48.7): the eyebrow, the final message (the value
- * proposition), the primary action, and the lighting (the warm key and the
- * top hairline). The headline and the first two messages are ink, not amber.
+ * AMBER on this surface (§48.7): the eyebrow, the supporting statement (the
+ * value proposition), the primary action, and the lighting (the warm key and
+ * the top hairline). The headline is ink, not amber.
  */
 
 // Very light grain over the hero lighting, matching HomeHero.tsx.
 const HERO_NOISE =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E";
-
-/* ------------------------------------------------------------ messages */
-
-/**
- * THE MESSAGE SEQUENCE (founder direction 2026-11-07). One fade per step,
- * then the value proposition stays. Times in ms on ONE clock (§46.3): every
- * message's opacity is a pure function of the elapsed time, with no
- * per-message timers.
- */
-/**
- * THE SEQUENCES, as data. Each step fades in, holds, fades out, and the next
- * begins; the last step stays. Only the final message is amber.
- *
- *   THREE_MESSAGES   the approved sequence (Design System Section 20.1).
- *   FIVE_MESSAGES    EXPERIMENT (2026-11-07), not approved: the three
- *                    problems as separate beats, shorter fades.
- *
- * TO REVERT: set ACTIVE (below) to 'three'. Nothing else changes.
- */
-type Step = { text: string; amber: boolean; holdMs: number };
-type Sequence = { startDelayMs: number; fadeMs: number; steps: Step[] };
-
-const FINAL: Omit<Step, 'holdMs'> = { text: 'JiTpro helps get the field what it needs, when it needs it.', amber: true };
-
-const THREE_MESSAGES: Sequence = {
-  startDelayMs: 1500,
-  fadeMs: 500,
-  steps: [
-    { text: 'Late materials. Wrong products. Idle crews.', amber: false, holdMs: 2000 },
-    { text: 'It doesn\u2019t have to be this way.', amber: false, holdMs: 2000 },
-    { ...FINAL, holdMs: Infinity },
-  ],
-};
-
-const FIVE_MESSAGES: Sequence = {
-  startDelayMs: 1500,
-  fadeMs: 400,
-  steps: [
-    { text: 'Late materials.', amber: false, holdMs: 1200 },
-    { text: 'Wrong products.', amber: false, holdMs: 1200 },
-    { text: 'Idle crews.', amber: false, holdMs: 1200 },
-    { text: 'It doesn\u2019t have to be this way.', amber: false, holdMs: 2000 },
-    { ...FINAL, holdMs: Infinity },
-  ],
-};
-
-const SEQUENCES = { three: THREE_MESSAGES, five: FIVE_MESSAGES } as const;
-type SequenceName = keyof typeof SEQUENCES;
-
-/** The sequence the site shows. TO REVERT: 'three'. */
-const ACTIVE: SequenceName = 'five';
-
-/**
- * Local comparison only: in the dev server, `?hero=three` or `?hero=five`
- * overrides ACTIVE for that page load. Production builds ignore it.
- */
-function chooseSequence(): Sequence {
-  if (import.meta.env.DEV && typeof window !== 'undefined') {
-    const asked = new URLSearchParams(window.location.search).get('hero');
-    if (asked && asked in SEQUENCES) return SEQUENCES[asked as SequenceName];
-  }
-  return SEQUENCES[ACTIVE];
-}
-
-const ACTIVE_SEQUENCE: Sequence = chooseSequence();
-
-/** Each step's fade-in and fade-out start times, in ms on ONE clock (§46.3). */
-function timeline({ startDelayMs, fadeMs, steps }: Sequence) {
-  let at = startDelayMs;
-  return steps.map((step) => {
-    const inAt = at;
-    const outAt = inAt + fadeMs + step.holdMs; // Infinity for the last step
-    at = outAt + fadeMs;
-    return { ...step, in: inAt, out: outAt };
-  });
-}
-
-const FADE_MS = ACTIVE_SEQUENCE.fadeMs;
-const MESSAGES = timeline(ACTIVE_SEQUENCE);
-const SEQUENCE_END = MESSAGES[MESSAGES.length - 1].in + FADE_MS;
-
-/** Once per page load: returning to the homepage in the same load shows the resolved state. */
-let sequencePlayed = false;
-
-const prefersReducedMotion = () =>
-  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-function opacityAt(t: number, m: (typeof MESSAGES)[number]) {
-  const fadeIn = Math.min(1, Math.max(0, (t - m.in) / FADE_MS));
-  const fadeOut = Math.min(1, Math.max(0, (t - m.out) / FADE_MS));
-  return fadeIn * (1 - fadeOut);
-}
-
-/**
- * One shared message area. Every message sits in the same grid cell, so
- * the area is always as tall as the tallest message at the current width and
- * the hero never moves. Opacity only: no slide, scale or colour change.
- * Plays once, never loops; reduced motion, or a second visit in the same
- * page load, shows the value proposition at once (§46.5). Every message stays
- * in the document, in order, for assistive technology.
- */
-function HeroMessages() {
-  const [t, setT] = useState(() => (sequencePlayed || prefersReducedMotion() ? SEQUENCE_END : 0));
-
-  useEffect(() => {
-    if (t >= SEQUENCE_END) return;
-    sequencePlayed = true;
-    const start = performance.now();
-    let raf = requestAnimationFrame(function tick(now) {
-      const elapsed = now - start;
-      setT(Math.min(SEQUENCE_END, elapsed));
-      if (elapsed < SEQUENCE_END) raf = requestAnimationFrame(tick);
-    });
-    return () => cancelAnimationFrame(raf);
-    // Runs once on mount; `t` only seeds whether to play.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return (
-    <div className="mx-auto mt-5 grid max-w-[34ch] text-center sm:mt-6 sm:max-w-[40ch]">
-      {MESSAGES.map((m) => (
-        <p
-          key={m.text}
-          className={`[grid-area:1/1] self-center font-heading text-[1.25rem] font-bold leading-[1.25] tracking-[-0.015em] text-balance sm:text-[1.5rem] lg:text-[1.625rem] ${
-            m.amber ? 'text-jp-brand-amber' : 'text-jp-text-primary'
-          }`}
-          style={{ opacity: opacityAt(t, m) }}
-        >
-          {m.text}
-        </p>
-      ))}
-    </div>
-  );
-}
 
 /* ---------------------------------------------------------------- hero */
 
@@ -221,7 +90,7 @@ export default function ProfitHero() {
             less tracked below `sm` to suit the longer line; balanced so a
             narrow wrap breaks between statements rather than inside one. */}
         <p className="text-center font-mono text-xs font-bold uppercase tracking-[0.16em] text-balance text-jp-brand-amber sm:text-sm sm:tracking-[0.18em]">
-          Your project. Your team. Our expertise.
+          One project. Your team. Our expertise.
         </p>
 
         {/* One h1, three lines, all in primary ink. One step smaller below
@@ -232,7 +101,11 @@ export default function ProfitHero() {
           <span className="block">Broken profits?</span>
         </h1>
 
-        <HeroMessages />
+        {/* The supporting statement: the value proposition, in Brand Amber,
+            below the headline's scale so the headline stays dominant. */}
+        <p className="mx-auto mt-5 max-w-[34ch] text-center font-heading text-[1.25rem] font-bold leading-[1.3] tracking-[-0.015em] text-balance text-jp-brand-amber sm:mt-6 sm:max-w-[40ch] sm:text-[1.5rem] lg:text-[1.625rem]">
+          JiTpro helps protect your schedule, your promises, and your profits by getting the field what it needs, when it needs it.
+        </p>
 
         {/* One decision with two doors (§48.1): the primary, and the quiet
             secondary with no fill, no border and no amber at rest. */}

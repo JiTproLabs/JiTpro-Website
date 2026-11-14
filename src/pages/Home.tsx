@@ -5,14 +5,12 @@ import FewerSurprisesSection from '../components/home/FewerSurprisesSection';
 import HowWeDoItSection from '../components/home/HowWeDoItSection';
 import AudienceSection from '../components/home/AudienceSection';
 import ThroughoutProjectSection from '../components/home/ThroughoutProjectSection';
-import ProtectProfitSection from '../components/home/ProtectProfitSection';
 import NextProblemCTA from '../components/home/NextProblemCTA';
 
 /**
- * The six-section homepage (Decision Log 2026-11-05; Section 20.1 amendment
- * of the same date). Plain English first: the business problem, the two ways
- * JiTpro protects profit, how the work starts, how it continues, why it
- * matters, and one action.
+ * The homepage (Decision Log 2026-11-05; Section 20.1 amendment of the same
+ * date, revised since). Plain English first: the business problem, JiTpro's
+ * approach, the benefits, and one invitation to begin with one project.
  *
  *   ACT ONE — the problem and the promise, on --jp-background
  *     1 Hero                  broken schedules, promises, profits
@@ -26,12 +24,10 @@ import NextProblemCTA from '../components/home/NextProblemCTA';
  *     3 Audience section      who JiTpro helps, and how (2026-11-09,
  *                             Design System Section 54); replaces
  *                             Know what's coming
- *     4 Throughout            the weekly list; your PMs still run the job
+ *     4 Throughout            one project at a time; with you throughout
  *
- *   ACT THREE — the outcome and the action, on --jp-surface then
- *   --jp-background
- *     5 Protect your profit   fewer delays, fewer surprises, clear answers
- *     6 Final CTA             let's find it early
+ *   ACT THREE — the action, on --jp-background
+ *     6 Final CTA             start with one project (2026-11-13)
  *
  * Both primary actions read "Let's talk about your project" and go to
  * /contact. The hero's quiet secondary goes to /learn-more.
@@ -52,6 +48,12 @@ import NextProblemCTA from '../components/home/NextProblemCTA';
  * `KnowWhatsComingSection` and its figures stay in the codebase, unchanged,
  * for reuse, and are preserved at tag `homepage-four-step-stack-2026-11-09`
  * (docs/archive/homepage-four-step-stack.md).
+ *
+ * PROTECT YOUR PROFIT (removed 2026-11-13). Section 5 repeated the financial
+ * argument the procurement section and Fewer surprises already make, so it is
+ * no longer rendered here. `ProtectProfitSection` stays in the codebase,
+ * unchanged, and its copy and restore steps are in
+ * docs/archive/homepage-protect-profit.md.
  */
 export default function Home() {
   return (
@@ -63,7 +65,6 @@ export default function Home() {
       <HowWeDoItSection />
       <AudienceSection />
       <ThroughoutProjectSection />
-      <ProtectProfitSection />
       <NextProblemCTA />
     </div>
   );

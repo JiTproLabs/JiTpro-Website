@@ -898,8 +898,10 @@ function PredictabilityVisual({ mode }: { mode: OwnerMode }) {
   const S = g.start;
   const Td = g.touchdown;
   const F0 = g.forecast[0];
-  const zoneLabel = (x0: number, x1: number, words: string, fill: string) => (
-    <text x={(x0 + x1) / 2} y={g.labelY} textAnchor="middle" style={caps(T.zone, fill)}>
+  const B = g.boundary;
+  const dateW = textWidth(LANDING_WORDS.date, B.tag.size, { caps: true, tracking: 0.08 }) + 2 * B.tag.pad;
+  const zoneLabel = (x: number, words: string, fill: string) => (
+    <text x={x} y={g.labelY} textAnchor="middle" style={caps(T.zone, fill)}>
       {words}
     </text>
   );
@@ -913,6 +915,27 @@ function PredictabilityVisual({ mode }: { mode: OwnerMode }) {
   /* The three moves of the projected finish compose: translations outside, horizontal scales inside, about its centre. */
   const moved = (children: ReactNode) => [0, 1, 2].reduceRight<ReactNode>((inner, i) => <K k={`f-${i}`}>{inner}</K>, children);
   const narrowed = (children: ReactNode) => [0, 1, 2].reduceRight<ReactNode>((inner, i) => <K k={`fw-${i}`}>{inner}</K>, children);
+  /**
+   * An annotation (Section 54.4.5): a navy dot on its subject, a hairline leader drawn from it, and its words in sentence
+   * case beyond. No box and no arrowhead: an interpretive note, not a diagram.
+   */
+  const N = g.note;
+  type Pt = { x: number; y: number };
+  const note = (lead: string, words: string, p: { dot: Pt; end: Pt; text: Pt }, text: string) => (
+    <>
+      <g style={{ opacity: 0.55 }}>
+        <Drawn k={lead} d={`M${p.dot.x} ${p.dot.y}L${p.end.x} ${p.end.y}`} stroke={navy} width={N.lead} cap="round" />
+      </g>
+      <g data-k={lead} style={{ opacity: 0 }}>
+        <circle cx={p.dot.x} cy={p.dot.y} r={N.dot} style={{ fill: navy }} />
+      </g>
+      <K k={words}>
+        <text x={p.text.x} y={p.text.y} style={{ fontSize: N.size, fontWeight: 700, fill: navy }}>
+          {text}
+        </text>
+      </K>
+    </>
+  );
   return (
     <>
       {/* The sheet: a faint grid, and the ground line. */}
@@ -927,13 +950,20 @@ function PredictabilityVisual({ mode }: { mode: OwnerMode }) {
         <path d={`M${R.x0 + 22 * g.k} ${R.y + R.h / 2}H${R.x1 - 6 * g.k}`} style={{ fill: 'none', stroke: PAPER, strokeOpacity: 0.7, strokeWidth: d ? 1 : 0.7, strokeDasharray: d ? '9 7' : '6 4' }} />
         <path d={Array.from({ length: 4 }, (_, i) => `M${R.x0 + (4 + i * 3.5) * g.k} ${R.y + 1.5 * g.k}v${R.h - 3 * g.k}`).join('')} style={{ fill: 'none', stroke: PAPER, strokeWidth: d ? 1.4 : 1 }} />
       </K>
-      {/* Beyond the planned finish: added time, added cost. Visible throughout; unused at the end. */}
+      {/* Beyond the planned completion date: added time, added cost. A deep red runway, and a translucent red rising from it
+          to the marker's height, fading as it rises: exposure, never alarm. Visible throughout; unused at the end. */}
+      <defs>
+        <linearGradient id={`overrun-${mode}`} x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" style={{ stopColor: late, stopOpacity: 0.14 }} />
+          <stop offset="1" style={{ stopColor: late, stopOpacity: 0 }} />
+        </linearGradient>
+      </defs>
       <K k="delay">
-        <rect x={g.delay.x0} y={R.y} width={g.delay.x1 - g.delay.x0} height={R.h} style={{ fill: late, fillOpacity: 0.32 }} />
-        <rect x={g.delay.x0} y={R.y - 22 * g.k} width={g.delay.x1 - g.delay.x0} height={22 * g.k} style={{ fill: late, fillOpacity: 0.045 }} />
-        <text x={(g.delay.x0 + g.delay.x1) / 2} y={g.labelY} textAnchor="middle" style={caps(T.zone, late)}>
+        <rect x={g.delay.x0} y={R.y} width={g.delay.x1 - g.delay.x0} height={R.h} style={{ fill: late, fillOpacity: 0.42 }} />
+        <rect x={g.delay.x0} y={R.y - B.h} width={g.delay.x1 - g.delay.x0} height={B.h} style={{ fill: `url(#overrun-${mode})` }} />
+        <text x={g.zoneLabelX.delay} y={g.labelY} textAnchor="middle" style={caps(T.zone, late)}>
           {LANDING_WORDS.delayLines.map((line, i) => (
-            <tspan key={line} x={(g.delay.x0 + g.delay.x1) / 2} y={g.labelY + i * g.labelStep}>
+            <tspan key={line} x={g.zoneLabelX.delay} y={g.labelY + i * g.labelStep}>
               {line}
             </tspan>
           ))}
@@ -944,15 +974,19 @@ function PredictabilityVisual({ mode }: { mode: OwnerMode }) {
         <rect x={g.target.x0} y={R.y} width={g.target.x1 - g.target.x0} height={R.h} style={{ fill: amber }} />
         <path d={`M${g.target.x0} ${R.y - 5 * g.k}v${4 * g.k}M${g.target.x1} ${R.y - 5 * g.k}v${4 * g.k}`} style={{ fill: 'none', stroke: amber, strokeWidth: d ? 1.2 : 0.9 }} />
       </K>
-      <K k="targetLabel">{zoneLabel(g.target.x0, g.target.x1, LANDING_WORDS.target, navy)}</K>
+      <K k="targetLabel">{zoneLabel(g.zoneLabelX.target, LANDING_WORDS.target, navy)}</K>
       {/* The touchdown point: two short paper-white bars across the runway, where the main gear first meets it. */}
       <K k="aim">
         <path d={`M${Td.x - 4 * g.k} ${R.y + 1.4 * g.k}v${R.h - 2.8 * g.k}M${Td.x + 4 * g.k} ${R.y + 1.4 * g.k}v${R.h - 2.8 * g.k}`} style={{ fill: 'none', stroke: PAPER, strokeWidth: d ? 2.4 : 1.7 }} />
       </K>
-      {/* The planned completion boundary: a clean navy post at the end of the planned zone. */}
-      <K k="boundary">
-        <path d={`M${g.boundary.x} ${R.y + R.h}V${R.y - g.boundary.h}`} style={{ fill: 'none', stroke: navy, strokeWidth: d ? 1.6 : 1.2 }} />
-        <rect x={g.boundary.x - 2.5 * g.k} y={R.y - g.boundary.h - 2.5 * g.k} width={5 * g.k} height={5 * g.k} rx={1} style={{ fill: navy }} />
+      {/* The planned completion date: a thin navy line on the seam where the planned zone meets the overrun, drawn up from
+          the runway to a compact navy tag. The established target, fixed throughout; no calendar date. */}
+      <Drawn k="boundary" d={`M${B.x} ${R.y + R.h}V${R.y - B.h}`} stroke={navy} width={d ? 1.4 : 1} />
+      <K k="boundaryLabel">
+        <rect x={B.x - dateW / 2} y={R.y - B.h - B.tag.h} width={dateW} height={B.tag.h} rx={2} style={{ fill: navy }} />
+        <text x={B.x} y={R.y - B.h - B.tag.h / 2 + B.tag.size * 0.36} textAnchor="middle" style={caps(B.tag.size, PAPER, 700)}>
+          {LANDING_WORDS.date}
+        </text>
       </K>
       {/* The stop: a small amber marker at the aircraft's nose, where it came to rest. */}
       <K k="stop">
@@ -965,7 +999,7 @@ function PredictabilityVisual({ mode }: { mode: OwnerMode }) {
         <path
           d={(() => {
             const half = textWidth(LANDING_WORDS.target, T.zone, { caps: true, tracking: 0.08 }) / 2;
-            const cx = (g.target.x0 + g.target.x1) / 2 - half - (d ? 11 : 8);
+            const cx = g.zoneLabelX.target - half - (d ? 11 : 8);
             const cy = g.labelY - T.zone * 0.35;
             const s2 = d ? 4 : 3;
             return `M${cx - s2} ${cy}l${s2 * 0.7} ${s2 * 0.7}l${s2 * 1.3} ${-s2 * 1.4}`;
@@ -985,7 +1019,8 @@ function PredictabilityVisual({ mode }: { mode: OwnerMode }) {
         {moved(
           <g transform={`translate(${F0.x} ${R.y})`}>
             <K k="forecastLabel">
-              <text x={0} y={-g.forecastLabel} textAnchor="middle" style={caps(T.label, navy, 700)}>
+              {/* A paper halo, so the planned completion date's line breaks behind these words where they pass it. */}
+              <text x={0} y={-g.forecastLabel} textAnchor="middle" style={{ ...caps(T.label, navy, 700), stroke: PAPER, strokeWidth: d ? 3 : 2.4, strokeLinejoin: 'round', paintOrder: 'stroke' }}>
                 {LANDING_WORDS.forecast}
               </text>
               <path d={`M0 ${-g.forecastLabel + (d ? 3 : 2)}V${-g.forecastH + 1}`} style={{ fill: 'none', stroke: navy, strokeWidth: d ? 1.2 : 0.9 }} />
@@ -999,6 +1034,9 @@ function PredictabilityVisual({ mode }: { mode: OwnerMode }) {
           </g>,
         )}
       </K>
+
+      {/* The planned approach, annotated: the planning path. Beneath its start, clear of the aircraft and the waypoints. */}
+      {note('planLead', 'planNote', g.planNote, LANDING_WORDS.plan)}
 
       {/* Procurement planning: three waypoints on the planned approach, each appearing ahead of the aircraft and checked as it passes. */}
       {g.gates.map((gate, i) => (
@@ -1028,6 +1066,8 @@ function PredictabilityVisual({ mode }: { mode: OwnerMode }) {
                   <Turboprop />
                 </g>
               </K>
+              {/* The aircraft, annotated: the project. In its own groups, so it travels and rests with it. */}
+              <K k="projectLevel">{note('projectLead', 'projectNote', g.projectNote, LANDING_WORDS.project)}</K>
             </K>
           </K>
         </K>
