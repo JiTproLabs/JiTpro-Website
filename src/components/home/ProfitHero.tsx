@@ -1,4 +1,5 @@
 import { ArrowRight, ChevronRight } from 'lucide-react';
+import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 
 /**
@@ -9,7 +10,10 @@ import { Link } from 'react-router-dom';
  *             replacing "Your project. Your team. Our expertise.", itself
  *             revised 2026-11-05 from "Built by contractors")
  *   H1        "Broken schedules? / Broken promises? / Broken profits?" — one
- *             h1, three lines, all in primary ink (revised 2026-11-05)
+ *             h1, three lines, all in primary ink (revised 2026-11-05) —
+ *             turning, one line at a time, into "Keep your schedules. / Keep
+ *             your promises. / Keep your profits." (the headline turn,
+ *             2026-11-15)
  *   STATEMENT "JiTpro helps protect your schedule, your promises, and your
  *             profits by getting the field what it needs, when it needs it."
  *             (copy revised 2026-11-13; three lines from `sm`, four on phones)
@@ -22,8 +26,10 @@ import { Link } from 'react-router-dom';
  * typical desktop viewport, so the spacing between them is deliberately
  * tight and the headline sits one step below the previous hero's scale.
  *
- * NO MOTION (2026-11-13). Every word of the hero is there on load; nothing
- * fades, rotates or waits. The entrance animation and the hand-drawn
+ * ONE MOTION (2026-11-15; was NO MOTION, 2026-11-13). Every word of the hero
+ * is there on load; the headline turn is the only thing that moves, once,
+ * resolving at 6.0 s. The eyebrow, the supporting statement and the actions
+ * never move. The entrance animation and the hand-drawn
  * underline of the previous hero (HomeHero.tsx, kept in place and preserved
  * at tag `homepage-pre-messaging-simplification-2026-11-05`) do not carry
  * over.
@@ -42,6 +48,31 @@ import { Link } from 'react-router-dom';
 // Very light grain over the hero lighting, matching HomeHero.tsx.
 const HERO_NOISE =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E";
+
+/* ------------------------------------------------------- headline turn */
+
+/** The headline's three lines: each question and the outcome it turns into. */
+const HEADLINE_TURNS = [
+  { question: 'Broken schedules?', outcome: 'Keep your schedules.' },
+  { question: 'Broken promises?', outcome: 'Keep your promises.' },
+  { question: 'Broken profits?', outcome: 'Keep your profits.' },
+] as const;
+
+/**
+ * The one clock for the headline turn (§46.3, Decision Log 2026-11-15): a
+ * 1.95 s hold on the questions, then each line turns over 900 ms with 675 ms
+ * between turns, resolving at 1950 + 3 × 900 + 2 × 675 = 6000 ms.
+ */
+const HEADLINE_TURN_CLOCK = { holdMs: 1950, turnMs: 900, pauseMs: 675 } as const;
+
+/** Line `index`'s timing, derived from the clock and read by both its texts. */
+function headlineTurnTiming(index: number): CSSProperties {
+  const { holdMs, turnMs, pauseMs } = HEADLINE_TURN_CLOCK;
+  return {
+    '--jp-hero-turn-delay': `${holdMs + index * (turnMs + pauseMs)}ms`,
+    '--jp-hero-turn-duration': `${turnMs}ms`,
+  } as CSSProperties;
+}
 
 /* ---------------------------------------------------------------- hero */
 
@@ -94,11 +125,33 @@ export default function ProfitHero() {
         </p>
 
         {/* One h1, three lines, all in primary ink. One step smaller below
-            `sm` so each question holds a single line on a narrow phone. */}
-        <h1 className="mx-auto mt-4 text-center font-heading text-[2rem] font-extrabold leading-[1.04] tracking-[-0.03em] text-jp-text-primary sm:mt-5 sm:text-[3rem] lg:text-[3.5rem] xl:text-[3.75rem]">
-          <span className="block">Broken schedules?</span>
-          <span className="block">Broken promises?</span>
-          <span className="block">Broken profits?</span>
+            `sm`, and below about 413 px scaled with the viewport (7.75vw), so
+            the longest outcome, "Keep your schedules.", holds a single line
+            within the gutters down to 320 px.
+
+            The headline turn (§20.1, 2026-11-15): assistive technology
+            receives the resolved headline once, as stable text; the animated
+            lines are hidden from it. Each line is a one-cell grid holding the
+            question and the outcome in the same cell, so it reserves the
+            wider of the two and nothing shifts as it turns. */}
+        <h1 className="mx-auto mt-4 text-center font-heading text-[length:min(2rem,7.75vw)] font-extrabold leading-[1.04] tracking-[-0.03em] text-jp-text-primary sm:mt-5 sm:text-[3rem] lg:text-[3.5rem] xl:text-[3.75rem]">
+          <span className="sr-only">{HEADLINE_TURNS.map((line) => line.outcome).join(' ')}</span>
+          <span aria-hidden="true">
+            {HEADLINE_TURNS.map((line, index) => (
+              <span
+                key={line.outcome}
+                className="grid justify-items-center"
+                style={headlineTurnTiming(index)}
+              >
+                <span className="jp-hero-turn-out pointer-events-none col-start-1 row-start-1 whitespace-nowrap select-none">
+                  {line.question}
+                </span>
+                <span className="jp-hero-turn-in col-start-1 row-start-1 whitespace-nowrap">
+                  {line.outcome}
+                </span>
+              </span>
+            ))}
+          </span>
         </h1>
 
         {/* The supporting statement: the value proposition, in Brand Amber,
