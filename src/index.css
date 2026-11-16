@@ -444,63 +444,83 @@
   }
 }
 
-/* The homepage hero headline turn (Design System §20.1, Decision Log
-   2026-11-15): each question gives way to its outcome in the same place.
+/* The homepage hero's three-act headline (Design System §20.1, Decision Log
+   2026-11-15): the problem → the turning point → the outcome, in one region.
 
-   One shared clock (§46.3): ProfitHero.tsx derives every line's start from a
-   single timing definition and sets it on the line as `--jp-hero-turn-delay`
-   and `--jp-hero-turn-duration`; the line's outgoing and incoming text both
-   read those two properties, so they cannot disagree.
+   One shared clock (§46.3): ProfitHero.tsx derives every act's start and
+   duration from a single ordered list of stages and sets them on the act as
+   custom properties; nothing here restates a time.
 
-   The RESTING state is the outcome: the question's own style is invisible and
-   the outcome's is visible, and the questions exist only in the animation's
-   held first frame (`both`). If the animation cannot run, or under reduced
-   motion (§46.5), the outcomes show. Opacity and transform only, so nothing
-   around the line moves. */
-@keyframes jp-hero-turn-out {
-  0% {
+   The treatment, fade and blur: a DISSOLVE loses opacity, gains a blur and
+   rises very slightly, a soft haze rather than a cut; a RESOLVE comes from
+   transparent and blurred to sharp and opaque, in place.
+
+   The RESTING state is the outcome: Acts 1 and 2 are invisible at rest and
+   exist only inside their animations, and Act 3 is visible at rest. If the
+   animation cannot run, or under reduced motion (§46.5), the outcome shows.
+   Opacity, filter and transform only, so nothing around the headline moves. */
+@keyframes jp-hero-dissolve {
+  from {
     opacity: 1;
+    filter: blur(0);
     transform: translate3d(0, 0, 0);
   }
-  60%,
-  100% {
+  to {
     opacity: 0;
-    transform: translate3d(0, -0.16em, 0);
+    filter: blur(0.12em);
+    transform: translate3d(0, -0.08em, 0);
   }
 }
 
-@keyframes jp-hero-turn-in {
-  0%,
-  40% {
+@keyframes jp-hero-resolve {
+  from {
     opacity: 0;
-    transform: translate3d(0, 0.16em, 0);
+    filter: blur(0.12em);
   }
-  100% {
+  to {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
+    filter: blur(0);
   }
 }
 
-.jp-hero-turn-out,
-.jp-hero-turn-in {
-  animation-duration: var(--jp-hero-turn-duration, 900ms);
-  animation-delay: var(--jp-hero-turn-delay, 0ms);
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  animation-fill-mode: both;
-}
-
-.jp-hero-turn-out {
+/* Act 1, the problem: visible from the first frame (the dissolve's held first
+   frame), then dissolves. */
+.jp-hero-act-problem {
   opacity: 0;
-  animation-name: jp-hero-turn-out;
+  animation: jp-hero-dissolve var(--jp-hero-out-duration) cubic-bezier(0.4, 0, 0.6, 1)
+    var(--jp-hero-out-delay) both;
 }
 
-.jp-hero-turn-in {
-  animation-name: jp-hero-turn-in;
+/* Act 2, the turning point: resolves, holds, dissolves. The resolve fills
+   backwards (hidden until it starts) and forwards (shown until the dissolve
+   starts); the dissolve fills forwards only, so it never masks the resolve. */
+.jp-hero-act-turn {
+  opacity: 0;
+  animation:
+    jp-hero-resolve var(--jp-hero-in-duration) cubic-bezier(0, 0, 0.58, 1)
+      var(--jp-hero-in-delay) both,
+    jp-hero-dissolve var(--jp-hero-out-duration) cubic-bezier(0.4, 0, 0.6, 1)
+      var(--jp-hero-out-delay) forwards;
+}
+
+/* Act 3, the outcome: resolves and stays. */
+.jp-hero-act-outcome {
+  animation: jp-hero-resolve var(--jp-hero-in-duration) cubic-bezier(0, 0, 0.58, 1)
+    var(--jp-hero-in-delay) both;
+}
+
+/* The supporting statement, revealed after the outcome (§20.1, Decision Log
+   2026-11-15): opacity only, reusing `hero-fade-in`. It holds its layout space
+   throughout (opacity never affects layout) and is visible at rest. */
+.jp-hero-statement-reveal {
+  animation: hero-fade-in var(--jp-hero-in-duration) ease-out var(--jp-hero-in-delay) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .jp-hero-turn-out,
-  .jp-hero-turn-in {
+  .jp-hero-act-problem,
+  .jp-hero-act-turn,
+  .jp-hero-act-outcome,
+  .jp-hero-statement-reveal {
     animation: none;
   }
 }

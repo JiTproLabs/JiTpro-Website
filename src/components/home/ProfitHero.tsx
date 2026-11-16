@@ -9,16 +9,18 @@ import { Link } from 'react-router-dom';
  *   EYEBROW   "One project. Your team. Our expertise." (revised 2026-11-13,
  *             replacing "Your project. Your team. Our expertise.", itself
  *             revised 2026-11-05 from "Built by contractors")
- *   H1        "Broken schedules? / Broken promises? / Broken profits?" — one
- *             h1, three lines, all in primary ink (revised 2026-11-05) —
- *             turning, one line at a time, into "Keep your schedules. / Keep
- *             your promises. / Keep your profits." (the headline turn,
- *             2026-11-15)
+ *   H1        one h1 in primary ink telling three acts in one region (the
+ *             three-act headline, 2026-11-15): "Broken schedules? / Broken
+ *             promises? / Broken profits?" (the problem, revised 2026-11-05),
+ *             "It doesn't have to be this way." (the turning point), and
+ *             "Keep your schedules. / Keep your promises. / Keep your
+ *             profits." (the outcome, which stays)
  *   STATEMENT "JiTpro helps protect your schedule, your promises, and your
  *             profits by getting the field what it needs, when it needs it."
  *             (copy revised 2026-11-13; three lines from `sm`, four on phones)
- *             beneath the headline, static and visible on load (revised
- *             2026-11-13, replacing the rotating message sequence)
+ *             beneath the headline, holding its place from load and fading
+ *             in after the headline's outcome (2026-11-15; was static and
+ *             visible on load, 2026-11-13)
  *   ACTIONS   the primary to /contact and the quiet secondary to /learn-more
  *
  * COMPACT BY DESIGN (revised 2026-11-05 after review): the headline, the
@@ -26,10 +28,10 @@ import { Link } from 'react-router-dom';
  * typical desktop viewport, so the spacing between them is deliberately
  * tight and the headline sits one step below the previous hero's scale.
  *
- * ONE MOTION (2026-11-15; was NO MOTION, 2026-11-13). Every word of the hero
- * is there on load; the headline turn is the only thing that moves, once,
- * resolving at 6.0 s. The eyebrow, the supporting statement and the actions
- * never move. The entrance animation and the hand-drawn
+ * MOTION (2026-11-15; was NO MOTION, 2026-11-13). The three-act headline
+ * plays once, resting on the outcome at 8.0 s; the supporting statement then
+ * fades in, opacity only, from 9.2 s to 10.1 s, both on one clock. The eyebrow and the actions never
+ * move, and nothing changes position. The entrance animation and the hand-drawn
  * underline of the previous hero (HomeHero.tsx, kept in place and preserved
  * at tag `homepage-pre-messaging-simplification-2026-11-05`) do not carry
  * over.
@@ -49,30 +51,59 @@ import { Link } from 'react-router-dom';
 const HERO_NOISE =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E";
 
-/* ------------------------------------------------------- headline turn */
+/* -------------------------------------------------- three-act headline */
 
-/** The headline's three lines: each question and the outcome it turns into. */
-const HEADLINE_TURNS = [
-  { question: 'Broken schedules?', outcome: 'Keep your schedules.' },
-  { question: 'Broken promises?', outcome: 'Keep your promises.' },
-  { question: 'Broken profits?', outcome: 'Keep your profits.' },
-] as const;
+/** Act 1, the problem, and Act 3, the outcome: three lines each. */
+const HEADLINE_PROBLEM = ['Broken schedules?', 'Broken promises?', 'Broken profits?'] as const;
+const HEADLINE_OUTCOME = ['Keep your schedules.', 'Keep your promises.', 'Keep your profits.'] as const;
 
 /**
- * The one clock for the headline turn (§46.3, Decision Log 2026-11-15): a
- * 1.95 s hold on the questions, then each line turns over 900 ms with 675 ms
- * between turns, resolving at 1950 + 3 × 900 + 2 × 675 = 6000 ms.
+ * The one clock for the three-act headline (§46.3, Decision Log 2026-11-15).
+ * Every act's timing below is derived from these durations, in order:
+ * problem hold 2300 → dissolve 700 → pause 400 → turning point resolve 600 →
+ * hold 2000 → dissolve 800 → pause 400 → outcome resolve 800 = 8000 ms;
+ * then, for the supporting statement, pause 1200 → fade in 900 = 10100 ms.
  */
-const HEADLINE_TURN_CLOCK = { holdMs: 1950, turnMs: 900, pauseMs: 675 } as const;
+const HEADLINE_CLOCK = {
+  problemHoldMs: 2300,
+  problemDissolveMs: 700,
+  pauseMs: 400,
+  turnResolveMs: 600,
+  turnHoldMs: 2000,
+  turnDissolveMs: 800,
+  outcomeResolveMs: 800,
+  statementPauseMs: 1200,
+  statementFadeMs: 900,
+} as const;
 
-/** Line `index`'s timing, derived from the clock and read by both its texts. */
-function headlineTurnTiming(index: number): CSSProperties {
-  const { holdMs, turnMs, pauseMs } = HEADLINE_TURN_CLOCK;
-  return {
-    '--jp-hero-turn-delay': `${holdMs + index * (turnMs + pauseMs)}ms`,
-    '--jp-hero-turn-duration': `${turnMs}ms`,
-  } as CSSProperties;
-}
+const turnInMs = HEADLINE_CLOCK.problemHoldMs + HEADLINE_CLOCK.problemDissolveMs + HEADLINE_CLOCK.pauseMs;
+const turnOutMs = turnInMs + HEADLINE_CLOCK.turnResolveMs + HEADLINE_CLOCK.turnHoldMs;
+const outcomeInMs = turnOutMs + HEADLINE_CLOCK.turnDissolveMs + HEADLINE_CLOCK.pauseMs;
+const statementInMs = outcomeInMs + HEADLINE_CLOCK.outcomeResolveMs + HEADLINE_CLOCK.statementPauseMs;
+
+const ms = (value: number) => `${value}ms`;
+
+/** Each act's timing, read by its class in index.css. */
+const HEADLINE_ACT_TIMING = {
+  problem: {
+    '--jp-hero-out-delay': ms(HEADLINE_CLOCK.problemHoldMs),
+    '--jp-hero-out-duration': ms(HEADLINE_CLOCK.problemDissolveMs),
+  },
+  turn: {
+    '--jp-hero-in-delay': ms(turnInMs),
+    '--jp-hero-in-duration': ms(HEADLINE_CLOCK.turnResolveMs),
+    '--jp-hero-out-delay': ms(turnOutMs),
+    '--jp-hero-out-duration': ms(HEADLINE_CLOCK.turnDissolveMs),
+  },
+  outcome: {
+    '--jp-hero-in-delay': ms(outcomeInMs),
+    '--jp-hero-in-duration': ms(HEADLINE_CLOCK.outcomeResolveMs),
+  },
+  statement: {
+    '--jp-hero-in-delay': ms(statementInMs),
+    '--jp-hero-in-duration': ms(HEADLINE_CLOCK.statementFadeMs),
+  },
+} as unknown as Record<'problem' | 'turn' | 'outcome' | 'statement', CSSProperties>;
 
 /* ---------------------------------------------------------------- hero */
 
@@ -124,39 +155,56 @@ export default function ProfitHero() {
           One project. Your team. Our expertise.
         </p>
 
-        {/* One h1, three lines, all in primary ink. One step smaller below
-            `sm`, and below about 413 px scaled with the viewport (7.75vw), so
-            the longest outcome, "Keep your schedules.", holds a single line
-            within the gutters down to 320 px.
+        {/* One h1 in primary ink. One step smaller below `sm`, and below
+            about 413 px scaled with the viewport (7.75vw), so the longest
+            line, "Keep your schedules.", holds a single line within the
+            gutters down to 320 px.
 
-            The headline turn (§20.1, 2026-11-15): assistive technology
-            receives the resolved headline once, as stable text; the animated
-            lines are hidden from it. Each line is a one-cell grid holding the
-            question and the outcome in the same cell, so it reserves the
-            wider of the two and nothing shifts as it turns. */}
+            The three-act headline (§20.1, 2026-11-15): assistive technology
+            receives the outcome once, as stable text; the animated acts are
+            hidden from it. The three acts share one grid cell, so the region
+            is always the size of the largest act and nothing around it moves.
+            The turning point sits centred in that region and may wrap to two
+            balanced lines where one does not fit. */}
         <h1 className="mx-auto mt-4 text-center font-heading text-[length:min(2rem,7.75vw)] font-extrabold leading-[1.04] tracking-[-0.03em] text-jp-text-primary sm:mt-5 sm:text-[3rem] lg:text-[3.5rem] xl:text-[3.75rem]">
-          <span className="sr-only">{HEADLINE_TURNS.map((line) => line.outcome).join(' ')}</span>
-          <span aria-hidden="true">
-            {HEADLINE_TURNS.map((line, index) => (
-              <span
-                key={line.outcome}
-                className="grid justify-items-center"
-                style={headlineTurnTiming(index)}
-              >
-                <span className="jp-hero-turn-out pointer-events-none col-start-1 row-start-1 whitespace-nowrap select-none">
-                  {line.question}
+          <span className="sr-only">{HEADLINE_OUTCOME.join(' ')}</span>
+          <span aria-hidden="true" className="grid">
+            <span
+              className="jp-hero-act-problem pointer-events-none col-start-1 row-start-1 select-none"
+              style={HEADLINE_ACT_TIMING.problem}
+            >
+              {HEADLINE_PROBLEM.map((line) => (
+                <span key={line} className="block whitespace-nowrap">
+                  {line}
                 </span>
-                <span className="jp-hero-turn-in col-start-1 row-start-1 whitespace-nowrap">
-                  {line.outcome}
+              ))}
+            </span>
+            <span
+              className="jp-hero-act-turn pointer-events-none col-start-1 row-start-1 self-center text-balance select-none"
+              style={HEADLINE_ACT_TIMING.turn}
+            >
+              It doesn&apos;t have to be this way.
+            </span>
+            <span
+              className="jp-hero-act-outcome col-start-1 row-start-1"
+              style={HEADLINE_ACT_TIMING.outcome}
+            >
+              {HEADLINE_OUTCOME.map((line) => (
+                <span key={line} className="block whitespace-nowrap">
+                  {line}
                 </span>
-              </span>
-            ))}
+              ))}
+            </span>
           </span>
         </h1>
 
         {/* The supporting statement: the value proposition, in Brand Amber,
-            below the headline's scale so the headline stays dominant. */}
-        <p className="mx-auto mt-5 max-w-[34ch] text-center font-heading text-[1.25rem] font-bold leading-[1.3] tracking-[-0.015em] text-balance text-jp-brand-amber sm:mt-6 sm:max-w-[40ch] sm:text-[1.5rem] lg:text-[1.625rem]">
+            below the headline's scale so the headline stays dominant. It
+            holds its place from the first frame and fades in, opacity only,
+            1.2 s after the outcome has resolved (§20.1, 2026-11-15). */}
+        <p
+          style={HEADLINE_ACT_TIMING.statement}
+          className="jp-hero-statement-reveal mx-auto mt-5 max-w-[34ch] text-center font-heading text-[1.25rem] font-bold leading-[1.3] tracking-[-0.015em] text-balance text-jp-brand-amber sm:mt-6 sm:max-w-[40ch] sm:text-[1.5rem] lg:text-[1.625rem]">
           JiTpro helps protect your schedule, your promises, and your profits by getting the field what it needs, when it needs it.
         </p>
 
