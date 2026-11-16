@@ -443,3 +443,64 @@
     animation: none;
   }
 }
+
+/* The homepage hero headline turn (Design System §20.1, Decision Log
+   2026-11-15): each question gives way to its outcome in the same place.
+
+   One shared clock (§46.3): ProfitHero.tsx derives every line's start from a
+   single timing definition and sets it on the line as `--jp-hero-turn-delay`
+   and `--jp-hero-turn-duration`; the line's outgoing and incoming text both
+   read those two properties, so they cannot disagree.
+
+   The RESTING state is the outcome: the question's own style is invisible and
+   the outcome's is visible, and the questions exist only in the animation's
+   held first frame (`both`). If the animation cannot run, or under reduced
+   motion (§46.5), the outcomes show. Opacity and transform only, so nothing
+   around the line moves. */
+@keyframes jp-hero-turn-out {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  60%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -0.16em, 0);
+  }
+}
+
+@keyframes jp-hero-turn-in {
+  0%,
+  40% {
+    opacity: 0;
+    transform: translate3d(0, 0.16em, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.jp-hero-turn-out,
+.jp-hero-turn-in {
+  animation-duration: var(--jp-hero-turn-duration, 900ms);
+  animation-delay: var(--jp-hero-turn-delay, 0ms);
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: both;
+}
+
+.jp-hero-turn-out {
+  opacity: 0;
+  animation-name: jp-hero-turn-out;
+}
+
+.jp-hero-turn-in {
+  animation-name: jp-hero-turn-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jp-hero-turn-out,
+  .jp-hero-turn-in {
+    animation: none;
+  }
+}
