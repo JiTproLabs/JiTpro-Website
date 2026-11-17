@@ -138,7 +138,8 @@ function usePageMeta(title: string, description: string) {
  * ONE IMAGE ELEMENT, TWO FRAMES. Below `lg` the image fills a full-bleed
  * band after the copy (object-cover, framed on the dark wall). From `lg` it
  * is a box at the photograph's own aspect ratio, anchored right and centred
- * vertically in the section, at least 1100 px wide (so the wall can hold the
+ * vertically in the section, then lifted up to 100 px but never above the
+ * section's foot (founder review 2026-11-17), at least 1100 px wide (so the wall can hold the
  * consequences, while the building stays right of the copy at 1024 px) and at most 2000 px. One download at every width.
  *
  * THE GROUP IN IMAGE COORDINATES (founder review 2026-11-16). From `lg` the
@@ -257,7 +258,7 @@ function Hero() {
           {/* Authored in sentence case, uppercased in CSS (§7.7). */}
           <p className="flex items-center gap-4 font-mono text-xs font-bold uppercase tracking-[0.16em] text-jp-brand-amber sm:text-sm sm:tracking-[0.18em]">
             <span aria-hidden="true" className="block h-[3px] w-12 shrink-0 bg-jp-brand-amber sm:w-16" />
-            Your partner in project readiness
+            Protecting your profits.
           </p>
 
           {/* Title case, as approved (§55.2). Three set lines; below `sm`
@@ -297,7 +298,11 @@ function Hero() {
             `lg` the wrapper is static, so the image box is placed against
             the section. */}
         <div className="relative -mx-6 sm:-mx-8 lg:static lg:mx-0">
-          <div className="@container absolute inset-0 -z-20 lg:inset-auto lg:top-1/2 lg:right-0 lg:aspect-[1672/941] lg:w-[max(100%,1100px)] lg:max-w-[2000px] lg:-translate-y-1/2 lg:[mask-image:linear-gradient(180deg,transparent_0%,black_9%,black_90%,transparent_100%)]">
+          {/* From `lg`, the box is placed by its foot (§55.3, founder review
+              2026-11-17): centred, then lifted up to 6.25rem, clamped so the
+              foot never rises above the section's. --hero-box-h restates the
+              box's own height (its width at the photograph's aspect). */}
+          <div className="@container absolute inset-0 -z-20 lg:inset-auto lg:right-0 lg:bottom-[max(calc(50%_-_var(--hero-box-h)/2),min(0px,calc(50%_-_var(--hero-box-h)/2_+_6.25rem)))] lg:aspect-[1672/941] lg:w-[max(100%,1100px)] lg:max-w-[2000px] lg:[--hero-box-h:calc(min(max(100vw,1100px),2000px)*941/1672)] lg:[mask-image:linear-gradient(180deg,transparent_0%,black_9%,black_90%,transparent_100%)]">
             <img
               src={`${HERO_IMAGE}-1672.webp`}
               srcSet={`${HERO_IMAGE}-960.webp 960w, ${HERO_IMAGE}-1672.webp 1672w`}
