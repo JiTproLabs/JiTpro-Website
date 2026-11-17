@@ -16,6 +16,7 @@ import {
   LIST_TOTAL,
   ROW_ITEMS,
   buildPlanScene,
+  frameOf,
   HEADER,
   calendarGrid,
   listCrossingFade,
@@ -168,7 +169,14 @@ export default function PlanChainPreview({
       el,
       id: el.dataset.longLabel!,
     }));
-    let frame: Frame = { w: frameEl.clientWidth, h: frameEl.clientHeight, aside: region };
+    /* The frame the views are computed from. A box with no area (hidden, or
+       between layouts while the viewport is resized or device emulation is
+       switched) has no view: applying it would write NaN transforms. Until
+       the box has a real size nothing is applied; after that, the last real
+       frame is kept until the next real one arrives. */
+    const measured = () => frameOf(frameEl.clientWidth, frameEl.clientHeight, region);
+    let frame: Frame = measured() ?? { w: 0, h: 0, aside: region };
+    let hasArea = frame.w > 0;
 
     const apply = (s: PlanState) => {
       canvas.style.transform = transformOf(s.view, frame);
@@ -411,16 +419,19 @@ export default function PlanChainPreview({
       startedAt.current ??= performance.now();
       const tick = () => {
         t = Math.min(endAt, performance.now() - startedAt.current!);
-        apply(stateAt(frame, t));
+        if (hasArea) apply(stateAt(frame, t));
         if (t < endAt) raf = requestAnimationFrame(tick);
       };
       raf = requestAnimationFrame(tick);
     }
-    apply(stateAt(frame, played && !reduced ? Math.min(endAt, performance.now() - startedAt.current!) : t));
+    if (hasArea) apply(stateAt(frame, played && !reduced ? Math.min(endAt, performance.now() - startedAt.current!) : t));
 
     /* A resize re-frames the same moment: every view is computed from the frame. */
     const ro = new ResizeObserver(() => {
-      frame = { w: frameEl.clientWidth, h: frameEl.clientHeight, aside: region };
+      const next = measured();
+      if (!next) return;
+      frame = next;
+      hasArea = true;
       apply(stateAt(frame, t));
     });
     ro.observe(frameEl);

@@ -553,6 +553,17 @@ export type Frame = {
    */
   list?: false;
 };
+/**
+ * The frame for a measured box, or null when the box has no area (not laid
+ * out: hidden, or between layouts while the viewport is being resized or the
+ * browser switches device emulation). Every camera scale is derived from the
+ * frame's size, so a 0 x 0 frame divides by zero and the views, label shifts
+ * and header become NaN. Callers keep their last real frame instead.
+ */
+export function frameOf(w: number, h: number, aside: Rect | null = null): Frame | null {
+  return Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0 ? { w, h, aside } : null;
+}
+
 /** The canvas point at the frame's centre, and the scale. */
 export type CameraView = { cx: number; cy: number; scale: number };
 

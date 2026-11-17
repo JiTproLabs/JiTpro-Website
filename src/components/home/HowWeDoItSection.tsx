@@ -3,80 +3,133 @@ import { Link } from 'react-router-dom';
 
 /**
  * The *How we do it* band (Design System Section 54.1; Decision Log
- * 2026-11-09, restoring the intro panel of 2026-11-06 / heading 2026-11-07).
+ * 2026-11-09, restoring the intro panel of 2026-11-06 / heading 2026-11-07;
+ * redesigned 2026-11-17 to the founder-approved Formula 1 reference
+ * docs/design/assets/homepage-how-we-do-it/
+ * precision-planning-peak-performance-reference.png, issue #84).
  *
- * This was the unnumbered intro panel that opened the *Know what's coming*
- * step stack. When that section left the homepage on 2026-11-09, the band
- * went with it unintentionally; it is restored here, directly before the
- * audience section, from the archived implementation at commit `2ea5926`
- * (tag `homepage-four-step-stack-2026-11-09`). The original stays, untouched,
- * inside KnowWhatsComingSection.tsx.
+ * The Formula 1 car is a metaphor for disciplined preparation, precision and
+ * coordination, not for speed: it stands still, front on, in a dark studio.
+ * It is a founder-approved, section-scoped exception to Sections 17.1 and
+ * 48.8 (Decision Log 2026-11-17), aria-hidden with empty alt text.
  *
- * COPY, LAYOUT, TYPE, COLOR AND SPACING ARE THE ARCHIVED PANEL'S, class for
- * class. Two deliberate differences, neither visible:
- *   - No `jp-step-stack` and no offset ref. The §46.11 sticky mechanism only
- *     means something inside a stack; outside one it would pin this band to
- *     the top of the view while the rest of the homepage scrolled over it.
- *   - The heading is now this section's h2 (it was an h3 under the old
- *     section's h2). Its register is unchanged.
+ * COMPOSITION
  *
- *   LEFT   eyebrow (amber, §48.7) and the heading at the homepage
- *          section-heading register
- *   RIGHT  the two paragraphs at the secondary body register, the closing
- *          statement at the semibold statement register, then the closing
- *          text link (§54.1, added 2026-11-09): Brand Amber, below the
- *          statement's register, the arrow nudging right on hover only.
+ *   From `xl`: one cinematic band on --jp-background. The car photograph
+ *   (its own studio, black and graphite with amber light and a glossy floor)
+ *   fills the band, anchored right so the car is the dominant element; its
+ *   empty left side fades into the section's navy, so the type sits on the
+ *   same dark ground with no seam and no card. LEFT, vertically centred: the
+ *   amber eyebrow, the h2 at a display register with "performance." in Brand
+ *   Amber, the two supporting paragraphs in near-white, the short amber rule,
+ *   then the band's existing closing link to /product (§54.1), kept.
  *
- * On the elevated dark band tone (--jp-surface, §48.6 hairline). From lg the
- * 5fr/7fr grid the homepage already uses, columns vertically centred in a
- * band at least one view tall; stacked below lg. "Procurement" is the intro
- * panel's scoped exception, carried over (§20.1).
+ *   Below `xl`: the type first, then the photograph as a full-bleed band
+ *   cropped to the car (never through it), fading into the navy at its top
+ *   and foot.
+ *
+ * AMBER (§48.7, with the 2026-11-17 scoped exception): the eyebrow,
+ * "performance.", the short rule and the closing link. No motion (§46).
  */
+
+const CAR = `${import.meta.env.BASE_URL}assets/home/how-we-do-it-f1-car`;
+
+/** --jp-background at a given strength. */
+const scrim = (percent: number) => `color-mix(in oklab, var(--jp-background) ${percent}%, transparent)`;
+
+/** From `xl`: the studio's empty left side fades into the section's navy
+ *  behind the type; a soft fade at the top and foot joins the neighbouring
+ *  sections. The car itself is not darkened. */
+const DESKTOP_FADES = {
+  backgroundImage: [
+    `linear-gradient(90deg, var(--jp-background) 0%, var(--jp-background) 22%, ${scrim(70)} 34%, transparent 46%)`,
+    `linear-gradient(180deg, var(--jp-background) 0%, transparent 12%, transparent 88%, var(--jp-background) 100%)`,
+  ].join(', '),
+};
+
+/** Below `xl`: the band fades into the navy at its top and foot. */
+const BAND_FADES = {
+  backgroundImage: `linear-gradient(180deg, var(--jp-background) 0%, transparent 18%, transparent 80%, var(--jp-background) 100%)`,
+};
+
 export default function HowWeDoItSection() {
   return (
-    <section className="flex flex-col justify-center border-t border-jp-border/12 bg-jp-surface px-6 py-16 sm:px-8 sm:py-20 lg:min-h-[calc(100svh_-_5rem_-_1px)] lg:px-10 lg:py-20">
-      <div className="mx-auto w-full max-w-7xl lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center lg:gap-x-14 xl:gap-x-20">
-        <div>
-          <p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-jp-brand-amber sm:text-sm sm:tracking-[0.18em]">
-            How we do it
-          </p>
-          <h2 className="mt-5 max-w-[18ch] font-heading text-[1.875rem] font-extrabold leading-[1.12] tracking-[-0.02em] text-balance text-jp-text-primary sm:mt-6 sm:text-[2.5rem] lg:text-[3rem]">
-            The level of procurement planning every project needs, but few receive.
-          </h2>
-        </div>
+    <section className="relative isolate overflow-hidden bg-jp-background xl:flex xl:min-h-[40vw] xl:items-center">
+      {/* The car, from `xl` the band's backdrop. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden xl:block">
+        <img
+          src={`${CAR}-1981.webp`}
+          srcSet={`${CAR}-1200.webp 1200w, ${CAR}-1981.webp 1981w`}
+          sizes="100vw"
+          width={1981}
+          height={793}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover object-right"
+        />
+        <div className="absolute inset-0" style={DESKTOP_FADES} />
+      </div>
 
-        <div className="mt-8 max-w-[58ch] lg:mt-0">
-          <div className="space-y-5 text-[1.0625rem] leading-[1.7] text-jp-text-secondary sm:text-[1.125rem] lg:text-[1.1875rem]">
-            <p>
-              We examine your schedule, drawings, specifications, and project information to identify everything the field will need.
+      <div className="relative w-full px-6 pt-16 sm:px-8 sm:pt-20 xl:pr-0 xl:pl-[max(2.5rem,6.7vw)] xl:py-[clamp(2.5rem,4.5vw,6rem)]">
+        <div className="mx-auto max-w-7xl xl:mx-0 xl:max-w-none">
+          <div className="max-w-[36rem] xl:max-w-[44vw]">
+            <p className="font-mono text-xs font-bold uppercase tracking-[0.24em] text-jp-brand-amber sm:text-sm sm:tracking-[0.26em]">
+              How we do it
             </p>
-            <p>
-              Then we build a detailed, step-by-step procurement plan that shows what needs to happen, in what order, who&apos;s responsible, and when each step must be completed.
+            <h2 className="mt-5 font-heading text-[2.5rem] font-extrabold leading-[1.04] tracking-[-0.03em] text-jp-text-primary sm:mt-6 sm:text-[3.5rem] xl:mt-[clamp(1rem,1.4vw,1.75rem)] xl:text-[clamp(2.75rem,4.1vw,5.25rem)]">
+              <span className="sm:block">Precision planning</span>{' '}
+              <span className="sm:block">
+                for peak <span className="text-jp-brand-amber">performance.</span>
+              </span>
+            </h2>
+            <div className="mt-7 space-y-4 text-[1.125rem] leading-[1.55] text-jp-text-primary/90 sm:mt-8 sm:space-y-5 sm:text-[1.25rem] xl:mt-[clamp(1.5rem,2.2vw,2.75rem)] xl:space-y-[clamp(0.75rem,1.1vw,1.25rem)] xl:text-[clamp(1.0625rem,1.25vw,1.5rem)]">
+              <p className="max-w-[44ch] xl:max-w-[34vw]">
+                Just like a Formula 1 team, we bring discipline, coordination and real-time control to your project.
+              </p>
+              <p className="max-w-[44ch] xl:max-w-[34vw]">
+                Every decision is deliberate. Every step is planned. Every detail is aligned for success.
+              </p>
+            </div>
+            <span aria-hidden="true" className="mt-8 block h-1 w-16 rounded-full bg-jp-brand-amber sm:mt-10 sm:w-20 xl:mt-[clamp(1.5rem,2vw,2.5rem)] xl:w-[clamp(4.5rem,5vw,6.5rem)]" />
+
+            {/* The band's existing closing link (§54.1), kept. One link, text
+                and arrow together; the 12px padding makes the 44px target. */}
+            <p className="mt-5 sm:mt-6 xl:mt-[clamp(0.5rem,0.8vw,1rem)]">
+              <Link
+                to="/product"
+                className="group inline-block rounded py-3 font-heading text-base font-semibold leading-[1.4] text-jp-brand-amber focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jp-text-primary sm:text-[1.0625rem]"
+              >
+                One project at a time. Your team. Our{' '}
+                <span className="whitespace-nowrap">
+                  expertise.
+                  <ArrowRight
+                    size={18}
+                    aria-hidden="true"
+                    className="ml-2 inline-block align-[-0.2em] transition-transform duration-200 ease-out group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+                  />
+                </span>
+              </Link>
             </p>
           </div>
-          <p className="mt-8 font-heading text-[1.25rem] font-semibold leading-[1.35] tracking-[-0.01em] text-balance text-jp-text-primary sm:mt-10 sm:text-[1.4375rem] lg:text-[1.5rem]">
-            Every product. Every required step. Every critical commitment.
-          </p>
-          {/* One link, text and arrow together. The last word and the arrow are
-              kept on one line; the rest wraps as ordinary text. The 12px
-              padding is part of the gap above and makes the 44px target. */}
-          <p className="mt-3 sm:mt-5">
-            <Link
-              to="/product"
-              className="group inline-block rounded py-3 font-heading text-base font-semibold leading-[1.4] text-jp-brand-amber focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-jp-text-primary sm:text-[1.0625rem]"
-            >
-              One project at a time. Your team. Our{' '}
-              <span className="whitespace-nowrap">
-                expertise.
-                <ArrowRight
-                  size={18}
-                  aria-hidden="true"
-                  className="ml-2 inline-block align-[-0.2em] transition-transform duration-200 ease-out group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
-                />
-              </span>
-            </Link>
-          </p>
         </div>
+      </div>
+
+      {/* Below `xl`: the car as a full-bleed band after the type, cropped to
+          the car. */}
+      <div aria-hidden="true" className="pointer-events-none relative mt-6 xl:hidden">
+        <img
+          src={`${CAR}-1981.webp`}
+          srcSet={`${CAR}-1200.webp 1200w, ${CAR}-1981.webp 1981w`}
+          sizes="(min-width: 640px) 145vw, 190vw"
+          width={1981}
+          height={793}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="block aspect-[4/3] w-full object-cover object-[94%_50%] sm:aspect-[16/9] sm:object-[88%_50%]"
+        />
+        <div className="absolute inset-0" style={BAND_FADES} />
       </div>
     </section>
   );

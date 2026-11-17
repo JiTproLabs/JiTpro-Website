@@ -13,6 +13,7 @@ import {
   ROW_ITEMS,
   TIMING,
   buildPlanScene,
+  frameOf,
   APP,
   LIST_ITEM,
   LIST_TITLE_H,
@@ -1047,4 +1048,25 @@ describe('Plan: a long activity keeps its in-bar label in view (refined 2026-11-
       });
     });
   }
+});
+
+describe('Plan: a frame with no area is never applied (rendering fix 2026-11-17)', () => {
+  it('has no frame for a box with no area, or an unmeasurable one', () => {
+    for (const [w, h] of [[0, 0], [0, 373], [598, 0], [-1, 10], [Number.NaN, 10], [10, Number.POSITIVE_INFINITY]]) {
+      expect(frameOf(w, h)).toBeNull();
+    }
+    expect(frameOf(598, 373)).toEqual({ w: 598, h: 373, aside: null });
+  });
+
+  it('gives finite views and label shifts for every frame it accepts, however small', () => {
+    const times = [0, T.chainArrive, T.holdEnd - 1, T.end, T.end + 1000];
+    for (const [w, h] of [[1, 1], [2, 1], [24, 15], [120, 75], [340, 212], [598, 373], [1200, 750]]) {
+      const f = frameOf(w, h)!;
+      for (const t of times) {
+        const s = planStateAt(scene, f, t);
+        expect([s.view.cx, s.view.cy, s.view.scale].every(Number.isFinite)).toBe(true);
+        expect(Object.values(s.labelShift).every(Number.isFinite)).toBe(true);
+      }
+    }
+  });
 });
