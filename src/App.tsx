@@ -31,6 +31,8 @@ import EconomicCase from './pages/investor/EconomicCase';
 import InvestorAppendix from './pages/investor/InvestorAppendix';
 import InvestorDeckPage from './pages/investor/InvestorDeckPage';
 import FAQ from './pages/FAQ';
+import FAQLegacy from './pages/FAQLegacy';
+import RobotsNoindex from './components/RobotsNoindex';
 import MainLayout from './components/MainLayout';
 import Admin from './pages/Admin';
 import AdminApproved from './pages/AdminApproved';
@@ -158,6 +160,18 @@ function App() {
           <Route path="/contact/owner" element={<Navigate to="/contact" replace />} />
           <Route path="/thank-you" element={<ThankYou />} />
           <Route path="/faq" element={<FAQ />} />
+          {/* The original FAQ, preserved unchanged for reference after the new FAQ
+              replaced it (Design System §65). Unlisted: not in navigation,
+              noindex, nofollow. */}
+          <Route
+            path="/faq-legacy"
+            element={
+              <>
+                <RobotsNoindex />
+                <FAQLegacy />
+              </>
+            }
+          />
           {/* Lead magnet: the indexable campaign landing page, and the
               destination every CTA links to so the offer still works without
               JavaScript (lead-gen plan D1.1). */}
