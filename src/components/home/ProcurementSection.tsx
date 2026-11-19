@@ -45,7 +45,7 @@ import {
  *   2  THE RIBBON, the centrepiece: the sixteen activities as large connected
  *      chevrons (dark translucent interior; a bright amber outline with a
  *      restrained static glow; an amber icon and a white label) travelling
- *      right to left in a continuous loop, unnumbered (they overlap and their
+ *      left to right, the way they point, in a continuous loop, unnumbered (they overlap and their
  *      order varies; deliberately mixed). Each chevron moves as one element with its label and
  *      icon. It runs continuously, with no pause control and no pause on
  *      hover or focus (founder direction, 2026-11-17). Under reduced motion

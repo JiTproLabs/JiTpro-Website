@@ -46,6 +46,7 @@ import {
   type TeamId,
 } from './ownerScenes';
 import { SweepingHand } from './SweepingHand';
+import { HOUSE_ELEVATION } from './houseElevation';
 import '../demo/tokens.css';
 import '../demo/screens/procurement-schedule/scheduleTokens.css';
 import '../demo/screens/procurement-chain/chainTokens.css';
@@ -112,44 +113,6 @@ function Paper({ x, y, w, h, rx = 2 }: { x: number; y: number; w: number; h: num
   );
 }
 
-/**
- * The house on the drawings: the Hero's house (`assets/hero/house-render`), redrawn as a front elevation. The render
- * is a night perspective; a plan set shows a building flat, in line. So this is drawn from it, not traced and not
- * placed: the tall pylon with its slot of light, the slatted pergola on the roof, the great roof and its overhang,
- * the glazed upper storey behind a balcony rail, the cantilevered balcony slab, the glazed ground storey with the
- * stair seen through it, the garage, the lower wing to the left with its own roof and balcony, and the entry steps.
- * On the sheet's own 230-unit width, the ground at y = 120. Line only: no fill, no shade, no amber.
- */
-const box = (x: number, y: number, w: number, h: number) => `M${x} ${y}h${w}v${h}h${-w}Z`;
-const HOUSE_ELEVATION = {
-  masses: [
-    box(66, 30, 14, 90), // the pylon
-    box(24, 61, 42, 4), // the left wing's roof
-    box(31, 65, 35, 22), // its upper storey
-    box(16, 87, 50, 4), // its balcony slab
-    box(27, 91, 39, 29), // its lower storey
-    box(80, 55, 100, 4.5), // the great roof
-    box(84, 59.5, 84, 25), // the upper storey
-    box(78, 84.5, 102, 4.5), // the balcony slab
-    box(84, 89, 52, 31), // the glazed ground storey
-    'M136 89H172V120', // the garage wall
-    box(142, 97, 26, 23), // the garage door
-    'M84 55V37H122V55', // the pergola on the roof
-    'M56 120V117H94V120M60 117V114H90V117', // the entry steps
-  ].join(''),
-  detail: [
-    box(71.5, 40, 3, 62), // the slot of light in the pylon
-    'M84 41.5H122M84 46H122M84 50.5H122', // the pergola's slats
-    'M42 65V87M54 65V87M40 91V120M53 91V120', // the left wing's glazing
-    'M16 87V80H31', // its balcony rail
-    'M105 59.5V84.5M126 59.5V84.5M147 59.5V84.5', // the upper storey's glazing
-    'M80 77H180V84.5', // the balcony rail
-    'M101 89V120M118 89V120', // the ground storey's glazing
-    'M104 117L132 93', // the stair, seen through the glass
-    'M142 103H168M142 109H168M142 115H168', // the garage door's panels
-  ].join(''),
-};
-
 /** A stack of architectural drawings: two sheets beneath, the house's front elevation on top. Drawn on 230 x 150 and scaled to the sheet. */
 function DrawingStack({ sheet }: { sheet: { x: number; y: number; w: number; h: number; turn: number } }) {
   const u = sheet.w / 230;
@@ -174,8 +137,8 @@ function DrawingStack({ sheet }: { sheet: { x: number; y: number; w: number; h: 
             them, the ground and a dimension string. */}
         <path d={HOUSE_ELEVATION.masses} style={{ ...ln(0.75), strokeLinejoin: 'round' }} />
         <path d={HOUSE_ELEVATION.detail} style={ln(0.5, 0.5)} />
-        <path d="M10 120H184" style={ln(0.85, 1.1)} />
-        <path d="M16 133H180M16 130v6M80 130v6M180 130v6" style={ln(0.5, 0.5)} />
+        <path d={HOUSE_ELEVATION.ground} style={ln(0.85, 1.1)} />
+        <path d={HOUSE_ELEVATION.dimension} style={ln(0.5, 0.5)} />
         <rect x={14} y={14} width={46} height={2.4} style={docWash(0.35)} />
         {/* The title block, down the right. */}
         <path d={`M186 6V${H - 6}M186 ${H - 44}H${W - 6}`} style={ln(0.4, 0.6)} />
