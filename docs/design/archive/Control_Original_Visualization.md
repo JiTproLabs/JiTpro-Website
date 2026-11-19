@@ -8,6 +8,7 @@
 ## Status in one line
 
 **Control has approved copy and a reserved placeholder. It has no
+**Screenshots and recording (moved 2026-11-18):** the images and the scroll recording this record lists, formerly in `docs/design/archive/control-original/`, are in the external JiTpro design archive, folder `Retired_Concepts/homepage-visualizations/control-original/`, indexed by its `Archive_Manifest.md` (see the notice at the top of `docs/design/JiTpro_Design_System_v1.0.md`). They can also be recovered from Git history at commit `a8c2d5a`.
 visualization, no animation and no data of its own.** Nothing has been built
 for it beyond what every unspecified tab receives. This record documents that
 state exactly, so the redesign starts from a known point.

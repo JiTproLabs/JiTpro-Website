@@ -5,11 +5,17 @@
  *
  * ARCHIVED (2026-11-18, Decision Log; Design System §63). This file lives in
  * docs/design/assets/archive/architects/when-complexity-turns-into-chaos/,
- * outside src/, so it is not part of the application. Beside it:
+ * outside src/, so it is not part of the application. Its images are not in
+ * the repository (since 2026-11-18): they are in the external JiTpro design
+ * archive (JiTpro OneDrive, folder JiTpro_Website_Design_Archive, indexed by
+ * Archive_Manifest.md), under
+ * Retired_Concepts/architects/when-complexity-turns-into-chaos/:
  *   production/  the five served illustrations, formerly
  *                public/assets/roles/architect-consequences-*.webp
  *   reference/   the approved mockup and clean artwork, formerly
  *                docs/design/assets/architect-consequences/
+ * They can also be recovered from Git history at commit a8c2d5a, under
+ * docs/design/assets/archive/architects/when-complexity-turns-into-chaos/.
  * To reuse it: copy this file back under src/ (it was
  * src/components/sections/WhenComplexityTurnsIntoChaos.tsx), copy production/
  * back to public/assets/roles/, import the default export, and write §63 in
