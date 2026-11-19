@@ -56,6 +56,8 @@ TODO:
 
 | Date | Decision | Scope | Owner | Source/Rationale |
 | --- | --- | --- | --- | --- |
+| 2026-11-19 | **About page, Section 3: *What we do* designed (new Section 77; Section 76 amended).** **Why.** Founder brief *Build About JiTpro Section 3, "What We Do"*, from an approved mockup and its text-free artwork: JiTpro builds the plan, establishes the priorities and provides the weekly guidance; the contractor's team executes the work. **What:** a dark `--jp-surface` section. The approved copy is at left. At right, an illustrative *Project Procurement Plan* and the *Weekly Guidance* panel layered over it, joined by *Plan drives the cadence*. A two-sided responsibility bar (JiTpro amber, the team navy) and the closing line follow. The panels are HTML and CSS, drawn from the artwork's geometry; only the artwork's backdrop (the window with the crane, and the desk with drawings) is served. **Not changed:** Sections 1, 2 and 4 to 7, the navigation, the footer and every other page. | Marketing website: `/about` Section 3 | Jeff Kaufman | Founder brief 2026-11-19. Sections 8.1.1, 8.8, 48.4, 48.6, 48.7, 48.8, 76, 77. |
+| 2026-11-18 | **About page restructured into seven sections; Sections 3 to 7 are placeholders (new Section 76).** **Why.** Founder brief *Rebuild the About JiTpro Page Structure*: establish the approved architecture of the service-led About page before each section is designed. **What:** the legacy content below Section 2 is removed (Git history keeps it), along with its section label component and the now-unused principles data. Five placeholders follow, *What we do*, *How we work together*, *Our experience*, *What we believe* and *Our invitation*, each with only its approved eyebrow, `h2` and central message and a temporary *Design pending* indicator. The page wrapper's literal colour classes become their exact token equivalents (`--jp-background`, `--jp-text-primary`). **Not changed:** Sections 1 and 2 (Sections 74 and 75), every other page, the navigation and the footer. | Marketing website: `/about` | Jeff Kaufman | Founder brief 2026-11-18. Sections 7.7, 8.8, 49, 74, 75, 76. |
 | 2026-11-18 | **Historical design artwork moved out of the repository to the external JiTpro design archive.** **Why.** Founder direction: the website repository holds the code and the optimized production assets the site needs; original artwork, mockups, superseded images and retired concepts are stored separately. **What:** 112 files (90.7 MB) from `docs/design/assets/`, `docs/design/archive/` and `docs/design/procurement-chain-reference/` were exported, verified by SHA-256 checksum against the repository, confirmed uploaded to the JiTpro OneDrive (`JiTpro_Website_Design_Archive`, indexed by `Archive_Manifest.md`), and then removed from the repository. They remain recoverable from Git history at commit `a8c2d5a`. A notice at the top of this document explains how to find them. **Not changed:** every file in `public/assets/`; every page; the reference paths and decisions recorded in this document; the FAQ mockup HTML (a test reads it), the Procurement Chain reference HTML and the archived *When Complexity Turns Into Chaos* component source. | Repository: design documentation and assets | Jeff Kaufman | Founder direction 2026-11-18. Section 49. |
 | 2026-11-18 | **Founder story page: the redundant backup of the previous page removed (Section 73 amended); hero resolution recorded for review.** **Why.** Founder direction (repository cleanup): `src/pages/FounderStory.before-founder-redesign.tsx` was a byte-for-byte copy of the previous page, which Git already preserves. **What:** the backup file is removed; the previous page is recoverable as `src/pages/FounderStory.tsx` at commit `4ca1a50`. The hero photograph's resolution is recorded in Section 73.2 as an open item. **Not changed:** the current page, its copy and its photographs. | Marketing website: `/founder-story` (documentation and repository only) | Jeff Kaufman | Founder direction 2026-11-18. Section 73. |
 | 2026-11-18 | **Architects & engineers page: *When Complexity Turns Into Chaos* archived (Section 63 rewritten).** **Why.** Founder direction (repository cleanup): preserve the unused section for possible reuse, outside the active application. **What:** the component, its five illustrations and its approved mockup and artwork move, byte for byte, to `docs/design/assets/archive/architects/when-complexity-turns-into-chaos/`, listed in `docs/design/assets/archive/README.md`. Only the component's header comment changes, to record the archive and how to restore it. **Not changed:** the Architects & engineers page, which never rendered the section. | Marketing website: `/roles/architects-engineers` (repository only) | Jeff Kaufman | Founder direction 2026-11-18. Sections 49, 63. |
@@ -6023,3 +6025,87 @@ Exactly as approved: the eyebrow *Why JiTpro exists*; the `h2` *The pressure sta
 - **From `xl`.** Two equal columns on `--jp-surface-white`: the narrative at left; at right the infographic panel (rounded, a 15% `--jp-ink-secondary` border, a 2% navy wash), sticky beside the longer narrative. The sky and crane fill the panel's head and fade into it; the award pill and the `h3` sit on it; then the two cards side by side (photograph, icon and title, list, pill); the divider with its down arrow; the central statement; the callout (handshake, an amber rule, heading and sentence).
 - **Below `xl`.** Stacked in narrative order, the copy first (at most 44rem), then the panel (at most 46rem). Narrower, two columns crowd the cards. The cards stay side by side from `sm` and stack below it; below `sm` the callout's icon sits above its text.
 - **No motion.**
+
+---
+
+# 76. About page, Sections 3 to 7: approved structure and placeholders
+
+Status: APPROVED (2026-11-18). Direction supplied by Jeff Kaufman (founder brief *Rebuild the About JiTpro Page Structure*). Scope: `/about` only, below Section 2 (Section 75). **Temporary:** each placeholder is replaced when its section is designed, and this section is amended at that time. **Amended 2026-11-19:** Section 3, *What we do*, is designed (Section 77); Sections 4 to 7 remain placeholders.
+
+The page has seven sections, in this order. Sections 1 and 2 are the approved hero (Section 74) and *Why JiTpro exists* (Section 75), unchanged. The page's former content below Section 2 is retired, not archived; Git history keeps it. That content was *Built by people who have lived it*, the principles, *Why we built it*, *Where this is going* and its two actions.
+
+## 76.1 Copy
+
+Each placeholder carries only its approved eyebrow, its exact `h2` and its central message as temporary supporting copy. No other marketing copy, no actions and no imagery.
+
+| # | Eyebrow | `h2` | Central message |
+| --- | --- | --- | --- |
+| 3 | What we do | *We do the work that gets your project ready.* | We don't simply tell your team what needs to be done. We work alongside them and execute the detailed planning. |
+| 4 | How we work together | *We work with the team you already have.* | Your team remains in charge. JiTpro brings focused expertise and additional capacity to the project. |
+| 5 | Our experience | *Built by people who have lived it.* | JiTpro was developed from firsthand experience managing the problems we now help contractors prevent. |
+| 6 | What we believe | *Protect your schedule. Protect your profits. Protect your people.* | Better planning creates better projects, healthier teams, and stronger construction companies. |
+| 7 | Our invitation | *Break the cycle. One project at a time.* | Start with one project. Experience what changes when the work ahead is properly planned. |
+
+Eyebrows are authored in sentence case and uppercased in CSS (Section 7.7). The page's governing theme is *Your project. Your team. Our expertise.*, and its concluding invitation is Section 7. Positioning (binding on every later design of these sections): JiTpro is a service-led company, supported by a disciplined methodology and purpose-built technology. It works alongside the contractor's team and performs the detailed upstream planning. It is not presented primarily as a software product, nor as a staffing agency, nor as a consultant who only makes recommendations.
+
+## 76.2 The placeholder (temporary convention, this page only)
+
+- **Surface.** Sections alternate `--jp-surface-light` (3, 5, 7) and `--jp-surface-white` (4, 6), continuing the light act Section 2 begins on white, so each section reads as distinct during development.
+- **Type.** As Section 75: the eyebrow in JetBrains Mono, bold, uppercase, `--jp-ink-secondary`, after a short `--jp-brand-amber` bar; the `h2` in Inter Tight extrabold, `--jp-background`, a step smaller than Section 75's (`clamp(2rem, 2.8vw, 2.625rem)` from `lg`); the central message at body size in `--jp-background` at 85%. One column, at most 48rem, on the shared `max-w-7xl` frame.
+- **The *Design pending* indicator.** A small pill after the eyebrow: JetBrains Mono, uppercase, `--jp-ink-secondary` on a 1px dashed `--jp-ink-secondary` border at 50%, transparent fill. It is development furniture, not a component: it MUST NOT appear anywhere else, and is removed with its placeholder.
+- **Amber** on the light grounds is decorative only (Section 8.8): the eyebrow bar. No icons, no imagery, no motion.
+
+## 76.3 Structure
+
+`src/pages/About.tsx` holds Sections 1 and 2 and composes the page. Section 3 is `src/components/about/WhatWeDoSection.tsx` (Section 77). Sections 4 to 7 are separate named components in `src/components/about/AboutSections.tsx` (`HowWeWorkTogetherSection`, `OurExperienceSection`, `WhatWeBelieveSection`, `OurInvitationSection`), each rendering the shared placeholder, `PendingSection`, so each can be replaced independently. Every section is a `section` labelled by its `h2`; the page has one `h1` (the hero). The global footer follows Section 7.
+
+---
+
+# 77. About page, Section 3: What we do
+
+Status: APPROVED (2026-11-19). Direction supplied by Jeff Kaufman (founder brief *Build About JiTpro Section 3, "What We Do"*). Scope: `/about` Section 3 only; it replaces that section's placeholder (Section 76).
+
+Reference: the approved mockup and its text-free artwork, supplied 2026-11-19 (*JiTpro Procurement Planning Dashboard.png*, the mockup; *Neon Amber Procurement Dashboard.png*, the artwork, 1672 × 941). Development guidance only, never served; they belong in the external design archive (see the notice at the top of this document).
+
+MESSAGE: JiTpro plans and guides; the contractor's team executes. JiTpro develops the detailed procurement plan, establishes the sequence, dates and priorities, and gives weekly guidance and look-ahead. The contractor's people keep managing their subcontractors and suppliers, submittals and approvals, paperwork, subcontracts and purchase orders, decisions and the work itself, with their own procedures. **Never** imply that JiTpro does the buyout, processes the contractor's submittals or runs its procurement administration; that it guarantees dates; or that the graphic is software the contractor must buy, learn or operate.
+
+## 77.1 Copy
+
+Used exactly:
+- **Eyebrow:** *What we do*.
+- **`h2`:** *We do the work that gets your project ready.*
+- **The two paragraphs:** *We develop the detailed procurement plan …* and *Your people continue managing …*.
+- **The plan graphic:** *Project Procurement Plan*, with *Upcoming commitments*, *Scope gaps*, *Product requirements* and *Submittal / review steps*. Its month labels (*Mar* to *Jun*) are illustrative.
+- **The connector:** *Plan drives the cadence*.
+- **The guidance graphic:** *Weekly Guidance*, with *This week*, *Next 7 days* and *3-week look-ahead*. The brief's description of each column is given to assistive technology only; the visible columns, like the mockup's, show checklists.
+- **The responsibility bar:** *JiTpro provides the plan, priorities, and weekly guidance.* and *Your team executes the work.*
+- **The closing line:** *JiTpro builds the plan, establishes the priorities, and provides the weekly guidance. Your team executes the work.*, its last sentence in `--jp-brand-amber`.
+
+The mockup's tab labels (*Plan*, *Register*, *Milestones*) are not used: as words they would present the graphic as a software product. Their underline marks remain, unlabelled.
+
+## 77.2 Scoped exceptions
+
+- **A dark section after the light Section 2 (Section 48.6).** By direction, Section 3 is the page's immersive change of surface: `--jp-surface`, which matches the artwork's navy wall.
+- **The graphics are HTML and CSS, drawn from the artwork (Section 48.8).** The artwork's panels are drawn in perspective, so their grids and bars slope, and as an image their text positions would hold at one size only. So the plan and guidance panels, the connector and the responsibility bar are rebuilt in HTML and CSS. The schedule's five rows, its amber and slate segments, its month divisions and the dashed *today* line with its diamond are placed from the artwork's own geometry, in percentages of the chart, so they scale with it. The only imagery served is the artwork's backdrop, in `public/assets/about/`. All of it is `aria-hidden`.
+  - `about-what-we-do-window-150.webp`: the window with the crane, from `xl`, at the section's top right.
+  - `about-what-we-do-desk-{960,1672}.webp`: the desk and drawings along the foot; the two thin rules baked into the artwork are removed, and the closing line draws its own.
+- **Icons (Section 48.4).** lucide equivalents of the artwork's line icons: `Layers` (the plan and *Submittal / review steps*, and JiTpro's side of the bar), `CalendarDays` (*Upcoming commitments* and *Weekly Guidance*), `AlertTriangle`, `Package` and `HardHat` (the team's side of the bar).
+- **Amber (Sections 8.1.1, 48.7).** On the navy, amber marks JiTpro:
+  - the eyebrow bar and the rule under the `h2`;
+  - the panels' glowing edges, the plan's icons, its amber schedule segments and the *today* diamond;
+  - the connector and its label;
+  - *This week*'s tab and its ticked boxes;
+  - JiTpro's side of the bar, as an amber wash with an amber edge and a diagonal divide;
+  - the closing line's last sentence.
+  The contractor's side of the bar is navy with a slate edge. The `--jp-surface` / `--jp-surface-white` / `--jp-brand-amber` mixes are written with `color-mix`.
+- **No motion.**
+
+## 77.3 Composition
+
+- **From `xl`:**
+  - **Columns.** Two columns on the `max-w-7xl` frame, about 36 : 64. At left: the eyebrow, the `h2`, a short amber rule and the two paragraphs, the first larger. At right: the graphic.
+  - **The graphic.** The plan panel spans about 88% of the column. Below it, the guidance panel (68%, aligned right) overlaps the plan's lower edge by a fixed 5rem, which covers only the empty foot of the chart, never its bars. In the space to its left, the connector drops from under the plan panel into the *Plan drives the cadence* label, and an arrow runs into the guidance panel.
+  - **The rest.** The responsibility bar and the closing line, between short rules, are centred beneath both columns.
+- **`md` to `xl`.** Stacked: the copy (at most 44rem), then the graphic at full width with the same overlap and connector, the bar on one row with its diagonal.
+- **Below `md`.** A deliberate stack: the copy, the plan panel (its four categories two across above the chart), the connector as a short vertical line, label and down arrow, the guidance panel (its three columns stacked below `sm`), the bar as two stacked halves (JiTpro's over the team's), then the closing line.
+
