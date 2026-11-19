@@ -50,6 +50,8 @@ TODO:
 
 | Date | Decision | Scope | Owner | Source/Rationale |
 | --- | --- | --- | --- | --- |
+| 2026-11-18 | **About page, *Why JiTpro exists* replaced (new Section 75).** **Why.** Founder brief *Replace the "Why JiTpro Exists" Section on the About Page*, from an approved mockup and text-free artwork (`docs/design/assets/about-why/`): at contract award the GC's team faces two workloads at once, and JiTpro joins the team to do the upfront planning. **What:** the former section is removed and a two-column section takes its place: the narrative, and an HTML infographic (two workloads, one team, *JiTpro joins your team.*) using only the artwork's photographs. **Scoped exceptions (Section 75.2)**, including navy for the mockup's blue. **Not changed:** the hero, the later sections and their order, the navigation, the footer, every other page. | Marketing website: `/about` Section 2 | Jeff Kaufman | Founder brief 2026-11-18. Sections 8.1.1, 8.8, 48.7, 48.8, 74. |
+| 2026-11-18 | **About page hero rebuilt (new Section 74).** **Why.** Founder brief *Rebuild the About JiTpro Hero*, from an approved mockup and its text-free photograph (`docs/design/assets/about-hero/`): JiTpro is a hands-on, service-led company working alongside the contractor's team, not another software platform. **What:** a photographic hero with the `h1` *Your project. Your team. Our expertise.*, the approved copy, an amber-barred closing statement and two actions (`/contact`, `/founder-story`). The former opening section's heading becomes an `h2` (that section is since replaced, Section 75). **Scoped exceptions (Section 74.2).** **Not changed:** the rest of the About page, the navigation, the footer, every other page. | Marketing website: `/about` hero | Jeff Kaufman | Founder brief 2026-11-18. Sections 8.1.1, 26.1, 48.1, 48.7, 48.8, 61. |
 | 2026-11-17 | **The new FAQ replaces the original at `/faq`; the original is preserved at `/faq-legacy` (Section 65 amended).** **Why.** Founder approval of the `/faq-preview` review page (brief *Finalize and Publish the New FAQ Page*). **What:** `/faq` now renders the Section 65 page; the navigation's and footer's existing FAQ links reach it unchanged. The original page is kept byte-for-byte (`src/pages/FAQLegacy.tsx`, its content in `faqData.ts`) at `/faq-legacy`: unlisted, noindex, nofollow. The `/faq-preview` route is removed. **Copy correction (founder-approved):** the callout in answers 03 and 09, *The cost of preventing a problem is always substantially less than the cost of recovering from it.*, becomes *In construction, upfront investment in planning and quality control is consistently far less expensive than the cost of rework and delays.* **Kept from the original page:** FAQPage structured data, now generated from the new questions. **Not changed:** every other page and route. | Marketing website: `/faq`, `/faq-legacy` | Jeff Kaufman | Founder approval 2026-11-17. Section 65. |
 | 2026-11-17 | **Candidate FAQ page at `/faq-preview` (new Section 65).** **Why.** Founder brief *Build a Separate JiTpro FAQ Preview Page*: a new FAQ for founder review beside the live one, before any replacement. **What:** a navy hero (*Less chaos. More clarity.*, a DEFINE, CONNECT, SEQUENCE readiness card), an amber principle strip, ten numbered questions on a warm neutral ground with Expand all and Collapse all, and a navy closing action, inside the site's own header and footer. Copy verbatim from the approved reference (`docs/design/assets/faq-preview/`). **Isolation:** `/faq` and its content are unchanged; the preview is linked from nowhere and marked noindex, nofollow (page meta and `public/_headers`). **Scoped exceptions (Section 65.2).** **Not changed:** every other page, the navigation and footer. | Marketing website: `/faq-preview` only | Jeff Kaufman | Founder brief 2026-11-17. Sections 7.7, 8.8, 26.1, 46.5, 48.1, 48.7. |
 | 2026-11-17 | **Homepage procurement ribbon: pause controls removed (Section 20.1 amended).** **Why.** Founder brief *Remove Procurement Marquee Pause Controls* (issue #84). **What:** the Pause / Play button, the pause on hover and the pause on keyboard focus are removed; the ribbon runs continuously at the approved speed, seamlessly looped; under reduced motion it is still a static grid. **Known gap, accepted by the founder:** WCAG 2.2 SC 2.2.2 (Level A) expects a way to pause auto-moving content that lasts more than five seconds; only visitors with reduced motion set get a static ribbon. **Not changed:** labels, icons, chevrons, colours, layout, speed, every other section. | Marketing website: homepage procurement section only | Jeff Kaufman | Founder brief 2026-11-17, issue #84. Sections 20.1, 46.5, 46.6. |
@@ -5650,3 +5652,51 @@ The ten questions and answers are used verbatim from the reference, including it
 - **Hero.** Two columns from `lg` (1.18 : 0.82), the readiness card turned 2 degrees; stacked below, the card level.
 - **FAQ.** The label beside the heading from `lg`; controls at the right; numbered rows with fine rules, the open row lifted onto white with a soft shadow.
 - **Phones.** One column; narrower number and toggle columns; touch targets at least 44px.
+
+# 74. About page hero
+
+Status: APPROVED (2026-11-18). Direction supplied by Jeff Kaufman (founder brief *Rebuild the About JiTpro Hero*). Scope: the hero of `/about` only. The page's former opening section (*Why JiTpro exists*) is replaced by Section 75.
+
+Reference: `docs/design/assets/about-hero/about-hero-reference.png` (the approved mockup; development guidance only, never served) and `jitpro-about-collaboration-hero.png` (the approved text-free photograph). **Message:** JiTpro is a hands-on, service-led procurement and project-readiness company that works alongside the contractor's own team; the contractor stays in charge. Not another software platform.
+
+## 74.1 Copy
+
+Exactly as approved: the eyebrow *About JiTpro*; the `h1` *Your project. Your team. Our expertise.*; the opening statement *We don't hand you another software platform and leave you to figure it out. We roll up our sleeves and work alongside you.*; two supporting paragraphs; the closing statement *No new software to master. No additional full-time staff to hire. Just experienced professionals helping you get ahead of the problems that have held your projects back.*; the actions *Let's talk about your project* (`/contact`) and *Read our founder's story* (`/founder-story`).
+
+## 74.2 Scoped exceptions
+
+- **Photograph (Section 48.8).** The founder-approved generated photograph of a JiTpro representative and two contractors over drawings on site, for this hero only. Decorative (empty `alt`; the copy carries the message), loaded eagerly at high priority, WebP at 960 and 1672 under `public/assets/about/`.
+- **Ground.** `--jp-surface`, the token nearest the photograph's own navy, so the wash and the photograph's dark left side meet without an edge.
+- **Eyebrow.** As in the mockup: a short vertical amber bar before the mono label, the label in `--jp-text-primary`.
+- **Actions (Sections 26.1, 48.1).** The amber primary beside a hairline secondary, as in the Architects hero (Section 61): the secondary's border and label in `--jp-text-primary` at rest and `--jp-brand-amber-active` on hover. Side by side from `sm`; stacked, full width, below it.
+- **Amber (Sections 8.1.1, 48.7).** The eyebrow's bar, the closing statement's bar and the primary action. No other amber.
+
+## 74.3 Composition
+
+- **From `xl`.** The photograph full bleed at right, starting at the content frame's left edge past 1280px so the copy keeps its place against the people at any width; the plain ground runs to its left. A `--jp-surface` wash from the left (solid to 30%, 90% at 40%, 55% at 48%, gone by 58%) carries the copy column and ends before the first contractor's face. The copy at left on the `max-w-7xl` frame; the `h1` on two lines.
+- **Below `xl`.** A deliberate stack: the photograph as a band (4:3 on phones, 3:2 from `sm`, 16:9 from `lg`) anchored right so all three people show, its foot and left edge handed to the ground; then the copy. On phones the `h1` sets one sentence per line.
+- **No motion** beyond the actions' hover.
+
+---
+
+# 75. About page, Section 2: Why JiTpro exists
+
+Status: APPROVED (2026-11-18). Direction supplied by Jeff Kaufman (founder brief *Replace the "Why JiTpro Exists" Section on the About Page*). Scope: the section directly after the About hero (Section 74), which it **replaces**: the former *Why JiTpro exists* section and its copy are removed. The later sections are unchanged and keep their order.
+
+Reference: `docs/design/assets/about-why/about-why-reference.png` (the approved mockup) and `jitpro-about-project-pressure-infographic.png` (the approved text-free artwork); development guidance only, never served. **Message:** at contract award the GC's team must get the job moving and get it ready at the same time; immediate demands win, the planning slips, and the cost arrives in the field. JiTpro joins the team to do that upfront work. Never: the team lacks skill, must work harder, or is replaced; JiTpro takes on no one's contractual role; JiTpro is software or a report.
+
+## 75.1 Copy
+
+Exactly as approved: the eyebrow *Why JiTpro exists*; the `h2` *The pressure starts before the project does.*; the narrative, with *And the clock is already running.* emphasised behind an amber bar and *That's two enormous jobs competing for the same people's time.* in semibold ink. The infographic: *Contract awarded*; the `h3` *Two critical workloads begin at the same time.*; the cards *Get the job moving* (*Immediate pressure*) and *Get the job ready* (*Equally important*) with their lists; *One team. Two competing demands.* and its sentence; the callout *JiTpro joins your team.* and its sentence.
+
+## 75.2 Scoped exceptions
+
+- **The infographic is HTML, not an image (Section 48.8).** Every word is live text. Only the artwork's photographs are used, cut from the approved artwork and served as WebP under `public/assets/about/` (`about-pressure-sky-crane`, with the artwork's baked pill painted out; `about-pressure-card-moving`; `about-pressure-card-ready`), all decorative. The panel, cards, pills, divider and callout are built from tokens, so no text depends on an image's geometry. Icons from lucide (hard hat, clipboard, down arrow, handshake).
+- **Colour (Sections 8.1.1, 8.8, 48.7).** The mockup's orange is `--jp-brand-amber`; its blue planning accent becomes navy (`--jp-surface`, and a 10% navy wash for its pill), since no blue token exists. Amber on white is decorative only: the eyebrow's and statement's bars, the hard-hat and handshake icons, the award pill's fill (its label in `--jp-background`), the workload pill's wash (12% to 20%), and the callout's edge and wash. Every word on white is in ink.
+- **Eyebrow.** As the About hero (Section 74.2), on white: the amber bar, the label in `--jp-ink-secondary`.
+
+## 75.3 Composition
+
+- **From `xl`.** Two equal columns on `--jp-surface-white`: the narrative at left; at right the infographic panel (rounded, a 15% `--jp-ink-secondary` border, a 2% navy wash), sticky beside the longer narrative. The sky and crane fill the panel's head and fade into it; the award pill and the `h3` sit on it; then the two cards side by side (photograph, icon and title, list, pill); the divider with its down arrow; the central statement; the callout (handshake, an amber rule, heading and sentence).
+- **Below `xl`.** Stacked in narrative order, the copy first (at most 44rem), then the panel (at most 46rem). Narrower, two columns crowd the cards. The cards stay side by side from `sm` and stack below it; below `sm` the callout's icon sits above its text.
+- **No motion.**
