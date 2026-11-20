@@ -5,9 +5,11 @@ import { escape as escapeHtmlEntities } from "jsr:@std/html/entities";
 
 /**
  * The columns this notification reads from a `leads` row. The unified
- * contact form (2026-08-26) collects name, email, role, and note (stored as
- * `message`) plus hidden source/page metadata; the legacy qualification
- * columns still exist on the table but are no longer collected or rendered.
+ * contact form (2026-08-26) collects name, company name (restored
+ * 2026-11-19, in the legacy `company` column), email, role, and note (stored
+ * as `message`) plus hidden source/page metadata; the other legacy
+ * qualification columns still exist on the table but are no longer collected
+ * or rendered. `company` is null on rows from before it was restored.
  */
 interface LeadRecord {
   id: number;
@@ -15,6 +17,7 @@ interface LeadRecord {
   role: string;
   first_name: string;
   last_name: string;
+  company: string | null;
   email: string;
   message: string | null;
   source: string | null;
@@ -368,6 +371,7 @@ Deno.serve(async (req: Request) => {
       <h2>New JiTpro Contact Form Lead</h2>
       <table style="border-collapse: collapse; width: 100%; max-width: 600px;">
         ${row("Name", name)}
+        ${row("Company", safe(lead.company))}
         ${row("Email", safe(lead.email))}
         ${row("Role", cleanRole)}
         ${row("Note", cleanMessage)}

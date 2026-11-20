@@ -18,6 +18,7 @@ import {
   type DocumentKind,
   type IdentifyState,
 } from './identifyStoryScene';
+import { HOUSE_ELEVATION } from './houseElevation';
 import '../demo/tokens.css';
 
 /**
@@ -347,6 +348,10 @@ function ConditionMark({ condition, cx, cy }: { condition: Condition; cx: number
 const line = (opacity: number, width = 0.6) => ({ stroke: INK, strokeOpacity: opacity, strokeWidth: width, fill: 'none' });
 const wash = (opacity: number) => ({ fill: INK, fillOpacity: opacity });
 
+/** Where the house's elevation (drawn on a 230-unit sheet) sits in the architectural sheet's drawing area, left of the title block. */
+const ELEVATION_AT = { x: 7, y: 8, scale: 0.72 } as const;
+const elevationLine = (opacity: number, width: number) => line(opacity, width / ELEVATION_AT.scale);
+
 /** A drawing sheet: its edge, its border and a title block down the right. */
 function SheetFrame({ number, title }: { number: string; title: string }) {
   return (
@@ -375,26 +380,16 @@ function DocumentSheet({ kind }: { kind: DocumentKind }) {
       return (
         <>
           <SheetFrame number="A5.11" title="ELEVATIONS" />
-          {/* An exterior elevation: gable, walls, windows and a door. */}
-          <polyline points="20,48 76,20 132,48" style={line(0.7, 0.8)} />
-          <rect x={26} y={48} width={100} height={48} style={line(0.7, 0.8)} />
-          <line x1={12} x2={142} y1={96} y2={96} style={line(0.8, 1)} />
-          {[34, 54, 94, 110].flatMap((x) =>
-            [56, 76].map((y) => (
-              <g key={`${x}-${y}`}>
-                <rect x={x} y={y} width={12} height={13} style={line(0.75)} />
-                <line x1={x + 6} x2={x + 6} y1={y} y2={y + 13} style={line(0.5, 0.4)} />
-              </g>
-            )),
-          )}
-          <rect x={72} y={74} width={13} height={22} style={line(0.75)} />
-          {/* A dimension string beneath it. */}
-          <line x1={26} x2={126} y1={104} y2={104} style={line(0.5, 0.4)} />
-          {[26, 76, 126].map((x) => (
-            <line key={x} x1={x} x2={x} y1={101.5} y2={106.5} style={line(0.5, 0.4)} />
-          ))}
+          {/* The house's front elevation, the drawing project owners → Reduce risk shows (houseElevation), scaled into
+              the sheet's drawing area. Line weights are given at sheet size and kept as it is scaled. */}
+          <g transform={`translate(${ELEVATION_AT.x} ${ELEVATION_AT.y}) scale(${ELEVATION_AT.scale})`}>
+            <path d={HOUSE_ELEVATION.masses} style={{ ...elevationLine(0.75, 0.8), strokeLinejoin: 'round' }} />
+            <path d={HOUSE_ELEVATION.detail} style={elevationLine(0.5, 0.5)} />
+            <path d={HOUSE_ELEVATION.ground} style={elevationLine(0.85, 1)} />
+            <path d={HOUSE_ELEVATION.dimension} style={elevationLine(0.5, 0.4)} />
+          </g>
           <text x={12} y={14} fontSize={4.6} fontWeight={600} style={{ fill: INK }}>
-            SOUTH ELEVATION
+            FRONT ELEVATION
           </text>
         </>
       );

@@ -4,6 +4,7 @@
 **Archive branch:** `archive/identify-original-visualization`
 **Source commit (the exact code this record describes):** `e4e3a03dbcdf350ca656d6711642088b89b1ffc0`
 **Source branch at the time:** `feature/102926_homepage_update`
+**Screenshots and recording (moved 2026-11-18):** the images and the scroll recording this record lists, formerly in `docs/design/archive/identify-original/`, are in the external JiTpro design archive, folder `Retired_Concepts/homepage-visualizations/identify-original/`, indexed by its `Archive_Manifest.md` (see the notice at the top of `docs/design/JiTpro_Design_System_v1.0.md`). They can also be recovered from Git history at commit `a8c2d5a`.
 
 This file records what the original Identify visualization is, how it works,
 which files build it, what it shares with the rest of the homepage, and how to

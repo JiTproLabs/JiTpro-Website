@@ -4,6 +4,7 @@
 **Archive branch:** `archive/identify-original-visualization` (the shared archive for the homepage visualizations)
 **Recovery commit (the exact code this record describes):** `01207d04066049aa08a32f3aa24dea736730dd97`
 **Source branch at the time:** `feature/102926_homepage_update`
+**Screenshots and recording (moved 2026-11-18):** the images and the scroll recording this record lists, formerly in `docs/design/archive/connect-original/`, are in the external JiTpro design archive, folder `Retired_Concepts/homepage-visualizations/connect-original/`, indexed by its `Archive_Manifest.md` (see the notice at the top of `docs/design/JiTpro_Design_System_v1.0.md`). They can also be recovered from Git history at commit `a8c2d5a`.
 
 This file records what the original Connect visualization is, how it works,
 which files build it, what it shares with Plan, and how to restore or reuse it.

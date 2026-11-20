@@ -4,6 +4,7 @@
 **Archive branch:** `archive/identify-original-visualization` (the same branch that holds v1)
 **v2 source commit (the exact approved code):** `d40734896246c662d04184d7a22ccdd6e732507c`
 **Source branch:** `feature/102926_homepage_update`
+**Screenshots and recording (moved 2026-11-18):** the images and the scroll recording this record lists, formerly in `docs/design/archive/identify-redesign-v2/`, are in the external JiTpro design archive, folder `Retired_Concepts/homepage-visualizations/identify-redesign-v2/`, indexed by its `Archive_Manifest.md` (see the notice at the top of `docs/design/JiTpro_Design_System_v1.0.md`). They can also be recovered from Git history at commit `a8c2d5a`.
 
 This file records what the redesigned Identify visualization is, how it works,
 which files build it, what it shares with the rest of the homepage, and how to

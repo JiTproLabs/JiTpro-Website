@@ -530,3 +530,34 @@
     animation: none;
   }
 }
+
+/* The procurement marquee (§20.1 and §46.6 recorded exception, Decision
+   Log 2026-11-17). One track holding --jp-marquee-copies identical copies
+   (enough that the track outruns the widest screen) travels right, the
+   way the chevrons point (founder direction, 2026-11-17), at constant speed
+   (§46.4) by exactly one copy's width, so the loop is seamless. One
+   declaration drives the whole band (§46.3); the duration is set on the
+   track by ProcurementSection.tsx. It runs continuously, with no pause on
+   hover, focus or a control (founder direction, 2026-11-17). Under reduced
+   motion it does not run: the component shows the sequence once, static. */
+@keyframes jp-marquee-travel {
+  /* Both ends sit one chevron further left, so the band's left edge never
+     reaches the track's empty start: the chevron entering from the left is
+     always drawn, and the loop has no seam. */
+  from {
+    transform: translate3d(calc(-100% / var(--jp-marquee-copies, 2) - var(--chev-w, 0px)), 0, 0);
+  }
+  to {
+    transform: translate3d(calc(-1 * var(--chev-w, 0px)), 0, 0);
+  }
+}
+
+.jp-marquee-track {
+  animation: jp-marquee-travel var(--jp-marquee-duration) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jp-marquee-track {
+    animation: none;
+  }
+}

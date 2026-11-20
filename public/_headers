@@ -4,6 +4,11 @@
 /review/*
   X-Robots-Tag: noindex, nofollow
 
+# The original FAQ, preserved for reference after the new FAQ replaced it
+# (Design System §65). The route sets <meta name="robots"> itself as well.
+/faq-legacy
+  X-Robots-Tag: noindex, nofollow
+
 # The Field Guide PDF (lead-gen plan, Decisions D5.1, D5.10). Headers target the
 # actual file, not the /guides/procurement-field-guide route, because Cloudflare
 # applies redirects before headers. Inline so the browser opens it, saved under

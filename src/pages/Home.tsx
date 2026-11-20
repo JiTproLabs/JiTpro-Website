@@ -24,7 +24,7 @@ import NextProblemCTA from '../components/home/NextProblemCTA';
  *     3 Audience section      who JiTpro helps, and how (2026-11-09,
  *                             Design System Section 54); replaces
  *                             Know what's coming
- *     4 Throughout            one project at a time; with you throughout
+ *     4 Throughout            one project at a time; start with one project
  *
  *   ACT THREE — the action, on --jp-background
  *     6 Final CTA             start with one project (2026-11-13)

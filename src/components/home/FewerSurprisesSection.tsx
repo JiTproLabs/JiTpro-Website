@@ -1,3 +1,5 @@
+import { FileText, Layers, Search, type LucideIcon } from 'lucide-react';
+
 /**
  * Section 2 — fewer surprises (Decision Log 2026-11-05; recomposed
  * 2026-11-13).
@@ -6,34 +8,35 @@
  * earlier, managing change, and keeping the record. Still on --jp-background,
  * so it continues the hero's act without a seam (§48.6).
  *
- * COMPOSITION (founder brief 2026-11-13: an editorial composition, distinct
- * from the procurement section above it):
+ * COMPOSITION (founder brief 2026-11-13; restyled 2026-11-17 to the
+ * founder-approved procurement mockup, issue #84, so it reads as the close of
+ * the procurement section directly above it):
  *
  *   RULE      a full-width hairline in --jp-border with a short Brand Amber
  *             segment at the shared left edge, like a dimension line's
  *             start mark
  *   LEFT      (about 40%) the heading, the section's anchor: three sentences
- *             one per line at a display register, the outcome, "Keep more of
- *             the profit you've earned.", in Brand Amber (no figure, no
- *             guarantee: §20.1 as amended)
- *   RIGHT     (about 60%) three benefits as one ordered list of editorial
- *             entries, not cards: a fine rule above each (and one closing
- *             the list), a small mono numeral in Brand Amber, a title at the
- *             statement register, one sentence at the body register. The
- *             order is the life of a problem: before, during, after.
+ *             at a display register, the outcome, "Keep more of the profit
+ *             you've earned.", in Brand Amber (no figure, no guarantee:
+ *             §20.1 as amended)
+ *   DIVIDER   a vertical hairline from `lg`
+ *   RIGHT     three benefits as one list of editorial rows on fine rules:
+ *             a Brand Amber lucide icon, the title in bold primary ink, an
+ *             em dash, and the sentence in secondary ink, run in. The order
+ *             is the life of a problem: before, during, after.
  *
  * Stacked below `lg`: the heading, then the benefits.
  *
- * AMBER (§48.7): the rule segment, the heading's last line and the three
- * numerals, nothing else. No cards, icons, fills, shadows or motion (§48.2,
- * §48.4).
+ * AMBER (§48.7, with the 2026-11-17 scoped exception): the rule segment, the
+ * heading's last line and the three icons (§48.4: icons sized to their
+ * titles, aria-hidden). No cards, fills, shadows or motion (§48.2).
  */
 
-const BENEFITS = [
-  { n: '01', title: 'See problems earlier', body: 'Identify procurement problems before they disrupt the field.' },
-  { n: '02', title: 'Manage change', body: 'Understand what changed and how it affects your project.' },
+const BENEFITS: ReadonlyArray<{ Icon: LucideIcon; title: string; body: string }> = [
+  { Icon: Search, title: 'See problems earlier', body: 'Identify procurement problems before they disrupt the field.' },
+  { Icon: Layers, title: 'Manage change', body: 'Understand what changed and how it affects your project.' },
   {
-    n: '03',
+    Icon: FileText,
     title: 'Keep the record',
     body: 'Know what happened, who was responsible, and why, without reconstructing the story six months later.',
   },
@@ -41,53 +44,43 @@ const BENEFITS = [
 
 export default function FewerSurprisesSection() {
   return (
-    <section className="bg-jp-background px-6 pt-16 pb-20 sm:px-8 sm:pt-20 sm:pb-24 lg:px-10 lg:pt-24 lg:pb-28">
-      <div className="mx-auto max-w-7xl">
-        <div aria-hidden="true" className="relative h-px bg-jp-border/12">
-          <span className="absolute inset-y-0 left-0 w-16 bg-jp-brand-amber sm:w-24" />
+    <section className="bg-jp-background px-6 pt-8 pb-20 sm:px-8 sm:pt-10 sm:pb-24 lg:px-10 lg:pt-12 lg:pb-28">
+      <div className="mx-auto max-w-6xl 2xl:max-w-7xl">
+        <div aria-hidden="true" className="relative h-px bg-jp-border/20">
+          <span className="absolute -top-px left-0 h-[3px] w-20 rounded-full bg-jp-brand-amber sm:w-32" />
         </div>
 
-        <div className="mt-12 lg:mt-16 lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start lg:gap-x-16 xl:gap-x-24">
-          <div>
-            {/* The anchor. The amber line is longer than the two above it,
-                so it is balanced across its own lines rather than left
-                ragged. */}
-            <h2 className="font-heading text-[2rem] font-extrabold leading-[1.06] tracking-[-0.03em] text-jp-text-primary sm:text-[2.75rem] lg:text-[2.75rem] xl:text-[3.25rem]">
-              <span className="block">Fewer surprises.</span>
-              <span className="block">More control.</span>
-              <span className="mt-1 block max-w-[16ch] text-balance text-jp-brand-amber sm:mt-1.5">
-                Keep more of the profit you&apos;ve earned.
-              </span>
-            </h2>
-          </div>
+        <div className="mt-10 lg:mt-12 lg:grid lg:grid-cols-[minmax(0,2fr)_1px_minmax(0,3fr)] lg:items-center lg:gap-x-12 xl:gap-x-14">
+          {/* The anchor. The amber line is longer than the two above it,
+              so it is balanced across its own lines rather than left
+              ragged. */}
+          <h2 className="font-heading text-[2.25rem] font-extrabold leading-[1.06] tracking-[-0.03em] text-jp-text-primary sm:text-[2.75rem] lg:text-[clamp(2.5rem,2.9vw,3.25rem)]">
+            <span className="block">Fewer surprises.</span>
+            <span className="block">More control.</span>
+            <span className="mt-1 block max-w-[16ch] text-balance text-jp-brand-amber sm:mt-1.5">
+              Keep more of the profit you&apos;ve earned.
+            </span>
+          </h2>
 
-          {/* The benefits: one ordered list, stacked editorial entries on
-              fine rules, each numeral on its title's baseline. The numeral is
-              shown for the eye; the list itself carries the order for
-              assistive technology. */}
-          <ol className="mt-12 border-b border-jp-border/20 lg:mt-1">
-            {BENEFITS.map((b) => (
+          <span aria-hidden="true" className="hidden h-full w-px bg-jp-border/30 lg:block" />
+
+          {/* The benefits: one list, editorial rows on fine rules, the
+              title run in to its sentence. */}
+          <ul className="mt-10 lg:mt-0">
+            {BENEFITS.map(({ Icon, title, body }) => (
               <li
-                key={b.n}
-                className="grid grid-cols-[2.75rem_minmax(0,1fr)] items-baseline gap-x-4 border-t border-jp-border/20 py-7 sm:grid-cols-[3.5rem_minmax(0,1fr)] sm:gap-x-6 sm:py-8"
+                key={title}
+                className="flex items-start gap-4 border-b border-jp-border/20 py-5 first:pt-0 last:border-b-0 last:pb-0 sm:gap-5 sm:py-6 sm:first:pt-0 sm:last:pb-0"
               >
-                <span
-                  aria-hidden="true"
-                  className="font-mono text-xs font-bold tracking-[0.16em] text-jp-brand-amber sm:text-sm sm:tracking-[0.18em]"
-                >
-                  {b.n}
-                </span>
-                <div className="min-w-0">
-                  <h3 className="font-heading text-[1.375rem] font-bold leading-[1.25] tracking-[-0.015em] text-jp-text-primary sm:text-[1.5rem] lg:text-[1.625rem]">
-                    {b.title}
-                  </h3>
-                  <p className="mt-2 max-w-[52ch] text-[1.0625rem] leading-[1.65] text-jp-text-secondary sm:text-[1.125rem] lg:text-[1.1875rem]">
-                    {b.body}
-                  </p>
+                <Icon aria-hidden="true" strokeWidth={1.75} className="mt-0.5 size-6 shrink-0 text-jp-brand-amber sm:size-7" />
+                <div className="min-w-0 text-[1.0625rem] leading-[1.55] sm:text-[1.125rem] lg:text-[1.1875rem]">
+                  <h3 className="inline font-heading font-bold tracking-[-0.01em] text-jp-text-primary">{title}</h3>
+                  <span aria-hidden="true" className="text-jp-text-secondary"> — </span>
+                  <p className="inline text-jp-text-secondary">{body}</p>
                 </div>
               </li>
             ))}
-          </ol>
+          </ul>
         </div>
       </div>
     </section>
