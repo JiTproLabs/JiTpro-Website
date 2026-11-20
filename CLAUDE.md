@@ -32,7 +32,7 @@ Existing code predates these standards and does not fully conform. That is a sch
 
 ## Project Overview
 
-JITpro marketing website — a React SPA built with Vite, TypeScript, and Tailwind CSS. Deployed to GitHub Pages via GitHub Actions on push to `main`.
+JITpro marketing website — a React SPA built with Vite, TypeScript, and Tailwind CSS. Deployed by Cloudflare Pages on push to `main` (see Deployment).
 
 ## Commands
 
@@ -64,7 +64,7 @@ If `npx audit-ci` or `npm audit` fails, or a build or test failure traces back t
 - **Styling:** Tailwind CSS 4 with CSS-first configuration (`@import 'tailwindcss'` and `@theme` blocks in `src/index.css`; no `tailwind.config.js`). Processed via `@tailwindcss/postcss`.
 - **Design tokens:** the approved `--jp-*` custom properties are declared once in `:root` in `src/index.css`, with `@theme inline` aliases (`--color-jp-*`) exposing them as Tailwind utilities. Hex values belong in that `:root` block and nowhere else (Design System §8.8, §45.2).
 - **Icons:** lucide-react
-- **Build:** Vite 5. Base path is env-driven: `VITE_BASE_PATH` (defaults to `/`). The GitHub Pages workflow builds with `VITE_BASE_PATH=/JiTpro-Website/` because that deployment lives at a repo subpath; root hosting and local dev use the default.
+- **Build:** Vite 5. Base path is env-driven: `VITE_BASE_PATH` (defaults to `/`). Cloudflare Pages hosts the site at the root, so production and local dev both use the default `/`. (The `/JiTpro-Website/` subpath belonged to the retired GitHub Pages deployment; see Deployment.)
 - **Entry:** `index.html` → `src/main.tsx` → `src/App.tsx`
 
 ### Routing
@@ -79,4 +79,12 @@ A Supabase Edge Function (`supabase/functions/submit-demo-request/index.ts`) han
 
 ## Deployment
 
-Pushing to `main` triggers `.github/workflows/deploy.yml`, which builds and deploys to GitHub Pages. Node 20 is used in CI.
+**Current (updated 2026-11-20):** the site is hosted on **Cloudflare Pages**.
+
+- **Production:** pushing or merging to `main` triggers a Cloudflare Pages build and deploy. It shows on the commit as the "Cloudflare Pages" check.
+- **Previews:** each pull request gets a Cloudflare Pages preview build, reported as a check on the PR.
+- **Build settings:** these live in the Cloudflare dashboard, not in this repository. There is no `wrangler` config. Hosting rules ship from `public/_headers` and `public/_redirects`.
+- **CI:** `.github/workflows/ci.yml` ("Marketing Site CI", job `build-and-test`) runs on every pull request to `main`: security audit, typecheck, lint, unit tests, build, and a link and image check. It does not deploy. Node comes from `.nvmrc`, currently 24.
+- **Merging:** merge pull requests with a squash merge once CI and the Cloudflare Pages preview both pass.
+
+**Deprecated (do not follow):** older guidance said pushing to `main` triggered `.github/workflows/deploy.yml`, which built and deployed to GitHub Pages under the `/JiTpro-Website/` base path, with Node 20 in CI. That workflow was deleted on 2026-07-28 (`c6a0405`, #21), and GitHub Pages no longer serves this site. Kept here for history only.
