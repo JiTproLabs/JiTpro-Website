@@ -2,10 +2,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-/* Three direct links, no dropdowns (founder direction 2026-11-18, issue #84). Every other page and route is kept;
-   only these header links changed. Token classes per §45.5; the literal classes around them are pre-standard legacy. */
+/* Direct links, no dropdowns (founder direction 2026-11-18, issue #84; Home added and About renamed 2026-11-20,
+   issue #89). Every other page and route is kept; only these header links changed. Token classes per §45.5; the literal classes around them are pre-standard legacy. */
 const navLinks = [
-  { to: '/about', label: 'About JiTpro' },
+  { to: '/', label: 'Home' },
+  { to: '/about', label: 'About' },
   { to: '/founder-story', label: 'Founder Story' },
   { to: '/contact', label: 'Contact Us' },
 ] as const;
