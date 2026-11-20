@@ -2,7 +2,22 @@
 
 GitHub issue: [#86](https://github.com/JiTproLabs/JiTpro-Website/issues/86). Branch: `issue-86-website-messaging-audit`.
 
-**Status:** final recommendations after the founder decisions of 2026-11-20 (Q1 to Q8), ready to implement page by page. No website copy has been changed yet.
+**Status (updated 2026-11-20):** first pass complete. 22 of the 23 changes are **Implemented** and live on `main` (squash commit `7d385f7`, PR [#87](https://github.com/JiTproLabs/JiTpro-Website/pull/87)). Only L6 (Product) is still **Proposed**. This branch is kept open for the remaining messaging work; it was brought level with `main` on 2026-11-20.
+
+## Where we left off, and next steps
+
+**How we work.** The founder marks a section **Approved** here (editing the copy if needed) and saves the file. Claude implements the exact approved text, relabels the section **Implemented**, and strikes through its `###` heading. When a batch is done, the branch goes to `main` through a squash-merged PR.
+
+**Done (first pass):** Home (H9, M2), About (H1, M1), General Contractors (H3, H5, H6, H4, M3, H7), Owners and Developers (H8), Founder Story (H2), FAQ (M4, L2, L3, L4), Learn More (L5), How It Works (M5, L7), Why (L1, M6, M7).
+
+**Next steps, in suggested order:**
+1. **L6, Product page.** Review and approve, edit, or withdraw (Section 11 below).
+2. **R1, the two new sentences.** Decide whether to add them now or later (Open question, at the end).
+3. **Design System records.** Several entries still quote the old copy and need updating to match what is live: the Decision Log entry of 2026-11-13, §20.1 (homepage copy), §58 (the GC brush underline now sits under *prevent it*, not *coming*), §74, and the §10 vocabulary, verbs and service name (*JiTpro Project Readiness Engagement*). The proposed additions are in Section 10 of `website-messaging-recommendations.md`.
+4. **Second pass: the 10 unlinked pages.** Preserved under Q3 and not yet reviewed. Do not delete, redirect, hide or change their indexing.
+5. **Later, separate projects (not this branch):** the 13 software-positioning flags (Future Software-Positioning Project), investor pages (Q6), and SEO and metadata (Q7), including the GC page's meta description.
+
+**Note on line numbers.** The file references below were taken from `main` at `2dd13fe`, before the first pass. For the implemented sections, the live copy is now the **Approved** text.
 
 **Source documents:**
 - `website-messaging-recommendations.md` gives the reasoning, the messaging principles and the deferred findings.
