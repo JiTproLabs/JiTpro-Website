@@ -50,7 +50,7 @@ const whatJiTproDoes = [
     body: 'Buyout, submittals, fabrication, and delivery are sequenced against the dates the field actually needs.',
   },
   {
-    title: 'Exposes risk while it can still be controlled',
+    title: 'Takes control while there is still time to act',
     body: 'Margin threats show up while there is still time to act—not after the recovery has started.',
   },
 ];
@@ -223,7 +223,7 @@ export default function Why() {
                 them.
               </p>
               <p className="mt-4 font-heading text-xl font-semibold leading-snug text-slate-100">
-                JiTpro makes invisible risk visible before it becomes field recovery.
+                JiTpro puts those commitments under control before they turn into field recovery.
               </p>
             </div>
 
@@ -244,10 +244,10 @@ export default function Why() {
         <div className="mx-auto max-w-4xl text-center">
           <SectionLabel>The JiTpro philosophy</SectionLabel>
           <div className="space-y-5 font-heading text-2xl font-semibold leading-snug text-slate-200 md:text-3xl">
-            <p>Every project begins with margin.</p>
+            <p>Every project begins with anticipated profit.</p>
             <p>Every unresolved commitment quietly spends it.</p>
             <p>The field simply reveals what procurement failed to control.</p>
-            <p>JiTpro exists to make those risks visible while they can still be managed.</p>
+            <p>JiTpro exists to bring those commitments under control while they can still be managed.</p>
           </div>
           <p className="mx-auto mt-12 max-w-3xl font-heading text-3xl font-bold tracking-tight text-slate-50 md:text-5xl">
             Projects do not fail in the field. They arrive there already failing.

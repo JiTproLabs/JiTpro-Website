@@ -80,16 +80,16 @@ function AboutHero() {
           <div className="mt-5 max-w-[40rem] space-y-4 text-[1.0625rem] leading-[1.6] text-pretty text-jp-text-secondary sm:text-[1.125rem] xl:max-w-[min(36rem,47vw)] xl:space-y-3 xl:text-[clamp(1rem,1.15vw,1.125rem)] xl:leading-[1.55]">
             <p>JiTpro is a hands-on construction procurement and project-readiness service built by contractors, for contractors.</p>
             <p>
-              We work side by side with you and your team to dig into the details, uncover problems before they reach the field,
-              and put the planning, coordination, and accountability in place to protect your schedule, your profits, and your
-              people.
+              We work side by side with you and your team to dig into the details, establish what&apos;s needed, who&apos;s
+              responsible, and when each step must happen, so the field has what it needs to keep the project moving.
             </p>
+            <p>Our goal is to protect your schedule, your profits, and your people.</p>
           </div>
           <div className="relative mt-7 max-w-[40rem] pl-5 sm:pl-6 xl:mt-6 xl:max-w-[min(36rem,47vw)]">
             <span aria-hidden="true" className="absolute top-1 bottom-1 left-0 w-1 rounded-full bg-jp-brand-amber" />
             <p className="font-heading text-[1.0625rem] font-bold leading-[1.45] text-pretty text-jp-text-primary sm:text-[1.1875rem] xl:text-[clamp(1.0625rem,1.25vw,1.1875rem)]">
-              No new software to master. No additional full-time staff to hire. Just experienced professionals helping you get
-              ahead of the problems that have held your projects back.
+              No new software to master. No additional full-time staff to hire. Just experienced professionals helping your team
+              take precise upstream control to prevent compounding downstream schedule disruptions.
             </p>
           </div>
           <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:flex-wrap xl:mt-8">
