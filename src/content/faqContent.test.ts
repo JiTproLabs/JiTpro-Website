@@ -101,7 +101,7 @@ describe('routes', () => {
     expect(app).toContain("import FAQLegacy from './pages/FAQLegacy';");
     const nav = readFileSync(resolve(__dirname, '../components/Navigation.tsx'), 'utf8');
     const footer = readFileSync(resolve(__dirname, '../components/Footer.tsx'), 'utf8');
-    // The header has three direct links since 2026-11-18 (About JiTpro, Founder Story, Contact Us), so it no
+    // The header has direct links since 2026-11-18 (Home, About, Founder Story, Contact Us), so it no
     // longer links the FAQ; neither the header nor the footer may link the legacy FAQ.
     expect(nav).not.toContain('faq-legacy');
     expect(footer).not.toContain('faq-legacy');

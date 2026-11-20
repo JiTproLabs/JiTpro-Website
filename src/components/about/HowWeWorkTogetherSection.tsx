@@ -103,8 +103,8 @@ const PLANNED: ReadonlyArray<Step> = [
 ];
 
 const PATHS = {
-  reactive: { title: 'Without a clear plan', subtitle: 'Reactive management', outcome: 'late' },
-  planned: { title: 'With JiTpro', subtitle: 'Planned execution', outcome: 'on time' },
+  reactive: { title: 'Without a clear plan', subtitle: 'Reactive management', ready: 'Not field ready', outcome: 'late or wrong' },
+  planned: { title: 'With JiTpro', subtitle: 'Planned execution', ready: 'Field ready', outcome: 'on time' },
 } as const;
 
 /* ------------------------------------------------------------------------------------------- the infographic */
@@ -142,17 +142,19 @@ function OverlayStart({ y }: { y: number }) {
   );
 }
 
-/** The end card's words: *Field ready*, then the outcome in its colour. */
+/** The end card's words: *Field ready* or *Not field ready*, then the outcome in its colour (§78.1). */
 function OverlayOutcome({ path, x, y }: { path: keyof typeof PATHS; x: number; y: number }) {
   const late = path === 'reactive';
+  /* The reactive card's longer words are set smaller so they stay inside its red card (text room 1512 to 1614). */
+  const [readySize, outcomeSize] = late ? [15, 16.5] : [19, 25];
   return (
     <li className="absolute -translate-y-1/2 font-heading leading-[1.1] whitespace-nowrap" style={at(x, y)}>
-      <span className="block font-bold text-jp-background" style={{ fontSize: cq(19) }}>
-        Field ready
+      <span className="block font-bold text-jp-background" style={{ fontSize: cq(readySize) }}>
+        {PATHS[path].ready}
       </span>{' '}
       <span
         className={`block font-extrabold ${late ? 'text-jp-warning-red' : ''}`}
-        style={{ fontSize: cq(25), ...(late ? {} : { color: ON_TIME }) }}
+        style={{ fontSize: cq(outcomeSize), ...(late ? {} : { color: ON_TIME }) }}
       >
         {PATHS[path].outcome}
       </span>
@@ -327,7 +329,7 @@ function ReactiveTimeline() {
         })}
         <li className={`relative ${ROW} flex items-center`}>
           <TimelineNode Icon={CalendarX} tone="late">
-            Field ready <span className="text-jp-warning-red">late</span>
+            {PATHS.reactive.ready}: <span className="text-jp-warning-red">{PATHS.reactive.outcome}</span>
           </TimelineNode>
         </li>
       </ol>
@@ -366,7 +368,7 @@ function PlannedTimeline() {
         ))}
         <li className={`relative ${ROW} flex items-center`}>
           <TimelineNode Icon={CalendarCheck} tone="on-time">
-            Field ready <span style={{ color: ON_TIME }}>on time</span>
+            {PATHS.planned.ready} <span style={{ color: ON_TIME }}>{PATHS.planned.outcome}</span>
           </TimelineNode>
         </li>
       </ol>
