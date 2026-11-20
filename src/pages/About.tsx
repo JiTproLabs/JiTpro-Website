@@ -1,11 +1,7 @@
 import { ArrowDown, ArrowRight, ClipboardList, Handshake, HardHat, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import {
-  HowWeWorkTogetherSection,
-  OurExperienceSection,
-  OurInvitationSection,
-  WhatWeBelieveSection,
-} from '../components/about/AboutSections';
+import { OurExperienceSection, OurInvitationSection, WhatWeBelieveSection } from '../components/about/AboutSections';
+import HowWeWorkTogetherSection from '../components/about/HowWeWorkTogetherSection';
 import WhatWeDoSection from '../components/about/WhatWeDoSection';
 
 /**

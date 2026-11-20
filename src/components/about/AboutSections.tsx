@@ -1,11 +1,12 @@
 /**
- * About page, Sections 4 to 7 (Design System §76, Decision Log 2026-11-18): the approved structure of the
- * service-led About page below *What we do* (Section 3, now designed: WhatWeDoSection.tsx, §77). Each section here
+ * About page, Sections 5 to 7 (Design System §76, Decision Log 2026-11-18): the approved structure of the
+ * service-led About page below *How we work together* (Sections 3 and 4, now designed: WhatWeDoSection.tsx, §77, and
+ * HowWeWorkTogetherSection.tsx, §78). Each section here
  * is a placeholder until it is designed: only its
  * approved eyebrow, its exact h2 and its central message, with a temporary *Design pending* indicator. No other copy,
  * no actions, no imagery (§76.1).
  *
- * Each section is its own named component, so it can be replaced independently; all five render PendingSection,
+ * Each section is its own named component, so it can be replaced independently; all three render PendingSection,
  * the temporary placeholder (§76.2), which is removed with the last of them.
  *
  * POSITIONING (§76.1, binding on every later design here): JiTpro is service-led, supported by a disciplined
@@ -58,19 +59,6 @@ function PendingSection({
         </div>
       </div>
     </section>
-  );
-}
-
-/** Section 4: how JiTpro works with contractors' existing teams. */
-export function HowWeWorkTogetherSection() {
-  return (
-    <PendingSection
-      id="how-we-work-together"
-      eyebrow="How we work together"
-      title="We work with the team you already have."
-      message="Your team remains in charge. JiTpro brings focused expertise and additional capacity to the project."
-      surface="white"
-    />
   );
 }
 
