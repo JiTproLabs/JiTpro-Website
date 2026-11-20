@@ -241,7 +241,9 @@ export default function ProcurementSection() {
             <div className="flex gap-5 text-[1.25rem] sm:gap-7 sm:text-[1.5rem] lg:text-[clamp(1.5rem,1.75vw,1.875rem)]">
               <span aria-hidden="true" className="mt-[0.2em] block h-[1.1em] w-1 shrink-0 rounded-full bg-jp-brand-amber" />
               <p className="max-w-[62ch] leading-[1.45] text-pretty text-jp-text-primary">
-                Every product, material, and service depends on a sequence of decisions, approvals, and commitments that must happen at the right time.
+                You may not call it procurement, but your team does it every day. Every product, material, and service your project
+                needs must be identified, selected, coordinated, approved, purchased, and delivered. And timing is everything. Miss a
+                critical decision, approval, or deadline, and what your field needs may not arrive when it&apos;s needed.
               </p>
             </div>
           </div>

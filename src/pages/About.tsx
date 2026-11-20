@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowRight, ClipboardList, Handshake, HardHat, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { OurExperienceSection, OurInvitationSection, WhatWeBelieveSection } from '../components/about/AboutSections';
+import { OurExperienceSection, WhatWeBelieveSection } from '../components/about/AboutSections';
+import NextProblemCTA from '../components/home/NextProblemCTA';
 import HowWeWorkTogetherSection from '../components/about/HowWeWorkTogetherSection';
 import WhatWeDoSection from '../components/about/WhatWeDoSection';
 
@@ -311,8 +312,8 @@ function WhyJiTproExists() {
 }
 
 /**
- * The About page (Design System §76): seven sections in the approved order. Sections 1 to 3 are designed and
- * approved (§74, §75, §77); Sections 4 to 7 are placeholders, each its own component, until they are designed.
+ * The About page (Design System §76): seven sections in the approved order, each its own component. Sections 1 to 6
+ * are designed (§74, §75, §77 to §80); Section 7 is the homepage's final call to action, shared with it (§81).
  */
 export default function About() {
   return (
@@ -323,7 +324,8 @@ export default function About() {
       <HowWeWorkTogetherSection />
       <OurExperienceSection />
       <WhatWeBelieveSection />
-      <OurInvitationSection />
+      {/* Section 7: the homepage's final call to action, the same component (§81). */}
+      <NextProblemCTA />
     </div>
   );
 }

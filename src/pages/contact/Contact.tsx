@@ -29,15 +29,22 @@ import Turnstile from '../../components/Turnstile';
  * putting it here costs the conversion of everyone who has.
  *
  * DELIBERATELY MINIMAL. This is a conversation starter, not a qualification
- * form: first name, last name, email, role, note — nothing else. No project
- * qualification questions, no schedule-call step, no phone/company fields.
- * Adding fields here is a product decision, not a form tweak.
+ * form: first name, last name, company name, email, role, note — nothing
+ * else. No project qualification questions, no schedule-call step, no phone
+ * field. Adding fields here is a product decision, not a form tweak.
+ *
+ * COMPANY NAME (restored 2026-11-19, founder direction): required, as a
+ * second way to identify a prospect if they mistype their email. It is
+ * stored in the existing legacy `leads.company` column (live schema checked
+ * 2026-11-19: string, nullable) and shown in the internal notification. Not
+ * to be confused with the hidden `company_website` honeypot below, which is
+ * spam protection and must stay as it is.
  *
  * PIPELINE (unchanged): submitContactForm() → the submit-contact edge
  * function (Turnstile verified server-side) → the existing `leads` table →
- * database webhook → Resend notification. Legacy qualification columns on
- * `leads` are nullable (verified against the live schema 2026-08-26) and
- * simply stay NULL on new rows. Hidden metadata still sent: intent, source,
+ * database webhook → Resend notification. The other legacy qualification
+ * columns on `leads` are nullable (verified against the live schema
+ * 2026-08-26) and simply stay NULL on new rows. Hidden metadata still sent: intent, source,
  * page. `role` carries the visitor's dropdown selection using the values
  * already in production ('contractor' / 'owner' / 'architect') plus 'other'.
  *
@@ -101,6 +108,7 @@ export default function Contact() {
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [company, setCompany] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
   const [note, setNote] = useState('');
@@ -136,6 +144,7 @@ export default function Contact() {
           page: '/contact',
           firstName,
           lastName,
+          company,
           email,
           message: note,
         },
@@ -224,6 +233,19 @@ export default function Contact() {
                     className={inputClass}
                   />
                 </div>
+              </div>
+
+              <div>
+                <label htmlFor="company" className={labelClass}>Company Name *</label>
+                <input
+                  type="text"
+                  id="company"
+                  required
+                  autoComplete="organization"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  className={inputClass}
+                />
               </div>
 
               <div>

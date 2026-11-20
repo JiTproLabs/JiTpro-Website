@@ -56,6 +56,10 @@ TODO:
 
 | Date | Decision | Scope | Owner | Source/Rationale |
 | --- | --- | --- | --- | --- |
+| 2026-11-19 | **About page, Section 6: *Protect your people.* emphasized in the `h2` (Section 80.2 amended).** **Why.** Founder direction: protecting the people who deliver the work matters as much as protecting schedules and profits, if not more. **What:** the `h2`'s three sentences each take their own line at every width; *Protect your people.* is about 18% larger, in the same navy, with a decorative Brand Amber underline. The sizes are capped by the column's width so no line wraps on phones or in the narrow `lg` column. **Amber text was briefed and declined by the founder in favour of this treatment:** Brand Amber on white is 2.15:1, below the 3:1 large-text minimum, and Section 8.8 forbids it. **Not changed:** the copy, the rest of Section 6, every other section. | Marketing website: `/about` Section 6 `h2` | Jeff Kaufman | Founder direction 2026-11-19. Sections 8.8, 80.2. |
+| 2026-11-19 | **About page, Section 7: *Our invitation* is the homepage's final call to action, the same component (new Section 81; Section 76 amended; the 2026-11-17 blueprint entry extended to `/about`).** **Why.** Founder direction: the About page closes exactly as the homepage does, and one shared component keeps the two consistent. **What:** the placeholder is removed and `/about` renders `NextProblemCTA` (`src/components/home/NextProblemCTA.tsx`) unchanged: its copy, blueprint background, scrim, amber glow, typography, spacing, button and destination (`/contact`). This is the new decision the 2026-11-17 entry requires for the blueprint to appear beyond the homepage; it permits `/about` only. The placeholder's eyebrow, `h2` (*Break the cycle. One project at a time.*) and central message are retired, and with the last placeholder gone, the temporary placeholder convention (Section 76.2) and `PendingSection` are removed. **Not changed:** the homepage, Sections 1 to 6 of `/about`, the navigation, the footer and every other page. | Marketing website: `/about` Section 7 | Jeff Kaufman | Founder direction 2026-11-19. Sections 48.6, 48.8, 76, 81; Decision Log 2026-11-17. |
+| 2026-11-19 | **About page, Section 6: *What we believe* designed (new Section 80; Section 76 amended).** **Why.** Founder-approved copy for *What we believe*: better construction management protects schedules and profits, and also the people who deliver the work. **What:** the placeholder is replaced on the same `--jp-surface-white` ground, carried by typography alone. The `h2`, unchanged, sits at left with each of its three sentences on its own line from `lg`; at right, the approved narrative, with *We don't believe that should be accepted as the cost of doing business.* in Section 79's emphasized-statement treatment (amber bar, heading face). The concluding statement closes the section on a full-width `--jp-surface` band (the closing-banner form of Section 78), centred in the heading face, under a short `--jp-brand-amber` rule. No cards, icons, imagery, diagrams or motion. **Not changed:** Sections 1 to 5 and 7, the navigation, the footer and every other page. | Marketing website: `/about` Section 6 | Jeff Kaufman | Founder direction 2026-11-19. Sections 7.7, 8.8, 76, 78, 79, 80. |
+| 2026-11-19 | **About page, Section 5: *Our experience* designed (new Section 79; Section 76 amended).** **Why.** Founder-approved copy for *Our experience*: the real construction experience behind JiTpro, leading visitors to the people behind it. **What:** the placeholder is replaced on the same `--jp-surface-light` ground. The eyebrow and `h2` sit at left; at right, the approved narrative, the emphasized statement behind a `--jp-brand-amber` bar in the heading face (the treatment of the hero's closing statement, Section 74), the closing paragraph, and *Meet the people behind JiTpro.* in the role link's treatment (Section 54.2.5). No imagery, no icons, no motion. **The link's target:** the Leadership Team page does not exist yet. Until its route is approved, the line is rendered in the link's type and underline but is not a link (no arrow, no target, not focusable), from one clearly marked placeholder constant in the component; no page or route is created. **Not changed:** Sections 1 to 4, 6 and 7, the navigation, the footer and every other page. | Marketing website: `/about` Section 5 | Jeff Kaufman | Founder direction 2026-11-19. Sections 7.7, 8.8, 34.1, 54.2.5, 74, 76, 79. |
 | 2026-11-19 | **About page, Section 4: *How we work together* designed as *Two paths through the same project* (new Section 78; Section 76 amended).** **Why.** Founder brief *Rebuild About JiTpro Section 4, "How We Work Together"*, from an approved mockup and its text-free artwork: early procurement planning and weekly guidance help the contractor's existing team move from reactive management to planned execution. *Order creates capacity.* **What:** a warm light section. The approved copy and the emphasized statement are at left. At right, the two-path infographic: the text-free artwork's two panels (the winding reactive path, the sequenced planned path, their icons, cards and end states) served as one image, with every heading, label and outcome as live HTML positioned on it in percentages and sized in container units, so the text scales with the artwork. Below `lg` the paths are rebuilt as two vertical HTML timelines. *Order creates capacity* follows, then a full-width navy closing banner. The paths are an illustrative comparison, not measured results or a guarantee. **Not changed:** Sections 1 to 3 and 5 to 7, the navigation, the footer and every other page. | Marketing website: `/about` Section 4 | Jeff Kaufman | Founder brief 2026-11-19. Sections 8.1.1, 8.3.1, 8.8, 48.4, 48.7, 48.8, 57.2, 76, 78. |
 | 2026-11-19 | **About page, Section 3: *What we do* designed (new Section 77; Section 76 amended).** **Why.** Founder brief *Build About JiTpro Section 3, "What We Do"*, from an approved mockup and its text-free artwork: JiTpro builds the plan, establishes the priorities and provides the weekly guidance; the contractor's team executes the work. **What:** a dark `--jp-surface` section. The approved copy is at left. At right, an illustrative *Project Procurement Plan* and the *Weekly Guidance* panel layered over it, joined by *Plan drives the cadence*. A two-sided responsibility bar (JiTpro amber, the team navy) and the closing line follow. The panels are HTML and CSS, drawn from the artwork's geometry; only the artwork's backdrop (the window with the crane, and the desk with drawings) is served. **Not changed:** Sections 1, 2 and 4 to 7, the navigation, the footer and every other page. | Marketing website: `/about` Section 3 | Jeff Kaufman | Founder brief 2026-11-19. Sections 8.1.1, 8.8, 48.4, 48.6, 48.7, 48.8, 76, 77. |
 | 2026-11-18 | **About page restructured into seven sections; Sections 3 to 7 are placeholders (new Section 76).** **Why.** Founder brief *Rebuild the About JiTpro Page Structure*: establish the approved architecture of the service-led About page before each section is designed. **What:** the legacy content below Section 2 is removed (Git history keeps it), along with its section label component and the now-unused principles data. Five placeholders follow, *What we do*, *How we work together*, *Our experience*, *What we believe* and *Our invitation*, each with only its approved eyebrow, `h2` and central message and a temporary *Design pending* indicator. The page wrapper's literal colour classes become their exact token equivalents (`--jp-background`, `--jp-text-primary`). **Not changed:** Sections 1 and 2 (Sections 74 and 75), every other page, the navigation and the footer. | Marketing website: `/about` | Jeff Kaufman | Founder brief 2026-11-18. Sections 7.7, 8.8, 49, 74, 75, 76. |
@@ -6031,7 +6035,7 @@ Exactly as approved: the eyebrow *Why JiTpro exists*; the `h2` *The pressure sta
 
 # 76. About page, Sections 3 to 7: approved structure and placeholders
 
-Status: APPROVED (2026-11-18). Direction supplied by Jeff Kaufman (founder brief *Rebuild the About JiTpro Page Structure*). Scope: `/about` only, below Section 2 (Section 75). **Temporary:** each placeholder is replaced when its section is designed, and this section is amended at that time. **Amended 2026-11-19:** Section 3, *What we do*, is designed (Section 77), and Section 4, *How we work together*, is designed (Section 78); Sections 5 to 7 remain placeholders.
+Status: APPROVED (2026-11-18). Direction supplied by Jeff Kaufman (founder brief *Rebuild the About JiTpro Page Structure*). Scope: `/about` only, below Section 2 (Section 75). **Temporary:** each placeholder is replaced when its section is designed, and this section is amended at that time. **Amended 2026-11-19:** Section 3, *What we do*, is designed (Section 77), Section 4, *How we work together*, is designed (Section 78), Section 5, *Our experience*, is designed (Section 79), Section 6, *What we believe*, is designed (Section 80), and Section 7 is the homepage's final call to action (Section 81). No placeholders remain; Sections 76.1 and 76.2 are historical.
 
 The page has seven sections, in this order. Sections 1 and 2 are the approved hero (Section 74) and *Why JiTpro exists* (Section 75), unchanged. The page's former content below Section 2 is retired, not archived; Git history keeps it. That content was *Built by people who have lived it*, the principles, *Why we built it*, *Where this is going* and its two actions.
 
@@ -6058,7 +6062,7 @@ Eyebrows are authored in sentence case and uppercased in CSS (Section 7.7). The 
 
 ## 76.3 Structure
 
-`src/pages/About.tsx` holds Sections 1 and 2 and composes the page. Section 3 is `src/components/about/WhatWeDoSection.tsx` (Section 77) and Section 4 is `src/components/about/HowWeWorkTogetherSection.tsx` (Section 78). Sections 5 to 7 are separate named components in `src/components/about/AboutSections.tsx` (`OurExperienceSection`, `WhatWeBelieveSection`, `OurInvitationSection`), each rendering the shared placeholder, `PendingSection`, so each can be replaced independently. Every section is a `section` labelled by its `h2`; the page has one `h1` (the hero). The global footer follows Section 7.
+`src/pages/About.tsx` holds Sections 1 and 2 and composes the page. Section 3 is `src/components/about/WhatWeDoSection.tsx` (Section 77) and Section 4 is `src/components/about/HowWeWorkTogetherSection.tsx` (Section 78). Sections 5 to 7 are separate named components in `src/components/about/AboutSections.tsx` (`OurExperienceSection`, `WhatWeBelieveSection`, `OurInvitationSection`), so each can be replaced independently; Sections 5 and 6 are designed (Sections 79 and 80). Section 7 is not in that file: it is the homepage's `NextProblemCTA` (Section 81). `PendingSection` is removed. Every section is a `section` labelled by its `h2`; the page has one `h1` (the hero). The global footer follows Section 7.
 
 ---
 
@@ -6147,3 +6151,79 @@ Used exactly:
 - **`lg` to 1400px.** The copy runs in two columns above the infographic (the eyebrow and `h2` at left; the paragraph and statement card at right), and the infographic takes the full width.
 - **Below `lg`.** A deliberate stack: the copy, the statement card, the reactive timeline, the planned timeline, *Order creates capacity*, the banner. From `md` the two timelines sit side by side.
 
+---
+
+# 79. About page, Section 5: Our experience
+
+Status: APPROVED (2026-11-19). Direction supplied by Jeff Kaufman (founder-approved copy for *Our experience*). Scope: `/about` Section 5 only; it replaces that section's placeholder (Section 76).
+
+MESSAGE: JiTpro comes from decades of firsthand experience running complex construction projects. Its people have carried the responsibilities its clients carry, and that experience shapes how JiTpro works. The section leads the visitor to the people behind JiTpro.
+
+## 79.1 Copy
+
+Used exactly, with its paragraph breaks:
+- **Eyebrow:** *Our experience* (uppercased in CSS, Section 7.7). **`h2`:** *Built by people who have lived it.*
+- **Paragraphs:** *JiTpro was born from decades of firsthand experience …*; *We've lived through the missed deadlines …*; *And we've seen what happens when projects are properly planned …*.
+- **Emphasized statement:** *We didn't create JiTpro because we thought construction needed another tool. We created it because we know construction can be better.*
+- **Paragraph:** *Our experience shapes how we work. We understand the responsibilities our clients carry because we've carried them ourselves.*
+- **Link:** *Meet the people behind JiTpro.* to the Leadership Team page.
+
+The placeholder's central message (Section 76.1) is retired.
+
+## 79.2 Treatment
+
+- **Surface.** `--jp-surface-light`, as the placeholder (Section 76.2).
+- **Type.** The eyebrow and `h2` as Section 76.2. The paragraphs at body size in `--jp-background` at 85%, the first a step larger.
+- **The emphasized statement.** The hero's closing-statement treatment (Section 74): a 4 px `--jp-brand-amber` bar at its left, the statement in the heading face, bold, in `--jp-background`, a step above the body; its second sentence extrabold. On the light ground amber is decorative only (Section 8.8): the eyebrow bar, the statement's bar and the link's underline. All text is ink.
+- **The link.** The role link's treatment (Section 54.2.5): the heading face, semibold, `--jp-background`, a decorative 2 px `--jp-brand-amber` underline offset 5 px, a 44 px target (Section 34.1), a lucide arrow that moves 4 px right on hover (none under reduced motion) and the standard ink focus outline. A text link, not a button.
+- **Placeholder target (temporary).** The Leadership Team page has no approved route yet. Until it does, the line keeps the link's type and underline but is not a link: no arrow, no target, not focusable. The route is one marked constant (`LEADERSHIP_TEAM_PATH`) in the component; setting it makes the line the link above. No page or route is created for it.
+- **No imagery, no icons, no motion.**
+
+## 79.3 Composition
+
+- **From `lg`.** Two columns on the shared `max-w-7xl` frame, about 5 : 7: at left the eyebrow and `h2`; at right the narrative (at most 40rem), the statement, the closing paragraph and the link.
+- **Below `lg`.** One column, at most 44rem: eyebrow, `h2`, the narrative, the statement, the closing paragraph, the link.
+
+---
+
+# 80. About page, Section 6: What we believe
+
+Status: APPROVED (2026-11-19). Direction supplied by Jeff Kaufman (founder-approved copy for *What we believe*). Scope: `/about` Section 6 only; it replaces that section's placeholder (Section 76).
+
+MESSAGE: better construction management is not only about schedules and profitability. It develops capable, resilient teams that can manage demanding projects without being continually overwhelmed by preventable problems. The message and the typography carry the section.
+
+## 80.1 Copy
+
+Used exactly, with its paragraph breaks:
+- **Eyebrow:** *What we believe* (uppercased in CSS, Section 7.7). **`h2`:** *Protect your schedule. Protect your profits. Protect your people.* (unchanged from Section 76.1).
+- **Paragraphs:** *We believe the strength of a construction company …*; *Construction will always be demanding. …*; *We've watched capable project managers …*.
+- **First emphasized statement:** *We don't believe that should be accepted as the cost of doing business.*
+- **Paragraphs:** *When teams have a clear plan …*; *Better planning protects profits. …*.
+- **Concluding statement:** *We believe better construction companies are built by developing stronger teams, not by demanding more from exhausted ones.*
+
+The placeholder's central message (Section 76.1) is retired.
+
+## 80.2 Treatment
+
+- **Surface.** `--jp-surface-white`, as the placeholder (Section 76.2); the concluding band is `--jp-surface`.
+- **Type.** The eyebrow and `h2` as Section 76.2. The paragraphs at body size in `--jp-background` at 85%, the first a step larger.
+- **The `h2`'s emphasis (amended 2026-11-19).** Each of its three sentences is set on its own line at every width. *Protect your people.*, the most important statement, is about 18% larger than the other two, in the same `--jp-background`, with a decorative `--jp-brand-amber` underline (0.07em thick, offset 0.2em). Amber is never its text: Brand Amber on `--jp-surface-white` measures 2.15:1 (Section 8.8). So that no line wraps, the `h2`'s sizes are capped by its column's width (container units: 8cqw for the first two lines, 9.45cqw for the third).
+- **First emphasized statement.** Section 79.2's emphasized-statement treatment: a 4 px `--jp-brand-amber` bar at its left, the heading face, bold, in `--jp-background`, a step above the body.
+- **Concluding statement.** The section's strongest emphasis, on a full-width `--jp-surface` band (the closing-banner form of Section 78.2): centred, the heading face, extrabold, `--jp-text-primary`, at about the `h2`'s size, within 56rem, beneath a short 4 px `--jp-brand-amber` rule.
+- **Amber** is restrained: on the white ground it is decorative only (Section 8.8), the eyebrow bar and the statement's bar; on the band, the short rule. No amber text.
+- **No cards, icons, imagery, diagrams or motion.**
+
+## 80.3 Composition
+
+- **From `lg`.** Two columns on the shared `max-w-7xl` frame, about 5 : 7, as Section 79: at left the eyebrow and `h2`; at right the narrative (at most 40rem) with the first statement in its place. The band follows at full width.
+- **Below `lg`.** One column, at most 44rem, then the band.
+
+---
+
+# 81. About page, Section 7: the homepage's final call to action
+
+Status: APPROVED (2026-11-19). Direction supplied by Jeff Kaufman. Scope: `/about` Section 7 only; it replaces that section's placeholder (Section 76).
+
+The About page closes with the homepage's final call to action, **the same component**, `NextProblemCTA` (`src/components/home/NextProblemCTA.tsx`), rendered without props or overrides. Its copy, the floor-plan blueprint (Decision Log 2026-11-17), the scrim, the amber glow, typography, line breaks, spacing, height, alignment, responsive behaviour, the button, its hover and its destination are the homepage's, and any change to it applies to both pages. It MUST NOT be forked, wrapped with page-specific styling, or given About-specific copy; a difference between the two pages needs its own decision.
+
+The placeholder's eyebrow *Our invitation*, its `h2` *Break the cycle. One project at a time.* and its central message are retired.

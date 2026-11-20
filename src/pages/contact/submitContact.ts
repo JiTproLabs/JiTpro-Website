@@ -10,6 +10,7 @@ export interface ContactFormData {
   // Visitor-entered
   firstName: string;
   lastName: string;
+  company: string;
   email: string;
   message: string;
 }
@@ -18,8 +19,9 @@ export interface ContactFormData {
  * Submits form data through the submit-contact Edge Function,
  * which validates the Turnstile token and inserts into the leads table.
  *
- * The payload intentionally omits the legacy qualification columns
- * (phone, company, has_project, project_*, user_role, procurement_method,
+ * `company` (restored 2026-11-19) goes to the existing legacy `leads.company`
+ * column. The payload intentionally omits the other legacy qualification
+ * columns (phone, has_project, project_*, user_role, procurement_method,
  * schedule_call, timestamp) — all verified nullable on the live `leads`
  * table (2026-08-26), so omitted keys simply insert as NULL.
  */
@@ -34,6 +36,7 @@ export async function submitContactForm(data: ContactFormData, turnstileToken: s
     page: data.page,
     first_name: data.firstName,
     last_name: data.lastName,
+    company: data.company,
     email: data.email,
     message: data.message,
   };
