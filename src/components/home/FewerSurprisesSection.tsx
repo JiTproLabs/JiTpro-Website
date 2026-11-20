@@ -33,8 +33,12 @@ import { FileText, Layers, Search, type LucideIcon } from 'lucide-react';
  */
 
 const BENEFITS: ReadonlyArray<{ Icon: LucideIcon; title: string; body: string }> = [
-  { Icon: Search, title: 'See problems earlier', body: 'Identify procurement problems before they disrupt the field.' },
-  { Icon: Layers, title: 'Manage change', body: 'Understand what changed and how it affects your project.' },
+  {
+    Icon: Search,
+    title: 'Know the needs. Control the process',
+    body: 'Identify the decisions, approvals, and commitments the field depends on, and when each one is due.',
+  },
+  { Icon: Layers, title: 'Manage change as it happens', body: 'Understand what changed and how it affects your project.' },
   {
     Icon: FileText,
     title: 'Keep the record',

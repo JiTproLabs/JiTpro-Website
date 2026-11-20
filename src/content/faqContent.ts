@@ -36,7 +36,7 @@ export const FAQS: Faq[] = [
     answer: [
       p('JiTpro helps general contractors take control of their projects before problems reach the field.'),
       p(
-        'We start by identifying the products, materials, and services your project needs. Then we uncover the information, decisions, approvals, and other requirements needed to get everything ready for construction.',
+        'We start by identifying the products, materials, and services your project needs. Then we establish the information, decisions, approvals, and other requirements needed to get everything ready for construction.',
       ),
       p(
         "We organize and sequence that work around when each item is needed on site, so everyone knows what needs to happen, who's responsible, and when it needs to be done.",
@@ -70,7 +70,7 @@ export const FAQS: Faq[] = [
         'JiTpro helps prevent these disruptions by identifying what your project needs, sequencing the work required to deliver it, and establishing clear responsibilities and deadlines before problems reach the field.',
       ),
       callout('In construction, upfront investment in planning and quality control is consistently far less expensive than the cost of rework and delays.'),
-      p("By identifying and addressing problems early, JiTpro helps protect your schedule, your people, and the profits you've earned."),
+      p("By identifying requirements early, assigning responsibility, and controlling the sequence, JiTpro helps protect your schedule, your people, and the profits you've earned."),
     ],
   },
   {
@@ -97,7 +97,7 @@ export const FAQS: Faq[] = [
         'We start by reviewing your project documents and construction schedule to identify the products, materials, services, and supporting requirements your project needs.',
       ),
       p(
-        'We uncover missing information, establish responsibilities, and develop a detailed procurement plan that sequences the work around when everything is needed on site.',
+        'We identify missing information, establish responsibilities, and develop a detailed procurement plan that sequences the work around when everything is needed on site.',
       ),
       p(strong("But our work doesn't stop with the initial plan.")),
       p(
@@ -120,7 +120,7 @@ export const FAQS: Faq[] = [
         'Your project managers and superintendents already have demanding responsibilities. Critical early planning often gets pushed aside as more immediate needs consume their time.',
       ),
       p(
-        'JiTpro takes that work off their shoulders, getting started immediately to identify requirements, uncover missing information, and establish a properly sequenced procurement plan.',
+        'JiTpro takes that work off their shoulders, getting started immediately to identify requirements, define missing information, and establish a properly sequenced procurement plan.',
       ),
       p('We remain involved throughout procurement, helping your team stay ahead as the project evolves.'),
       callout('We do the critical planning early, so your team can focus on building instead of constantly catching up.'),

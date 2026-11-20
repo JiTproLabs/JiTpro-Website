@@ -42,7 +42,7 @@ const ART = `${import.meta.env.BASE_URL}assets/home/one-project-golden-path`;
 const POINTS: ReadonlyArray<{ title: string; body: string; Icon: LucideIcon }> = [
   {
     title: 'Plan early. Stay involved.',
-    body: 'We do the detailed procurement planning up front, then help your team stay ahead of decisions, commitments, and potential problems throughout the project.',
+    body: 'We do the detailed planning up front, then stay with your team through construction, with weekly guidance that keeps decisions, commitments, and open items on schedule.',
     Icon: CalendarDays,
   },
   {

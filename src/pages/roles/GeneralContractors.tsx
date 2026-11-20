@@ -62,14 +62,14 @@ const CONSEQUENCES = [
 const PROTECT = ['Protect your schedule.', 'Protect your profits.', 'Protect your people.', 'Deliver on your promises.'];
 
 const IMAGINE = [
-  'Imagine knowing months in advance which decisions, approvals, products, and commitments could threaten your construction schedule.',
+  'Imagine knowing months in advance which decisions, approvals, products, and commitments your construction schedule depends on, and when each one is due.',
   'Imagine your owner knowing exactly when selections are required and why. Your architect knowing which information must be released. Your trade partners knowing what is expected and when.',
   'Imagine your project managers spending less time chasing answers and your superintendents spending more time building.',
 ];
 
 const STEPS = [
   {
-    title: 'We uncover the hidden risks.',
+    title: 'We define what the project needs.',
     body: 'We examine project scope, products, materials, services, and the information required to procure them. We identify gaps and unresolved conditions before they become field problems.',
   },
   {
@@ -82,7 +82,7 @@ const STEPS = [
   },
   {
     title: 'We help your team stay ahead.',
-    body: 'We make emerging risks visible so your team can act while options remain, rather than paying to recover after disruptions occur.',
+    body: 'Each week, we show your team what needs attention now and what is coming next, so open items get resolved while options remain, rather than paying to recover after disruptions occur.',
   },
 ];
 
@@ -404,7 +404,7 @@ function BetterWay() {
         {/* Right: the argument and the four closing statements. */}
         <div className="mt-10 sm:mt-12 lg:mt-1">
           <p className="max-w-[56ch] text-[1.0625rem] leading-[1.6] text-pretty text-jp-text-primary/90 sm:text-[1.1875rem] xl:text-[1.25rem]">
-            At JiTpro, we go deeper into the details of your project to uncover problems that traditional management practices often miss, long before they disrupt your schedule, exhaust your people, and consume your profits.
+            At JiTpro, we go deeper into the details of your project to establish what the field will need, what must happen to make it ready, and who is responsible for each step, long before a missed requirement can disrupt your schedule, exhaust your people, and consume your profits.
           </p>
 
           <p className="mt-10 font-heading text-[1.75rem] font-extrabold leading-[1.1] tracking-[-0.03em] text-balance text-jp-text-primary sm:mt-12 sm:text-[2.25rem] xl:text-[2.75rem] 2xl:text-[3.125rem]">
@@ -655,7 +655,7 @@ const COMPARISON = [
   {
     key: 'reactive',
     label: 'Reactive',
-    heading: 'Problems discovered in the field.',
+    heading: 'Problems materialize in the field.',
     points: ['Late decisions and approvals', 'Missing or incomplete products', 'Crews waiting and being reallocated', 'Schedule and profit at risk'],
     Icon: AlertTriangle,
     fill: 'bg-jp-warning-red',
@@ -664,7 +664,7 @@ const COMPARISON = [
   {
     key: 'proactive',
     label: 'Proactive',
-    heading: 'Problems identified early enough to act.',
+    heading: 'Requirements managed upstream.',
     points: ['Decisions and approvals on time', 'Right products, ready when needed', 'Crews working productively', 'Schedule and profit protected'],
     Icon: CheckCircle2,
     fill: 'bg-jp-success',
@@ -762,9 +762,9 @@ function Possibility() {
               id="gc-possibility"
               className="mt-7 max-w-[15ch] font-heading text-[min(2.75rem,11vw)] font-extrabold leading-[1.02] tracking-[-0.035em] text-balance text-jp-background sm:text-[3.5rem] lg:text-[4rem] xl:text-[3.5rem] 2xl:text-[3.875rem]"
             >
-              What if you could see the problems{' '}
+              What if you knew what&apos;s at risk, who owns it, and how to{' '}
               <span className="relative inline-block">
-                coming
+                prevent it
                 <BrushUnderline className="absolute top-full left-[-3%] -mt-[0.02em] h-[0.16em] w-[106%]" />
               </span>
               ?
@@ -1065,7 +1065,7 @@ function Invitation() {
                 You don&apos;t have to overhaul your entire company to begin changing how you build.
               </p>
               <p className="text-[1.125rem] leading-[1.6] text-pretty text-jp-text-primary/90 sm:text-[1.25rem] xl:text-[1.375rem]">
-                JiTpro starts with a Project Readiness Engagement. We take a detailed look at one project, identify the risks and missing commitments, and establish a structured procurement plan to help your team get ahead of them.
+                It starts with a JiTpro Project Readiness Engagement on one project. We work with your team to identify what the project needs, establish who is responsible for each requirement and when it is due, and build the procurement plan your team works from. Then we stay with the project, giving your team weekly guidance on what needs attention now and what is coming next.
               </p>
             </div>
           </div>

@@ -440,7 +440,7 @@ function BetterWayToBuild() {
                 id="owner-better-way"
                 className="mt-5 font-heading text-[min(2.375rem,9.6vw)] font-extrabold leading-[1.08] tracking-[-0.025em] text-balance text-jp-text-primary sm:text-[2.875rem] lg:text-[clamp(2.25rem,3.2vw,3.25rem)]"
               >
-                Imagine a contractor who sees problems coming before you do.
+                Imagine a contractor who knows what&apos;s coming before you have to ask.
               </h2>
 
               <div className="mt-6 space-y-3.5 text-[1.0625rem] leading-[1.55] text-pretty text-jp-text-primary/90 sm:text-[1.125rem] lg:text-[clamp(1rem,1.2vw,1.125rem)]">

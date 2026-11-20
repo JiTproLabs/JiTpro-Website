@@ -6,11 +6,11 @@ const phases = [
     number: '01',
     title: 'Assess the Project',
     body: [
-      'JiTpro reviews the drawings, specifications, schedule, and procurement strategy—looking for long-lead items, missing decisions, coordination risks, constraints, and schedule exposure before any of it can impact construction.',
+      'JiTpro reviews the drawings, specifications, schedule, and procurement strategy to establish what the project will need, when the field needs it, and what must happen first: long-lead items, open decisions, coordination requirements, and constraints.',
       'The assessment answers the question every GC should be able to answer at award, and almost never can: where is this job already exposed?',
     ],
     deliverables: [
-      'Executive Procurement Risk Assessment',
+      'Project Readiness Assessment',
       'Initial Constraint Register',
       'Priority Action List',
     ],

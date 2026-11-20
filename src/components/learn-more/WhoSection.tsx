@@ -47,7 +47,7 @@ export default function WhoSection() {
         heading="This works best before a project is in trouble."
         lede={
           <p>
-            JiTpro is preventive. It is at its most useful on a project early enough that decisions, information, and commitments can still be worked, for a contractor who has paid for preventable problems before and does not want to repeat it on the next one.
+            JiTpro works ahead of the field. It is at its most useful on a project early enough that decisions, information, and commitments can still be worked, for a contractor who has paid for preventable problems before and does not want to repeat it on the next one.
           </p>
         }
       />
