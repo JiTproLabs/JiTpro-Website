@@ -21,7 +21,8 @@ import { Link } from 'react-router-dom';
  *   empty left side fades into the section's navy, so the type sits on the
  *   same dark ground with no seam and no card. LEFT, vertically centred: the
  *   amber eyebrow, the h2 at a display register with "performance." in Brand
- *   Amber, the two supporting paragraphs in near-white, the short amber rule,
+ *   Amber, the engagement's introduction label, supporting headline and
+ *   three paragraphs (issue #92), the short amber rule,
  *   then the band's existing closing link to /product (§54.1), kept.
  *
  *   Below `xl`: the type first, then the photograph as a full-bleed band
@@ -55,8 +56,10 @@ const BAND_FADES = {
 export default function HowWeDoItSection() {
   return (
     <section className="relative isolate overflow-hidden bg-jp-background xl:flex xl:min-h-[40vw] xl:items-center">
-      {/* The car, from `xl` the band's backdrop. */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden xl:block">
+      {/* The car, from `xl` the band's backdrop: drawn at its own proportions (as tall as 40vw at full width) and
+          centred vertically, so a taller band (issue #92) never scales the car up behind the type; its fades
+          hand its top and foot to the navy. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-1/2 hidden aspect-[1981/793] -translate-y-1/2 xl:block">
         <img
           src={`${CAR}-1981.webp`}
           srcSet={`${CAR}-1200.webp 1200w, ${CAR}-1981.webp 1981w`}
@@ -83,12 +86,29 @@ export default function HowWeDoItSection() {
                 for peak <span className="text-jp-brand-amber">performance.</span>
               </span>
             </h2>
-            <div className="mt-7 space-y-4 text-[1.125rem] leading-[1.55] text-jp-text-primary/90 sm:mt-8 sm:space-y-5 sm:text-[1.25rem] xl:mt-[clamp(1.5rem,2.2vw,2.75rem)] xl:space-y-[clamp(0.75rem,1.1vw,1.25rem)] xl:text-[clamp(1.0625rem,1.25vw,1.5rem)]">
+            {/* The engagement (issue #92, §54.1): the introduction label in the eyebrow's mono register but in
+                secondary ink, so the band's amber stays at four elements (§48.7); authored in sentence case,
+                uppercased in CSS (§7.7). Then the supporting headline and the three paragraphs. */}
+            <p className="mt-8 font-mono text-xs font-bold uppercase tracking-[0.2em] text-jp-text-secondary sm:mt-10 sm:text-sm xl:mt-[clamp(1.5rem,2.2vw,2.75rem)] xl:text-[clamp(0.8125rem,0.85vw,1rem)]">
+              Introducing the JiTpro Project Readiness Engagement
+            </p>
+            <h3 className="mt-3 font-heading text-[1.5rem] font-bold leading-[1.2] tracking-[-0.015em] text-jp-text-primary sm:text-[1.75rem] xl:mt-[clamp(0.5rem,0.7vw,0.875rem)] xl:text-[clamp(1.375rem,1.75vw,2.125rem)]">
+              Your project. Your team. JiTpro&apos;s Playbook
+            </h3>
+            <div className="mt-5 space-y-4 text-[1.125rem] leading-[1.55] text-jp-text-primary/90 sm:mt-6 sm:space-y-5 sm:text-[1.25rem] xl:mt-[clamp(0.875rem,1.2vw,1.5rem)] xl:space-y-[clamp(0.75rem,1.1vw,1.25rem)] xl:text-[clamp(1.0625rem,1.25vw,1.5rem)]">
               <p className="max-w-[44ch] xl:max-w-[34vw]">
-                Just like a Formula 1 team, we bring discipline, coordination and real-time control to your project.
+                We work alongside your project team to build a comprehensive Procurement Playbook, customized to your
+                project, that identifies exactly what&apos;s needed, who is responsible, and when every action must be
+                completed to keep construction moving.
               </p>
               <p className="max-w-[44ch] xl:max-w-[34vw]">
-                Every decision is deliberate. Every step is planned. Every detail is aligned for success.
+                Our experienced construction professionals examine your drawings, specifications, and schedule to
+                establish the decisions, approvals, commitments, and procurement activities required to support the
+                work in the field.
+              </p>
+              <p className="max-w-[44ch] xl:max-w-[34vw]">
+                No new software to master. No additional full-time staff to hire. Just experienced professionals
+                bringing precision, clarity, and accountability to your project.
               </p>
             </div>
             <span aria-hidden="true" className="mt-8 block h-1 w-16 rounded-full bg-jp-brand-amber sm:mt-10 sm:w-20 xl:mt-[clamp(1.5rem,2vw,2.5rem)] xl:w-[clamp(4.5rem,5vw,6.5rem)]" />

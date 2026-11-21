@@ -7,7 +7,7 @@
  * The reader picks who they are; a rail of tabs written for that reader
  * appears; each tab shows a headline and description beside a visual column.
  *
- *   HEADER    the eyebrow "What JiTpro means for:" (the h2), with the
+ *   HEADER    the eyebrow "What JiTpro delivers for:" (the h2), with the
  *             audience field beside it from sm: a native <select>
  *   RAIL      the selected audience's tabs as compact pills, ink on light
  *   HAIRLINE  the light-surface hairline
@@ -451,7 +451,7 @@ export default function AudienceSection() {
               id={headingId}
               className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-jp-ink-secondary sm:text-sm sm:tracking-[0.18em]"
             >
-              What JiTpro means for:
+              What JiTpro delivers for:
               <span className="sr-only">{` ${audience.label.toLowerCase()}`}</span>
             </h2>
 
