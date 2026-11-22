@@ -31,6 +31,7 @@ import EconomicCase from './pages/investor/EconomicCase';
 import InvestorAppendix from './pages/investor/InvestorAppendix';
 import InvestorDeckPage from './pages/investor/InvestorDeckPage';
 import FAQ from './pages/FAQ';
+import Pricing from './pages/Pricing';
 import FAQLegacy from './pages/FAQLegacy';
 import RobotsNoindex from './components/RobotsNoindex';
 import MainLayout from './components/MainLayout';
@@ -179,6 +180,17 @@ function App() {
           {/* Linked from the capture form's fine print, and from the footer
               in Sprint 5 (D3.7). */}
           <Route path="/privacy" element={<Privacy />} />
+          {/* UNLAUNCHED draft (Design System §82, issue #94): noindex, nofollow, not in
+              navigation, the footer or any sitemap, and not linked from any page. */}
+          <Route
+            path="/pricing"
+            element={
+              <>
+                <RobotsNoindex />
+                <Pricing />
+              </>
+            }
+          />
           <Route path="/demo" element={<Demo />} />
           {/* Unlisted — not in nav. Direct-link only. Plan to re-integrate later. */}
           <Route path="/homepage-concept" element={<HomepageConcept />} />
