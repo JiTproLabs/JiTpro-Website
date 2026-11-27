@@ -234,9 +234,13 @@ describe('advantage page copy', () => {
   });
 
   it('keeps the founder’s key statements', () => {
-    expect(content.RACE_TO_BOTTOM.statement).toBe(
-      "You've reduced your profit before construction even begins, but you haven't reduced the inefficiencies that consume it.",
-    );
+    const { heading, closing } = content.RACE_TO_BOTTOM;
+    expect([...heading.lines, heading.emphasis].join(' ')).toBe('Winning the job means nothing if you lose the profit.');
+    expect(closing.before + closing.emphasis + closing.after).toBe('Compete through performance, not sacrifice.');
+    expect(content.RACE_TO_BOTTOM.comparison.map((p) => p.outcome)).toEqual([
+      'Greater financial exposure.',
+      'Greater competitive strength.',
+    ]);
     expect(content.COMPOUNDING.statement.join(' ')).toBe(
       "Operational excellence creates pricing flexibility. Pricing flexibility doesn't create operational excellence.",
     );

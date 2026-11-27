@@ -26,22 +26,33 @@ export const HERO = {
   action: "Let's talk about your next project",
 } as const;
 
+/**
+ * The race to the bottom (§83.1, item 2, §83.6; rebuilt 2026-11-25 to the founder's approved mockup,
+ * docs/design/assets/advantage-race/race-to-the-bottom-approved-mockup.png). Founder copy, used exactly as the mockup
+ * sets it. Split strings mark where the mockup breaks a line or changes colour.
+ */
 export const RACE_TO_BOTTOM = {
   eyebrow: 'The race to the bottom',
-  heading: "You can't cut your way to profitability.",
-  paragraphs: [
-    'When competition tightens, the fastest lever is the bid. Margins come down so the work can be won.',
-    'But the inefficiencies that erode margin stay exactly where they were. They show up on the job, one cost at a time.',
+  /** Two lines on desktop; the last word in Brand Amber. */
+  heading: { lines: ['Winning the job means nothing', 'if you lose the'], emphasis: 'profit.' },
+  statement:
+    "There is a difference between lowering your price because you've become more efficient and lowering your price simply to win the job.",
+  comparison: [
+    {
+      tone: 'sacrifice',
+      title: 'Cut your price',
+      points: ['Lower your price.', 'Accept less margin.', 'Carry the same inefficiencies.'],
+      outcome: 'Greater financial exposure.',
+    },
+    {
+      tone: 'performance',
+      title: 'Sharpen your organization',
+      points: ['Improve project control.', 'Reduce preventable costs.', 'Retain more profit.'],
+      outcome: 'Greater competitive strength.',
+    },
   ],
-  costs: [
-    { title: 'Late decisions', body: 'Work waits on answers that were needed weeks earlier.' },
-    { title: 'Missed commitments', body: 'A late approval or delivery pushes the next trade back.' },
-    { title: 'Field disruptions', body: 'Crews stop, resequence, or work around what is missing.' },
-    { title: 'Expediting', body: 'Premiums paid to recover time that was lost upstream.' },
-    { title: 'Remobilization', body: 'Trades leave and come back, and the job pays for both trips.' },
-    { title: 'Extended overhead', body: 'Every added week carries supervision, equipment, and general conditions.' },
-  ],
-  statement: "You've reduced your profit before construction even begins, but you haven't reduced the inefficiencies that consume it.",
+  /** The middle word (with its comma, as the light mockup sets it) in amber. */
+  closing: { before: 'Compete through ', emphasis: 'performance,', after: ' not sacrifice.' },
 } as const;
 
 /**

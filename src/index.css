@@ -64,6 +64,12 @@
   --jp-surface-light: #f1f5f9; /* role inversion of --jp-text-primary */
   --jp-ink-secondary: #475569; /* body and structural linework on light */
   --jp-surface-white: #ffffff; /* raised light zone within a light act (§8.8, 2026-11-05) */
+
+  /* Scoped to The race to the bottom, light colorway (§8.8, §83.1 item 2,
+     2026-11-25): the warm ivory sampled from its artwork, and the deep amber
+     that carries amber text on it (brand amber is 1.94:1 there). */
+  --jp-surface-ivory: #f9f2eb;
+  --jp-amber-ink: #a84d08; /* 5.07:1 on --jp-surface-ivory */
 }
 
 /*
@@ -92,6 +98,8 @@
   --color-jp-surface-light: var(--jp-surface-light);
   --color-jp-ink-secondary: var(--jp-ink-secondary);
   --color-jp-surface-white: var(--jp-surface-white);
+  --color-jp-surface-ivory: var(--jp-surface-ivory);
+  --color-jp-amber-ink: var(--jp-amber-ink);
 }
 
 /*

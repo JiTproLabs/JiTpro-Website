@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Eye, Gauge, ShieldCheck, Users, type LucideIcon } from 'lucide-react';
 import {
@@ -45,7 +45,6 @@ const PRIMARY_BUTTON =
   'inline-flex items-center justify-center gap-2.5 rounded-xl bg-jp-brand-amber px-6 py-4 text-center text-[0.9375rem] font-semibold text-jp-background shadow-[0_12px_30px_-12px_color-mix(in_oklab,var(--jp-brand-amber)_60%,transparent)] transition-colors duration-200 ease-out hover:bg-jp-brand-amber-active focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-jp-text-primary motion-reduce:transition-none sm:px-7 sm:text-base';
 
 const EYEBROW_DARK = 'font-mono text-xs font-bold uppercase tracking-[0.24em] text-jp-brand-amber sm:text-sm';
-const EYEBROW_LIGHT = 'font-mono text-xs font-bold uppercase tracking-[0.24em] text-jp-ink-secondary sm:text-sm';
 const H2 = 'font-heading text-[2.125rem] font-extrabold leading-[1.06] tracking-[-0.03em] text-balance sm:text-[2.75rem] lg:text-[3.25rem]';
 
 /** The JiTpro pit stop: the founder-supplied overhead scene, its JiTpro livery and crew branding part of the image (§83.3). */
@@ -154,36 +153,230 @@ function Hero() {
 
 /* ---------------------------------------------------------------------------------- 2. race to the bottom */
 
+/**
+ * True once the element has entered the viewport, then stays true. Under reduced motion, or without
+ * IntersectionObserver, it is true from the first render, so the section shows its resolved state (§46.5).
+ */
+function useRevealed<T extends Element>(rootMargin = '0px 0px -18% 0px'): [RefObject<T>, boolean] {
+  const ref = useRef<T>(null);
+  const [revealed, setRevealed] = useState(
+    () =>
+      typeof window === 'undefined' ||
+      typeof IntersectionObserver === 'undefined' ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+  useEffect(() => {
+    const el = ref.current;
+    if (revealed || !el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setRevealed(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [revealed, rootMargin]);
+  return [ref, revealed];
+}
+
+/**
+ * The section's one reveal timeline (§46.3): every delay in the section is read from here, in milliseconds after its
+ * group enters the viewport. Text only: the artwork never moves.
+ */
+const RACE_TIMELINE = {
+  intro: { eyebrow: 0, heading: 120, statement: 280 },
+  /** The sacrifice group first, then the performance group: the eye reads the descent, then the climb. */
+  groups: [0, 220] as const,
+  closing: 0,
+  fade: 700,
+} as const;
+
+/** A fade and short rise, resolved under reduced motion. Opacity only governs visibility: the text is always rendered. */
+function reveal(shown: boolean, delay: number, className: string, style?: CSSProperties): { className: string; style: CSSProperties } {
+  return {
+    className: `${className} transition-[opacity,translate] ease-out motion-reduce:transition-none print:translate-y-0 print:opacity-100 ${
+      shown ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
+    }`,
+    style: { ...style, transitionDuration: `${RACE_TIMELINE.fade}ms`, transitionDelay: `${delay}ms` },
+  };
+}
+
+/**
+ * The founder's artwork (§83.6), 1672 x 941. From `xl` the section is the artwork's own shape and everything on it is
+ * placed in the approved mockup's pixels: `--u` is one mockup pixel at the current section width (the section is the
+ * size container), so `calc(N * var(--u))` is N mockup pixels.
+ */
+/** The light colorway (§83.6, 2026-11-25). The dark artwork, race-to-the-bottom-background.webp, is kept unused. */
+const RACE_ART = `${import.meta.env.BASE_URL}assets/advantage/race-to-the-bottom-background-light.webp`;
+const RACE_U = { '--u': 'calc(100cqw / 1672)' } as CSSProperties;
+/** Places an element at a mockup y (its box top), from `xl`. */
+const at = (y: number) => ({ '--y': y }) as CSSProperties;
+const AT_Y = 'xl:absolute xl:top-[calc(var(--y)*var(--u))]';
+
+/** The artwork's sky and ground fade into the section's ivory (sampled from the artwork), so its edges never show. */
+const RACE_FADE_TOP: CSSProperties = { backgroundImage: 'linear-gradient(180deg, var(--jp-surface-ivory) 0%, transparent 100%)' };
+const RACE_FADE_BOTTOM: CSSProperties = { backgroundImage: 'linear-gradient(0deg, var(--jp-surface-ivory) 0%, transparent 100%)' };
+/** The closing statement's flanking rules fade outward (the eyebrow's are short and solid). */
+const RULE_FADE_LEFT: CSSProperties = { backgroundImage: 'linear-gradient(90deg, transparent 0%, var(--jp-brand-amber) 100%)' };
+const RULE_FADE_RIGHT: CSSProperties = { backgroundImage: 'linear-gradient(270deg, transparent 0%, var(--jp-brand-amber) 100%)' };
+
+/** Cut your price, then Sharpen your organization: the mockup's two groups, at their mockup x. */
+const RACE_GROUP_X = [151, 1082] as const;
+const RACE_GROUP_W = [406, 446] as const;
+
+/** The economic argument, on the founder's light artwork, reproduced to the approved light mockup (§83.1, item 2). */
 function RaceToTheBottom() {
+  const R = RACE_TO_BOTTOM;
+  const T = RACE_TIMELINE;
+  const [headingRef, introShown] = useRevealed<HTMLHeadingElement>();
+  const [groupsRef, groupsShown] = useRevealed<HTMLDivElement>();
+  const [closingRef, closingShown] = useRevealed<HTMLParagraphElement>('0px 0px -4% 0px');
+
   return (
-    <section aria-labelledby="race-heading" className="bg-jp-surface-light py-16 sm:py-20 lg:py-24">
-      <div className={CONTAINER}>
-        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-x-16">
-          <div>
-            <p className={EYEBROW_LIGHT}>{RACE_TO_BOTTOM.eyebrow}</p>
-            <h2 id="race-heading" className={`mt-4 ${H2} text-jp-background`}>
-              {RACE_TO_BOTTOM.heading}
-            </h2>
-          </div>
-          <div className="mt-6 space-y-4 text-[1.0625rem] leading-[1.65] text-jp-ink-secondary sm:text-[1.125rem] lg:mt-10">
-            {RACE_TO_BOTTOM.paragraphs.map((p) => (
-              <p key={p}>{p}</p>
-            ))}
-          </div>
+    <section aria-labelledby="race-heading" className="@container relative isolate overflow-hidden bg-jp-surface-ivory">
+      <div style={RACE_U} className="relative pt-16 pb-20 sm:pt-20 sm:pb-24 xl:aspect-[1672/941] xl:p-0">
+        {/* The introduction, centred. */}
+        <div className="px-6 text-center sm:px-8">
+          <p
+            style={at(86)}
+            className={`${AT_Y} flex items-center justify-center gap-4 xl:inset-x-0 xl:gap-[calc(20*var(--u))]`}
+          >
+            <span aria-hidden="true" className="h-px w-8 bg-jp-brand-amber/70 sm:w-12 xl:h-[calc(2.5*var(--u))] xl:w-[calc(100*var(--u))]" />
+            <span
+              {...reveal(
+                introShown,
+                T.intro.eyebrow,
+                'font-mono text-xs font-bold uppercase tracking-[0.16em] text-jp-amber-ink sm:text-sm xl:text-[length:calc(21*var(--u))] xl:leading-none xl:tracking-[0.12em]',
+              )}
+            >
+              {R.eyebrow}
+            </span>
+            <span aria-hidden="true" className="h-px w-8 bg-jp-brand-amber/70 sm:w-12 xl:h-[calc(2.5*var(--u))] xl:w-[calc(100*var(--u))]" />
+          </p>
+          <h2
+            id="race-heading"
+            ref={headingRef}
+            {...reveal(
+              introShown,
+              T.intro.heading,
+              `mt-5 font-heading text-[2.125rem] font-bold leading-[1.08] tracking-[-0.025em] text-balance text-jp-background sm:text-[2.875rem] ${AT_Y} xl:inset-x-0 xl:mt-0 xl:text-[length:calc(56*var(--u))] xl:leading-[calc(57*var(--u))] xl:tracking-normal xl:text-wrap`,
+              at(131),
+            )}
+          >
+            {R.heading.lines[0]} <br className="hidden xl:inline" />
+            {R.heading.lines[1]} <span className="text-jp-amber-ink">{R.heading.emphasis}</span>
+          </h2>
+          <p
+            {...reveal(
+              introShown,
+              T.intro.statement,
+              `mx-auto mt-5 max-w-[36rem] text-[1.0625rem] leading-[1.6] text-jp-background sm:text-[1.1875rem] ${AT_Y} xl:inset-x-0 xl:mt-0 xl:max-w-[36em] xl:text-[length:max(16px,calc(20.1*var(--u)))] xl:leading-[1.54]`,
+              at(271),
+            )}
+          >
+            {R.statement}
+          </p>
         </div>
 
-        <ul className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-jp-ink-secondary/15 bg-jp-ink-secondary/15 sm:grid-cols-2 lg:grid-cols-3">
-          {RACE_TO_BOTTOM.costs.map(({ title, body }) => (
-            <li key={title} className="bg-jp-surface-white p-6 sm:p-7">
-              <h3 className="font-heading text-[1.125rem] font-bold text-jp-background">{title}</h3>
-              <p className="mt-2 text-[1rem] leading-[1.55] text-jp-ink-secondary">{body}</p>
-            </li>
-          ))}
-        </ul>
+        {/* The artwork. Below `xl`, full width between the introduction and the groups: whole from `sm`, and on a phone
+            3:2, trimmed only from the left (bare cliff face) so the descent, the low point and the project stay large.
+            From `xl`, the section itself. Decorative (§83.6); never animated. */}
+        <div aria-hidden="true" className="pointer-events-none relative mt-10 sm:mt-12 xl:absolute xl:inset-0 xl:-z-10 xl:mt-0">
+          <img
+            src={RACE_ART}
+            width={1672}
+            height={941}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="block aspect-[3/2] h-auto w-full object-cover object-right sm:aspect-[1672/941] xl:aspect-auto xl:h-full"
+          />
+          <div className="absolute inset-x-0 top-0 h-[14%] xl:h-[7%]" style={RACE_FADE_TOP} />
+          <div className="absolute inset-x-0 bottom-0 h-[14%] xl:h-[7%]" style={RACE_FADE_BOTTOM} />
+        </div>
 
-        <p className="mt-12 border-l-4 border-jp-brand-amber pl-5 font-heading text-[1.5rem] font-extrabold leading-[1.25] tracking-[-0.02em] text-balance text-jp-background sm:text-[1.875rem] lg:max-w-[52rem]">
-          {RACE_TO_BOTTOM.statement}
-        </p>
+        {/* The two groups: stacked (sacrifice first) on a phone, side by side from `md`, at their mockup places from `xl`. */}
+        <div ref={groupsRef} className="mx-auto mt-10 grid max-w-3xl gap-12 px-6 sm:mt-12 sm:px-8 md:grid-cols-2 md:gap-x-10 md:gap-y-0 xl:absolute xl:inset-x-0 xl:top-[calc(470*var(--u))] xl:m-0 xl:block xl:h-[calc(262*var(--u))] xl:max-w-none xl:p-0">
+          {R.comparison.map((group, i) => {
+            const performance = group.tone === 'performance';
+            return (
+              <div
+                key={group.tone}
+                {...reveal(
+                  groupsShown,
+                  T.groups[i],
+                  'md:row-span-5 md:grid md:grid-rows-subgrid xl:absolute xl:top-0 xl:left-[calc(var(--x)*var(--u))] xl:block xl:w-[calc(var(--w)*var(--u))]',
+                  { '--x': RACE_GROUP_X[i], '--w': RACE_GROUP_W[i] } as CSSProperties,
+                )}
+              >
+                <h3
+                  className={`font-heading text-[1.625rem] font-bold leading-[1.2] tracking-[-0.015em] text-jp-background sm:text-[1.875rem] md:self-end xl:self-auto xl:text-[length:calc(35.5*var(--u))] xl:leading-[calc(40*var(--u))] xl:tracking-normal ${
+                    performance ? '' : 'xl:text-jp-text-primary'
+                  }`}
+                >
+                  {group.title}
+                </h3>
+                <div
+                  aria-hidden="true"
+                  className={`mt-4 h-[3px] w-20 xl:mt-[calc(18*var(--u))] xl:h-[calc(3*var(--u))] xl:w-[calc(85*var(--u))] ${
+                    performance ? 'bg-jp-brand-amber' : 'bg-jp-warning-red'
+                  }`}
+                />
+                <ul className="mt-5 space-y-2.5 xl:mt-[calc(15*var(--u))] xl:space-y-0">
+                  {group.points.map((point) => (
+                    <li
+                      key={point}
+                      className={`relative pl-7 text-[1.0625rem] leading-[1.5] xl:pl-[calc(38*var(--u))] xl:text-[length:max(16px,calc(20*var(--u)))] xl:leading-[calc(37*var(--u))] ${
+                        performance ? 'text-jp-background' : 'text-jp-background xl:text-jp-text-primary'
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`absolute top-[0.55em] left-1.5 size-2.5 rounded-full xl:top-[calc(13*var(--u))] xl:left-[calc(9*var(--u))] xl:size-[calc(11*var(--u))] ${
+                          performance ? 'bg-jp-brand-amber' : 'bg-jp-text-muted'
+                        }`}
+                      />
+                      {point}
+                    </li>
+                  ))}
+                </ul>
+                <div aria-hidden="true" className="mt-5 h-px bg-jp-ink-secondary/25 xl:mt-[calc(14*var(--u))]" />
+                <p
+                  className={`mt-5 font-heading text-[1.3125rem] font-bold leading-[1.25] tracking-[-0.01em] sm:text-[1.4375rem] xl:mt-[calc(18*var(--u))] xl:text-[length:calc(27*var(--u))] xl:leading-[calc(30*var(--u))] xl:tracking-normal ${
+                    performance ? 'text-jp-amber-ink' : 'text-jp-background'
+                  }`}
+                >
+                  {group.outcome}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* The closing statement between amber rules that fade outward. */}
+        <div
+          style={at(785)}
+          className={`mt-16 flex items-center justify-center gap-4 px-6 sm:mt-20 sm:gap-6 sm:px-8 ${AT_Y} xl:inset-x-0 xl:mt-0 xl:gap-[calc(45*var(--u))] xl:p-0`}
+        >
+          <span aria-hidden="true" className="h-0.5 w-8 shrink-0 sm:w-20 xl:h-[calc(3*var(--u))] xl:w-[calc(300*var(--u))]" style={RULE_FADE_LEFT} />
+          <p
+            ref={closingRef}
+            {...reveal(
+              closingShown,
+              T.closing,
+              'text-center font-heading text-[1.625rem] font-extrabold italic leading-[1.2] tracking-[-0.015em] text-balance text-jp-background sm:text-[2rem] xl:text-[length:calc(37.5*var(--u))] xl:leading-[calc(44*var(--u))] xl:tracking-normal xl:whitespace-nowrap',
+            )}
+          >
+            {R.closing.before}
+            <span className="text-jp-amber-ink">{R.closing.emphasis}</span>
+            {R.closing.after}
+          </p>
+          <span aria-hidden="true" className="h-0.5 w-8 shrink-0 sm:w-20 xl:h-[calc(3*var(--u))] xl:w-[calc(300*var(--u))]" style={RULE_FADE_RIGHT} />
+        </div>
       </div>
     </section>
   );
