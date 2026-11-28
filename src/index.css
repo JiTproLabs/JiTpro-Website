@@ -66,8 +66,8 @@
   --jp-surface-white: #ffffff; /* raised light zone within a light act (§8.8, 2026-11-05) */
 
   /* Scoped to The race to the bottom, light colorway (§8.8, §83.1 item 2,
-     2026-11-25), and Compete from a position of strength (§83.1 item 4,
-     2026-11-27): the warm ivory sampled from the race artwork, and the deep
+     2026-11-25), Compete from a position of strength (§83.1 item 4) and The
+     compounding advantage (§83.1 item 6, both 2026-11-27): the warm ivory sampled from the race artwork, and the deep
      amber that carries amber text on it (brand amber is 1.94:1 there). */
   --jp-surface-ivory: #f9f2eb;
   --jp-amber-ink: #a84d08; /* 5.07:1 on --jp-surface-ivory */

@@ -255,5 +255,15 @@ describe('advantage page copy', () => {
       "Operational excellence creates pricing flexibility. Pricing flexibility doesn't create operational excellence.",
     );
     expect(content.HOW_JITPRO.concepts.map((c) => c.title)).toEqual(['Clarity', 'Control', 'Coordination', 'Performance']);
+    expect(content.HOW_JITPRO.heading).toBe('Four disciplines. One stronger project.');
+    expect(content.HOW_JITPRO.concepts.map((c) => c.body)).toEqual([
+      'Know what needs to happen.',
+      'Give every requirement an owner and a date.',
+      'Keep everyone working toward the same plan.',
+      'Protect the work and the profit.',
+    ]);
+    expect(content.HOW_JITPRO.closing).toBe('Better preparation leads to better execution.');
+    expect(content.COMPOUNDING.heading.lines.join(' ')).toBe('Control compounds into advantage.');
+    expect(content.COMPOUNDING.steps).toEqual(['Stronger control', 'More reliable execution', 'Greater retained profit', 'Greater competitive strength']);
   });
 });

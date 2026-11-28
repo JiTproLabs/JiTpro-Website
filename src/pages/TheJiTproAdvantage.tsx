@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Eye, Gauge, ShieldCheck, Users, type LucideIcon } from 'lucide-react';
+import { ArrowRight, BarChart3, ClipboardList, Crosshair, Users, type LucideIcon } from 'lucide-react';
 import {
   DEFAULT_INPUTS,
   LIMITS,
@@ -224,7 +224,7 @@ const RACE_FADE_BOTTOM: CSSProperties = { backgroundImage: 'linear-gradient(0deg
 const RULE_FADE_LEFT: CSSProperties = { backgroundImage: 'linear-gradient(90deg, transparent 0%, var(--jp-brand-amber) 100%)' };
 const RULE_FADE_RIGHT: CSSProperties = { backgroundImage: 'linear-gradient(270deg, transparent 0%, var(--jp-brand-amber) 100%)' };
 
-/** Cut your price, then Sharpen your organization: the mockup's two groups, at their mockup x. */
+/** Cut your price, then Improve your performance: the mockup's two groups, at their mockup x. */
 const RACE_GROUP_X = [151, 1082] as const;
 const RACE_GROUP_W = [406, 446] as const;
 
@@ -564,7 +564,6 @@ function ProfitIllustration() {
   /** The recovery slider's position, in tenths (the default is the exact $137,500 ratio, about 73.5%). */
   const recoveryValue = Math.round(result.recoveryPct * 10) / 10;
   /** The share of the estimate kept, as a whole percent for the plain-English line. */
-  const keptShare = Math.max(1, Math.round(inputs.keptPct));
 
   return (
     <>
@@ -633,7 +632,7 @@ function ProfitIllustration() {
                   </output>
                 </div>
                 <p className={HINT} aria-live="polite">
-                  {result.actualProfit > 0 ? PROFIT.kept.positive(keptShare) : result.actualProfit === 0 ? PROFIT.kept.zero : PROFIT.kept.negative}
+                  {PROFIT.kept.sentence(result)}
                 </p>
                 <input
                   id={keptId}
@@ -954,28 +953,142 @@ function PositionOfStrength() {
 
 /* --------------------------------------------------------------------------------- 5. how JiTpro creates */
 
-const CONCEPT_ICONS: Record<string, LucideIcon> = { Clarity: Eye, Control: ShieldCheck, Coordination: Users, Performance: Gauge };
+/**
+ * The founder's mountain composition (§83.1 item 5, 2026-11-27): the text-free artwork, rows 0 to 760 of 1672 x 941,
+ * with the sunrise, the four slanted panels, their icons, numbers and amber connectors, the eyebrow's short rule and the
+ * closing statement's flanking rules drawn in. From `xl` the section is the artwork's shape and the HTML text sits on
+ * it in artwork pixels; below `xl` the panels and connectors are rebuilt in CSS under a crop of the sunrise.
+ */
+const HOW_ART = `${import.meta.env.BASE_URL}assets/advantage/how-mountains-1672.webp`;
+/** The sunrise alone (artwork columns 700 to 1672, rows 0 to 268), for the stacked layout below `xl`. */
+const HOW_BANNER = `${import.meta.env.BASE_URL}assets/advantage/how-mountains-banner-972.webp`;
+const HOW_U = { '--u': 'calc(100cqw / 1672)' } as CSSProperties;
+/** Below `xl`, the sunrise fades into the section's navy at its foot and its left. */
+const HOW_FADE: CSSProperties = {
+  backgroundImage:
+    'linear-gradient(0deg, var(--jp-background) 0%, transparent 70%), linear-gradient(90deg, color-mix(in oklab, var(--jp-background) 75%, transparent) 0%, transparent 70%)',
+};
+/**
+ * Each discipline's text on its panel, in artwork pixels from `xl`: the title's left edge and width (inside the panel's
+ * slanted sides at the title's height); the description sits 12 px further left, following the slant, and wraps at
+ * `bw` so each breaks where the mockup breaks it.
+ */
+const HOW_PANELS = [
+  { x: 141, w: 255, bw: 200 },
+  { x: 535, w: 252, bw: 252 },
+  { x: 920, w: 252, bw: 252 },
+  { x: 1300, w: 266, bw: 200 },
+] as const;
+/** The disciplines appear in order, 180 ms apart, from one reveal of the list (§46.3); the closing statement after. */
+const HOW_STAGGER = 180;
+/** Icons for the CSS panels below `xl` (from `xl` the artwork draws its own). */
+const HOW_ICONS: LucideIcon[] = [Crosshair, ClipboardList, Users, BarChart3];
 
 function HowJiTpro() {
+  const H = HOW_JITPRO;
+  const [listRef, listShown] = useRevealed<HTMLOListElement>();
+  const last = H.concepts.length - 1;
   return (
-    <section aria-labelledby="how-heading" className="bg-jp-background py-16 sm:py-20 lg:py-24">
-      <div className={CONTAINER}>
-        <h2 id="how-heading" className={`${H2} text-jp-text-primary`}>
-          {HOW_JITPRO.heading}
-        </h2>
-        <p className="mt-5 max-w-[62ch] text-[1.0625rem] leading-[1.65] text-jp-text-secondary sm:text-[1.125rem]">{HOW_JITPRO.intro}</p>
-        <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {HOW_JITPRO.concepts.map(({ title, body }) => {
-            const Icon = CONCEPT_ICONS[title];
-            return (
-              <li key={title} className="rounded-2xl border border-jp-border/15 bg-jp-surface p-6 sm:p-7">
-                <Icon aria-hidden="true" strokeWidth={1.75} className="size-7 text-jp-brand-amber" />
-                <h3 className="mt-5 font-heading text-[1.375rem] font-extrabold tracking-[-0.015em] text-jp-text-primary">{title}</h3>
-                <p className="mt-2 text-[1rem] leading-[1.6] text-jp-text-secondary">{body}</p>
-              </li>
-            );
-          })}
-        </ul>
+    <section aria-labelledby="how-heading" style={HOW_U} className="@container relative isolate overflow-hidden bg-jp-background">
+      {/* The artwork. From `xl` the section's own ground, drawn whole; below it, the sunrise above the heading. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+        <img src={HOW_ART} width={1672} height={760} alt="" loading="lazy" decoding="async" className="hidden h-full w-full xl:block" />
+        <div className="absolute inset-x-0 top-0 xl:hidden">
+          <img
+            src={HOW_BANNER}
+            width={972}
+            height={268}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="block aspect-[3/2] w-full object-cover object-[80%_50%] sm:aspect-[5/2] lg:aspect-[972/268]"
+          />
+          <div className="absolute inset-0" style={HOW_FADE} />
+        </div>
+      </div>
+
+      <div className="relative xl:aspect-[1672/760]">
+        <div className="mx-auto max-w-7xl px-6 pt-36 pb-16 sm:px-8 sm:pt-44 sm:pb-20 lg:px-10 lg:pt-40 xl:absolute xl:inset-0 xl:max-w-none xl:p-0">
+          <p className="xl:absolute xl:top-[calc(50*var(--u))] xl:left-[calc(104*var(--u))]">
+            <span className={`${EYEBROW_DARK} block xl:text-[length:calc(22*var(--u))] xl:leading-[calc(28*var(--u))] xl:tracking-[0.1em]`}>{H.eyebrow}</span>
+            <span aria-hidden="true" className="mt-3 block h-0.5 w-14 bg-jp-brand-amber xl:hidden" />
+          </p>
+          <h2
+            id="how-heading"
+            className={`${H2} mt-5 text-jp-text-primary xl:absolute xl:top-[calc(110*var(--u))] xl:left-[calc(100*var(--u))] xl:mt-0 xl:text-[length:calc(68*var(--u))] xl:leading-[calc(76*var(--u))] xl:tracking-[-0.025em] xl:whitespace-nowrap`}
+          >
+            {H.heading}
+          </h2>
+          <p className="mt-5 max-w-[40rem] text-[1.0625rem] leading-[1.6] text-jp-text-secondary sm:text-[1.1875rem] xl:absolute xl:top-[calc(196*var(--u))] xl:left-[calc(104*var(--u))] xl:mt-0 xl:max-w-[calc(780*var(--u))] xl:text-[length:max(16px,calc(23*var(--u)))] xl:leading-[1.35]">
+            {H.intro}
+          </p>
+
+          {/* The four disciplines: stacked with vertical connectors on a phone and tablet, one row from `lg`, and from
+              `xl` the text alone on the artwork's panels. */}
+          <ol ref={listRef} className="mt-12 grid max-w-xl gap-8 px-3 lg:max-w-none lg:px-0 lg:grid-cols-4 lg:gap-9 xl:static xl:mt-0 xl:block">
+            {H.concepts.map(({ title, body }, i) => {
+              const Icon = HOW_ICONS[i];
+              const strong = i === last;
+              return (
+                <li
+                  key={title}
+                  {...reveal(
+                    listShown,
+                    i * HOW_STAGGER,
+                    'relative px-7 pt-6 pb-7 xl:absolute xl:top-[calc(372*var(--u))] xl:left-[calc(var(--x)*var(--u))] xl:w-[calc(var(--w)*var(--u))] xl:p-0',
+                    // Each panel above the next, so its connector's far dot is not covered by the next panel.
+                    { '--x': HOW_PANELS[i].x, '--w': HOW_PANELS[i].w, '--bw': HOW_PANELS[i].bw, zIndex: last - i + 1 } as CSSProperties,
+                  )}
+                >
+                  {/* The slanted panel (below `xl`; from `xl` the artwork's). Performance carries the amber outline. */}
+                  <div
+                    aria-hidden="true"
+                    className={`absolute inset-0 -z-10 -skew-x-[8deg] rounded-2xl lg:-skew-x-12 border xl:hidden ${
+                      strong
+                        ? 'border-2 border-jp-brand-amber bg-jp-surface/80 shadow-[0_0_28px_-6px_color-mix(in_oklab,var(--jp-brand-amber)_70%,transparent)]'
+                        : 'border-jp-border/25 bg-jp-surface/70'
+                    }`}
+                  />
+                  {/* The amber connector to the next panel: down on a phone and tablet, across from `lg`. */}
+                  {i < last && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute top-full left-12 flex h-8 w-0.5 flex-col items-center justify-between bg-jp-brand-amber lg:top-1/2 lg:left-full lg:h-0.5 lg:w-9 lg:flex-row xl:hidden"
+                    >
+                      <span className="-mt-1 size-2.5 shrink-0 rounded-full bg-jp-brand-amber lg:mt-0 lg:-ml-1" />
+                      <span className="-mb-1 size-2.5 shrink-0 rounded-full bg-jp-brand-amber lg:mb-0 lg:-mr-1" />
+                    </span>
+                  )}
+                  <div aria-hidden="true" className="mb-4 flex items-center justify-between xl:hidden">
+                    <Icon strokeWidth={1.75} className="size-8 text-jp-brand-amber" />
+                    <span className="font-heading text-[1.75rem] font-extrabold tracking-[-0.02em] text-jp-text-secondary/45">{String(i + 1).padStart(2, '0')}</span>
+                  </div>
+                  <h3 className="font-heading text-[1.5rem] font-extrabold leading-[1.15] tracking-[-0.02em] text-jp-text-primary xl:text-[length:calc(36*var(--u))] xl:leading-[calc(44*var(--u))] xl:font-bold xl:whitespace-nowrap">
+                    {title}
+                  </h3>
+                  <p className="mt-2 text-[1rem] leading-[1.5] text-jp-text-secondary xl:mt-[calc(8*var(--u))] text-pretty xl:-ml-[calc(12*var(--u))] xl:max-w-[calc(var(--bw)*var(--u))] xl:text-[length:max(15px,calc(22*var(--u)))] xl:leading-[1.45]">
+                    {body}
+                  </p>
+                </li>
+              );
+            })}
+          </ol>
+
+          {/* The conclusion, between the artwork's amber rules from `xl`; below it, between rules of its own. */}
+          <p
+            {...reveal(
+              listShown,
+              H.concepts.length * HOW_STAGGER + 120,
+              'mt-14 flex items-center justify-center gap-5 text-center sm:mt-16 xl:absolute xl:top-[calc(574*var(--u))] xl:left-[calc(357*var(--u))] xl:mt-0 xl:h-[calc(76*var(--u))] xl:w-[calc(953*var(--u))] xl:justify-center',
+            )}
+          >
+            <span aria-hidden="true" className="hidden h-0.5 flex-1 sm:block xl:hidden" style={RULE_FADE_LEFT} />
+            <span className="font-heading text-[1.75rem] font-extrabold italic leading-[1.15] tracking-[-0.025em] text-balance text-jp-text-primary sm:max-w-[30rem] sm:text-center sm:text-[2rem] lg:max-w-none lg:text-[2.25rem] xl:text-[length:calc(46*var(--u))] xl:whitespace-nowrap">
+              {H.closing}
+            </span>
+            <span aria-hidden="true" className="hidden h-0.5 flex-1 sm:block xl:hidden" style={RULE_FADE_RIGHT} />
+          </p>
+        </div>
       </div>
     </section>
   );
@@ -983,38 +1096,209 @@ function HowJiTpro() {
 
 /* -------------------------------------------------------------------------------- 6. compounding advantage */
 
+/**
+ * The founder's wave photograph (§83.1 item 6, §83.8; 2026-11-27): a barrel wave at sunset, 1920 x 819, served whole and
+ * never retouched. From `lg` the section is the approved mockup's shape (1672 x 975 here) on `--jp-surface-ivory`, and
+ * everything on it is placed in section pixels (`--u`, as the race section): the photograph spans the width from y 170,
+ * its sky and foot covered in the section's ivory by an SVG overlay that follows the wave (the sun left open), and the
+ * four stages stand above the wave on amber leaders, joined by an amber line that rises with it.
+ */
+const WAVE = `${import.meta.env.BASE_URL}assets/advantage/compounding-wave`;
+const WAVE_SRCSET = `${WAVE}-768.webp 768w, ${WAVE}-1280.webp 1280w, ${WAVE}-1920.webp 1920w`;
+const WAVE_U = { '--u': 'calc(100cqw / 1672)' } as CSSProperties;
+/** Section height and the photograph's top, in section pixels; one photograph pixel is 1672 / 1920 section pixels. */
+const WAVE_H = 975;
+const WAVE_TOP = 170;
+const WAVE_SCALE = 1672 / 1920;
+
+/**
+ * The ivory cover's lower edge, in photograph pixels: just above the water line at the left, around the lower spray, then
+ * one steady rise to the crest (2026-11-27, founder review: no dip into the wave under the third stage). Drawn as a smooth
+ * curve, like the progression line; the sun is left open by the overlay's mask.
+ */
+const WAVE_SKY_EDGE: readonly (readonly [number, number])[] = [
+  [-40, 548], [300, 548], [450, 535], [600, 505], [700, 480], [760, 420], [820, 335], [900, 280], [980, 238], [1060, 205],
+  [1160, 176], [1260, 154], [1380, 134], [1500, 118], [1620, 106], [1760, 96], [1960, 88],
+];
+/** The water line the amber progression follows, in photograph pixels, from the first stage to the crest. */
+const WAVE_LINE: readonly (readonly [number, number])[] = [
+  [300, 556], [470, 540], [650, 505], [800, 468], [960, 400], [1080, 345], [1190, 286], [1300, 232], [1400, 190], [1510, 160], [1620, 138],
+];
+
+/** A smooth curve through points (Catmull-Rom as cubic Béziers). */
+function smoothPath(points: readonly (readonly [number, number])[]): string {
+  let d = `M${points[0][0]},${points[0][1]}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const [x0, y0] = points[i - 1] ?? points[i];
+    const [x1, y1] = points[i];
+    const [x2, y2] = points[i + 1];
+    const [x3, y3] = points[i + 2] ?? points[i + 1];
+    const c1 = [x1 + (x2 - x0) / 6, y1 + (y2 - y0) / 6].map((v) => v.toFixed(1));
+    const c2 = [x2 - (x3 - x1) / 6, y2 - (y3 - y1) / 6].map((v) => v.toFixed(1));
+    d += ` C${c1.join(',')} ${c2.join(',')} ${x2},${y2}`;
+  }
+  return d;
+}
+const WAVE_PATH = smoothPath(WAVE_LINE);
+const WAVE_SKY = `${smoothPath(WAVE_SKY_EDGE)} L1960,-40 L-40,-40 Z`;
+
+/**
+ * Each stage, in photograph pixels: its anchor on the water line, the label's left edge and the label's foot (its leader
+ * runs from there down to the anchor), and the label's width in section pixels, so each breaks where the mockup breaks it.
+ * `at` is how far along the progression line the anchor lies, for the reveal.
+ */
+const WAVE_STAGES = [
+  { ax: 300, ay: 556, lx: 262, foot: 480, w: 170, at: 0 },
+  { ax: 650, ay: 505, lx: 612, foot: 430, w: 215, at: 0.27 },
+  { ax: 1190, ay: 286, lx: 1152, foot: 150, w: 150, at: 0.67 },
+  { ax: 1620, ay: 138, lx: 1582, foot: 70, w: 262, at: 1 },
+] as const;
+/** The progression line draws once, then each stage appears as the line reaches it (§46.3). */
+const WAVE_DRAW = 1600;
+
 function Compounding() {
+  const C = COMPOUNDING;
+  const ids = useId().replace(/:/g, '');
+  const [stagesRef, stagesShown] = useRevealed<HTMLOListElement>();
+  const last = C.steps.length - 1;
+  const ivory = { stopColor: 'var(--jp-surface-ivory)' };
   return (
-    <section aria-labelledby="compounding-heading" className="bg-jp-surface-light py-16 sm:py-20 lg:py-24">
-      <div className={CONTAINER}>
-        <h2 id="compounding-heading" className={`${H2} text-jp-background`}>
-          {COMPOUNDING.heading}
-        </h2>
-        <ol className="mt-12 grid gap-4 lg:grid-cols-4 lg:gap-0">
-          {COMPOUNDING.steps.map((step, i) => (
-            <li key={step} className="relative flex items-center gap-4 lg:block">
-              <div
-                className={`flex-1 rounded-2xl border p-6 lg:min-h-[9.5rem] ${i < COMPOUNDING.steps.length - 1 ? 'lg:mr-6' : ''} ${
-                  i === COMPOUNDING.steps.length - 1 ? 'border-jp-background bg-jp-background text-jp-text-primary' : 'border-jp-ink-secondary/20 bg-jp-surface-white text-jp-background'
-                }`}
+    <section aria-labelledby="compounding-heading" style={WAVE_U} className="@container relative isolate overflow-hidden bg-jp-surface-ivory">
+      <div className="relative lg:aspect-[1672/975]">
+        <div className="mx-auto max-w-7xl px-6 pt-16 pb-16 sm:px-8 sm:pt-20 sm:pb-20 lg:absolute lg:inset-0 lg:max-w-none lg:p-0">
+          <p className="font-mono text-xs font-bold uppercase tracking-[0.24em] text-jp-amber-ink sm:text-sm lg:absolute lg:top-[calc(62*var(--u))] lg:left-[calc(68*var(--u))] lg:text-[length:max(12px,calc(20*var(--u)))] lg:tracking-[0.22em]">
+            {C.eyebrow}
+          </p>
+          <h2
+            id="compounding-heading"
+            className="mt-5 font-heading text-[2.5rem] font-extrabold leading-[1.02] tracking-[-0.035em] text-balance text-jp-background sm:text-[3.25rem] lg:absolute lg:top-[calc(104*var(--u))] lg:left-[calc(64*var(--u))] lg:mt-0 lg:text-[length:calc(78*var(--u))] lg:leading-[calc(80*var(--u))] lg:whitespace-nowrap"
+          >
+            {C.heading.lines[0]} <br className="hidden lg:inline" />
+            {C.heading.lines[1]}
+          </h2>
+          <p className="mt-5 max-w-[40rem] text-[1.0625rem] leading-[1.6] text-jp-ink-secondary sm:text-[1.1875rem] lg:absolute lg:top-[calc(284*var(--u))] lg:left-[calc(68*var(--u))] lg:mt-0 lg:max-w-[calc(760*var(--u))] lg:text-[length:max(15px,calc(21*var(--u)))] lg:leading-[1.5]">
+            {C.intro[0]} {C.intro[1]}
+          </p>
+
+          {/* The wave: a full-bleed crop below `lg`; from `lg` the section's middle, under the ivory overlay. */}
+          <div aria-hidden="true" className="pointer-events-none relative -mx-6 mt-10 sm:-mx-8 sm:mt-12 lg:absolute lg:-z-10 lg:inset-x-0 lg:top-[calc(170*var(--u))] lg:mx-0 lg:mt-0">
+            <img
+              src={`${WAVE}-1280.webp`}
+              srcSet={WAVE_SRCSET}
+              sizes="100vw"
+              width={1920}
+              height={819}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="block aspect-[4/3] h-auto w-full object-cover object-[68%_50%] sm:aspect-[2/1] lg:aspect-auto"
+            />
+            <svg viewBox="0 0 1920 819" preserveAspectRatio="none" className="absolute inset-0 hidden h-full w-full overflow-visible lg:block">
+              <defs>
+                <filter id={`${ids}-soft`} x="-5%" y="-10%" width="110%" height="120%">
+                  <feGaussianBlur stdDeviation="14" />
+                </filter>
+                <filter id={`${ids}-glow`} x="-5%" y="-20%" width="110%" height="140%">
+                  <feGaussianBlur stdDeviation="6" />
+                </filter>
+                <radialGradient id={`${ids}-sun`} cx="150" cy="520" r="260" gradientUnits="userSpaceOnUse">
+                  <stop offset="0.3" style={{ stopColor: 'var(--jp-surface-white)', stopOpacity: 0 }} />
+                  <stop offset="1" style={{ stopColor: 'var(--jp-surface-white)', stopOpacity: 1 }} />
+                </radialGradient>
+                <mask id={`${ids}-sunmask`} maskUnits="userSpaceOnUse" x="-60" y="-60" width="2040" height="940">
+                  <rect x="-60" y="-60" width="2040" height="940" fill={`url(#${ids}-sun)`} />
+                </mask>
+                <linearGradient id={`${ids}-foot`} x1="0" y1="600" x2="0" y2="740" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" style={{ ...ivory, stopOpacity: 0 }} />
+                  <stop offset="1" style={{ ...ivory, stopOpacity: 1 }} />
+                </linearGradient>
+              </defs>
+              <path d={WAVE_SKY} style={{ fill: 'var(--jp-surface-ivory)' }} filter={`url(#${ids}-soft)`} mask={`url(#${ids}-sunmask)`} />
+              <rect x="-40" y="600" width="2000" height="260" fill={`url(#${ids}-foot)`} />
+              {/* The progression: a soft glow under a fine amber line, drawn once from the first stage to the crest. */}
+              <g
+                style={{ strokeDashoffset: stagesShown ? 0 : 1, transitionDuration: `${WAVE_DRAW}ms` }}
+                className="transition-[stroke-dashoffset] ease-out motion-reduce:transition-none"
+                strokeDasharray="1"
               >
-                <p className={`font-mono text-sm font-bold tracking-[0.16em] ${i === COMPOUNDING.steps.length - 1 ? 'text-jp-brand-amber' : 'text-jp-ink-secondary'}`}>
-                  {String(i + 1).padStart(2, '0')}
-                </p>
-                <p className="mt-3 font-heading text-[1.25rem] font-bold leading-[1.25]">{step}</p>
-              </div>
-              {i < COMPOUNDING.steps.length - 1 && (
-                <ArrowRight
-                  aria-hidden="true"
-                  className="hidden size-5 text-jp-ink-secondary lg:absolute lg:top-1/2 lg:right-0.5 lg:block lg:-translate-y-1/2"
-                />
-              )}
-            </li>
-          ))}
-        </ol>
-        <p className="mx-auto mt-14 max-w-[40ch] text-center font-heading text-[1.5rem] font-semibold leading-[1.3] tracking-[-0.015em] text-balance text-jp-ink-secondary sm:text-[2rem]">
-          <span className="block font-extrabold text-jp-background">{COMPOUNDING.statement[0]}</span> <span className="block">{COMPOUNDING.statement[1]}</span>
-        </p>
+                <path d={WAVE_PATH} pathLength={1} fill="none" strokeWidth="9" strokeOpacity="0.45" style={{ stroke: 'var(--jp-brand-amber)' }} filter={`url(#${ids}-glow)`} />
+                <path d={WAVE_PATH} pathLength={1} fill="none" strokeWidth="3" strokeLinecap="round" style={{ stroke: 'var(--jp-brand-amber-active)' }} />
+              </g>
+              {WAVE_STAGES.map((s, i) => {
+                const r = i === last ? 13 : 9;
+                return (
+                  <g key={s.ax} {...reveal(stagesShown, s.at * WAVE_DRAW * 0.9, '')}>
+                    <line x1={s.ax} y1={s.foot + 10} x2={s.ax} y2={s.ay - r} strokeWidth="2" style={{ stroke: 'var(--jp-brand-amber)' }} />
+                    <circle cx={s.ax} cy={s.ay} r={r + 7} style={{ fill: 'var(--jp-brand-amber)' }} opacity="0.35" filter={`url(#${ids}-glow)`} />
+                    <circle cx={s.ax} cy={s.ay} r={r} strokeWidth="4" style={{ fill: 'var(--jp-surface-ivory)', stroke: 'var(--jp-brand-amber)' }} />
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+
+          {/* The four stages: a rising timeline below `lg`; from `lg` above the wave, each on its leader. */}
+          <ol ref={stagesRef} className="relative mt-10 space-y-7 pl-11 sm:mt-12 lg:static lg:mt-0 lg:space-y-0 lg:pl-0">
+            {C.steps.map((step, i) => {
+              const s = WAVE_STAGES[i];
+              const strong = i === last;
+              const place = {
+                '--lx': s.lx * WAVE_SCALE,
+                '--lb': WAVE_H - (WAVE_TOP + s.foot * WAVE_SCALE),
+                '--lw': s.w,
+              } as CSSProperties;
+              return (
+                <li
+                  key={step}
+                  {...reveal(
+                    stagesShown,
+                    s.at * WAVE_DRAW * 0.9,
+                    'relative lg:absolute lg:bottom-[calc(var(--lb)*var(--u))] lg:left-[calc(var(--lx)*var(--u))] lg:w-[calc(var(--lw)*var(--u))]',
+                    place,
+                  )}
+                >
+                  {/* Below `lg`: the amber segment from this stage's anchor down to the next one's. */}
+                  {!strong && <span aria-hidden="true" className="absolute top-[1.875rem] -left-[2.0625rem] h-[calc(100%+0.25rem)] w-0.5 bg-jp-brand-amber lg:hidden" />}
+                  <span
+                    aria-hidden="true"
+                    className={`absolute top-1.5 -left-11 rounded-full border-jp-brand-amber lg:hidden ${strong ? 'size-6 border-[5px] bg-jp-brand-amber' : 'size-6 border-[3px] bg-jp-surface-ivory'}`}
+                  />
+                  <span
+                    aria-hidden="true"
+                    className={`block font-heading font-extrabold leading-none tracking-[-0.02em] text-jp-amber-ink ${
+                      strong ? 'text-[2.25rem] lg:text-[length:max(22px,calc(44*var(--u)))]' : 'text-[1.75rem] lg:text-[length:max(18px,calc(32*var(--u)))]'
+                    }`}
+                  >
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span
+                    className={`mt-1.5 block font-heading font-extrabold tracking-[-0.02em] text-jp-background lg:mt-[calc(6*var(--u))] ${
+                      strong
+                        ? 'text-[1.75rem] leading-[1.05] lg:text-[length:max(22px,calc(40*var(--u)))] lg:leading-[1]'
+                        : 'text-[1.3125rem] leading-[1.15] lg:text-[length:max(16px,calc(28*var(--u)))] lg:leading-[1.02]'
+                    }`}
+                  >
+                    {step}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+
+          {/* The lesson, beneath the wave: the first line in navy, the second in amber italic between fine amber rules. */}
+          <p className="mt-14 text-center font-heading tracking-[-0.02em] text-balance sm:mt-16 lg:absolute lg:inset-x-0 lg:top-[calc(806*var(--u))] lg:mt-0">
+            <span className="block text-[1.5rem] font-bold leading-[1.2] text-jp-background sm:text-[1.875rem] lg:text-[length:calc(42*var(--u))] lg:leading-[calc(52*var(--u))]">
+              {C.statement[0]}
+            </span>
+            <span className="mt-2 flex items-center justify-center gap-5 lg:mt-[calc(4*var(--u))] lg:gap-[calc(48*var(--u))]">
+              <span aria-hidden="true" className="hidden h-px w-16 bg-jp-brand-amber sm:block lg:h-[calc(2*var(--u))] lg:w-[calc(136*var(--u))]" />
+              <span className="text-[1.5rem] font-extrabold italic leading-[1.2] text-jp-amber-ink sm:text-[1.875rem] lg:text-[length:calc(42*var(--u))] lg:leading-[calc(52*var(--u))]">
+                {C.statement[1]}
+              </span>
+              <span aria-hidden="true" className="hidden h-px w-16 bg-jp-brand-amber sm:block lg:h-[calc(2*var(--u))] lg:w-[calc(136*var(--u))]" />
+            </span>
+          </p>
+        </div>
       </div>
     </section>
   );

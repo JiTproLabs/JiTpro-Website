@@ -9,6 +9,8 @@
  * as software, no em dashes, no CPM.
  */
 
+import { formatDollars, type RetentionResult } from './advantageCalculator';
+
 export const ADVANTAGE_META = {
   title: 'The JiTpro Advantage | JiTpro',
   description:
@@ -46,7 +48,7 @@ export const RACE_TO_BOTTOM = {
     },
     {
       tone: 'performance',
-      title: 'Sharpen your organization',
+      title: 'Improve your performance',
       points: ['Improve project control.', 'Reduce preventable costs.', 'Retain more profit.'],
       outcome: 'Greater competitive strength.',
     },
@@ -97,6 +99,26 @@ export const LEAKING_BUCKET = {
   },
 } as const;
 
+/**
+ * The line under *How much did you actually keep?* (founder brief *Refine Profit Calculator Language*, 2026-11-27):
+ * what was kept and what slipped away, in the calculator's own figures. Compared in whole dollars, as displayed, so a
+ * fraction of a cent never reads as "$0 slipped away".
+ */
+export function keptSentence(result: Pick<RetentionResult, 'expectedProfit' | 'actualProfit' | 'shortfall' | 'favorable'>): string {
+  const expected = Math.round(result.expectedProfit);
+  const actual = Math.round(result.actualProfit);
+  if (expected <= 0) {
+    if (actual > 0) return `You finished ${formatDollars(actual)} ahead of what you expected.`;
+    if (actual < 0) return `You finished ${formatDollars(-actual)} in the red.`;
+    return 'You broke even.';
+  }
+  if (actual < 0) return `You finished ${formatDollars(-actual)} in the red, instead of making the ${formatDollars(expected)} you expected.`;
+  if (actual === 0) return `You broke even. The ${formatDollars(expected)} you expected to make slipped away.`;
+  if (actual === expected) return 'You kept every dollar of the profit you expected.';
+  if (actual > expected) return `You finished ${formatDollars(result.favorable)} ahead of what you expected.`;
+  return `You kept ${formatDollars(actual)}. The other ${formatDollars(result.shortfall)} slipped away.`;
+}
+
 export const PROFIT = {
   /** The calculator's small label; the transition above it carries the heading (2026-11-22). */
   eyebrow: 'Profit retention calculator',
@@ -105,13 +127,12 @@ export const PROFIT = {
     expectedProfit: 'How much profit did you expect to make?',
     keptPct: 'How much did you actually keep?',
   },
-  expectedHint: 'As a share of the contract value.',
+  expectedHint: 'What percentage of the job did you expect to keep?',
   kept: {
     lostEnd: 'Lost money',
     keptEnd: 'Kept all estimated profit',
-    positive: (pct: number) => `You kept ${pct}% of the profit you originally estimated.`,
-    zero: 'Your project broke even.',
-    negative: 'Your project finished at a loss.',
+    /** The plain-English line under the kept slider, in whole dollars as the calculator shows them (keptSentence). */
+    sentence: keptSentence,
   },
   shortfall: {
     label: "Profit that didn't make it to the finish line",
@@ -122,8 +143,8 @@ export const PROFIT = {
     even: 'You made exactly what you expected.',
   },
   improvement: {
-    question: 'What if you kept this much more?',
-    helper: 'How much of your lost profit could you have kept?',
+    question: 'What if you had kept more?',
+    helper: 'How much of that lost profit could you have saved?',
     disabled: "There's no gap to close on this project: you kept everything you expected, or more.",
   },
   results: {
@@ -186,26 +207,38 @@ export const POSITION_OF_STRENGTH = {
   ],
 } as const;
 
+/**
+ * How JiTpro creates your advantage (§83.1 item 5, rebuilt 2026-11-27 to the founder's approved mockup, founder brief
+ * *Rebuild "How JiTpro Creates Your Advantage"*). Four disciplines of one operating method, not four software features.
+ * Headings in sentence case (§7.7), as the mockup sets them.
+ */
 export const HOW_JITPRO = {
-  heading: 'How JiTpro creates your advantage',
-  intro:
-    'JiTpro is not another software application. Experienced construction professionals work alongside your team to plan the work, establish responsibilities, and keep the project moving.',
+  eyebrow: 'How JiTpro creates your advantage',
+  heading: 'Four disciplines. One stronger project.',
+  intro: 'Every step builds on the one before it, bringing greater control to the work long before it reaches the field.',
   concepts: [
-    { title: 'Clarity', body: 'Know what must happen, who is responsible, and when.' },
-    { title: 'Control', body: 'Manage the upstream work required to support field execution.' },
-    { title: 'Coordination', body: 'Give the entire project team advance visibility into their responsibilities and commitments.' },
-    { title: 'Performance', body: 'Reduce avoidable disruption and protect project profitability.' },
+    { title: 'Clarity', body: 'Know what needs to happen.' },
+    { title: 'Control', body: 'Give every requirement an owner and a date.' },
+    { title: 'Coordination', body: 'Keep everyone working toward the same plan.' },
+    { title: 'Performance', body: 'Protect the work and the profit.' },
   ],
+  closing: 'Better preparation leads to better execution.',
 } as const;
 
+/**
+ * The compounding advantage (§83.1 item 6, rebuilt 2026-11-27 to the founder's approved mockup, founder brief *Redesign
+ * "The Compounding Advantage" Section*): four connected outcomes along a rising wave, not guaranteed results. Headings in
+ * sentence case (§7.7).
+ */
 export const COMPOUNDING = {
-  heading: 'The compounding advantage',
-  steps: [
-    'Better upstream project control',
-    'More reliable field execution',
-    'Greater retained profit',
-    'Greater competitive strength',
+  eyebrow: 'The compounding advantage',
+  /** The `h2`, broken where the mockup breaks it from `lg`. */
+  heading: { lines: ['Control compounds into', 'advantage.'] },
+  intro: [
+    'Every project you bring under better control strengthens your ability to deliver the next one.',
+    'Less disruption. More reliable execution. Greater retained profit. A stronger company.',
   ],
+  steps: ['Stronger control', 'More reliable execution', 'Greater retained profit', 'Greater competitive strength'],
   statement: ["Operational excellence creates pricing flexibility.", "Pricing flexibility doesn't create operational excellence."],
 } as const;
 
