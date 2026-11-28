@@ -5,8 +5,8 @@
  * finished project's contract value, the profit they expected as a percentage
  * of that contract value (a share of the contract, not a markup on costs), and
  * how much of that estimated profit they actually kept, as a percentage of it
- * (below zero for a loss). The calculator shows the shortfall, lets them explore keeping more of
- * it in percentage points of contract value (never more than the shortfall),
+ * (below zero for a loss). The calculator shows the shortfall, lets them explore recovering a share
+ * of it (0% to 100% of the shortfall, so never more than the shortfall; Decision Log 2026-11-27),
  * and multiplies the result across a year of similar projects. Illustrative
  * only: not customer results, and not a promise of savings.
  */
@@ -18,8 +18,8 @@ export interface RetentionInputs {
   expectedPct: number;
   /** Share of the estimated profit actually kept, percent (−30 to 100; below zero is a loss). Not a margin on contract value. */
   keptPct: number;
-  /** How much more to keep, in percentage points of contract value. The effective value is capped at the shortfall. */
-  improvementPts: number;
+  /** How much of the shortfall could have been recovered, percent of the shortfall (0 to 100). */
+  recoveryPct: number;
   /** Similar projects in a year: whole number, 1 or more. */
   projects: number;
 }
@@ -35,11 +35,9 @@ export interface RetentionResult {
   favorable: number;
   /** The shortfall as a whole-number percentage of expected profit; null when expected profit is not above zero. */
   shortfallPctOfExpected: number | null;
-  /** The most the improvement can be, in percentage points of contract value (whole tenths). */
-  maxImprovementPts: number;
-  /** The improvement actually applied, in points, after the cap. */
-  improvementPts: number;
-  /** Additional profit per project, dollars (never more than the shortfall). */
+  /** The share of the shortfall recovered, percent (0 to 100). */
+  recoveryPct: number;
+  /** Shortfall × recovery percentage, dollars, rounded to the cent (never more than the shortfall). */
   additionalProfit: number;
   /** Actual profit plus the additional profit. */
   couldHaveMade: number;
@@ -54,13 +52,15 @@ export interface RetentionResult {
 
 /**
  * The example the calculator opens with on every page load, and returns to on reset (founder direction, 2026-11-22):
- * a $2.75M job, 12.5% expected, 5.7% of the contract kept (45.6% of the estimate), +5 points, 5 similar projects.
+ * a $2.75M job, 12.5% expected, 5.7% of the contract kept (45.6% of the estimate), 5 similar projects. The recovery
+ * opens at exactly $137,500 of the $187,000 shortfall (about 73.5%; founder direction 2026-11-27), the same dollars the
+ * earlier +5-points default gave, so it is stored as that exact ratio rather than a rounded percentage.
  */
 export const DEFAULT_INPUTS: RetentionInputs = {
   contractValue: 2_750_000,
   expectedPct: 12.5,
   keptPct: 45.6,
-  improvementPts: 5,
+  recoveryPct: (137_500 / 187_000) * 100,
   projects: 5,
 };
 
@@ -70,7 +70,8 @@ export const LIMITS = {
   /** The kept slider moves the kept share of the contract value in tenths of a point (see keptSliderRange). */
   keptPct: { min: -30, max: 100 },
   keptContractStep: 0.1,
-  improvementPts: { min: 0, step: 0.1 },
+  /** Percent of the shortfall, in tenths. */
+  recoveryPct: { min: 0, max: 100, step: 0.1 },
   projects: { min: 1, max: 500 },
 } as const;
 
@@ -80,42 +81,41 @@ export const PROJECT_CHOICES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 const finite = (value: number, fallback: number) => (Number.isFinite(value) ? value : fallback);
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
-/** Inputs within their ranges; non-numbers fall back to the example. The improvement is kept as entered (the cap is applied in the result). */
+/** Inputs within their ranges; non-numbers fall back to the example. */
 export function normalize(inputs: RetentionInputs): RetentionInputs {
   return {
     contractValue: clamp(finite(inputs.contractValue, DEFAULT_INPUTS.contractValue), LIMITS.contractValue.min, LIMITS.contractValue.max),
     expectedPct: clamp(finite(inputs.expectedPct, DEFAULT_INPUTS.expectedPct), LIMITS.expectedPct.min, LIMITS.expectedPct.max),
     keptPct: clamp(finite(inputs.keptPct, DEFAULT_INPUTS.keptPct), LIMITS.keptPct.min, LIMITS.keptPct.max),
-    improvementPts: Math.max(0, finite(inputs.improvementPts, DEFAULT_INPUTS.improvementPts)),
+    recoveryPct: clamp(finite(inputs.recoveryPct, DEFAULT_INPUTS.recoveryPct), LIMITS.recoveryPct.min, LIMITS.recoveryPct.max),
     projects: Math.round(clamp(finite(inputs.projects, DEFAULT_INPUTS.projects), LIMITS.projects.min, LIMITS.projects.max)),
   };
 }
 
 export function calculate(raw: RetentionInputs): RetentionResult {
-  const { contractValue, expectedPct, keptPct, improvementPts, projects } = normalize(raw);
+  const { contractValue, expectedPct, keptPct, recoveryPct, projects } = normalize(raw);
   const expectedProfit = (contractValue * expectedPct) / 100;
   const actualProfit = Math.round(expectedProfit * keptPct) / 100;
   const shortfall = Math.max(0, expectedProfit - actualProfit);
   const favorable = Math.max(0, actualProfit - expectedProfit);
   const shortfallPctOfExpected = expectedProfit > 0 && shortfall > 0 ? Math.round((shortfall / expectedProfit) * 100) : null;
-  // Points of contract value, floored to whole tenths so the slider's top step never overshoots the shortfall.
-  const maxImprovementPts = Math.floor(((shortfall / contractValue) * 100 + 1e-9) * 10) / 10;
-  const pts = Math.min(improvementPts, maxImprovementPts);
-  // Rounded to the cent so floating-point remainders never reach the display or the annual total.
-  const additionalProfit = Math.min(shortfall, Math.round(contractValue * pts) / 100);
+  // A share of the shortfall, rounded to the cent so floating-point remainders never reach the display or the annual
+  // total. At 100% it is the shortfall itself, so the result lands exactly on the original estimate.
+  const full = recoveryPct >= LIMITS.recoveryPct.max;
+  const additionalProfit = full ? shortfall : Math.min(shortfall, Math.round(shortfall * recoveryPct) / 100);
+  const couldHaveMade = full ? Math.max(expectedProfit, actualProfit) : actualProfit + additionalProfit;
   return {
     expectedProfit,
     actualProfit,
     shortfall,
     favorable,
     shortfallPctOfExpected,
-    maxImprovementPts,
-    improvementPts: pts,
+    recoveryPct,
     additionalProfit,
-    couldHaveMade: actualProfit + additionalProfit,
+    couldHaveMade,
     plannedPctOfContract: (expectedProfit / contractValue) * 100,
     actualPctOfContract: (actualProfit / contractValue) * 100,
-    couldPctOfContract: ((actualProfit + additionalProfit) / contractValue) * 100,
+    couldPctOfContract: (couldHaveMade / contractValue) * 100,
     projects,
     annualAdditional: additionalProfit * projects,
   };
@@ -160,12 +160,6 @@ export function formatPct(value: number): string {
 export function formatPct1(value: number): string {
   const fixed = (Math.round(value * 10) / 10).toFixed(1);
   return `${fixed === '-0.0' ? '0.0' : fixed}%`;
-}
-
-/** Percentage points: "3 points", "0.1 points", "1 point". */
-export function formatPoints(value: number): string {
-  const n = Number(value.toFixed(1));
-  return `${n} ${n === 1 ? 'point' : 'points'}`;
 }
 
 /** Parses a typed amount: "$1,250,000", "1.25m", "250k", "-50,000". NaN when it is not a number. */

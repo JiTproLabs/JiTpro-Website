@@ -9,12 +9,12 @@ import {
   formatContract,
   formatDollars,
   formatPct1,
-  formatPoints,
   keptPctFromContractPct,
   keptSliderRange,
   normalize,
   type RetentionInputs,
 } from '../content/advantageCalculator';
+import { fitFigure } from '../content/advantageFigures';
 import {
   ADVANTAGE_META,
   CLOSING,
@@ -497,6 +497,25 @@ const HINT = 'mt-0.5 text-[0.875rem] leading-[1.45] text-jp-text-muted';
 const SLIDER =
   'mt-2.5 h-2 w-full cursor-pointer accent-jp-brand-amber focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-jp-text-primary disabled:cursor-not-allowed disabled:opacity-40';
 
+/** The native range handle's width. The handle's centre travels from half a handle in from each end of the track, so the
+ *  label below it is placed on that same span (Design System §83.1, Decision Log 2026-11-27). */
+const THUMB_PX = 16;
+
+/** A small percentage centred beneath a slider's handle, driven by the slider's own value so the two move as one. */
+function HandleLabel({ value, min, max, dimmed = false, children }: { value: number; min: number; max: number; dimmed?: boolean; children: string }) {
+  const fraction = max > min ? Math.min(1, Math.max(0, (value - min) / (max - min))) : 0;
+  return (
+    <div aria-hidden="true" className="relative mt-2 h-[1.125rem]">
+      <span
+        className={`absolute top-0 -translate-x-1/2 font-heading text-[0.8125rem] leading-[1.125rem] font-bold whitespace-nowrap tabular-nums text-jp-brand-amber ${dimmed ? 'opacity-40' : ''}`}
+        style={{ left: `calc(${THUMB_PX / 2}px + (100% - ${THUMB_PX}px) * ${fraction})` }}
+      >
+        {children}
+      </span>
+    </div>
+  );
+}
+
 /** One result row: the label with its share of the contract value right after it, on the left; the dollar figure
  *  right-aligned in its own column. */
 function StoryLine({ label, value, pct, tone }: { label: string; value: number; pct: number; tone: 'plain' | 'muted' }) {
@@ -507,7 +526,8 @@ function StoryLine({ label, value, pct, tone }: { label: string; value: number; 
         <span className="ml-2.5 font-heading text-[1rem] font-bold whitespace-nowrap tabular-nums text-jp-brand-amber sm:text-[1.0625rem]">{formatPct1(pct)}</span>
       </dt>
       <dd
-        className={`shrink-0 text-right font-heading text-[1.625rem] font-extrabold tabular-nums tracking-[-0.02em] transition-colors sm:text-[1.875rem] ${
+        style={fitFigure(formatDollars(value), 55)}
+        className={`shrink-0 text-right font-heading text-[length:min(1.625rem,var(--fig-fit))] font-extrabold whitespace-nowrap tabular-nums tracking-[-0.02em] transition-colors sm:text-[length:min(1.875rem,var(--fig-fit))] ${
           tone === 'muted' ? 'text-jp-text-secondary' : 'text-jp-text-primary'
         }`}
       >
@@ -539,6 +559,10 @@ function ProfitIllustration() {
   const customId = useId();
   const hasGap = result.shortfall > 0;
   const keptRange = keptSliderRange(inputs.expectedPct);
+  /** The kept slider's position: the kept share of the contract value, in tenths. */
+  const keptValue = Math.round(result.actualPctOfContract * 10) / 10;
+  /** The recovery slider's position, in tenths (the default is the exact $137,500 ratio, about 73.5%). */
+  const recoveryValue = Math.round(result.recoveryPct * 10) / 10;
   /** The share of the estimate kept, as a whole percent for the plain-English line. */
   const keptShare = Math.max(1, Math.round(inputs.keptPct));
 
@@ -551,7 +575,7 @@ function ProfitIllustration() {
             {PROFIT.eyebrow}
           </p>
 
-          <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-7">
+          <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-7">
             <form aria-label="Your project" onSubmit={(event) => event.preventDefault()} className="flex flex-col gap-6 rounded-2xl border border-jp-border/15 bg-jp-background/60 p-6 sm:p-7 lg:justify-between">
               <div>
                 <div className="flex items-baseline justify-between gap-4">
@@ -578,8 +602,9 @@ function ProfitIllustration() {
                   <label htmlFor={expectedId} className={FIELD_LABEL}>
                     {PROFIT.fields.expectedProfit}
                   </label>
+                  {/* The estimated profit in dollars; the margin rides beneath the handle. */}
                   <output htmlFor={expectedId} className={VALUE}>
-                    {formatPct1(inputs.expectedPct)}
+                    {formatDollars(result.expectedProfit)}
                   </output>
                 </div>
                 <p className={HINT}>{PROFIT.expectedHint}</p>
@@ -592,6 +617,9 @@ function ProfitIllustration() {
                   onChange={(event) => set('expectedPct', Number(event.target.value))}
                   className={SLIDER}
                 />
+                <HandleLabel value={inputs.expectedPct} min={LIMITS.expectedPct.min} max={LIMITS.expectedPct.max}>
+                  {formatPct1(inputs.expectedPct)}
+                </HandleLabel>
               </div>
 
               <div>
@@ -599,9 +627,9 @@ function ProfitIllustration() {
                   <label htmlFor={keptId} className={FIELD_LABEL}>
                     {PROFIT.fields.keptPct}
                   </label>
-                  {/* What was kept as a share of the contract value (kept dollars ÷ contract value). */}
+                  {/* The kept profit in dollars; its share of the contract value rides beneath the handle. */}
                   <output htmlFor={keptId} className={VALUE}>
-                    {formatPct1(result.actualPctOfContract)}
+                    {formatDollars(result.actualProfit)}
                   </output>
                 </div>
                 <p className={HINT} aria-live="polite">
@@ -611,12 +639,16 @@ function ProfitIllustration() {
                   id={keptId}
                   type="range"
                   {...keptRange}
-                  value={Math.round(result.actualPctOfContract * 10) / 10}
+                  value={keptValue}
                   aria-valuetext={`${formatPct1(result.actualPctOfContract)} of the contract value, ${formatDollars(result.actualProfit)}`}
                   onChange={(event) => set('keptPct', keptPctFromContractPct(Number(event.target.value), inputs.expectedPct))}
                   className={SLIDER}
                 />
-                <div aria-hidden="true" className="mt-1 flex justify-between text-[0.8125rem] text-jp-text-muted">
+                {/* Kept dollars ÷ contract value × 100: a share of the contract, not of the estimate. */}
+                <HandleLabel value={keptValue} min={keptRange.min} max={keptRange.max}>
+                  {formatPct1(result.actualPctOfContract)}
+                </HandleLabel>
+                <div aria-hidden="true" className="mt-0.5 flex justify-between text-[0.8125rem] text-jp-text-muted">
                   <span>{PROFIT.kept.lostEnd}</span>
                   <span>{PROFIT.kept.keptEnd}</span>
                 </div>
@@ -627,27 +659,30 @@ function ProfitIllustration() {
                   <label htmlFor={improvementId} className={FIELD_LABEL}>
                     {PROFIT.improvement.question}
                   </label>
+                  {/* The additional profit in dollars; the share of the shortfall rides beneath the handle. */}
                   <output htmlFor={improvementId} className={VALUE}>
-                    {formatPoints(result.improvementPts)}
+                    {formatDollars(result.additionalProfit)}
                   </output>
                 </div>
                 <p className={HINT}>{hasGap ? PROFIT.improvement.helper : PROFIT.improvement.disabled}</p>
                 <input
                   id={improvementId}
                   type="range"
-                  min={LIMITS.improvementPts.min}
-                  max={Math.max(result.maxImprovementPts, LIMITS.improvementPts.step)}
-                  step={LIMITS.improvementPts.step}
-                  value={result.improvementPts}
+                  {...LIMITS.recoveryPct}
+                  value={recoveryValue}
                   disabled={!hasGap}
-                  aria-valuetext={`${formatPoints(result.improvementPts)}, ${formatDollars(result.additionalProfit)}`}
-                  onChange={(event) => set('improvementPts', Number(event.target.value))}
+                  aria-valuetext={`${formatPct1(result.recoveryPct)} of the lost profit, ${formatDollars(result.additionalProfit)}`}
+                  onChange={(event) => set('recoveryPct', Number(event.target.value))}
                   className={SLIDER}
                 />
+                {/* A share of the shortfall, not of the contract value. Dimmed with the slider when there is no gap. */}
+                <HandleLabel value={recoveryValue} min={LIMITS.recoveryPct.min} max={LIMITS.recoveryPct.max} dimmed={!hasGap}>
+                  {formatPct1(result.recoveryPct)}
+                </HandleLabel>
               </div>
             </form>
 
-            <div className="flex flex-col rounded-2xl border border-jp-border/15 bg-jp-background p-6 sm:p-7" aria-live="polite">
+            <div className="@container flex flex-col rounded-2xl border border-jp-border/15 bg-jp-background p-6 sm:p-7" aria-live="polite">
               <dl className="space-y-3">
                 <StoryLine label={PROFIT.results.planned} value={result.expectedProfit} pct={result.plannedPctOfContract} tone="plain" />
                 <StoryLine label={PROFIT.results.actual} value={result.actualProfit} pct={result.actualPctOfContract} tone="muted" />
@@ -670,11 +705,14 @@ function ProfitIllustration() {
               </p>
               {/* The focus: what keeping more is worth on this project. */}
               <div
-                className="rounded-xl border border-jp-brand-amber/40 p-5 sm:p-6 lg:mt-auto"
+                className="@container rounded-xl border border-jp-brand-amber/40 p-5 sm:p-6 lg:mt-auto"
                 style={{ backgroundColor: 'color-mix(in oklab, var(--jp-brand-amber) 8%, var(--jp-background))' }}
               >
                 <p className="font-heading leading-none">
-                  <span className="block text-[2.75rem] font-extrabold tabular-nums tracking-[-0.035em] text-jp-brand-amber sm:text-[3.5rem]">
+                  <span
+                    style={fitFigure(formatDollars(result.additionalProfit), 100)}
+                    className="block text-[length:min(2.75rem,var(--fig-fit))] font-extrabold whitespace-nowrap tabular-nums tracking-[-0.035em] text-jp-brand-amber sm:text-[length:min(3.5rem,var(--fig-fit))]"
+                  >
                     {formatDollars(result.additionalProfit)}
                   </span>
                   <span className="mt-2 block text-[1.5rem] font-extrabold tracking-[-0.02em] text-jp-text-primary sm:text-[1.75rem]">{PROFIT.results.more}</span>
@@ -707,7 +745,7 @@ function ProfitIllustration() {
         />
         <div className={`relative ${CONTAINER}`}>
           <div className="overflow-hidden rounded-2xl border border-jp-brand-amber/35 bg-jp-background">
-            <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
+            <div className="grid grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
               <div className="p-6 sm:p-8 lg:p-10">
                 <h2 id="annual-heading" className="font-heading text-[1.75rem] font-extrabold leading-[1.15] tracking-[-0.02em] text-jp-text-primary sm:text-[2.25rem]">
                   {PROFIT.annual.heading}
@@ -753,12 +791,15 @@ function ProfitIllustration() {
                 )}
               </div>
               <div
-                className="flex flex-col justify-center border-t border-jp-brand-amber/25 p-6 sm:p-8 lg:border-t-0 lg:border-l lg:p-10"
+                className="@container flex flex-col justify-center border-t border-jp-brand-amber/25 p-6 sm:p-8 lg:border-t-0 lg:border-l lg:p-10"
                 style={{ backgroundColor: 'color-mix(in oklab, var(--jp-brand-amber) 10%, var(--jp-background))' }}
                 aria-live="polite"
               >
                 <p className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-jp-brand-amber sm:text-sm">{PROFIT.annual.label}</p>
-                <p className="mt-3 font-heading text-[3.5rem] font-extrabold leading-none tabular-nums tracking-[-0.04em] text-jp-brand-amber sm:text-[5rem] lg:text-[clamp(4.5rem,6vw,6rem)]">
+                <p
+                  style={fitFigure(formatDollars(result.annualAdditional), 100)}
+                  className="mt-3 font-heading text-[length:min(3.5rem,var(--fig-fit))] font-extrabold leading-none whitespace-nowrap tabular-nums tracking-[-0.04em] text-jp-brand-amber sm:text-[length:min(5rem,var(--fig-fit))] lg:text-[length:min(clamp(4.5rem,6vw,6rem),var(--fig-fit))]"
+                >
                   {formatDollars(result.annualAdditional)}
                 </p>
                 <p className="mt-3 font-heading text-[1.25rem] font-bold text-jp-text-primary">{PROFIT.annual.caption}</p>
@@ -796,70 +837,117 @@ function ProfitIllustration() {
 
 /* -------------------------------------------------------------------------------- 4. position of strength */
 
-/** The judo throw (§83.4): strength from balance, leverage, timing and control. Decorative; the copy carries the meaning. */
-const JUDO = `${import.meta.env.BASE_URL}assets/advantage/judo-throw`;
+/**
+ * The founder's judo composition (§83.4, 2026-11-27): the text-free artwork's upper region, rows 0 to 576 of 1672 x 941,
+ * the athletes, the diagonal light and the amber corner. The principles and the navy statement beneath it are built in
+ * HTML so they can reflow; their artwork rows (from 576) are not served. Decorative; the copy carries the meaning.
+ */
+const STRENGTH_ART = `${import.meta.env.BASE_URL}assets/advantage/strength-judo-1672.webp`;
+/** One mockup pixel at the section's width (the section is the size container), as in the race section. */
+const STRENGTH_U = { '--u': 'calc(100cqw / 1672)' } as CSSProperties;
+/** Below `xl`, the artwork's own top edge (grey light) fades into the ivory above it. */
+const STRENGTH_FADE_TOP: CSSProperties = { backgroundImage: 'linear-gradient(180deg, var(--jp-surface-ivory) 0%, transparent 100%)' };
+/** The mockup's slanted amber markers: a parallelogram leaning right. */
+const SLANT: CSSProperties = { clipPath: 'polygon(22% 0, 100% 0, 78% 100%, 0 100%)' };
 
 function PositionOfStrength() {
+  const S = POSITION_OF_STRENGTH;
   return (
-    <section aria-labelledby="strength-heading" className="bg-jp-surface-white py-16 sm:py-20 lg:py-24">
-      <div className={CONTAINER}>
-        {/* The idea: the headline, and the introduction beside it from `lg`. */}
-        <div className="lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
-          <h2 id="strength-heading" className={`max-w-[18ch] ${H2} text-jp-background`}>
-            {POSITION_OF_STRENGTH.heading}
+    <section aria-labelledby="strength-heading" style={STRENGTH_U} className="@container relative isolate overflow-hidden bg-jp-surface-ivory">
+      {/* The statement over the athletes: stacked below `xl`; from `xl` the artwork's own shape with the type at its
+          mockup places, left of the athletes. */}
+      <div className="relative pt-16 sm:pt-20 xl:aspect-[1672/576] xl:p-0">
+        <div className="px-6 sm:px-8 xl:absolute xl:inset-0 xl:p-0">
+          <p className="flex items-center gap-4 xl:absolute xl:top-[calc(66*var(--u))] xl:left-[calc(121*var(--u))] xl:gap-[calc(14*var(--u))]">
+            <span className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-jp-amber-ink sm:text-sm xl:text-[length:calc(21*var(--u))] xl:leading-[calc(27*var(--u))] xl:tracking-[0.06em]">
+              {S.eyebrow}
+            </span>
+            <span aria-hidden="true" className="h-0.5 w-12 bg-jp-brand-amber xl:h-[calc(4*var(--u))] xl:w-[calc(78*var(--u))]" />
+          </p>
+          <h2
+            id="strength-heading"
+            className="mt-5 max-w-[14ch] font-heading text-[2.625rem] font-extrabold leading-[1.02] tracking-[-0.035em] text-jp-background sm:max-w-none sm:text-[3.5rem] xl:absolute xl:top-[calc(104*var(--u))] xl:left-[calc(100*var(--u))] xl:mt-0 xl:text-[length:calc(79.5*var(--u))] xl:leading-[calc(76*var(--u))] xl:whitespace-nowrap"
+          >
+            {S.heading.lines[0]} <br className="hidden sm:inline" />
+            {S.heading.lines[1]}
           </h2>
-          <p className="mt-5 max-w-[48ch] text-[1.0625rem] leading-[1.65] text-jp-ink-secondary sm:text-[1.1875rem] lg:mt-0 lg:pb-2">{POSITION_OF_STRENGTH.intro}</p>
+          <p className="mt-5 max-w-[34rem] text-[1.0625rem] leading-[1.6] text-jp-background sm:text-[1.1875rem] xl:absolute xl:top-[calc(285*var(--u))] xl:left-[calc(103*var(--u))] xl:mt-0 xl:max-w-[calc(500*var(--u))] xl:text-[length:max(16px,calc(20.5*var(--u)))] xl:leading-[1.45]">
+            {S.intro}
+          </p>
         </div>
 
-        {/* The photograph, large, beside the five practices. */}
-        <div className="mt-10 grid items-center gap-8 sm:mt-12 lg:mt-14 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] xl:gap-14">
-          <div className="max-w-[48rem] overflow-hidden rounded-2xl bg-jp-surface-light xl:max-w-none">
-            <img
-              src={`${JUDO}-1254.webp`}
-              srcSet={`${JUDO}-640.webp 640w, ${JUDO}-900.webp 900w, ${JUDO}-1254.webp 1254w`}
-              sizes="(min-width: 1280px) 680px, (min-width: 832px) 768px, 100vw"
-              width={1254}
-              height={1254}
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-              decoding="async"
-              className="block aspect-[5/4] w-full object-cover object-[50%_52%]"
-            />
-          </div>
-          <ol className="border-t border-jp-ink-secondary/20">
-            {POSITION_OF_STRENGTH.practices.map(({ title, body }, i) => (
-              <li key={title} className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-3 border-b border-jp-ink-secondary/20 py-4 sm:py-5">
-                <span aria-hidden="true" className="pt-0.5 font-mono text-sm font-bold tracking-[0.1em] text-jp-ink-secondary">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <div>
-                  <h3 className="font-heading text-[1.125rem] font-bold leading-[1.3] text-jp-background sm:text-[1.1875rem]">{title}</h3>
-                  <p className="mt-1 text-[1rem] leading-[1.55] text-jp-ink-secondary">{body}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
+        {/* The athletes. On a phone 3:2 and from `sm` 2:1, trimmed only from the sides, centred on the throw; from `xl`
+            the section's own ground, drawn whole. Never stretched. */}
+        <div aria-hidden="true" className="pointer-events-none relative mt-8 sm:mt-10 xl:absolute xl:inset-0 xl:-z-10 xl:mt-0">
+          <img
+            src={STRENGTH_ART}
+            width={1672}
+            height={576}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="block aspect-[3/2] h-auto w-full object-cover object-[71%_50%] sm:aspect-[2/1] sm:object-[82%_50%] xl:aspect-auto xl:h-full xl:object-center"
+          />
+          <div className="absolute inset-x-0 top-0 h-[16%] xl:hidden" style={STRENGTH_FADE_TOP} />
         </div>
+      </div>
 
-        {/* What stronger execution makes possible: one navy band, the four choices in a row from `lg`. */}
-        <aside aria-labelledby="choices-heading" className="mt-10 rounded-2xl bg-jp-background p-7 sm:mt-12 sm:p-9 lg:mt-14 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:items-center lg:gap-12 lg:p-10">
-          <div>
-            <h3 id="choices-heading" className="font-heading text-[1.75rem] font-extrabold leading-[1.15] tracking-[-0.02em] text-jp-text-primary sm:text-[2rem]">
-              {POSITION_OF_STRENGTH.choicesHeading}
-            </h3>
-            <p className="mt-3 text-[1rem] leading-[1.6] text-jp-text-secondary sm:text-[1.0625rem]">{POSITION_OF_STRENGTH.choicesIntro}</p>
-          </div>
-          <ul className="mt-6 grid gap-x-8 gap-y-3 sm:grid-cols-2 lg:mt-0">
-            {POSITION_OF_STRENGTH.choices.map((choice) => (
-              <li key={choice} className="flex gap-3 font-heading text-[1.0625rem] font-semibold leading-[1.45] text-jp-text-primary">
-                <span aria-hidden="true" className="mt-[0.55rem] size-2 shrink-0 rounded-full bg-jp-brand-amber" />
+      {/* The five principles: one ruled row of five from `lg`, two columns from `sm`, a list on a phone. */}
+      <ol className="mx-auto grid max-w-7xl gap-y-8 px-6 pt-8 pb-12 sm:grid-cols-2 sm:gap-x-10 sm:px-8 sm:pb-14 lg:grid-cols-5 lg:gap-x-0 lg:px-10 lg:pt-4 xl:max-w-none xl:px-[calc(32*var(--u))] xl:pt-[calc(7*var(--u))] xl:pb-[calc(31*var(--u))]">
+        {S.practices.map(({ title, body }, i) => (
+          <li
+            key={title}
+            className="lg:border-l lg:border-jp-ink-secondary/30 lg:px-5 lg:first:border-l-0 xl:min-h-[calc(130*var(--u))] xl:px-[calc(38*var(--u))]"
+          >
+            <div className="flex items-start gap-3 lg:flex-col lg:gap-3 xl:flex-row xl:gap-[calc(22*var(--u))]">
+              <span
+                aria-hidden="true"
+                style={SLANT}
+                className="mt-0.5 flex h-6 w-11 shrink-0 items-center justify-center bg-jp-brand-amber font-mono text-[0.75rem] font-bold text-jp-background xl:mt-0 xl:h-[calc(28*var(--u))] xl:w-[calc(46*var(--u))] xl:text-[length:max(11px,calc(14*var(--u)))]"
+              >
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <h3 className="font-heading text-[1.1875rem] font-bold leading-[1.15] tracking-[-0.015em] text-jp-background lg:text-[1.0625rem] xl:text-[length:max(17px,calc(24*var(--u)))] xl:leading-[1.08]">
+                {title}
+              </h3>
+            </div>
+            <p className="mt-3 text-[0.9375rem] leading-[1.5] text-jp-ink-secondary xl:mt-[calc(16*var(--u))] xl:text-[length:max(14px,calc(16.5*var(--u)))] xl:leading-[1.36]">
+              {body}
+            </p>
+          </li>
+        ))}
+      </ol>
+
+      {/* What stronger execution makes possible: the navy band, full width. Three parts between hairlines from `lg`. */}
+      <aside aria-labelledby="choices-heading" className="relative isolate overflow-hidden bg-jp-surface">
+        {/* The mockup's quiet diagonals: a lighter wedge at the left, an amber stripe and a lighter wedge at the right. */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 hidden lg:block">
+          <div className="absolute inset-y-0 left-0 w-[calc(90*var(--u))] bg-jp-border/10" style={{ clipPath: 'polygon(0 0, 85% 0, 0 100%)' }} />
+          <div className="absolute inset-y-0 right-0 w-[calc(105*var(--u))] bg-jp-border/10" style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }} />
+          <div className="absolute inset-y-0 right-0 w-[calc(105*var(--u))] bg-jp-brand-amber" style={{ clipPath: 'polygon(96% 0, 100% 0, 25% 100%, 0 100%)' }} />
+        </div>
+        <div className="mx-auto max-w-7xl px-6 py-12 sm:px-8 sm:py-14 lg:grid lg:grid-cols-[544fr_464fr_470fr] lg:items-center lg:px-10 lg:py-12 xl:max-w-none xl:pr-[calc(102*var(--u))] xl:pl-[calc(92*var(--u))] xl:py-[calc(30*var(--u))]">
+          <h3
+            id="choices-heading"
+            className="font-heading text-[2.25rem] font-extrabold leading-[1.02] tracking-[-0.03em] text-jp-text-primary sm:text-[2.75rem] lg:pr-8 lg:text-[2.125rem] xl:pr-0 xl:text-[length:calc(56*var(--u))] xl:leading-[calc(50*var(--u))]"
+          >
+            {S.choicesHeading.lead}
+            <br />
+            <span className="text-jp-brand-amber">{S.choicesHeading.emphasis}</span>
+          </h3>
+          <p className="mt-6 border-t border-jp-border/30 pt-6 text-[1.0625rem] leading-[1.55] text-jp-text-primary lg:mt-0 lg:self-stretch lg:border-t-0 lg:border-l lg:pt-0 lg:pl-8 lg:flex lg:items-center xl:pl-[calc(64*var(--u))] xl:pr-[calc(40*var(--u))] xl:text-[length:max(16px,calc(19.5*var(--u)))] xl:leading-[1.4]">
+            {S.choicesIntro}
+          </p>
+          <ul className="mt-6 space-y-3 border-t border-jp-border/30 pt-6 lg:mt-0 lg:self-stretch lg:border-t-0 lg:border-l lg:pt-0 lg:pl-8 lg:flex lg:flex-col lg:justify-center lg:space-y-2 xl:pl-[calc(65*var(--u))] xl:space-y-[calc(10*var(--u))]">
+            {S.choices.map((choice) => (
+              <li key={choice} className="flex items-start gap-3 font-heading text-[1.0625rem] font-semibold leading-[1.3] text-jp-text-primary xl:gap-[calc(20*var(--u))] xl:text-[length:max(15px,calc(18*var(--u)))]">
+                <span aria-hidden="true" style={SLANT} className="mt-[0.3em] h-2.5 w-4 shrink-0 bg-jp-brand-amber xl:h-[calc(11*var(--u))] xl:w-[calc(16*var(--u))]" />
                 <span>{choice}</span>
               </li>
             ))}
           </ul>
-        </aside>
-      </div>
+        </div>
+      </aside>
     </section>
   );
 }

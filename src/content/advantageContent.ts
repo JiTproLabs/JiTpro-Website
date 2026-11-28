@@ -123,7 +123,7 @@ export const PROFIT = {
   },
   improvement: {
     question: 'What if you kept this much more?',
-    helper: 'Each percentage point equals 1% of your contract value.',
+    helper: 'How much of your lost profit could you have kept?',
     disabled: "There's no gap to close on this project: you kept everything you expected, or more.",
   },
   results: {
@@ -162,8 +162,11 @@ export const PROFIT = {
     'Illustrative example only. Use consistent profit figures. Annual results assume similar projects and the same improvement on each. Actual results depend on project conditions and contract terms. JiTpro does not guarantee specific profit improvements.',
 } as const;
 
+/** Compete from a position of strength, reproduced to the founder's approved mockup (§83.1 item 4, 2026-11-27). */
 export const POSITION_OF_STRENGTH = {
-  heading: 'What if you could compete from a position of strength?',
+  eyebrow: 'The JiTpro Advantage',
+  /** Two lines from `xl`, as in the mockup. */
+  heading: { lines: ['Compete from a', 'position of strength.'] },
   intro: 'Margin is protected long before the job is finished. It is protected by how well the work is prepared.',
   practices: [
     { title: 'Better project planning', body: 'The work ahead is understood before it reaches the field.' },
@@ -172,7 +175,8 @@ export const POSITION_OF_STRENGTH = {
     { title: 'Procurement control', body: 'Products and materials are planned back from when the field needs them.' },
     { title: 'Improved field readiness', body: 'Crews arrive to work that is ready for them.' },
   ],
-  choicesHeading: 'Better performance creates choices.',
+  /** The second part is in Brand Amber, on its own line from `lg`. */
+  choicesHeading: { lead: 'Better performance', emphasis: 'creates choices.' },
   choicesIntro: 'When more of your estimated profit makes it to the end of the job, you decide what to do with it.',
   choices: [
     'Protect your margins.',
