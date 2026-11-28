@@ -243,10 +243,14 @@ export const COMPOUNDING = {
 } as const;
 
 export const CLOSING = {
-  heading: ['Your competitors are sharpening their pencils.', 'What are you sharpening?'],
-  paragraphs: ["You don't need to rebuild your whole company to start performing better. Start with one project."],
-  lead: 'No new software to master. No additional full-time staff to hire.',
-  body: 'Just experienced construction professionals helping teams strengthen project execution, reduce preventable waste, and protect estimated profits.',
+  eyebrow: 'Your next project starts here',
+  heading: { lines: ['Your competitors are', 'sharpening their pencils.'], question: 'What are you sharpening?' },
+  intro: [
+    "You don't have to rebuild your company overnight.",
+    'Start with one project. Let JiTpro help your team take early control of the information, decisions, commitments, and procurement activities that support field execution.',
+  ],
   statement: 'Build a stronger company. Compete with confidence.',
-  action: "Let's talk about your project",
+  action: "Let's talk about your next project",
+  /** Set in capitals by CSS (Section 7.7), authored in sentence case. */
+  signature: 'One project at a time.',
 } as const;

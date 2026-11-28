@@ -1306,30 +1306,80 @@ function Compounding() {
 
 /* ------------------------------------------------------------------------------------------- 7. closing */
 
+/**
+ * The founder's closing composition (§83.1 item 7, §83.9; 2026-11-27): construction drawings and two sharpened amber
+ * pencils on warm ivory, 1672 x 941, text-free, served whole and never retouched. From `lg` the photograph is the
+ * section's ground, full width and drawn whole (the section grows only if the type needs it, and then the photograph
+ * covers it, trimmed from its empty ivory left), and the type sits on its ivory left in mockup pixels (`--u`, as the race
+ * section). Below `lg` the type comes first on the ivory and the photograph follows, cropped to the drawings and pencils.
+ */
+const CLOSING_ART = `${import.meta.env.BASE_URL}assets/advantage/closing-drawings`;
+const CLOSING_SRCSET = `${CLOSING_ART}-768.webp 768w, ${CLOSING_ART}-1280.webp 1280w, ${CLOSING_ART}-1672.webp 1672w`;
+const CLOSING_U = { '--u': 'calc(100cqw / 1672)' } as CSSProperties;
+
 function Closing() {
+  const C = CLOSING;
   return (
-    <section aria-labelledby="closing-heading" className="relative isolate overflow-hidden bg-jp-background py-20 sm:py-24 lg:py-28">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(62%_70%_at_50%_100%,color-mix(in_oklab,var(--jp-brand-amber)_12%,transparent),transparent_70%)]"
-      />
-      <div className={`relative ${CONTAINER} sm:text-center`}>
-        <h2 id="closing-heading" className={`${H2} text-jp-text-primary sm:mx-auto sm:max-w-[24ch]`}>
-          <span className="block">{CLOSING.heading[0]}</span> <span className="block text-jp-brand-amber">{CLOSING.heading[1]}</span>
-        </h2>
-        <div className="mt-7 space-y-4 text-[1.0625rem] leading-[1.7] text-jp-text-secondary sm:mx-auto sm:max-w-[58ch] sm:text-[1.125rem]">
-          {CLOSING.paragraphs.map((p) => (
-            <p key={p}>{p}</p>
-          ))}
-          <p className="font-heading font-semibold text-jp-text-primary">{CLOSING.lead}</p>
-          <p>{CLOSING.body}</p>
-        </div>
-        <p className="mt-9 font-heading text-[1.5rem] font-extrabold tracking-[-0.02em] text-jp-text-primary sm:text-[1.875rem]">{CLOSING.statement}</p>
-        <div className="mt-8">
-          <Link to="/contact" className={`${PRIMARY_BUTTON} w-full max-w-md sm:w-auto`}>
-            {CLOSING.action}
-            <ArrowRight size={18} aria-hidden="true" className="shrink-0" />
+    <section aria-labelledby="closing-heading" style={CLOSING_U} className="@container relative isolate overflow-hidden bg-jp-surface-ivory">
+      <div className="relative lg:flex lg:min-h-[calc(941*var(--u))] lg:items-center">
+        <div className="px-6 pt-16 pb-12 sm:px-8 sm:pt-20 sm:pb-14 lg:w-[calc(855*var(--u))] lg:py-[calc(40*var(--u))] lg:pr-0 lg:pl-[calc(55*var(--u))]">
+          <p className="flex items-center gap-4 lg:gap-[calc(18*var(--u))]">
+            <span aria-hidden="true" className="h-0.5 w-8 shrink-0 bg-jp-brand-amber lg:w-[calc(40*var(--u))]" />
+            <span className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-jp-background sm:text-sm lg:text-[length:max(11px,calc(19*var(--u)))]">
+              {C.eyebrow}
+            </span>
+            <span aria-hidden="true" className="h-px min-w-0 flex-1 bg-jp-brand-amber/60 lg:ml-[calc(8*var(--u))]" />
+          </p>
+
+          <h2
+            id="closing-heading"
+            className="mt-7 font-heading text-[2rem] font-extrabold leading-[1.06] min-[360px]:text-[2.25rem] tracking-[-0.03em] text-balance text-jp-background sm:text-[3rem] lg:mt-[calc(52*var(--u))] lg:text-[length:calc(70*var(--u))] lg:leading-[calc(77*var(--u))] lg:whitespace-nowrap"
+          >
+            <span className="block">
+              {C.heading.lines[0]} <br className="hidden lg:inline" />
+              {C.heading.lines[1]}
+            </span>
+            <span className="mt-3 block lg:mt-[calc(16*var(--u))]">{C.heading.question}</span>
+          </h2>
+          <span aria-hidden="true" className="mt-7 block h-1 w-24 bg-jp-brand-amber lg:mt-[calc(34*var(--u))] lg:h-[max(3px,calc(4*var(--u)))] lg:w-[calc(162*var(--u))]" />
+
+          <p className="mt-7 max-w-[36rem] text-[1.0625rem] leading-[1.6] text-jp-background sm:text-[1.1875rem] lg:mt-[calc(40*var(--u))] lg:max-w-[calc(770*var(--u))] lg:text-[length:max(16px,calc(24.5*var(--u)))] lg:leading-[1.6]">
+            <span className="sm:block">{C.intro[0]}</span> {C.intro[1]}
+          </p>
+          <p className="mt-7 font-heading text-[1.3125rem] font-bold leading-[1.25] tracking-[-0.015em] text-balance text-jp-background sm:text-[1.5rem] lg:mt-[calc(38*var(--u))] lg:text-[length:max(18px,calc(30*var(--u)))]">
+            {C.statement}
+          </p>
+
+          <Link
+            to="/contact"
+            className={`${PRIMARY_BUTTON} mt-8 w-full max-w-md sm:w-auto lg:mt-[calc(44*var(--u))] lg:max-w-none lg:gap-[max(10px,calc(28*var(--u)))] lg:px-[max(28px,calc(44*var(--u)))] lg:py-[max(16px,calc(21*var(--u)))] lg:text-[length:max(16px,calc(26*var(--u)))]`}
+          >
+            {C.action}
+            <ArrowRight aria-hidden="true" className="size-[18px] shrink-0 lg:size-[max(18px,calc(26*var(--u)))]" />
           </Link>
+
+          <p className="mt-9 flex items-center gap-4 sm:gap-5 lg:mt-[calc(52*var(--u))] lg:gap-[calc(30*var(--u))]">
+            <span className="shrink-0 whitespace-nowrap font-mono text-xs font-bold uppercase tracking-[0.22em] text-jp-background sm:text-sm lg:text-[length:max(11px,calc(19*var(--u)))]">
+              {C.signature}
+            </span>
+            <span aria-hidden="true" className="h-px min-w-0 max-w-16 flex-1 bg-jp-brand-amber/60 sm:max-w-24 lg:max-w-none lg:flex-none lg:w-[calc(362*var(--u))]" />
+          </p>
+        </div>
+
+        {/* The drawings and pencils. Below `lg` a full-bleed crop to them (square on a phone, 5:4 from `sm`), anchored
+            right; from `lg` the section's own ground, drawn whole. Never stretched; no fade, vignette or frame. */}
+        <div aria-hidden="true" className="pointer-events-none lg:absolute lg:inset-0 lg:-z-10">
+          <img
+            src={`${CLOSING_ART}-1280.webp`}
+            srcSet={CLOSING_SRCSET}
+            sizes="(min-width: 1024px) 100vw, (min-width: 640px) 142vw, 178vw"
+            width={1672}
+            height={941}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="block aspect-square h-auto w-full object-cover object-[100%_50%] sm:aspect-[5/4] lg:aspect-auto lg:h-full"
+          />
         </div>
       </div>
     </section>
